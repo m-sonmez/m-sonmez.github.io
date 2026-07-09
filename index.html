@@ -1,0 +1,114 @@
+<!doctype html>
+<html data-theme="dark" lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <meta content="Murat Sönmez - Software Architect and Full-Stack Developer specialized in Laravel and High-Performance Systems." name="description" />
+        <title>Murat Sönmez | Software Architect</title>
+
+        <!-- Minimalist CSS Framework -->
+        <link href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" rel="stylesheet" />
+
+        <style>
+            :root {
+                --spacing: 1.5rem;
+            }
+
+            body {
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+            }
+
+            header {
+                padding: 4rem 0;
+                border-bottom: 1px solid var(--muted-border-color);
+            }
+
+            .grid-skills {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 2rem;
+                margin-top: 2rem;
+            }
+
+            article {
+                height: 100%;
+                margin-bottom: 0;
+            }
+
+            footer {
+                padding: 3rem 0;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+
+            .location {
+                color: var(--secondary);
+                font-size: 1.1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="container">
+            <!-- Header Section -->
+            <header>
+                <hgroup>
+                    <h1>Murat Sönmez</h1>
+                    <p>Software Architect & Full-Stack Developer</p>
+                    <p class="location">Hatay, Türkiye</p>
+                </hgroup>
+                <div style="margin-top: 1.5rem">
+                    <a class="outline" href="https://github.com/m-sonmez" role="button">GitHub Profile</a>
+                    <a class="secondary" href="mailto:11619503+m-sonmez@users.noreply.github.com" role="button">Contact Me</a>
+                </div>
+            </header>
+
+            <!-- About Section -->
+            <section id="about" style="padding: 3rem 0">
+                <h2>About</h2>
+                <p>I am a software architect dedicated to building scalable, high-performance web applications. With a deep focus on the <strong>Laravel ecosystem</strong> and <strong>system-level optimization</strong>, I bridge the gap between robust software design and efficient hardware utilization.</p>
+                <p>I am a proponent of clean code, Domain-Driven Design (DDD), and maintaining a highly optimized development environment tailored for professional productivity.</p>
+            </section>
+
+            <!-- Expertise Grid -->
+            <section id="expertise">
+                <h2>Technical Expertise</h2>
+                <div class="grid-skills">
+                    <article>
+                        <h3>Backend Architecture</h3>
+                        <ul>
+                            <li>Laravel & PHP Development</li>
+                            <li>Database Optimization (MySQL, PostgreSQL)</li>
+                            <li>API Design & SOLID Principles</li>
+                        </ul>
+                    </article>
+                    <article>
+                        <h3>System & DevOps</h3>
+                        <ul>
+                            <li>Linux System Administration (Arch-based)</li>
+                            <li>Shell Automation & Workflow Scripting</li>
+                            <li>High-Performance Compute Environments</li>
+                        </ul>
+                    </article>
+                    <article>
+                        <h3>Technical Philosophy</h3>
+                        <ul>
+                            <li>Scalability-first Design</li>
+                            <li>Local-first Developer Experience</li>
+                            <li>Performance Benchmarking</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="container">
+            <hr />
+            <p>&copy; 2026 Murat Sönmez. Built with simplicity in mind.</p>
+            <p><small>“Simplicity is the ultimate sophistication.”</small></p>
+        </footer>
+    </body>
+</html>

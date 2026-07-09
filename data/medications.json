@@ -1,0 +1,17 @@
+[
+{"id":1,"name":"Apikobal","base_dose":250,"unit":"mg","is_emergency":false},
+{"id":2,"name":"BelocZOK","base_dose":50,"unit":"mg","is_emergency":false},
+{"id":3,"name":"Cipro","base_dose":750,"unit":"mg","is_emergency":false},
+{"id":4,"name":"Cordarone","base_dose":200,"unit":"mg","is_emergency":false},
+{"id":5,"name":"Dilatrend","base_dose":6.25,"unit":"mg","is_emergency":false},
+{"id":6,"name":"EcopirinPro","base_dose":81,"unit":"mg","is_emergency":false},
+{"id":7,"name":"GeralginePlus","base_dose":300,"unit":"mg","is_emergency":false},
+{"id":8,"name":"Kapril","base_dose":25,"unit":"mg","is_emergency":true},
+{"id":9,"name":"Levopront","base_dose":60,"unit":"mg","is_emergency":false},
+{"id":10,"name":"Mikostatin","base_dose":1,"unit":"ml","is_emergency":false},
+{"id":11,"name":"Panto","base_dose":40,"unit":"mg","is_emergency":false},
+{"id":12,"name":"Stafine","base_dose":500,"unit":"mg","is_emergency":false},
+{"id":13,"name":"Tavanic","base_dose":500,"unit":"mg","is_emergency":false},
+{"id":14,"name":"Warfmadin","base_dose":5,"unit":"mg","is_emergency":false},
+{"id":15,"name":"Augmentin","base_dose":1000,"unit":"mg","is_emergency":false}
+]

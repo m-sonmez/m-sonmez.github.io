@@ -1,0 +1,107 @@
+@import 'tailwindcss';
+
+@theme {
+    --font-sans: 'Inter', sans-serif;
+    --font-display: 'Outfit', sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+#summary,
+#charts,
+#logs,
+#prescriptions,
+#flowsheet,
+#calendar,
+#clinical-report,
+#lab-trends,
+#lab-findings,
+#reports {
+    scroll-margin-top: 110px;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.glass-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.05),
+        0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.glass-card-hover:hover {
+    border-color: rgba(79, 70, 229, 0.2);
+    box-shadow:
+        0 10px 15px -3px rgba(79, 70, 229, 0.05),
+        0 4px 6px -4px rgba(79, 70, 229, 0.05);
+    transform: translateY(-1px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-emerald-50 {
+    background-color: #f0fdf4 !important;
+}
+
+.text-emerald-700 {
+    color: #047857 !important;
+    font-weight: 600 !important;
+}
+
+.border-emerald-200 {
+    border-color: rgba(167, 243, 208, 0.6) !important;
+}
+
+.bg-amber-50 {
+    background-color: #fffbeb !important;
+    font-weight: 600 !important;
+}
+
+.text-amber-700 {
+    color: #b45309 !important;
+    font-weight: 600 !important;
+}
+
+.border-amber-200 {
+    border-color: rgba(253, 230, 138, 0.6) !important;
+}
+
+.bg-rose-50 {
+    background-color: #fff1f2 !important;
+    font-weight: 600 !important;
+}
+
+.text-rose-700 {
+    color: #be123c !important;
+    font-weight: 600 !important;
+}
+
+.border-rose-200 {
+    border-color: rgba(254, 205, 211, 0.6) !important;
+}
+
+input[type='date']::-webkit-date-and-time-value {
+    text-align: right !important;
+}

@@ -1,0 +1,42 @@
+{
+    "name": "MediLog",
+    "version": "1.0.0",
+    "description": "Health Tracking",
+    "scripts": {
+        "build": "npm run build:css && npm run build:js",
+        "build:css": "npx tailwindcss -i ./input.css -o dist/output.css --minify",
+        "build:js": "esbuild input.js --bundle --outfile=dist/output.js --minify --format=esm",
+        "dev": "npm run dev:css & npm run dev:js",
+        "dev:css": "npx tailwindcss -i ./input.css -o dist/output.css --watch",
+        "dev:js": "esbuild input.js --bundle --outfile=dist/output.js --watch --format=esm",
+        "dev:serve": "concurrently -c \"#93c5fd,#c4b5fd,#fb7185\" --names \"css,js,server\" --kill-others --timestamp \"npm run dev:css\" \"npm run dev:js\" \"python3 -m http.server 3333\"",
+        "format": "npx prettier --write ./",
+        "ready": "npm install && npm run build && npm run format",
+        "serve": "npm install && npm run build && npm run format && npm run dev:serve"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/m-sonmez/m-sonmez.github.io.git"
+    },
+    "keywords": [],
+    "author": "Murat Sönmez",
+    "license": "ISC",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/m-sonmez/m-sonmez.github.io/issues"
+    },
+    "homepage": "https://m-sonmez.github.io/panel.html",
+    "devDependencies": {
+        "@tailwindcss/cli": "^4.3.0",
+        "concurrently": "^10.0.3",
+        "esbuild": "^0.28.1",
+        "prettier": "^3.8.4",
+        "prettier-plugin-tailwindcss": "^0.8.0",
+        "tailwindcss": "^4.3.0"
+    },
+    "dependencies": {
+        "@alpinejs/collapse": "^3.15.12",
+        "alpinejs": "^3.15.12",
+        "chart.js": "^4.5.1"
+    }
+}
