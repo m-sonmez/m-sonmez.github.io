@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+
+# IDEs and editors
+.idea
+.vscode
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# LERD
+.gemini
+.cursor
+node_modules
+.vscode
+.github
+.ai
+.claude
+.junie
+.mcp.json
+.lerd.yaml
+AGENTS.md
+GEMINI.md
+package-lock.json
+.aider*
