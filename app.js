@@ -205,10 +205,13 @@ export default function registerDashboard(Alpine) {
                 return !this.isMedicationActiveInRange(m.id);
             });
         },
+        convertYmdHiToYmd(at) {
+            return at.substring(0, 10);
+        },
         get filteredMedTimeline() {
             return this.medicationChanges
                 .filter((c) => {
-                    return c.at >= this.startDate && c.at <= this.endDate;
+                    return this.convertYmdHiToYmd(c.at) >= this.startDate && this.convertYmdHiToYmd(c.at) <= this.endDate;
                 })
                 .sort((a, b) => new Date(b.at) - new Date(a.at));
         },
@@ -216,17 +219,20 @@ export default function registerDashboard(Alpine) {
             const start = this.startDate;
             const end = this.endDate;
             let dayEvents = this.medTimeline.filter((e) => {
-                const inDateRange = e.date >= start && e.date <= end;
+                const eDate = this.convertYmdHiToYmd(e.date);
+                const inDateRange = eDate >= start && eDate <= end;
                 const matchesSelection = this.selectedMed.length === 0 || this.selectedMed.includes(e.med);
                 const matchesActive = !this.onlyActive || this.isMedActiveAtEndDate(e.med);
                 return inDateRange && matchesSelection && matchesActive;
             });
+
             const medsToShow = this.selectedMed.length === 0 ? [...new Set(this.medTimeline.map((e) => e.med))] : this.selectedMed;
+
             medsToShow.forEach((medName) => {
                 if (this.onlyActive && !this.isMedActiveAtEndDate(medName)) return;
-                const hasExactStart = dayEvents.some((e) => e.med === medName && e.date === start);
+                const hasExactStart = dayEvents.some((e) => e.med === medName && this.convertYmdHiToYmd(e.date) === start);
                 if (!hasExactStart && !this.isEmergencyMed(medName)) {
-                    const lastEventBefore = [...this.medTimeline].filter((e) => e.med === medName && e.date < start).sort((a, b) => b.date.localeCompare(a.date))[0];
+                    const lastEventBefore = [...this.medTimeline].filter((e) => e.med === medName && this.convertYmdHiToYmd(e.date) < start).sort((a, b) => b.date.localeCompare(a.date))[0];
                     if (lastEventBefore && lastEventBefore.type !== 'end') {
                         dayEvents.push({ ...lastEventBefore, date: lastEventBefore.date, msg: lastEventBefore.msg + ' <span class="text-[10px] text-slate-400 italic">(Devam eden doz)</span>' });
                     }
@@ -291,7 +297,7 @@ export default function registerDashboard(Alpine) {
         },
         get sortedReports() {
             if (!this.reports || this.reports.length === 0) return [];
-            return [...this.reports].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+            return [...this.reports].sort((a, b) => new Date(b.at) - new Date(a.at));
         },
         testHasOutOfBounds(testId) {
             let items = this.testItems.filter((ti) => ti.test_id === testId);
@@ -428,9 +434,9 @@ export default function registerDashboard(Alpine) {
                 this.selectLabSession(sorted[0].id);
             }
             if (this.reports.length > 0) {
-                const sortedReports = [...this.reports].sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+                const sortedReports = [...this.reports].sort((a, b) => new Date(b.at) - new Date(a.at));
                 if (this.sortedReports.length > 0) {
-                    this.selectReport(this.sortedReports[0].protocol_no || this.sortedReports[0].datetime);
+                    this.selectReport(this.sortedReports[0].protocol_no || this.sortedReports[0].at);
                 }
             }
             if (this.endDate) {
@@ -476,7 +482,7 @@ export default function registerDashboard(Alpine) {
         },
         selectReport(protocolNo) {
             this.selectedReportId = protocolNo;
-            this.selectedReportObj = this.reports.find((r) => (r.protocol_no || r.datetime) === protocolNo) || {};
+            this.selectedReportObj = this.reports.find((r) => (r.protocol_no || r.at) === protocolNo) || {};
         },
         loadBackupData() {
             this.corsError = true;
@@ -713,7 +719,7 @@ export default function registerDashboard(Alpine) {
             this.metrics.outOfBoundsCount = outList.length;
             this.metrics.outOfBoundsList = outList;
             const getPrescriptionOnDate = (medId, dateStr) => {
-                let history = this.medicationChanges.filter((c) => c.medication_id === medId && c.at <= dateStr).sort((a, b) => a.at.localeCompare(b.at));
+                let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) >= dateStr).sort((a, b) => a.at.localeCompare(b.at));
                 if (history.length === 0) return null;
                 let last = history[history.length - 1];
                 if (['Ended', 'Paused'].includes(last.type) || last.amount === 0) {
@@ -754,7 +760,7 @@ export default function registerDashboard(Alpine) {
                 });
                 let firstChange = this.medicationChanges.find((c) => c.medication_id === med.id && c.type === 'Started');
                 if (firstChange && firstChange.timespan === 168) {
-                    let rxStartMs = new Date(firstChange.at + 'T00:00:00');
+                    let rxStartMs = new Date(this.convertYmdHiToYmd(firstChange.at) + 'T00:00:00');
                     let weekIdx = 0;
                     while (true) {
                         let wStart = new Date(rxStartMs);
@@ -844,14 +850,14 @@ export default function registerDashboard(Alpine) {
             return { count: filtered.length, displayValue: displayValue, logs: displayLogs };
         },
         getMedicationStatusOnDate(medId, dateStr) {
-            let history = this.medicationChanges.filter((c) => c.medication_id === medId && c.at <= dateStr).sort((a, b) => a.at.localeCompare(b.at));
+            let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) >= dateStr).sort((a, b) => a.at.localeCompare(b.at));
             if (history.length === 0) return 'Passive';
             let isActive = false;
             let lastType = null;
             let lastDate = null;
             for (let c of history) {
                 if (c.type === 'Taken') {
-                    if (c.at === dateStr) {
+                    if (this.convertYmdHiToYmd(c.at) === dateStr) {
                         isActive = true;
                     } else {
                         isActive = false;
@@ -864,19 +870,19 @@ export default function registerDashboard(Alpine) {
                 lastType = c.type;
                 lastDate = c.at;
             }
-            if (lastType === 'Taken' && lastDate !== dateStr) {
+            if (lastType === 'Taken' && this.convertYmdHiToYmd(lastDate) !== dateStr) {
                 isActive = false;
             }
             return isActive ? 'Active' : 'Passive';
         },
         getMedicationTimespanOnDate(medId, dateStr) {
-            let history = this.medicationChanges.filter((c) => c.medication_id === medId && c.at <= dateStr).sort((a, b) => a.at.localeCompare(b.at));
+            let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= dateStr).sort((a, b) => a.at.localeCompare(b.at));
             if (history.length === 0) return null;
             let last = history[history.length - 1];
             return last.timespan;
         },
         getMedicationAmountOnDate(medId, dateStr) {
-            let history = this.medicationChanges.filter((c) => c.medication_id === medId && c.at <= dateStr).sort((a, b) => a.at.localeCompare(b.at));
+            let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= dateStr).sort((a, b) => a.at.localeCompare(b.at));
             if (history.length === 0) return 0;
             let last = history[history.length - 1];
             let amount = parseFloat(last.amount) || 0;
@@ -887,12 +893,12 @@ export default function registerDashboard(Alpine) {
             return this.getMedicationStatusOnDate(medId, this.endDate);
         },
         isMedicationActiveInRange(medId) {
-            let history = this.medicationChanges.filter((c) => c.medication_id === medId && c.at <= this.endDate).sort((a, b) => a.at.localeCompare(b.at));
+            let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= this.convertYmdHiToYmd(this.endDate)).sort((a, b) => a.at.localeCompare(b.at));
             if (history.length === 0) return false;
             let statusAtStart = this.getMedicationStatusOnDate(medId, this.startDate);
             if (statusAtStart === 'Active') return true;
             for (let c of history) {
-                if (c.at >= this.startDate && c.at <= this.endDate) {
+                if (this.convertYmdHiToYmd(c.at) >= this.convertYmdHiToYmd(this.startDate) && this.convertYmdHiToYmd(c.at) <= this.convertYmdHiToYmd(this.endDate)) {
                     if (['Started', 'Resumed', 'Changed', 'Taken'].includes(c.type)) {
                         return true;
                     }
@@ -930,8 +936,8 @@ export default function registerDashboard(Alpine) {
                 });
         },
         get visibleMeds() {
-            const startMs = new Date(this.startDate).getTime();
-            const endMs = new Date(this.endDate).getTime();
+            const startMs = new Date(this.startDate + 'T00:00:00').getTime();
+            const endMs = new Date(this.endDate + 'T23:59:59').getTime();
             const totalMs = endMs - startMs;
             if (totalMs <= 0) return [];
             return this.detailedMeds
@@ -940,8 +946,8 @@ export default function registerDashboard(Alpine) {
                 .map((med) => {
                     let filteredSegments = [];
                     med.segments.forEach((seg) => {
-                        const sMs = new Date(seg.s).getTime();
-                        const eMs = seg.e ? new Date(seg.e).getTime() : endMs;
+                        const sMs = new Date(seg.s.replace(' ', 'T')).getTime();
+                        const eMs = seg.e ? new Date(seg.e.replace(' ', 'T')).getTime() : endMs;
                         if (eMs >= startMs && sMs <= endMs) {
                             const clampedStart = Math.max(sMs, startMs);
                             const clampedEnd = Math.min(eMs, endMs);
@@ -984,7 +990,11 @@ export default function registerDashboard(Alpine) {
             const med = this.detailedMeds.find((m) => m.name === medName);
             if (!med) return false;
             const date = this.endDate;
-            return med.segments.some((seg) => seg.s <= date && (seg.e === null || seg.e >= date));
+            return med.segments.some((seg) => {
+                const segStart = this.convertYmdHiToYmd(seg.s);
+                const segEnd = seg.e ? this.convertYmdHiToYmd(seg.e) : null;
+                return segStart <= date && (segEnd === null || segEnd >= date);
+            });
         },
         toggleMed(medName) {
             if (this.selectedMed.includes(medName)) {
@@ -1041,7 +1051,8 @@ export default function registerDashboard(Alpine) {
         },
         formatTurkishDate(isoDate) {
             if (!isoDate) return '-';
-            const parts = isoDate.split('-');
+            const datePart = isoDate.includes(' ') ? isoDate.split(' ')[0] : isoDate;
+            const parts = datePart.split('-');
             if (parts.length !== 3) return isoDate;
             return `${parts[2]}.${parts[1]}.${parts[0]}`;
         },
@@ -2238,7 +2249,7 @@ export default function registerDashboard(Alpine) {
         },
         getDailyEvents(dateStr) {
             let events = [];
-            const currentDateTime = new Intl.DateTimeFormat('sv', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
+            const currentAt = new Intl.DateTimeFormat('sv', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
             this.medicationLogs.forEach((l) => {
                 if (l.at.startsWith(dateStr)) {
                     let isEmergency = this.isEmergencyMed(l.med);
@@ -2255,11 +2266,11 @@ export default function registerDashboard(Alpine) {
                 if (t.at.startsWith(dateStr)) events.push({ ...t, type: 'test', time: t.at.substring(11, 16) });
             });
             this.reports.forEach((r) => {
-                if (r.datetime.startsWith(dateStr)) events.push({ ...r, type: 'report', time: r.datetime.substring(11, 16), at: r.datetime });
+                if (r.at.startsWith(dateStr)) events.push({ ...r, type: 'report', time: r.at.substring(11, 16), at: r.at });
             });
             events.sort((a, b) => a.time.localeCompare(b.time));
             events.forEach((e) => {
-                e.isPlan = e.at > currentDateTime;
+                e.isPlan = e.at > currentAt;
             });
             return events;
         },
@@ -2324,14 +2335,14 @@ export default function registerDashboard(Alpine) {
                 if (mode === 'period') {
                     const start = this.startDate;
                     const end = this.endDate;
-                    filteredChanges = mc.filter((c) => c.at >= start && c.at <= end);
+                    filteredChanges = mc.filter((c) => this.convertYmdHiToYmd(c.at) >= start && this.convertYmdHiToYmd(c.at) <= end);
                     filteredLogs = ml.filter((l) => l.at.substring(0, 10) >= start && l.at.substring(0, 10) <= end);
                     filteredPressures = p.filter((pr) => pr.at.substring(0, 10) >= start && pr.at.substring(0, 10) <= end);
                     filteredWeights = w.filter((wt) => wt.at.substring(0, 10) >= start && wt.at.substring(0, 10) <= end);
                     filteredTests = t.filter((test) => test.at.substring(0, 10) >= start && test.at.substring(0, 10) <= end);
                     const filteredTestIds = filteredTests.map((test) => test.id);
                     filteredTestItems = ti.filter((item) => filteredTestIds.includes(item.test_id));
-                    filteredReports = r.filter((rep) => rep.datetime.substring(0, 10) >= start && rep.datetime.substring(0, 10) <= end);
+                    filteredReports = r.filter((rep) => rep.at.substring(0, 10) >= start && rep.at.substring(0, 10) <= end);
                     clinicalInsightsData = {
                         selected_period: {
                             label: 'Seçili Dönem',

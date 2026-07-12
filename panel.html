@@ -1215,8 +1215,8 @@
                             <div class="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
                                 <template x-for="report in sortedReports">
                                     <div
-                                        :class="selectedReportId === (report.protocol_no || report.datetime) ? 'bg-indigo-50/70 text-indigo-900 border-l-4 border-l-indigo-600' : 'hover:bg-slate-50 text-slate-700'"
-                                        @click="selectReport(report.protocol_no || report.datetime)"
+                                        :class="selectedReportId === (report.protocol_no || report.at) ? 'bg-indigo-50/70 text-indigo-900 border-l-4 border-l-indigo-600' : 'hover:bg-slate-50 text-slate-700'"
+                                        @click="selectReport(report.protocol_no || report.at)"
                                         class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition"
                                     >
                                         <div class="min-w-0 flex-1">
@@ -1227,7 +1227,7 @@
                                             <div class="mt-0.5 truncate text-[10px] font-normal text-slate-400" x-text="getHospitalName(report.hospital_id)"></div>
                                         </div>
                                         <div class="ml-2 shrink-0 text-right">
-                                            <div class="font-mono text-[10px] font-bold text-slate-500" x-text="formatTurkishDate(report.datetime.substring(0, 10))"></div>
+                                            <div class="font-mono text-[10px] font-bold text-slate-500" x-text="formatTurkishDate(report.at.substring(0, 10))"></div>
                                         </div>
                                     </div>
                                 </template>
@@ -1242,7 +1242,7 @@
                             <div class="mb-4 flex flex-col items-start gap-3 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <h3 class="font-display text-base font-semibold text-slate-900" x-text="selectedReportObj.title || 'Rapor Seçiniz'"></h3>
-                                    <p class="mt-0.5 text-xs font-medium text-slate-400" x-text="selectedReportObj.datetime ? formatFullDate(selectedReportObj.datetime) : ''"></p>
+                                    <p class="mt-0.5 text-xs font-medium text-slate-400" x-text="selectedReportObj.at ? formatFullDate(selectedReportObj.at) : ''"></p>
                                 </div>
                                 <span class="self-start rounded border border-indigo-100 bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600 sm:self-auto" x-text="selectedReportObj.report_type"></span>
                             </div>
