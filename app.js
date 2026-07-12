@@ -1,5 +1,4 @@
 window.clinicalCharts = window.clinicalCharts || {};
-
 window.endAnimation = function (isPaused = false) {
     if (window.timelineInterval) {
         clearInterval(window.timelineInterval);
@@ -11,7 +10,6 @@ window.endAnimation = function (isPaused = false) {
         app.animStatus = isPaused ? 'paused' : 'idle';
     }
 };
-
 window.runTimelineStep = function () {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -26,7 +24,6 @@ window.runTimelineStep = function () {
     app.endDate = nextDateStr;
     app.updateFilters();
 };
-
 window.startAnimation = function (customStart = null, customEnd = null, isResume = false) {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -55,7 +52,6 @@ window.startAnimation = function (customStart = null, customEnd = null, isResume
     const intervals = [2000, 1000, 500, 250, 125];
     window.timelineInterval = setInterval(window.runTimelineStep, intervals[app.animSpeedIndex]);
 };
-
 window.updateAnimationSpeed = function () {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -65,7 +61,6 @@ window.updateAnimationSpeed = function () {
         window.timelineInterval = setInterval(window.runTimelineStep, intervals[app.animSpeedIndex]);
     }
 };
-
 export default function registerDashboard(Alpine) {
     Alpine.data('dashboardApp', () => ({
         flowsheetMode: 'grid',
@@ -225,9 +220,7 @@ export default function registerDashboard(Alpine) {
                 const matchesActive = !this.onlyActive || this.isMedActiveAtEndDate(e.med);
                 return inDateRange && matchesSelection && matchesActive;
             });
-
             const medsToShow = this.selectedMed.length === 0 ? [...new Set(this.medTimeline.map((e) => e.med))] : this.selectedMed;
-
             medsToShow.forEach((medName) => {
                 if (this.onlyActive && !this.isMedActiveAtEndDate(medName)) return;
                 const hasExactStart = dayEvents.some((e) => e.med === medName && this.convertYmdHiToYmd(e.date) === start);
@@ -850,29 +843,16 @@ export default function registerDashboard(Alpine) {
             return { count: filtered.length, displayValue: displayValue, logs: displayLogs };
         },
         getMedicationStatusOnDate(medId, dateStr) {
-            let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) >= dateStr).sort((a, b) => a.at.localeCompare(b.at));
-            if (history.length === 0) return 'Passive';
-            let isActive = false;
-            let lastType = null;
-            let lastDate = null;
-            for (let c of history) {
-                if (c.type === 'Taken') {
-                    if (this.convertYmdHiToYmd(c.at) === dateStr) {
-                        isActive = true;
-                    } else {
-                        isActive = false;
-                    }
-                } else if (['Started', 'Resumed', 'Changed'].includes(c.type)) {
-                    isActive = true;
-                } else if (['Ended', 'Paused'].includes(c.type)) {
-                    isActive = false;
-                }
-                lastType = c.type;
-                lastDate = c.at;
-            }
-            if (lastType === 'Taken' && this.convertYmdHiToYmd(lastDate) !== dateStr) {
-                isActive = false;
-            }
+            const med = this.medications.find((m) => m.id === medId);
+            if (!med) return 'Passive';
+            const medData = this.detailedMeds.find((m) => m.name === med.name);
+            if (!medData) return 'Passive';
+            const date = dateStr;
+            const isActive = medData.segments.some((seg) => {
+                const segStart = this.convertYmdHiToYmd(seg.s);
+                const segEnd = seg.e ? this.convertYmdHiToYmd(seg.e) : null;
+                return segStart <= date && (segEnd === null || segEnd >= date);
+            });
             return isActive ? 'Active' : 'Passive';
         },
         getMedicationTimespanOnDate(medId, dateStr) {
@@ -892,19 +872,57 @@ export default function registerDashboard(Alpine) {
         getMedicationStatus(medId) {
             return this.getMedicationStatusOnDate(medId, this.endDate);
         },
-        isMedicationActiveInRange(medId) {
-            let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= this.convertYmdHiToYmd(this.endDate)).sort((a, b) => a.at.localeCompare(b.at));
-            if (history.length === 0) return false;
-            let statusAtStart = this.getMedicationStatusOnDate(medId, this.startDate);
-            if (statusAtStart === 'Active') return true;
-            for (let c of history) {
-                if (this.convertYmdHiToYmd(c.at) >= this.convertYmdHiToYmd(this.startDate) && this.convertYmdHiToYmd(c.at) <= this.convertYmdHiToYmd(this.endDate)) {
-                    if (['Started', 'Resumed', 'Changed', 'Taken'].includes(c.type)) {
-                        return true;
-                    }
-                }
+        getCurrentDoseText(medId) {
+            const med = this.medications.find((m) => m.id === medId);
+            if (!med) return '';
+            const changes = this.medicationChanges
+                .filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= this.endDate)
+                .filter((c) => !['Ended', 'Paused'].includes(c.type))
+                .sort((a, b) => b.at.localeCompare(a.at));
+            const latest = changes[0];
+            if (!latest) return '';
+            return this.formatDoseText(med, latest.amount, latest.timespan);
+        },
+        formatDoseText(med, amount, timespan) {
+            if (med.is_emergency) {
+                return `${amount} ${med.unit}`;
             }
-            return false;
+            const baseDose = med.base_dose || 1;
+            const singleDose = amount / baseDose;
+            const formatPill = (val) => {
+                return (val % 1 === 0 ? val : val.toFixed(2)).toString().replace('.50', '.5').replace('.00', '').replace('.0', '');
+            };
+            if (timespan === 168) {
+                return `Haftalık ${formatPill(singleDose)}x`;
+            } else if (timespan === 72) {
+                return `3 Günde 1x${formatPill(singleDose)}`;
+            } else if ([8, 12, 24].includes(timespan)) {
+                const freq = 24 / timespan;
+                return `${freq}x${formatPill(singleDose)}`;
+            } else {
+                return `${formatPill(singleDose)}x`;
+            }
+        },
+        getLastPrescribedDoseText(medId) {
+            const med = this.medications.find((m) => m.id === medId);
+            if (!med) return '';
+            const changes = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= this.endDate).sort((a, b) => b.at.localeCompare(a.at));
+            const lastPrescription = changes.find((c) => !['Ended', 'Paused'].includes(c.type));
+            if (!lastPrescription) return '';
+            return this.formatDoseText(med, lastPrescription.amount, lastPrescription.timespan);
+        },
+        isMedicationActiveInRange(medId) {
+            const med = this.medications.find((m) => m.id === medId);
+            if (!med) return false;
+            const medData = this.detailedMeds.find((m) => m.name === med.name);
+            if (!medData) return false;
+            const start = this.startDate;
+            const end = this.endDate;
+            return medData.segments.some((seg) => {
+                const segStart = this.convertYmdHiToYmd(seg.s);
+                const segEnd = seg.e ? this.convertYmdHiToYmd(seg.e) : null;
+                return segStart <= end && (segEnd === null || segEnd >= start);
+            });
         },
         updateVisibleMeds() {
             this.detailedMeds = this.medications

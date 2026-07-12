@@ -115,7 +115,6 @@
                     <span>Dinamik JSON verileri tarayıcı güvenlik politikası nedeniyle yerel dosyadan doğrudan çekilemedi. Panel korumalı simüle veriler ile başlatıldı. Gerçek analiz akışı için lütfen projeyi bir yerel sunucu (VS Code Live Server vb.) üzerinden çalıştırın.</span>
                 </div>
             </template>
-
             <header class="border-b border-slate-200/80 bg-white" x-show="toolbarOpen">
                 <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
                     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -145,7 +144,6 @@
                     </div>
                 </div>
             </header>
-
             <main class="mx-auto max-w-full px-4 pb-16 sm:px-6 lg:px-8">
                 <div @scroll.window="handleScroll()" class="relative sticky top-0 z-40 -mx-4 transition-all duration-300 sm:-mx-6 lg:-mx-8 print:hidden">
                     <div x-collapse x-show="toolbarOpen">
@@ -718,7 +716,7 @@
                                         <div class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/60 bg-slate-50 p-3 shadow-inner sm:flex-row sm:items-center">
                                             <div>
                                                 <h4 class="text-xs font-bold text-slate-800" x-text="med.name"></h4>
-                                                <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="'Temel Doz: ' + med.base_dose + ' ' + med.unit"></p>
+                                                <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="getCurrentDoseText(med.id)"></p>
                                             </div>
                                             <span :class="med.is_emergency ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'" class="self-start rounded-md border px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide uppercase sm:self-auto" x-text="med.is_emergency ? 'Acil Durum' : 'Rutin' "></span>
                                         </div>
@@ -736,7 +734,7 @@
                                         <div class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/40 bg-slate-100/60 p-3 opacity-65 sm:flex-row sm:items-center">
                                             <div>
                                                 <h4 class="text-xs font-bold text-slate-600" x-text="med.name"></h4>
-                                                <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="'Dozaj Sınırı: ' + med.base_dose + ' ' + med.unit"></p>
+                                                <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="getLastPrescribedDoseText(med.id)"></p>
                                             </div>
                                             <span class="self-start rounded border border-slate-300 bg-slate-200/80 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-slate-500 uppercase sm:self-auto">Kullanımda Değil</span>
                                         </div>
@@ -1312,7 +1310,6 @@
                     </div>
                 </div>
             </main>
-
             <div :class="show ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'" @scroll.window="show = window.scrollY > 300;clearTimeout(timeout);if (show) { timeout = setTimeout(() => show = false, 3000); }" class="fixed right-6 bottom-6 z-[100] transition-all duration-500 ease-in-out" x-data="{ show: false, timeout: null }">
                 <button @click="window.scrollTo({ top: 0, behavior: 'smooth' })" class="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 transition-all hover:scale-110 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 focus:outline-none active:scale-95" title="Yukarı Çık">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
