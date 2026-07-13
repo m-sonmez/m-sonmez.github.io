@@ -793,5 +793,10 @@
 {"at":"2026-07-12 08:50","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
 {"at":"2026-07-12 09:30","model":"MedLog","user_id":1,"med":"EcopirinPro","dose":81},
 {"at":"2026-07-12 18:30","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
-{"at":"2026-07-12 21:30","model":"MedLog","user_id":1,"med":"Warfmadin","dose":2.5}
+{"at":"2026-07-12 21:30","model":"MedLog","user_id":1,"med":"Warfmadin","dose":2.5},
+{"at":"2026-07-13 07:00","model":"MedLog","user_id":1,"med":"Panto","dose":40},
+{"at":"2026-07-13 08:10","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
+{"at":"2026-07-13 09:03","model":"MedLog","user_id":1,"med":"EcopirinPro","dose":81},
+{"at":"2026-07-13 19:35","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
+{"at":"2026-07-13 21:26","model":"MedLog","user_id":1,"med":"Warfmadin","dose":5}
 ]
