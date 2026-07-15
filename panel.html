@@ -18,6 +18,7 @@
             <h3 class="font-display text-lg font-bold tracking-tight">Ekran Çok Küçük</h3>
             <p class="mt-2 text-xs leading-relaxed text-slate-400">Verilerin düzgün görüntülenebilmesi için lütfen telefonunuzu yan çevirin, daha büyük bir ekran veya bilgisayar kullanın.</p>
         </div>
+
         <div class="block max-[300px]:hidden">
             <div :class="open ? 'translate-x-0' : '-translate-x-64'" @keydown.window.escape="open = false" class="fixed top-1/8 left-0 z-50 flex items-center transition-transform duration-300 ease-in-out print:hidden" x-data="{ open: false }">
                 <div class="w-64 rounded-r-2xl border border-l-0 border-slate-200/80 bg-white/95 p-4 shadow-md backdrop-blur-md">
