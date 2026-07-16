@@ -501,13 +501,10 @@ export default function registerDashboard(Alpine) {
                 this.validDatesPool = pool;
                 this.firstD = pool[0];
                 this.lastD = pool[pool.length - 1];
-                let anchorDate = new Date(this.lastD);
-                anchorDate.setDate(anchorDate.getDate() - 27);
-                let calculatedStart = anchorDate.toISOString().split('T')[0];
-                this.startDate = calculatedStart < this.firstD ? this.firstD : calculatedStart;
                 let todayStr = new Date().toISOString().split('T')[0];
                 this.endDate = this.lastD < todayStr ? this.lastD : todayStr;
-                this.datePreset = '28';
+                this.datePreset = '60';
+                this.applyDatePreset();
             } else {
                 this.validDatesPool = [];
                 let today = new Date();
@@ -516,11 +513,9 @@ export default function registerDashboard(Alpine) {
                 let firstDObj = new Date();
                 firstDObj.setDate(today.getDate() - 30);
                 this.firstD = firstDObj.toISOString().split('T')[0];
-                let startDObj = new Date();
-                startDObj.setDate(today.getDate() - 27);
-                this.startDate = startDObj.toISOString().split('T')[0];
                 this.endDate = todayStr;
-                this.datePreset = '28';
+                this.datePreset = '60';
+                this.applyDatePreset();
             }
             this.selectedMed = [];
             this.onlyActive = true;
@@ -1771,18 +1766,21 @@ export default function registerDashboard(Alpine) {
                 });
             };
             addPeriod('all', start, end);
-            let d2 = new Date(end);
-            d2.setDate(d2.getDate() - 1);
-            addPeriod('last2', d2, end);
-            let d7 = new Date(end);
-            d7.setDate(d7.getDate() - 6);
-            addPeriod('last7', d7, end);
-            let d14 = new Date(end);
-            d14.setDate(d14.getDate() - 13);
-            addPeriod('last14', d14, end);
-            let d28 = new Date(end);
-            d28.setDate(d28.getDate() - 27);
-            addPeriod('last28', d28, end);
+            const presets = [
+                { label: 'last3', days: 3 },
+                { label: 'last7', days: 7 },
+                { label: 'last10', days: 10 },
+                { label: 'last15', days: 15 },
+                { label: 'last30', days: 30 },
+                { label: 'last45', days: 45 },
+                { label: 'last60', days: 60 },
+                { label: 'last90', days: 90 },
+            ];
+            presets.forEach(({ label, days }) => {
+                let dStart = new Date(end);
+                dStart.setDate(dStart.getDate() - (days - 1));
+                addPeriod(label, dStart, end);
+            });
             return periods;
         },
         destroyAllCharts() {
@@ -2143,18 +2141,14 @@ export default function registerDashboard(Alpine) {
             let dateObj = new Date(this.lastD);
             if (mode === 'all') {
                 this.startDate = this.firstD;
-            } else if (mode === '1') {
-                dateObj.setDate(dateObj.getDate() - 1);
-                this.startDate = dateObj.toISOString().split('T')[0];
-            } else if (mode === '7') {
-                dateObj.setDate(dateObj.getDate() - 6);
-                this.startDate = dateObj.toISOString().split('T')[0];
-            } else if (mode === '14') {
-                dateObj.setDate(dateObj.getDate() - 13);
-                this.startDate = dateObj.toISOString().split('T')[0];
-            } else if (mode === '28') {
-                dateObj.setDate(dateObj.getDate() - 27);
-                this.startDate = dateObj.toISOString().split('T')[0];
+            } else {
+                const days = parseInt(mode, 10);
+                if (!isNaN(days) && days > 0) {
+                    dateObj.setDate(dateObj.getDate() - (days - 1));
+                    this.startDate = dateObj.toISOString().split('T')[0];
+                } else {
+                    this.startDate = this.firstD;
+                }
             }
             this.updateFilters();
         },
@@ -2375,7 +2369,16 @@ export default function registerDashboard(Alpine) {
                         },
                     };
                 } else {
-                    const presetToPeriod = { 1: 'last2', 7: 'last7', 14: 'last14', 28: 'last28' };
+                    const presetToPeriod = {
+                        3: 'last3',
+                        7: 'last7',
+                        10: 'last10',
+                        15: 'last15',
+                        30: 'last30',
+                        45: 'last45',
+                        60: 'last60',
+                        90: 'last90',
+                    };
                     const excludePreset = this.datePreset !== 'custom' && this.datePreset !== 'all' ? presetToPeriod[this.datePreset] || null : null;
                     const selectedPeriods = this.getInsightPeriods(this.endDate, this.startDate, excludePreset);
                     const allTimePeriods = this.getInsightPeriods(this.lastD, this.firstD, null);
