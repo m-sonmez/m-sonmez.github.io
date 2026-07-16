@@ -707,9 +707,9 @@ export default function registerDashboard(Alpine) {
             this.metrics.outOfBoundsCount = outList.length;
             this.metrics.outOfBoundsList = outList;
             const getPrescriptionOnDate = (medId, dateStr) => {
-                let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) >= dateStr).sort((a, b) => a.at.localeCompare(b.at));
+                let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= dateStr).sort((a, b) => b.at.localeCompare(a.at));
                 if (history.length === 0) return null;
-                let last = history[history.length - 1];
+                let last = history[0];
                 if (['Ended', 'Paused'].includes(last.type) || last.amount === 0) {
                     return null;
                 }
