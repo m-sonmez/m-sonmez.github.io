@@ -763,11 +763,7 @@
                             </div>
                             <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                                 <button :class="flowsheetMode === 'grid' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 border border-slate-200'" @click="flowsheetMode = 'grid'; selectedMed = []" class="flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition sm:flex-none">Çizelge</button>
-                                <button
-                                    :class="flowsheetMode === 'chart' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 border border-slate-200'"
-                                    @click="flowsheetMode = 'chart'; if(selectedMed.length === 0 && uniqueMeds.length > 0) selectedMed = [uniqueMeds[0]]; $nextTick(() => renderFocusChart())"
-                                    class="flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition sm:flex-none"
-                                >
+                                <button :class="flowsheetMode === 'chart' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 border border-slate-200'" @click="flowsheetMode = 'chart'; $nextTick(() => renderFocusChart())" class="flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition sm:flex-none">
                                     Grafik Karşılaştır
                                 </button>
                             </div>
@@ -817,7 +813,7 @@
                         </div>
                         <div class="space-y-4" x-show="flowsheetMode === 'chart'">
                             <div class="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                <template :key="medName" x-for="medName in uniqueMeds">
+                                <template :key="medName" x-for="medName in allFlowsheetMeds">
                                     <button
                                         :class="selectedMed.includes(medName) ? 'bg-indigo-600 text-white font-bold border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
                                         @click="toggleMed(medName); renderFocusChart()"
@@ -1136,10 +1132,13 @@
                     <div class="space-y-3">
                         <div class="flex flex-col items-start justify-between gap-2 pl-1 sm:flex-row sm:items-center">
                             <h3 class="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">Tahliller</h3>
-                            <label class="flex cursor-pointer items-center gap-1.5 select-none">
-                                <input class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" type="checkbox" x-model="showOnlyOutOfBoundsTests" />
-                                <span class="text-[10px] font-semibold text-slate-400">Sadece Sınır Dışı</span>
-                            </label>
+                            <div class="flex items-center gap-3">
+                                <label class="flex cursor-pointer items-center gap-1.5 select-none">
+                                    <input class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" type="checkbox" x-model="showOnlyOutOfBoundsTests" />
+                                    <span class="text-[10px] font-semibold text-slate-400">Sadece Sınır Dışı</span>
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-1.5 select-none"> <input class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" type="checkbox" x-model="hideSpecialTests" /> <span class="text-[10px] font-semibold text-slate-400">Gizle: AKG & Crossmatch</span> </label>
+                            </div>
                         </div>
                         <div class="custom-scrollbar space-y-2 pr-1">
                             <div class="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
@@ -1166,44 +1165,54 @@
                             </template>
                         </div>
                     </div>
+
                     <div class="lg:col-span-2">
                         <div class="glass-card rounded-2xl p-6 shadow-sm">
                             <div class="mb-4 border-b border-slate-100 pb-3">
                                 <h3 class="font-display text-base font-semibold text-slate-900" x-text="selectedTestObj.title ? selectedTestObj.title + ' Bulguları' : 'Tahlil Seçiniz'"></h3>
                                 <p class="mt-0.5 text-xs font-medium text-slate-400" x-text="selectedTestObj.at ? formatFullDate(selectedTestObj.at) : ''"></p>
                             </div>
-                            <div class="custom-scrollbar space-y-3.5 pr-1">
-                                <template :key="item.code" x-for="item in (showOnlyOutOfBoundsTests ? selectedTestItems.filter(i => getLabItemStatus(i) !== 'Normal') : selectedTestItems)">
-                                    <div class="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 transition duration-150 hover:bg-slate-50">
-                                        <div class="mb-2 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-                                            <div>
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <span class="shrink-0 rounded border border-indigo-100/50 bg-indigo-50 px-1.5 py-0.5 text-xs font-black text-indigo-600" x-text="item.code"></span>
-                                                    <span class="text-xs font-bold text-slate-800" x-text="item.name"></span>
-                                                </div>
-                                                <span class="mt-0.5 block text-[10px] font-medium text-slate-400" x-text="item.description"></span>
-                                            </div>
-                                            <div class="flex items-baseline gap-1 self-start rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-sm sm:self-auto">
-                                                <span class="text-sm font-black text-slate-900" x-text="parseFloat(item.result).toFixed(2)"></span>
-                                                <span class="text-[10px] font-bold text-slate-400" x-text="item.unit"></span>
-                                            </div>
-                                        </div>
-                                        <div class="space-y-1">
-                                            <div class="flex justify-between text-[9px] font-semibold text-slate-400">
-                                                <span>Alt Sınır: <strong class="text-slate-600" x-text="item.reference_min ? parseFloat(item.reference_min).toFixed(2) : '-'"></strong></span>
-                                                <span :class="getLabItemClass(item)" class="text-[10px] font-black tracking-wider uppercase" x-text="getLabItemStatus(item)"></span>
-                                                <span>Üst Sınır: <strong class="text-slate-600" x-text="item.reference_max ? parseFloat(item.reference_max).toFixed(2) : '-'"></strong></span>
-                                            </div>
-                                            <div class="relative h-2 overflow-hidden rounded-full border border-slate-200 bg-slate-200/50 shadow-inner">
-                                                <div :style="getRangeZoneStyle(item)" class="absolute h-full border-x border-emerald-300 bg-emerald-400/20"></div>
-                                                <div :class="getLabPointerClass(item)" :style="getPointerPositionStyle(item)" class="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full shadow transition-all duration-300"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template x-if="showOnlyOutOfBoundsTests && selectedTestItems.filter(i => getLabItemStatus(i) !== 'Normal').length === 0">
-                                    <div class="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-8 text-center text-xs font-medium text-slate-400">Seçilen tahlil seansında sınır dışı (anormal) parametre saptanmadı. Tüm değerler normaldir.</div>
-                                </template>
+                            <div class="custom-scrollbar overflow-x-auto pr-1">
+                                <table class="w-full min-w-[600px] text-left text-xs">
+                                    <thead class="border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase">
+                                        <tr>
+                                            <th class="py-2 pl-2">Parametre</th>
+                                            <th class="py-2 text-right">Değer</th>
+                                            <th class="py-2 text-left">Birim</th>
+                                            <th class="py-2 text-center">Referans Aralığı</th>
+                                            <th class="py-2 pr-2 text-center">Durum</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <template :key="item.code" x-for="item in (showOnlyOutOfBoundsTests ? selectedTestItems.filter(i => getLabItemStatus(i) !== 'Normal') : selectedTestItems)">
+                                            <tr class="transition hover:bg-slate-50/60">
+                                                <td class="py-2.5 pl-2 font-semibold whitespace-nowrap text-slate-700">
+                                                    <span x-text="item.name"></span>
+                                                    <span class="font-mono text-[9px] text-slate-400" x-text="'(' + item.code + ')'"></span>
+                                                </td>
+                                                <td class="py-2.5 text-right font-black whitespace-nowrap text-slate-900">
+                                                    <span x-text="parseFloat(item.result).toFixed(2)"></span>
+                                                </td>
+                                                <td class="py-2.5 text-left text-[10px] font-bold whitespace-nowrap text-slate-400" x-text="item.unit"></td>
+                                                <td class="py-2.5 text-center whitespace-nowrap text-slate-600">
+                                                    <span x-text="item.reference_min ? parseFloat(item.reference_min).toFixed(2) : '-'"></span>
+                                                    <span class="text-slate-400"> – </span>
+                                                    <span x-text="item.reference_max ? parseFloat(item.reference_max).toFixed(2) : '-'"></span>
+                                                </td>
+                                                <td class="py-2.5 pr-2 text-center whitespace-nowrap">
+                                                    <span :class="getLabItemClass(item)" class="rounded-md px-2 py-0.5 text-[9px] font-black" x-text="getLabItemStatus(item)"></span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        <template x-if="(showOnlyOutOfBoundsTests ? selectedTestItems.filter(i => getLabItemStatus(i) !== 'Normal') : selectedTestItems).length === 0">
+                                            <tr>
+                                                <td class="py-4 text-center text-slate-400" colspan="5">
+                                                    <span x-text="showOnlyOutOfBoundsTests ? 'Bu tahlil seansında sınır dışı parametre bulunmamaktadır.' : 'Bu tahlil seansına ait parametre bulunmamaktadır.'"></span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>

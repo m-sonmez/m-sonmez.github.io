@@ -77,6 +77,7 @@ export default function registerDashboard(Alpine) {
         calendarMonth: null,
         selectedCalendarDayStr: null,
         showOnlyOutOfBoundsTests: false,
+        hideSpecialTests: true,
         user: {},
         hospitals: [],
         medications: [],
@@ -88,6 +89,7 @@ export default function registerDashboard(Alpine) {
         testItems: [],
         metrics: { avgSys: 0, avgDia: 0, currentWeight: 0, startWeight: 0, weightDelta: 0, adherenceRate: 100, outOfBoundsCount: 0, outOfBoundsList: [], latestInr: null, latestHgb: null },
         flowsheetDays: [],
+        allFlowsheetMeds: [],
         uniqueMeds: [],
         tooltip: { show: false, x: 0, y: 0, med: '', date: '', count: 0, times: [] },
         selectedTestId: null,
@@ -143,8 +145,19 @@ export default function registerDashboard(Alpine) {
             'Solunum / Öksürük': ['Levopront'],
             'Vitamin / Takviye': ['Apikobal'],
         },
-        bpViewMode: 'raw',
-        sections: { summary: true, charts: true, logs: true, prescriptions: true, flowsheet: true, calendar: true, clinicalReport: true, labTrends: true, labFindings: true, reports: true },
+        bpViewMode: 'trend',
+        sections: {
+            summary: true,
+            charts: true,
+            logs: true,
+            prescriptions: true,
+            flowsheet: true,
+            calendar: true,
+            clinicalReport: true,
+            labTrends: true,
+            labFindings: true,
+            reports: true,
+        },
         animStatus: 'idle',
         animScope: 'all',
         animTargetDate: null,
@@ -270,14 +283,29 @@ export default function registerDashboard(Alpine) {
                 let d = t.at.substring(0, 10);
                 return d >= this.startDate && d <= this.endDate;
             });
+
+            if (this.hideSpecialTests) {
+                testsInWindow = testsInWindow.filter((t) => {
+                    const title = t.title.toLowerCase();
+                    return !title.includes('arter kan gazı') && !title.includes('crossmatch');
+                });
+            }
+
             if (this.showOnlyOutOfBoundsTests) {
                 testsInWindow = testsInWindow.filter((t) => this.testHasOutOfBounds(t.id));
             }
             testsInWindow.sort((a, b) => new Date(b.at) - new Date(a.at));
+
             if (testsInWindow.length > 0) {
                 return testsInWindow.map((t) => ({ ...t, outOfRange: false }));
             } else {
                 let historicalTests = this.tests.filter((t) => t.at.substring(0, 10) <= this.endDate);
+                if (this.hideSpecialTests) {
+                    historicalTests = historicalTests.filter((t) => {
+                        const title = t.title.toLowerCase();
+                        return !title.includes('arter kan gazı') && !title.includes('crossmatch');
+                    });
+                }
                 if (this.showOnlyOutOfBoundsTests) {
                     historicalTests = historicalTests.filter((t) => this.testHasOutOfBounds(t.id));
                 }
@@ -291,6 +319,16 @@ export default function registerDashboard(Alpine) {
         get sortedReports() {
             if (!this.reports || this.reports.length === 0) return [];
             return [...this.reports].sort((a, b) => new Date(b.at) - new Date(a.at));
+        },
+        toggleHideSpecialTests() {
+            const visibleTests = this.filteredTests;
+            if (visibleTests.length > 0) {
+                this.selectLabSession(visibleTests[0].id);
+            } else {
+                this.selectedTestId = null;
+                this.selectedTestObj = {};
+                this.selectedTestItems = [];
+            }
         },
         testHasOutOfBounds(testId) {
             let items = this.testItems.filter((ti) => ti.test_id === testId);
@@ -496,6 +534,8 @@ export default function registerDashboard(Alpine) {
             this.tests.forEach((t) => pool.push(t.at.substring(0, 10)));
             this.medicationLogs.forEach((ml) => pool.push(ml.at.substring(0, 10)));
             this.medicationChanges.forEach((mc) => pool.push(mc.at.substring(0, 10)));
+            this.datePreset = 'all';
+
             if (pool.length > 0) {
                 pool = [...new Set(pool)].sort();
                 this.validDatesPool = pool;
@@ -503,7 +543,6 @@ export default function registerDashboard(Alpine) {
                 this.lastD = pool[pool.length - 1];
                 let todayStr = new Date().toISOString().split('T')[0];
                 this.endDate = this.lastD < todayStr ? this.lastD : todayStr;
-                this.datePreset = '60';
                 this.applyDatePreset();
             } else {
                 this.validDatesPool = [];
@@ -514,7 +553,6 @@ export default function registerDashboard(Alpine) {
                 firstDObj.setDate(today.getDate() - 30);
                 this.firstD = firstDObj.toISOString().split('T')[0];
                 this.endDate = todayStr;
-                this.datePreset = '60';
                 this.applyDatePreset();
             }
             this.selectedMed = [];
@@ -811,7 +849,10 @@ export default function registerDashboard(Alpine) {
                 let logDay = log.at.substring(0, 10);
                 return days.includes(logDay);
             });
-            let activeMedNames = [...new Set(logsInWindow.map((log) => log.med))].sort();
+            let allMedNames = [...new Set(logsInWindow.map((log) => log.med))].sort();
+            this.allFlowsheetMeds = allMedNames; // tüm ilaçlar
+
+            let activeMedNames = allMedNames;
             if (this.selectedMed && this.selectedMed.length > 0) {
                 activeMedNames = activeMedNames.filter((m) => this.selectedMed.includes(m));
             }
@@ -1796,6 +1837,8 @@ export default function registerDashboard(Alpine) {
             }
         },
         renderMainCharts() {
+            const self = this;
+
             const formatDateToDDMM = (dateStr) => {
                 if (!dateStr) return '';
                 const parts = dateStr.split(' ');
@@ -1811,6 +1854,7 @@ export default function registerDashboard(Alpine) {
                 }
                 return dateStr;
             };
+
             if (window.clinicalCharts && window.clinicalCharts['bp']) {
                 try {
                     window.clinicalCharts['bp'].destroy();
@@ -1823,12 +1867,12 @@ export default function registerDashboard(Alpine) {
                 } catch (e) {}
                 window.clinicalCharts['weight'] = null;
             }
+
             let fps = [...this.getFilteredPressures()].sort((a, b) => new Date(a.at) - new Date(b.at));
             let bpCtx = document.getElementById('bpLineChart')?.getContext('2d');
             if (bpCtx && fps.length > 0) {
-                let chartLabels = [];
-                let systolicData = [];
-                let diastolicData = [];
+                let chartData = [];
+
                 if (this.bpViewMode === 'trend') {
                     const start = new Date(this.startDate);
                     const end = new Date(this.endDate);
@@ -1837,58 +1881,180 @@ export default function registerDashboard(Alpine) {
                         let current = new Date(start);
                         current.setDate(current.getDate() + i);
                         let currentIsoDate = current.toISOString().split('T')[0];
-                        let formattedLabel = formatDateToDDMM(currentIsoDate);
                         let targetEnd = new Date(currentIsoDate);
                         let targetStart = new Date(currentIsoDate);
                         targetStart.setDate(targetStart.getDate() - 6);
+
                         let readingsInWindow = this.pressures.filter((p) => {
                             let pDate = new Date(p.at.substring(0, 10));
                             return pDate >= targetStart && pDate <= targetEnd;
                         });
+
+                        let dateObj = new Date(currentIsoDate + 'T00:00:00');
+
                         if (readingsInWindow.length > 0) {
                             let avgSys = readingsInWindow.reduce((sum, p) => sum + p.sys, 0) / readingsInWindow.length;
                             let avgDia = readingsInWindow.reduce((sum, p) => sum + p.dia, 0) / readingsInWindow.length;
-                            chartLabels.push(formattedLabel);
-                            systolicData.push(Math.round(avgSys));
-                            diastolicData.push(Math.round(avgDia));
+                            chartData.push({ x: dateObj, sys: Math.round(avgSys), dia: Math.round(avgDia) });
                         } else {
                             if (this.pressures.some((p) => p.at.substring(0, 10) === currentIsoDate)) {
-                                chartLabels.push(formattedLabel);
-                                systolicData.push(null);
-                                diastolicData.push(null);
+                                chartData.push({ x: dateObj, sys: null, dia: null });
                             }
                         }
                     }
                 } else {
-                    chartLabels = fps.map((p) => formatDateToDDMM(p.at));
-                    systolicData = fps.map((p) => p.sys);
-                    diastolicData = fps.map((p) => p.dia);
+                    chartData = fps.map((p) => ({
+                        x: new Date(p.at),
+                        sys: p.sys,
+                        dia: p.dia,
+                    }));
                 }
-                let allVals = [...systolicData, ...diastolicData].filter((v) => v !== null && !isNaN(v));
+
+                let sysData = chartData.map((d) => ({ x: d.x, y: d.sys }));
+                let diaData = chartData.map((d) => ({ x: d.x, y: d.dia }));
+
+                let allVals = chartData.flatMap((d) => [d.sys, d.dia]).filter((v) => v !== null && !isNaN(v));
                 let bpMin = allVals.length > 0 ? Math.max(0, Math.floor(Math.min(...allVals) - 10)) : 50;
                 let bpMax = allVals.length > 0 ? Math.ceil(Math.max(...allVals) + 10) : 170;
+
+                if (this.bpViewMode === 'trend') {
+                    bpMin = 70;
+                    bpMax = 130;
+                } else {
+                    bpMin = 50;
+                    bpMax = 170;
+                }
+
                 window.clinicalCharts['bp'] = new Chart(bpCtx, {
                     type: 'line',
                     data: {
-                        labels: chartLabels,
                         datasets: [
-                            { label: 'Sistolik', data: systolicData, borderColor: 'rgb(225, 29, 72)', backgroundColor: 'rgba(225, 29, 72, 0.03)', pointRadius: 1, borderWidth: 2, tension: 0.2, fill: true, spanGaps: true },
-                            { label: 'Diastolik', data: diastolicData, borderColor: 'rgb(79, 70, 229)', backgroundColor: 'rgba(79, 70, 229, 0.03)', pointRadius: 1, borderWidth: 2, tension: 0.2, fill: true, spanGaps: true },
+                            {
+                                label: 'Sistolik',
+                                data: sysData,
+                                borderColor: 'rgb(225, 29, 72)',
+                                backgroundColor: 'rgba(225, 29, 72, 0.03)',
+                                pointRadius: 1,
+                                borderWidth: 2,
+                                tension: 0.2,
+                                fill: true,
+                                spanGaps: true,
+                            },
+                            {
+                                label: 'Diastolik',
+                                data: diaData,
+                                borderColor: 'rgb(79, 70, 229)',
+                                backgroundColor: 'rgba(79, 70, 229, 0.03)',
+                                pointRadius: 1,
+                                borderWidth: 2,
+                                tension: 0.2,
+                                fill: false,
+                                spanGaps: true,
+                            },
                         ],
                     },
-                    options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false }, scales: { x: { grid: { display: false } }, y: { ticks: { stepSize: 10 }, min: bpMin, max: bpMax, grid: { color: 'rgba(226, 232, 240, 0.6)' } } } },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: function (tooltipItems) {
+                                        const date = new Date(tooltipItems[0].parsed.x);
+                                        return self.formatFullDate(date);
+                                    },
+                                },
+                            },
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    displayFormats: { day: 'D MMM' },
+                                },
+                                grid: { display: false },
+                                ticks: {
+                                    callback: function (value) {
+                                        const date = new Date(value);
+                                        const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+                                        return date.getDate() + ' ' + months[date.getMonth()];
+                                    },
+                                },
+                            },
+                            y: {
+                                ticks: { stepSize: 10 },
+                                min: bpMin,
+                                max: bpMax,
+                                grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                            },
+                        },
+                    },
                 });
             }
+
             let fws = [...this.getFilteredWeights()].sort((a, b) => new Date(a.at) - new Date(b.at));
             let wCtx = document.getElementById('weightLineChart')?.getContext('2d');
             if (wCtx && fws.length > 0) {
-                let weightsPool = fws.map((w) => w.weight);
+                let weightData = fws.map((w) => ({ x: new Date(w.at), y: w.weight }));
+                let weightsPool = weightData.map((d) => d.y);
                 let minW = Math.max(0, Math.floor(Math.min(...weightsPool) - 2));
                 let maxW = Math.ceil(Math.max(...weightsPool) + 2);
+
                 window.clinicalCharts['weight'] = new Chart(wCtx, {
                     type: 'line',
-                    data: { labels: fws.map((w) => formatDateToDDMM(w.at)), datasets: [{ label: 'Kilo (kg)', data: weightsPool, borderColor: 'rgb(13, 148, 136)', backgroundColor: 'rgba(13, 148, 136, 0.03)', pointRadius: 1, borderWidth: 2, tension: 0.2, fill: true }] },
-                    options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { x: { grid: { display: false } }, y: { min: minW, max: maxW, grid: { color: 'rgba(226, 232, 240, 0.6)' } } } },
+                    data: {
+                        datasets: [
+                            {
+                                label: 'Kilo (kg)',
+                                data: weightData,
+                                borderColor: 'rgb(13, 148, 136)',
+                                backgroundColor: 'rgba(13, 148, 136, 0.03)',
+                                pointRadius: 1,
+                                borderWidth: 2,
+                                tension: 0.2,
+                                fill: true,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: function (tooltipItems) {
+                                        const date = new Date(tooltipItems[0].parsed.x);
+                                        return self.formatFullDate(date);
+                                    },
+                                },
+                            },
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: { unit: 'day', displayFormats: { day: 'D MMM' } },
+                                grid: { display: false },
+                                ticks: {
+                                    callback: function (value) {
+                                        const date = new Date(value);
+                                        const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+                                        return date.getDate() + ' ' + months[date.getMonth()];
+                                    },
+                                },
+                            },
+                            y: {
+                                min: minW,
+                                max: maxW,
+                                grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                            },
+                        },
+                    },
                 });
             }
         },
@@ -1901,35 +2067,92 @@ export default function registerDashboard(Alpine) {
                 window.clinicalCharts['focus'] = null;
             }
             let canvas = document.getElementById('focusChartCanvas');
-            if (!canvas || this.selectedMed.length === 0) return;
+            if (!canvas) return;
+
+            // Hangi ilaçları göstereceğimizi belirle
+            let medsToShow = this.selectedMed.length > 0 ? this.selectedMed : this.allFlowsheetMeds;
+            if (medsToShow.length === 0) {
+                // hiç ilaç yoksa grafik boş
+                return;
+            }
+
+            const self = this;
             let start = new Date(this.startDate);
             let end = new Date(this.endDate);
             let daysCount = Math.round((end - start) / (24 * 60 * 60 * 1000));
-            let labels = [];
             let daysKeys = [];
             const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
             for (let i = 0; i <= daysCount; i++) {
                 let temp = new Date(start);
                 temp.setDate(temp.getDate() + i);
                 let iso = temp.toISOString().split('T')[0];
-                labels.push(`${temp.getDate()} ${months[temp.getMonth()]}`);
-                daysKeys.push(iso);
+                daysKeys.push(new Date(iso + 'T00:00:00'));
             }
+
             let datasets = [];
-            this.selectedMed.forEach((medName) => {
+            medsToShow.forEach((medName) => {
                 let cfg = this.medConfig[medName] || { color: 'rgb(100, 116, 139)' };
-                let values = daysKeys.map((iso) => {
+                let values = daysKeys.map((date) => {
+                    let iso = date.toISOString().split('T')[0];
                     let dayLogs = this.medicationLogs.filter((l) => l.med.toLowerCase() === medName.toLowerCase() && l.at.substring(0, 10) === iso);
                     let base_dose = this.medConversions[medName] || 1;
                     let totalDose = dayLogs.reduce((sum, l) => sum + l.dose, 0);
                     return totalDose / base_dose;
                 });
-                datasets.push({ label: medName, data: values, backgroundColor: cfg.color, borderColor: cfg.color, borderRadius: 4, borderWidth: 1 });
+
+                let data = daysKeys.map((date, idx) => ({ x: date, y: values[idx] }));
+
+                datasets.push({
+                    label: medName,
+                    data: data,
+                    backgroundColor: cfg.color,
+                    borderColor: cfg.color,
+                    borderRadius: 4,
+                    borderWidth: 1,
+                });
             });
+
             window.clinicalCharts['focus'] = new Chart(canvas.getContext('2d'), {
                 type: 'bar',
-                data: { labels: labels, datasets: datasets },
-                options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(226, 232, 240, 0.6)' }, border: { display: false } }, x: { grid: { display: false }, border: { display: false } } } },
+                data: { datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function (tooltipItems) {
+                                    const date = new Date(tooltipItems[0].parsed.x);
+                                    return self.formatFullDate(date);
+                                },
+                            },
+                        },
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                displayFormats: { day: 'D MMM' },
+                            },
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: {
+                                callback: function (value) {
+                                    const date = new Date(value);
+                                    return date.getDate() + ' ' + months[date.getMonth()];
+                                },
+                            },
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                            border: { display: false },
+                        },
+                    },
+                },
             });
         },
         renderLabTrendCharts() {
@@ -1953,6 +2176,10 @@ export default function registerDashboard(Alpine) {
                 { id: 'kChart', code: 'K', label: 'Potasyum', color: 'rgb(225, 29, 72)' },
                 { id: 'caChart', code: 'CA', label: 'Kalsiyum', color: 'rgb(245, 158, 11)' },
             ];
+
+            const self = this;
+            const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
             targets.forEach((tgt) => {
                 if (window.clinicalCharts && window.clinicalCharts[tgt.id]) {
                     try {
@@ -1962,6 +2189,7 @@ export default function registerDashboard(Alpine) {
                 }
                 let canvasEl = document.getElementById(tgt.id);
                 if (!canvasEl) return;
+
                 let allPoints = [];
                 this.tests.forEach((s) => {
                     let match = this.testItems.find((item) => {
@@ -1970,17 +2198,24 @@ export default function registerDashboard(Alpine) {
                         return itemCode === tgt.code || (tgt.code === 'NEU' && itemCode === 'NEU#') || (tgt.code === 'LYM' && itemCode === 'LYM#') || (tgt.code === 'NA' && itemCode === 'SODYUM') || (tgt.code === 'K' && itemCode === 'POTASYUM') || (tgt.code === 'CA' && (itemCode === 'KALSİYUM' || itemCode === 'KALSIYUM'));
                     });
                     if (match) {
-                        allPoints.push({ val: parseFloat(match.result), date: s.at.substring(0, 10), rawDate: s.at, refMin: match.reference_min ? parseFloat(match.reference_min) : null, refMax: match.reference_max ? parseFloat(match.reference_max) : null });
+                        allPoints.push({
+                            val: parseFloat(match.result),
+                            date: s.at.substring(0, 10),
+                            rawDate: s.at,
+                            refMin: match.reference_min ? parseFloat(match.reference_min) : null,
+                            refMax: match.reference_max ? parseFloat(match.reference_max) : null,
+                        });
                     }
                 });
+
                 allPoints.sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
+
                 let insideRange = allPoints.filter((p) => p.date >= this.startDate && p.date <= this.endDate);
                 let beforeRange = allPoints.filter((p) => p.date < this.startDate);
+
                 let finalPoints = [];
                 if (insideRange.length >= 2) {
-                    if (beforeRange.length > 0) {
-                        finalPoints.push(beforeRange[beforeRange.length - 1]);
-                    }
+                    if (beforeRange.length > 0) finalPoints.push(beforeRange[beforeRange.length - 1]);
                     finalPoints = finalPoints.concat(insideRange);
                 } else if (insideRange.length === 1) {
                     finalPoints = [...insideRange];
@@ -1996,27 +2231,52 @@ export default function registerDashboard(Alpine) {
                         idx--;
                     }
                 }
+
                 if (finalPoints.length === 0) return;
-                let dArr = [];
-                let lArr = [];
-                let minArr = [];
-                let maxArr = [];
-                finalPoints.forEach((p) => {
-                    let dObj = new Date(p.rawDate);
-                    lArr.push(`${dObj.getDate()} ${this.getShortMonthName(dObj.getMonth())}`);
-                    dArr.push(p.val);
-                    minArr.push(p.refMin);
-                    maxArr.push(p.refMax);
-                });
+
+                let dData = finalPoints.map((p) => ({ x: new Date(p.rawDate), y: p.val }));
+                let minData = finalPoints.map((p) => ({ x: new Date(p.rawDate), y: p.refMin }));
+                let maxData = finalPoints.map((p) => ({ x: new Date(p.rawDate), y: p.refMax }));
+
                 let ctx = canvasEl.getContext('2d');
                 window.clinicalCharts[tgt.id] = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: lArr,
                         datasets: [
-                            { label: 'Max Sınır', data: maxArr, borderColor: 'rgba(34, 197, 94, 0.15)', borderWidth: 1, borderDash: [2, 2], pointRadius: 0, tension: 0, fill: false, spanGaps: true },
-                            { label: 'Min Sınır', data: minArr, borderColor: 'rgba(34, 197, 94, 0.15)', borderWidth: 1, borderDash: [2, 2], pointRadius: 0, tension: 0, fill: 0, backgroundColor: 'rgba(34, 197, 94, 0.02)', spanGaps: true },
-                            { label: tgt.label, data: dArr, borderColor: tgt.color, backgroundColor: tgt.color.replace('rgb', 'rgba').replace(')', ',0.03)'), borderWidth: 1.5, pointRadius: 2.5, tension: 0.15, fill: false, spanGaps: true },
+                            {
+                                label: 'Max Sınır',
+                                data: maxData,
+                                borderColor: 'rgba(34, 197, 94, 0.15)',
+                                borderWidth: 1,
+                                borderDash: [2, 2],
+                                pointRadius: 0,
+                                tension: 0,
+                                fill: false,
+                                spanGaps: true,
+                            },
+                            {
+                                label: 'Min Sınır',
+                                data: minData,
+                                borderColor: 'rgba(34, 197, 94, 0.15)',
+                                borderWidth: 1,
+                                borderDash: [2, 2],
+                                pointRadius: 0,
+                                tension: 0,
+                                fill: 0,
+                                backgroundColor: 'rgba(34, 197, 94, 0.02)',
+                                spanGaps: true,
+                            },
+                            {
+                                label: tgt.label,
+                                data: dData,
+                                borderColor: tgt.color,
+                                backgroundColor: tgt.color.replace('rgb', 'rgba').replace(')', ',0.03)'),
+                                borderWidth: 1.5,
+                                pointRadius: 2.5,
+                                tension: 0.15,
+                                fill: false,
+                                spanGaps: true,
+                            },
                         ],
                     },
                     options: {
@@ -2027,20 +2287,45 @@ export default function registerDashboard(Alpine) {
                             legend: { display: false },
                             tooltip: {
                                 callbacks: {
+                                    title: function (tooltipItems) {
+                                        const date = new Date(tooltipItems[0].parsed.x);
+                                        return self.formatFullDate(date);
+                                    },
                                     label: function (context) {
                                         if (context.datasetIndex === 2) {
-                                            return `${context.dataset.label}: ${context.raw}`;
+                                            return `${context.dataset.label}: ${context.raw.y}`;
                                         }
                                         return null;
                                     },
                                 },
                             },
                         },
-                        scales: { x: { grid: { display: false }, ticks: { font: { size: 8 } } }, y: { grid: { color: 'rgba(226, 232, 240, 0.4)' }, ticks: { font: { size: 8 } } } },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    displayFormats: { day: 'D MMM' },
+                                },
+                                grid: { display: false },
+                                ticks: {
+                                    font: { size: 8 },
+                                    callback: function (value) {
+                                        const date = new Date(value);
+                                        return date.getDate() + ' ' + months[date.getMonth()];
+                                    },
+                                },
+                            },
+                            y: {
+                                grid: { color: 'rgba(226, 232, 240, 0.4)' },
+                                ticks: { font: { size: 8 } },
+                            },
+                        },
                     },
                 });
             });
         },
+
         getLabItemStatus(item) {
             if (!item.reference_min || !item.reference_max) return 'Normal';
             let val = parseFloat(item.result);
@@ -2246,11 +2531,20 @@ export default function registerDashboard(Alpine) {
         hideTooltip() {
             this.tooltip.show = false;
         },
-        formatFullDate(dateStr) {
-            if (!dateStr) return '';
-            let d = new Date(dateStr.substring(0, 10));
-            const m = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-            return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`;
+        formatFullDate(dateInput) {
+            if (!dateInput) return '';
+            let d;
+            if (typeof dateInput === 'string') {
+                const datePart = dateInput.substring(0, 10);
+                d = new Date(datePart);
+            } else if (dateInput instanceof Date) {
+                d = dateInput;
+            } else {
+                return '';
+            }
+            if (isNaN(d.getTime())) return '';
+            const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
         },
         getShortMonthName(mIdx) {
             return ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'][mIdx] || '';
