@@ -1176,30 +1176,30 @@
                                 <table class="w-full min-w-[600px] text-left text-xs">
                                     <thead class="border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase">
                                         <tr>
-                                            <th class="py-2 pl-2">Parametre</th>
-                                            <th class="py-2 text-right">Değer</th>
-                                            <th class="py-2 text-left">Birim</th>
-                                            <th class="py-2 text-center">Referans Aralığı</th>
-                                            <th class="py-2 pr-2 text-center">Durum</th>
+                                            <th class="p-2">Parametre</th>
+                                            <th class="p-2 text-right">Değer</th>
+                                            <th class="p-2 text-left">Birim</th>
+                                            <th class="p-2 text-center">Referans Aralığı</th>
+                                            <th class="p-2 text-center">Durum</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
                                         <template :key="item.code" x-for="item in (showOnlyOutOfBoundsTests ? selectedTestItems.filter(i => getLabItemStatus(i) !== 'Normal') : selectedTestItems)">
                                             <tr class="transition hover:bg-slate-50/60">
-                                                <td class="py-2.5 pl-2 font-semibold whitespace-nowrap text-slate-700">
+                                                <td class="p-2.5 font-semibold whitespace-nowrap text-slate-700">
                                                     <span x-text="item.name"></span>
                                                     <span class="font-mono text-[9px] text-slate-400" x-text="'(' + item.code + ')'"></span>
                                                 </td>
-                                                <td class="py-2.5 text-right font-black whitespace-nowrap text-slate-900">
+                                                <td class="p-2.5 text-right font-black whitespace-nowrap text-slate-900">
                                                     <span x-text="parseFloat(item.result).toFixed(2)"></span>
                                                 </td>
-                                                <td class="py-2.5 text-left text-[10px] font-bold whitespace-nowrap text-slate-400" x-text="item.unit"></td>
-                                                <td class="py-2.5 text-center whitespace-nowrap text-slate-600">
+                                                <td class="p-2.5 text-left text-[10px] font-bold whitespace-nowrap text-slate-400" x-text="item.unit"></td>
+                                                <td class="p-2.5 text-center whitespace-nowrap text-slate-600">
                                                     <span x-text="item.reference_min ? parseFloat(item.reference_min).toFixed(2) : '-'"></span>
                                                     <span class="text-slate-400"> – </span>
                                                     <span x-text="item.reference_max ? parseFloat(item.reference_max).toFixed(2) : '-'"></span>
                                                 </td>
-                                                <td class="py-2.5 pr-2 text-center whitespace-nowrap">
+                                                <td class="p-2.5 text-center whitespace-nowrap">
                                                     <span :class="getLabItemClass(item)" class="rounded-md px-2 py-0.5 text-[9px] font-black" x-text="getLabItemStatus(item)"></span>
                                                 </td>
                                             </tr>
