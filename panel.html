@@ -33,7 +33,7 @@
         <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />
         <meta content="./dist/icons/browserconfig.xml" name="msapplication-config" />
     </head>
-    <body class="min-h-screen bg-slate-50 font-sans text-slate-700 antialiased selection:bg-indigo-500 selection:text-white" x-cloak x-data="dashboardApp()" x-init="initDashboard()">
+    <body class="min-h-screen max-w-full overflow-x-hidden bg-slate-50 font-sans text-slate-700 antialiased selection:bg-indigo-500 selection:text-white" x-cloak x-data="dashboardApp()" x-init="initDashboard()">
         <div class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-slate-900 p-6 text-center text-white select-none max-[300px]:flex">
             <div class="mb-4 rounded-full bg-amber-500/10 p-3 text-amber-400">
                 <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,7 +43,7 @@
             <h3 class="font-display text-lg font-bold tracking-tight">Ekran Çok Küçük</h3>
             <p class="mt-2 text-xs leading-relaxed text-slate-400">Verilerin düzgün görüntülenebilmesi için lütfen telefonunuzu yan çevirin, daha büyük bir ekran veya bilgisayar kullanın.</p>
         </div>
-        <div class="block max-[300px]:hidden">
+        <div class="block w-full max-w-full overflow-x-hidden max-[300px]:hidden">
             <template x-if="corsError">
                 <div class="sticky top-0 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2.5 text-center text-xs font-semibold text-white shadow-md">
                     <svg class="h-4 w-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,8 +52,8 @@
                     <span>Dinamik JSON verileri tarayıcı güvenlik politikası nedeniyle yerel dosyadan doğrudan çekilemedi. Panel korumalı simüle veriler ile başlatıldı. Gerçek analiz akışı için lütfen projeyi bir yerel sunucu (VS Code Live Server vb.) üzerinden çalıştırın.</span>
                 </div>
             </template>
-            <div class="items-stretch lg:flex lg:flex-1">
-                <div @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" style="display: none" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-end="opacity-100" x-transition:enter-start="opacity-0" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-end="opacity-0" x-transition:leave-start="opacity-100"></div>
+            <div class="w-full max-w-full min-w-0 items-stretch overflow-x-hidden lg:flex lg:flex-1">
+                <div @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" style="display: none" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-end="opacity-0" x-transition:leave-start="opacity-100"></div>
 
                 <aside :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full lg:translate-x-0': !sidebarOpen, 'lg:w-14': sidebarCollapsed, 'lg:w-64': !sidebarCollapsed }" class="fixed inset-y-0 left-0 z-[60] flex w-64 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:shadow-none">
                     <div class="relative flex h-16 shrink-0 items-center justify-between border-b border-slate-100 px-4">
@@ -127,7 +127,7 @@
                             </button>
                             <label :title="Object.values(sections).every(Boolean) ? 'Tümünü Gizle' : 'Tümünü Göster'" class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input :checked="Object.values(sections).every(Boolean)" @change="let state = $el.checked; Object.keys(sections).forEach(k => sections[k] = state)" class="peer sr-only" type="checkbox" />
-                                <div class="h-4 w-7 rounded-full bg-slate-300 shadow-inner transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -142,7 +142,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" title="Görünürlüğü Aç/Kapat" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.summary" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -155,7 +155,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.charts" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -168,7 +168,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.prescriptions" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -181,7 +181,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.flowsheet" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -194,7 +194,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.calendar" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -207,7 +207,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.labTrends" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -220,7 +220,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.labFindings" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -233,7 +233,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.reports" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
 
@@ -246,7 +246,7 @@
                             </a>
                             <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
                                 <input class="peer sr-only" type="checkbox" x-model="sections.clinicalReport" />
-                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                <div class="switch-slider"></div>
                             </label>
                         </div>
                     </nav>
@@ -302,15 +302,15 @@
                     </div>
                 </aside>
 
-                <main class="min-w-0 flex-1 px-4 pb-16 sm:px-6 lg:px-8">
+                <main class="container mx-auto w-full max-w-full min-w-0 flex-1 overflow-x-hidden px-4 py-16 sm:px-6 lg:px-8">
                     <button @click="sidebarOpen = true" aria-label="Menüyü aç" class="fixed top-2 left-2 z-50 rounded-lg border border-slate-200 bg-white/80 p-2 shadow-lg backdrop-blur-sm transition-colors hover:bg-slate-50 lg:hidden" x-show="!sidebarOpen && isMobile">
                         <svg class="h-6 w-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
                         </svg>
                     </button>
 
-                    <div class="mx-auto mt-8 mb-8 grid max-w-7xl grid-cols-2 gap-6 lg:grid-cols-4 print:grid-cols-4" id="summary" x-cloak x-show="sections.summary" x-transition>
-                        <div class="glass-card glass-card-hover order-1 flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-500 p-6 transition-all duration-300 lg:order-1" title="Son 7 gün ortalaması...">
+                    <section class="grid max-w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-4" id="summary" name="summary" x-cloak x-show="sections.summary" x-transition>
+                        <div class="app-card app-card-hover order-1 flex flex-col justify-between border-b-4 border-b-rose-500" name="weekly-bp" title="Son 7 gün ortalaması...">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
                                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
@@ -339,7 +339,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div :title="latestKilo.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestKilo.date) : ''" class="glass-card glass-card-hover order-3 flex flex-col justify-between rounded-2xl border-b-4 border-b-blue-500 p-6 transition-all duration-300 lg:order-2">
+                        <div :title="latestKilo.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestKilo.date) : ''" class="app-card app-card-hover order-3 flex flex-col justify-between border-b-4 border-b-blue-500 transition-all duration-300 lg:order-2" name="latest-weight">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
                                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
@@ -368,7 +368,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div :title="latestInr.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestInr.date) : ''" class="glass-card glass-card-hover order-5 flex flex-col justify-between rounded-2xl border-b-4 border-b-amber-500 p-6 transition-all duration-300 lg:order-3">
+                        <div :title="latestInr.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestInr.date) : ''" class="app-card app-card-hover order-5 flex flex-col justify-between border-b-4 border-b-amber-500 transition-all duration-300 lg:order-3" name="latest-inr">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
                                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
@@ -397,7 +397,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div :title="latestHgb.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestHgb.date) : ''" class="glass-card glass-card-hover order-6 flex flex-col justify-between rounded-2xl border-b-4 border-b-emerald-500 p-6 transition-all duration-300 lg:order-4">
+                        <div :title="latestHgb.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestHgb.date) : ''" class="app-card app-card-hover order-6 flex flex-col justify-between border-b-4 border-b-emerald-500 transition-all duration-300 lg:order-4" name="latest-hgb">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
                                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
@@ -426,7 +426,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div class="glass-card glass-card-hover order-2 flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-400 p-6 transition-all duration-300 lg:order-5">
+                        <div class="app-card app-card-hover order-2 flex flex-col justify-between border-b-4 border-b-rose-400 p-6 transition-all duration-300 lg:order-5" name="average-bp">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
                                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
@@ -462,7 +462,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div class="glass-card glass-card-hover order-4 flex flex-col justify-between rounded-2xl border-b-4 border-b-blue-400 p-6 transition-all duration-300 lg:order-6">
+                        <div class="app-card app-card-hover order-4 flex flex-col justify-between border-b-4 border-b-blue-400 p-6 transition-all duration-300 lg:order-6" name="weight-diff">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
                                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
@@ -492,7 +492,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div class="glass-card glass-card-hover order-7 flex flex-col justify-between rounded-2xl border-b-4 border-b-indigo-500 p-6 transition-all duration-300 lg:order-7">
+                        <div class="app-card app-card-hover order-7 flex flex-col justify-between border-b-4 border-b-indigo-500 p-6 transition-all duration-300 lg:order-7" name="med-adherence">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
                                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
@@ -522,7 +522,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div class="glass-card glass-card-hover order-8 flex flex-col justify-between rounded-2xl border-b-4 border-b-amber-400 p-6 transition-all duration-300 lg:order-8">
+                        <div class="app-card app-card-hover order-8 flex flex-col justify-between border-b-4 border-b-amber-400 p-6 transition-all duration-300 lg:order-8" name="abnormal-tests">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
                                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
@@ -555,163 +555,163 @@
                                 </div>
                             </template>
                         </div>
-                    </div>
-                    <div class="mx-auto mt-6 max-w-7xl" id="charts" x-show="sections.charts">
-                        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                            <div class="order-1 lg:order-1">
-                                <div class="glass-card rounded-2xl p-6 shadow-sm">
-                                    <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <h2 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Kan Basıncı</h2>
-                                        <label class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50">
-                                            <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase" x-text="bpViewMode === 'trend' ? 'Anlık Göster' : 'Trend Göster'"></span>
-                                            <div class="relative inline-flex items-center">
-                                                <input :checked="bpViewMode === 'trend'" @change="bpViewMode = $el.checked ? 'trend' : 'raw'; renderMainCharts();" class="peer sr-only" type="checkbox" />
-                                                <div class="hidden h-4 w-7 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    <div class="relative h-[280px] w-full">
-                                        <template x-if="loadingBpChart">
-                                            <div class="absolute inset-0 flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-                                                <div class="flex flex-col items-center gap-2">
-                                                    <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
-                                                    <span class="text-xs font-medium text-slate-400">Tansiyon grafiği yükleniyor...</span>
-                                                </div>
-                                            </div>
-                                        </template>
-                                        <template x-if="!loadingBpChart">
-                                            <template x-if="getFilteredPressures().length > 0">
-                                                <canvas class="absolute inset-0 h-full w-full" id="bpLineChart"></canvas>
-                                            </template>
-                                            <template x-if="getFilteredPressures().length === 0">
-                                                <div class="absolute inset-0 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
-                                                    <svg class="mb-2 h-8 w-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                                    </svg>
-                                                    <span class="text-xs font-medium text-slate-400">Bu tarih aralığında tansiyon ölçümü bulunmamaktadır.</span>
-                                                </div>
-                                            </template>
-                                        </template>
-                                    </div>
+                    </section>
+
+                    <section class="grid max-w-full grid-cols-1 gap-6 lg:grid-cols-2" id="charts" name="charts" x-cloak x-show="sections.charts" x-transition>
+                        <div class="order-1 lg:order-1" name="chart-bp">
+                            <div class="app-card">
+                                <div class="app-card-header">
+                                    <h2 class="app-card-title">Kan Basıncı</h2>
+                                    <label class="btn-toggle-label">
+                                        <span class="btn-toggle-text" x-text="bpViewMode === 'trend' ? 'Anlık Göster' : 'Trend Göster'"></span>
+                                        <div class="relative inline-flex items-center">
+                                            <input :checked="bpViewMode === 'trend'" @change="bpViewMode = $el.checked ? 'trend' : 'raw'; renderMainCharts();" class="peer sr-only" type="checkbox" />
+                                            <div class="switch-slider"></div>
+                                        </div>
+                                    </label>
                                 </div>
-                            </div>
-                            <div class="order-3 lg:order-2">
-                                <div class="glass-card rounded-2xl p-6 shadow-sm">
-                                    <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <h2 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Ağırlık</h2>
-                                        <div class="invisible h-7 w-7"></div>
-                                    </div>
-                                    <div class="relative h-[280px] w-full">
-                                        <template x-if="loadingBpChart">
-                                            <div class="absolute inset-0 flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
-                                                <div class="flex flex-col items-center gap-2">
-                                                    <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
-                                                    <span class="text-xs font-medium text-slate-400">Kilo grafiği yükleniyor...</span>
-                                                </div>
+                                <div class="relative h-[280px] w-full">
+                                    <template x-if="loadingBpChart">
+                                        <div class="absolute inset-0 flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+                                            <div class="flex flex-col items-center gap-2">
+                                                <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
+                                                <span class="text-xs font-medium text-slate-400">Tansiyon grafiği yükleniyor...</span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="!loadingBpChart">
+                                        <template x-if="getFilteredPressures().length > 0">
+                                            <canvas class="absolute inset-0 h-full w-full" id="bpLineChart"></canvas>
+                                        </template>
+                                        <template x-if="getFilteredPressures().length === 0">
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
+                                                <svg class="mb-2 h-8 w-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                </svg>
+                                                <span class="text-xs font-medium text-slate-400">Bu tarih aralığında tansiyon ölçümü bulunmamaktadır.</span>
                                             </div>
                                         </template>
-                                        <template x-if="!loadingBpChart">
-                                            <template x-if="getFilteredWeights().length > 0">
-                                                <canvas class="absolute inset-0 h-full w-full" id="weightLineChart"></canvas>
-                                            </template>
-                                            <template x-if="getFilteredWeights().length === 0">
-                                                <div class="absolute inset-0 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
-                                                    <svg class="mb-2 h-8 w-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                                    </svg>
-                                                    <span class="text-xs font-medium text-slate-400">Bu tarih aralığında kilo ölçümü bulunmamaktadır.</span>
-                                                </div>
-                                            </template>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="order-2 lg:order-3">
-                                <div class="glass-card rounded-2xl p-6 shadow-sm" x-data="{ showAllBp: false }">
-                                    <div class="mb-5 flex flex-col flex-row items-center items-start justify-between gap-3">
-                                        <h2 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Kan Basıncı</h2>
-                                        <label class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50">
-                                            <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase">Tümünü Göster</span>
-                                            <div class="relative inline-flex items-center">
-                                                <input class="peer sr-only" type="checkbox" x-model="showAllBp" />
-                                                <div class="h-4 w-7 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    <div class="custom-scrollbar overflow-x-auto">
-                                        <table class="w-full min-w-[300px] text-left text-xs">
-                                            <thead class="sticky top-0 border-b border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase">
-                                                <tr>
-                                                    <th class="py-2.5 pl-2">Kayıt Zamanı</th>
-                                                    <th class="py-2.5 text-center">Kan Basıncı</th>
-                                                    <th class="py-2.5 pr-2 text-right">Değerlendirme</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-slate-100 font-medium text-slate-600">
-                                                <template :key="bp.at" x-for="bp in (showAllBp ? getFilteredPressures() : getFilteredPressures().slice(0, 10))">
-                                                    <tr class="transition hover:bg-slate-50">
-                                                        <td class="py-2.5 pl-2 font-semibold whitespace-nowrap text-slate-700" x-text="bp.at"></td>
-                                                        <td class="py-2.5 text-center font-extrabold whitespace-nowrap text-slate-900" x-text="bp.sys + '/' + bp.dia + ' mmHg'"></td>
-                                                        <td class="py-2.5 pr-2 text-right whitespace-nowrap">
-                                                            <span :class="getBPBadgeClass(bp.sys, bp.dia)" class="rounded-md px-2 py-0.5 text-[9px] font-black" x-text="getBPStatusText(bp.sys, bp.dia)"></span>
-                                                        </td>
-                                                    </tr>
-                                                </template>
-                                                <template x-if="getFilteredPressures().length === 0">
-                                                    <tr>
-                                                        <td class="py-4 text-center text-slate-400" colspan="3">Bu tarih aralığında ölçüm bulunmamaktadır.</td>
-                                                    </tr>
-                                                </template>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="order-4 lg:order-4">
-                                <div class="glass-card rounded-2xl p-6 shadow-sm" x-data="{ showAllWt: false }">
-                                    <div class="mb-5 flex flex-col flex-row items-center items-start justify-between gap-3">
-                                        <h2 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Ağırlık</h2>
-                                        <label class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50">
-                                            <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase">Tümünü Göster</span>
-                                            <div class="relative inline-flex items-center">
-                                                <input class="peer sr-only" type="checkbox" x-model="showAllWt" />
-                                                <div class="h-4 w-7 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    <div class="custom-scrollbar overflow-x-auto">
-                                        <table class="w-full min-w-[300px] text-left text-xs">
-                                            <thead class="sticky top-0 border-b border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase">
-                                                <tr>
-                                                    <th class="py-2.5 pl-2">Ölçüm Tarihi</th>
-                                                    <th class="py-2.5 text-center">Vücut Kütlesi</th>
-                                                    <th class="py-2.5 pr-2 text-right">Kronolojik Değişim</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="divide-y divide-slate-100 font-medium text-slate-600">
-                                                <template :key="wt.at" x-for="wt in (showAllWt ? getFilteredWeights() : getFilteredWeights().slice(0, 10))">
-                                                    <tr class="transition hover:bg-slate-50">
-                                                        <td class="py-2.5 pl-2 font-semibold whitespace-nowrap text-slate-700" x-text="wt.at"></td>
-                                                        <td class="py-2.5 text-center font-black whitespace-nowrap text-slate-900" x-text="wt.weight + ' kg'"></td>
-                                                        <td class="py-2.5 pr-2 text-right whitespace-nowrap">
-                                                            <span :class="getWeightDiffClass(wt)" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold" x-text="calculateIndividualWeightDiff(wt)"></span>
-                                                        </td>
-                                                    </tr>
-                                                </template>
-                                                <template x-if="getFilteredWeights().length === 0">
-                                                    <tr>
-                                                        <td class="py-4 text-center text-slate-400" colspan="3">Bu tarih aralığında ağırlık ölçümü bulunmamaktadır.</td>
-                                                    </tr>
-                                                </template>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mx-auto mt-6 max-w-7xl space-y-6" id="prescriptions" x-cloak x-show="sections.prescriptions" x-transition>
-                        <div class="glass-card rounded-2xl p-6 shadow-sm print:hidden">
+                        <div class="order-3 lg:order-2" name="chart-weight">
+                            <div class="app-card">
+                                <div class="app-card-header">
+                                    <h2 class="app-card-title">Ağırlık</h2>
+                                    <div class="invisible h-7 w-7"></div>
+                                </div>
+                                <div class="relative h-[280px] w-full">
+                                    <template x-if="loadingBpChart">
+                                        <div class="absolute inset-0 flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+                                            <div class="flex flex-col items-center gap-2">
+                                                <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
+                                                <span class="text-xs font-medium text-slate-400">Kilo grafiği yükleniyor...</span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="!loadingBpChart">
+                                        <template x-if="getFilteredWeights().length > 0">
+                                            <canvas class="absolute inset-0 h-full w-full" id="weightLineChart"></canvas>
+                                        </template>
+                                        <template x-if="getFilteredWeights().length === 0">
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
+                                                <svg class="mb-2 h-8 w-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                </svg>
+                                                <span class="text-xs font-medium text-slate-400">Bu tarih aralığında kilo ölçümü bulunmamaktadır.</span>
+                                            </div>
+                                        </template>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="order-2 lg:order-3" name="list-bp">
+                            <div class="app-card" x-data="{ showAllBp: false }">
+                                <div class="app-card-header">
+                                    <h2 class="app-card-title">Kan Basıncı</h2>
+                                    <label class="btn-toggle-label">
+                                        <span class="btn-toggle-text">Tümünü Göster</span>
+                                        <div class="relative inline-flex items-center">
+                                            <input class="peer sr-only" type="checkbox" x-model="showAllBp" />
+                                            <div class="switch-slider"></div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="table-scroll-container">
+                                    <table class="w-full min-w-[300px] text-left text-xs">
+                                        <thead class="sticky top-0 border-b border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase">
+                                            <tr>
+                                                <th class="py-2.5 pl-2">Kayıt Zamanı</th>
+                                                <th class="py-2.5 text-center">Kan Basıncı</th>
+                                                <th class="py-2.5 pr-2 text-right">Değerlendirme</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100 font-medium text-slate-600">
+                                            <template :key="bp.at" x-for="bp in (showAllBp ? getFilteredPressures() : getFilteredPressures().slice(0, 10))">
+                                                <tr class="transition hover:bg-slate-50">
+                                                    <td class="py-2.5 pl-2 font-semibold whitespace-nowrap text-slate-700" x-text="bp.at"></td>
+                                                    <td class="py-2.5 text-center font-extrabold whitespace-nowrap text-slate-900" x-text="bp.sys + '/' + bp.dia + ' mmHg'"></td>
+                                                    <td class="py-2.5 pr-2 text-right whitespace-nowrap">
+                                                        <span :class="getBPBadgeClass(bp.sys, bp.dia)" class="rounded-md px-2 py-0.5 text-[9px] font-black" x-text="getBPStatusText(bp.sys, bp.dia)"></span>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                            <template x-if="getFilteredPressures().length === 0">
+                                                <tr>
+                                                    <td class="py-4 text-center text-slate-400" colspan="3">Bu tarih aralığında ölçüm bulunmamaktadır.</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="order-4 lg:order-4" name="list-weight">
+                            <div class="app-card" x-data="{ showAllWt: false }">
+                                <div class="app-card-header">
+                                    <h2 class="app-card-title">Ağırlık</h2>
+                                    <label class="btn-toggle-label">
+                                        <span class="btn-toggle-text">Tümünü Göster</span>
+                                        <div class="relative inline-flex items-center">
+                                            <input class="peer sr-only" type="checkbox" x-model="showAllWt" />
+                                            <div class="switch-slider"></div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="table-scroll-container">
+                                    <table class="w-full min-w-[300px] text-left text-xs">
+                                        <thead class="sticky top-0 border-b border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase">
+                                            <tr>
+                                                <th class="py-2.5 pl-2">Ölçüm Tarihi</th>
+                                                <th class="py-2.5 text-center">Vücut Kütlesi</th>
+                                                <th class="py-2.5 pr-2 text-right">Kronolojik Değişim</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100 font-medium text-slate-600">
+                                            <template :key="wt.at" x-for="wt in (showAllWt ? getFilteredWeights() : getFilteredWeights().slice(0, 10))">
+                                                <tr class="transition hover:bg-slate-50">
+                                                    <td class="py-2.5 pl-2 font-semibold whitespace-nowrap text-slate-700" x-text="wt.at"></td>
+                                                    <td class="py-2.5 text-center font-black whitespace-nowrap text-slate-900" x-text="wt.weight + ' kg'"></td>
+                                                    <td class="py-2.5 pr-2 text-right whitespace-nowrap">
+                                                        <span :class="getWeightDiffClass(wt)" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold" x-text="calculateIndividualWeightDiff(wt)"></span>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                            <template x-if="getFilteredWeights().length === 0">
+                                                <tr>
+                                                    <td class="py-4 text-center text-slate-400" colspan="3">Bu tarih aralığında ağırlık ölçümü bulunmamaktadır.</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="max-w-full print:hidden" name="med-filter" x-cloak x-show="sections.prescriptions" x-transition>
+                        <div class="app-card">
                             <div class="mb-4 text-xs font-bold tracking-wider text-slate-400 uppercase">İlaç Filtresi</div>
                             <div class="mb-0 flex flex-col items-stretch justify-between gap-4 border-b border-slate-100 pb-4 md:flex-row md:items-center">
                                 <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
@@ -748,7 +748,7 @@
                                     <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase">Güncel</span>
                                     <div class="relative inline-flex items-center">
                                         <input @change="updateVisibleMeds(); setupFlowsheet()" class="peer sr-only" type="checkbox" x-model="onlyActive" />
-                                        <div class="h-4 w-8 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-4"></div>
+                                        <div class="switch-slider"></div>
                                     </div>
                                 </label>
                             </div>
@@ -761,10 +761,13 @@
                                 </template>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                            <div class="space-y-6 lg:col-span-2">
-                                <div class="glass-card overflow-hidden rounded-2xl p-6 shadow-sm">
-                                    <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                    </section>
+
+                    <section class="grid max-w-full grid-cols-1 gap-6 lg:grid-cols-3" id="prescriptions" name="med-timeline" x-cloak x-show="sections.prescriptions" x-transition>
+                        <section class="grid gap-6 lg:col-span-2">
+                            <div name="timeline">
+                                <div class="app-card overflow-hidden">
+                                    <h2 class="app-card-title mb-5">
                                         <span class="h-6 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
                                         <span>İlaç Zaman Akışı</span>
                                     </h2>
@@ -827,8 +830,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="glass-card rounded-2xl p-6 shadow-sm">
-                                    <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                            </div>
+                            <div name="chronology">
+                                <div class="app-card">
+                                    <h2 class="app-card-title mb-5">
                                         <svg class="h-5 w-5 shrink-0 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
                                         </svg>
@@ -870,53 +875,54 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="space-y-6">
-                                <div class="glass-card rounded-2xl p-6 shadow-sm">
-                                    <h2 class="font-display mb-5 flex items-center gap-2 text-lg font-semibold text-slate-900">
-                                        <span class="h-5 w-1 shrink-0 rounded-full bg-emerald-500"></span>
-                                        Aktif İlaçlar
-                                    </h2>
-                                    <div class="space-y-2.5">
-                                        <template :key="med.id" x-for="med in activeMeds">
-                                            <div class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/60 bg-slate-50 p-3 shadow-inner sm:flex-row sm:items-center">
-                                                <div>
-                                                    <h4 class="text-xs font-bold text-slate-800" x-text="med.name"></h4>
-                                                    <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="getCurrentDoseText(med.id)"></p>
-                                                </div>
-                                                <span :class="med.is_emergency ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'" class="self-start rounded-md border px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide uppercase sm:self-auto" x-text="med.is_emergency ? 'Acil Durum' : 'Rutin'"></span>
+                        </section>
+                        <div class="min-w-[200px]" name="active-passive-meds">
+                            <div class="app-card">
+                                <h2 class="app-card-title mb-5">
+                                    <span class="h-5 w-1 shrink-0 rounded-full bg-emerald-500"></span>
+                                    Aktif İlaçlar
+                                </h2>
+                                <div class="space-y-2.5">
+                                    <template :key="med.id" x-for="med in activeMeds">
+                                        <div class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/60 bg-slate-50 p-3 shadow-inner sm:flex-row sm:items-center">
+                                            <div>
+                                                <h4 class="text-xs font-bold text-slate-800" x-text="med.name"></h4>
+                                                <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="getCurrentDoseText(med.id)"></p>
                                             </div>
-                                        </template>
-                                        <template x-if="activeMeds.length === 0">
-                                            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-4 text-center text-xs font-medium text-slate-400">Aktif ilaç kaydı bulunamadı.</div>
-                                        </template>
-                                    </div>
-                                    <h2 class="font-display mt-6 mb-4 flex items-center gap-1.5 text-base font-bold text-slate-900">
-                                        <span class="h-5 w-1 shrink-0 rounded-full bg-slate-400"></span>
-                                        Pasif İlaçlar
-                                    </h2>
-                                    <div class="space-y-2.5">
-                                        <template :key="med.id" x-for="med in passiveMeds">
-                                            <div class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/40 bg-slate-100/60 p-3 opacity-65 sm:flex-row sm:items-center">
-                                                <div>
-                                                    <h4 class="text-xs font-bold text-slate-600" x-text="med.name"></h4>
-                                                    <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="getLastPrescribedDoseText(med.id)"></p>
-                                                </div>
-                                                <span class="self-start rounded border border-slate-300 bg-slate-200/80 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-slate-500 uppercase sm:self-auto">Kullanımda Değil</span>
+                                            <span :class="med.is_emergency ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'" class="self-start rounded-md border px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide uppercase sm:self-auto" x-text="med.is_emergency ? 'Acil Durum' : 'Rutin'"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="activeMeds.length === 0">
+                                        <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-4 text-center text-xs font-medium text-slate-400">Aktif ilaç kaydı bulunamadı.</div>
+                                    </template>
+                                </div>
+                                <h2 class="app-card-title mt-6 mb-4">
+                                    <span class="h-5 w-1 shrink-0 rounded-full bg-slate-400"></span>
+                                    Pasif İlaçlar
+                                </h2>
+                                <div class="space-y-2.5">
+                                    <template :key="med.id" x-for="med in passiveMeds">
+                                        <div class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/40 bg-slate-100/60 p-3 opacity-65 sm:flex-row sm:items-center">
+                                            <div>
+                                                <h4 class="text-xs font-bold text-slate-600" x-text="med.name"></h4>
+                                                <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="getLastPrescribedDoseText(med.id)"></p>
                                             </div>
-                                        </template>
-                                        <template x-if="passiveMeds.length === 0">
-                                            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-4 text-center text-xs font-medium text-slate-400">Pasif/Geçmiş ilaç kaydı bulunamadı.</div>
-                                        </template>
-                                    </div>
+                                            <span class="self-start rounded border border-slate-300 bg-slate-200/80 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-slate-500 uppercase sm:self-auto">Kullanımda Değil</span>
+                                        </div>
+                                    </template>
+                                    <template x-if="passiveMeds.length === 0">
+                                        <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-4 text-center text-xs font-medium text-slate-400">Pasif/Geçmiş ilaç kaydı bulunamadı.</div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mx-auto mt-6 max-w-7xl space-y-6" id="flowsheet" x-cloak x-show="sections.flowsheet" x-transition>
-                        <div class="glass-card rounded-2xl p-6 shadow-sm">
+                    </section>
+
+                    <section class="max-w-full min-w-0" id="flowsheet" name="med-matrix" x-cloak x-show="sections.flowsheet" x-transition>
+                        <div class="app-card">
                             <div class="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div>
-                                    <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                                    <h2 class="app-card-title mb-5">
                                         <span class="h-5 w-1 shrink-0 rounded-full bg-indigo-600"></span>
                                         <span>İlaç Matrisi</span>
                                     </h2>
@@ -935,7 +941,7 @@
                             </div>
                             <div x-show="!loadingFlowsheet">
                                 <div class="relative" x-show="flowsheetMode === 'grid'">
-                                    <div @scroll="activeCellTooltip = null" class="custom-scrollbar overflow-x-auto rounded-xl border border-slate-200/60 bg-slate-50/50">
+                                    <div @scroll="activeCellTooltip = null" class="table-scroll-container rounded-xl border border-slate-200/60 bg-slate-50/50">
                                         <table class="w-full border-collapse text-left">
                                             <thead>
                                                 <tr class="border-b border-slate-200 bg-slate-100 text-[10px] font-bold text-slate-500 uppercase">
@@ -1027,17 +1033,18 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mx-auto mt-6 grid max-w-7xl grid-cols-1 items-start gap-6 lg:grid-cols-3" id="calendar" x-cloak x-show="sections.calendar" x-transition>
-                        <div class="glass-card rounded-2xl p-6 shadow-sm lg:col-span-2">
-                            <div class="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <h2 class="font-display flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
-                                        <span class="h-5 w-1 shrink-0 rounded-full bg-indigo-600"></span>
-                                        <span>İnteraktif Takvim</span>
-                                    </h2>
-                                    <p class="mt-0.5 text-xs font-medium text-slate-400">Tüm klinik verilerin kronolojik saat dağılımı</p>
-                                </div>
+                    </section>
+
+                    <section class="grid max-w-full grid-cols-1 gap-6 lg:grid-cols-3" id="calendar" name="calendar" x-cloak x-show="sections.calendar" x-transition>
+                        <div class="app-card lg:col-span-2" name="interactive-calendar">
+                            <div class="app-card-header">
+                                <h2 class="app-card-title">
+                                    <span class="h-5 w-1 shrink-0 rounded-full bg-indigo-600"></span>
+                                    <span>İnteraktif Takvim</span>
+                                </h2>
+                                <p class="mt-0.5 text-xs font-medium text-slate-400">Tüm klinik verilerin kronolojik saat dağılımı</p>
+                            </div>
+                            <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div class="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm sm:w-auto">
                                     <button :class="{ 'opacity-30 cursor-not-allowed': !canGoPrevMonth() }" :disabled="!canGoPrevMonth()" @click="prevCalendarMonth()" class="text-slate-500 transition hover:text-indigo-600 active:scale-90">
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1079,15 +1086,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="glass-card rounded-2xl p-6 shadow-sm">
-                            <div class="mb-4 flex flex-col flex-row items-center items-start justify-between gap-3 border-b border-slate-100 pb-4">
-                                <h3 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Gün Detayı</h3>
 
-                                <label class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50">
-                                    <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase">Sadece İlaçlar</span>
+                        <div class="app-card min-w-full sm:min-w-sm" name="day-details">
+                            <div class="app-card-header">
+                                <h3 class="app-card-title">Gün Detayı</h3>
+                                <label class="btn-toggle-label">
+                                    <span class="btn-toggle-text">Sadece İlaçlar</span>
                                     <div class="relative inline-flex items-center">
                                         <input class="peer sr-only" type="checkbox" x-model="onlyMeds" />
-                                        <div class="h-4 w-7 rounded-full bg-slate-300 shadow-inner transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                        <div class="switch-slider"></div>
                                     </div>
                                 </label>
                             </div>
@@ -1171,17 +1178,18 @@
                                 </template>
                             </div>
                         </div>
-                    </div>
-                    <div class="mx-auto mt-6 max-w-7xl space-y-6" id="lab-trends" x-cloak x-show="sections.labTrends" x-transition>
-                        <div class="glass-card mt-8 rounded-2xl p-6 shadow-sm">
-                            <div class="mb-5">
-                                <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                    </section>
+
+                    <section class="max-w-full" id="lab-trends" name="lab-trends" x-cloak x-show="sections.labTrends" x-transition>
+                        <div class="app-card">
+                            <div class="app-card-header">
+                                <h2 class="app-card-title">
                                     <svg class="h-5 w-5 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
                                     </svg>
                                     <span>Tahlil Değişim Eğilimleri</span>
                                 </h2>
-                                <p class="mt-0.5 text-xs font-medium text-slate-400">Seçilen global tarih filtresi aralığındaki tüm laboratuvar kayıtlarının kronolojik akış trendleri.</p>
+                                <p class="text-xs font-medium text-slate-400">Seçilen global tarih filtresi aralığındaki tüm laboratuvar kayıtlarının kronolojik akış trendleri.</p>
                             </div>
                             <div class="flex h-96 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50" x-show="loadingLabCharts">
                                 <div class="flex flex-col items-center gap-2">
@@ -1302,9 +1310,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-6 lg:grid-cols-3" id="lab-findings" x-cloak x-show="sections.labFindings" x-transition>
-                        <div class="space-y-3">
+                    </section>
+
+                    <section class="grid max-w-full grid-cols-1 gap-6 lg:grid-cols-3" id="lab-findings" name="lab-findings" x-cloak x-show="sections.labFindings" x-transition>
+                        <div class="min-w-[200px] space-y-3" name="tests">
                             <div class="flex flex-col items-start justify-between gap-2 pl-1 sm:flex-row sm:items-center">
                                 <h3 class="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">Tahliller</h3>
                                 <div class="flex items-center gap-3">
@@ -1318,7 +1327,7 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="custom-scrollbar space-y-2 pr-1">
+                            <div class="table-scroll-container space-y-2 pr-1">
                                 <div class="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
                                     <template :key="test.id" x-for="test in filteredTests">
                                         <div :class="selectedTestId === test.id ? 'bg-indigo-50/70 text-indigo-900' : 'hover:bg-slate-50 text-slate-700'" @click="selectLabSession(test.id)" class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition">
@@ -1343,13 +1352,13 @@
                                 </template>
                             </div>
                         </div>
-                        <div class="lg:col-span-2">
-                            <div class="glass-card rounded-2xl p-6 shadow-sm">
-                                <div class="mb-4 border-b border-slate-100 pb-3">
+                        <div class="lg:col-span-2" name="test-table">
+                            <div class="app-card">
+                                <div class="app-card-header">
                                     <h3 class="font-display text-base font-semibold text-slate-900" x-text="selectedTestObj.title ? selectedTestObj.title + ' Bulguları' : 'Tahlil Seçiniz'"></h3>
                                     <p class="mt-0.5 text-xs font-medium text-slate-400" x-text="selectedTestObj.at ? formatFullDate(selectedTestObj.at) : ''"></p>
                                 </div>
-                                <div class="custom-scrollbar overflow-x-auto pr-1">
+                                <div class="table-scroll-container pr-1">
                                     <table class="w-full min-w-[600px] text-left text-xs">
                                         <thead class="border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase">
                                             <tr>
@@ -1393,13 +1402,14 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mx-auto mt-8 grid max-w-7xl grid-cols-1 items-start gap-6 lg:grid-cols-3" id="reports" x-cloak x-show="sections.reports" x-transition>
-                        <div class="space-y-3">
+                    </section>
+
+                    <section class="grid max-w-full grid-cols-1 gap-6 lg:grid-cols-3" id="reports" name="reports" x-cloak x-show="sections.reports" x-transition>
+                        <div class="min-w-[200px] space-y-3" name="report-list">
                             <div class="flex flex-col items-start justify-between gap-2 pl-1 sm:flex-row sm:items-center">
                                 <h3 class="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">Raporlar</h3>
                             </div>
-                            <div class="custom-scrollbar overflow-y-auto pr-1">
+                            <div class="table-scroll-container overflow-y-auto pr-1">
                                 <div class="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
                                     <template x-for="report in sortedReports">
                                         <div :class="selectedReportId === (report.protocol_no || report.at) ? 'bg-indigo-50/70 text-indigo-900 border-l-4 border-l-indigo-600' : 'hover:bg-slate-50 text-slate-700'" @click="selectReport(report.protocol_no || report.at)" class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition">
@@ -1421,16 +1431,16 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="lg:col-span-2">
-                            <div class="glass-card rounded-2xl p-6 shadow-sm">
-                                <div class="mb-4 flex flex-col items-start gap-3 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="lg:col-span-2" name="report-content">
+                            <div class="app-card">
+                                <div class="app-card-header">
                                     <div>
                                         <h3 class="font-display text-base font-semibold text-slate-900" x-text="selectedReportObj.title || 'Rapor Seçiniz'"></h3>
                                         <p class="mt-0.5 text-xs font-medium text-slate-400" x-text="selectedReportObj.at ? formatFullDate(selectedReportObj.at) : ''"></p>
                                     </div>
                                     <span class="self-start rounded border border-indigo-100 bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600 sm:self-auto" x-text="selectedReportObj.report_type"></span>
                                 </div>
-                                <div class="custom-scrollbar space-y-4 overflow-y-auto pr-1 text-xs">
+                                <div class="table-scroll-container space-y-4 overflow-y-auto pr-1 text-xs">
                                     <template x-if="selectedReportObj.doctor_name">
                                         <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                                             <svg class="h-4 w-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1472,7 +1482,7 @@
                                     <template x-if="selectedReportObj.clinical_details && selectedReportObj.clinical_details.surgery_note">
                                         <div class="space-y-2">
                                             <h4 class="text-[10px] font-bold tracking-wide text-slate-800 uppercase">Cerrahi Operasyon Detayları</h4>
-                                            <div class="rounded-xl border border-slate-200/70 bg-slate-50/50 bg-slate-900/5 p-3.5 font-mono text-[10px] leading-relaxed text-slate-600" x-text="selectedReportObj.clinical_details.surgery_note"></div>
+                                            <div class="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 font-mono text-[10px] leading-relaxed text-slate-600" x-text="selectedReportObj.clinical_details.surgery_note"></div>
                                         </div>
                                     </template>
                                     <template x-if="selectedReportObj.conclusions && selectedReportObj.conclusions.length > 0">
@@ -1503,12 +1513,12 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="mx-auto mt-6 max-w-7xl space-y-6" id="clinical-report" x-cloak x-show="sections.clinicalReport" x-transition>
-                        <div class="glass-card rounded-2xl border-l-4 border-l-indigo-500 p-6 shadow-sm">
-                            <div class="mb-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <h2 class="font-display flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                    <section class="max-w-full" id="clinical-report" name="insights" x-cloak x-show="sections.clinicalReport" x-transition>
+                        <div class="app-card border-l-4 border-l-indigo-500">
+                            <div class="app-card-header">
+                                <h2 class="app-card-title">
                                     <svg class="h-5 w-5 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
                                     </svg>
@@ -1518,7 +1528,7 @@
                             </div>
                             <div class="space-y-2 text-sm leading-relaxed font-medium text-slate-600" x-html="generateDynamicInsight(startDate, endDate)"></div>
                         </div>
-                    </div>
+                    </section>
                 </main>
             </div>
 

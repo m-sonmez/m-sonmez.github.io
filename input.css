@@ -125,3 +125,50 @@ input[type='date']::-webkit-datetime-edit-fields-wrapper {
     display: flex !important;
     justify-content: flex-end !important;
 }
+
+/* ===== COMPONENT SASS/CSS COMPILATION ===== */
+
+/* Card Component Standardizations */
+.app-card {
+    @apply rounded-2xl p-6 shadow-sm transition-all duration-300;
+    background-color: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.05),
+        0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.app-card-hover:hover {
+    border-color: rgba(79, 70, 229, 0.2);
+    box-shadow:
+        0 10px 15px -3px rgba(79, 70, 229, 0.05),
+        0 4px 6px -4px rgba(79, 70, 229, 0.05);
+    transform: translateY(-1px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-card-header {
+    @apply mb-4 flex items-center justify-between border-b border-slate-100 pb-2;
+}
+
+.app-card-title {
+    @apply font-display flex items-center gap-2 text-lg font-semibold text-slate-900;
+}
+
+/* Interactive Standardized Toggle Button */
+.btn-toggle-label {
+    @apply flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50;
+}
+
+.btn-toggle-text {
+    @apply text-[10px] font-black tracking-tight text-indigo-700 uppercase;
+}
+
+.switch-slider {
+    @apply h-4 w-7 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3;
+}
+
+/* Scrollable Table Wrappers */
+.table-scroll-container {
+    @apply overflow-x-auto;
+}
