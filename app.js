@@ -120,13 +120,6 @@ export default function registerDashboard(Alpine) {
             outOfBoundsList: [],
             latestInr: null,
             latestHgb: null,
-            // NEW CLINICAL METRICS
-            infectionRisk: false,
-            infectionRiskDetails: [],
-            anemiaTrend: 'Stabil',
-            missedDoses: [],
-            lowAdherence: false,
-            bpAboveTarget: false,
         },
         flowsheetDays: [],
         allFlowsheetMeds: [],
@@ -906,9 +899,6 @@ export default function registerDashboard(Alpine) {
                 })
                 .sort((a, b) => new Date(b.at) - new Date(a.at));
         },
-        // ================================================================
-        // NEW CLINICAL METRICS CALCULATION (enhanced calculateMetrics)
-        // ================================================================
         calculateMetrics() {
             let fps = this.getFilteredPressures();
             if (fps.length > 0) {
@@ -918,14 +908,6 @@ export default function registerDashboard(Alpine) {
                 this.metrics.avgSys = 0;
                 this.metrics.avgDia = 0;
             }
-
-            // ---- BP Above Target (Bentall-specific) ----
-            this.metrics.bpAboveTarget = this.metrics.avgSys > 130 || this.metrics.avgDia > 80;
-            // Also flag any individual reading above target
-            const anyReadingAbove = fps.some((p) => p.sys > 130 || p.dia > 80);
-            if (anyReadingAbove) this.metrics.bpAboveTarget = true;
-
-            // ---- Weight ----
             let inRangeW = this.getFilteredWeights();
             let weightBeforeStart = [...this.weights].filter((w) => w.at.substring(0, 10) < this.startDate).sort((a, b) => new Date(b.at) - new Date(a.at));
             if (inRangeW.length > 0) {
@@ -938,8 +920,6 @@ export default function registerDashboard(Alpine) {
                 this.metrics.weightDelta = 0;
                 this.metrics.startWeight = 0;
             }
-
-            // ---- Lab out-of-bounds (existing) ----
             let outList = [];
             const testsBeforeEnd = this.tests.filter((t) => t.at.substring(0, 10) <= this.endDate);
             if (testsBeforeEnd.length > 0) {
@@ -962,105 +942,6 @@ export default function registerDashboard(Alpine) {
             }
             this.metrics.outOfBoundsCount = outList.length;
             this.metrics.outOfBoundsList = outList;
-
-            // ---- INFECTION RISK (CRP > 10 && WBC > 10) ----
-            this.metrics.infectionRisk = false;
-            this.metrics.infectionRiskDetails = [];
-            // Collect all test sessions in the period
-            const periodTests = this.tests.filter((t) => t.at.substring(0, 10) >= this.startDate && t.at.substring(0, 10) <= this.endDate);
-            for (let test of periodTests) {
-                const crpItem = this.testItems.find((item) => item.test_id === test.id && item.code === 'CRP');
-                const wbcItem = this.testItems.find((item) => item.test_id === test.id && item.code === 'WBC');
-                if (crpItem && wbcItem) {
-                    const crpVal = parseFloat(crpItem.result);
-                    const wbcVal = parseFloat(wbcItem.result);
-                    if (crpVal > 10 && wbcVal > 10) {
-                        this.metrics.infectionRisk = true;
-                        this.metrics.infectionRiskDetails.push({
-                            date: test.at.substring(0, 10),
-                            crp: crpVal,
-                            wbc: wbcVal,
-                        });
-                    }
-                }
-            }
-
-            // ---- ANEMIA TREND (HGB vs 3-month average) ----
-            const threeMonthsAgo = new Date(this.endDate);
-            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-            const threeMonthsStr = threeMonthsAgo.toISOString().substring(0, 10);
-            const historicalHgbItems = this.testItems.filter((item) => {
-                const test = this.tests.find((t) => t.id === item.test_id);
-                return test && item.code === 'HGB' && test.at.substring(0, 10) >= threeMonthsStr && test.at.substring(0, 10) <= this.endDate;
-            });
-            let hgbValues = historicalHgbItems.map((item) => parseFloat(item.result));
-            let currentHgb = null;
-            const latestHgbItem = historicalHgbItems.sort((a, b) => {
-                const ta = this.tests.find((t) => t.id === a.test_id);
-                const tb = this.tests.find((t) => t.id === b.test_id);
-                return new Date(tb.at) - new Date(ta.at);
-            })[0];
-            if (latestHgbItem) {
-                currentHgb = parseFloat(latestHgbItem.result);
-                const avgHgb = hgbValues.length > 0 ? hgbValues.reduce((a, b) => a + b, 0) / hgbValues.length : currentHgb;
-                if (hgbValues.length >= 2) {
-                    const diff = currentHgb - avgHgb;
-                    if (diff > 0.5) this.metrics.anemiaTrend = 'İyileşiyor';
-                    else if (diff < -0.5) this.metrics.anemiaTrend = 'Kötüleşiyor';
-                    else this.metrics.anemiaTrend = 'Stabil';
-                } else {
-                    this.metrics.anemiaTrend = 'Veri Yetersiz';
-                }
-                // Also flag if HGB < 12
-                if (currentHgb < 12) {
-                    // we can set a separate flag if needed
-                }
-            } else {
-                this.metrics.anemiaTrend = 'Veri Yok';
-            }
-
-            // ---- MISSED DOSAGE CALCULATOR ----
-            this.metrics.missedDoses = [];
-            // Get all active medications in the period
-            const activeMeds = this.medications.filter((m) => this.isMedActiveAtEndDate(m.name) && !m.is_emergency);
-            const start = new Date(this.startDate);
-            const end = new Date(this.endDate);
-            const oneDay = 86400000;
-            for (let d = new Date(start); d <= end; d = new Date(d.getTime() + oneDay)) {
-                const dayStr = d.toISOString().split('T')[0];
-                for (let med of activeMeds) {
-                    // Determine if this medication is active on this day
-                    const activeSegments = this.detailedMeds.find((m) => m.name === med.name)?.segments || [];
-                    const isActiveOnDay = activeSegments.some((seg) => {
-                        const segStart = this.convertYmdHiToYmd(seg.s);
-                        const segEnd = seg.e ? this.convertYmdHiToYmd(seg.e) : null;
-                        return segStart <= dayStr && (segEnd === null || segEnd >= dayStr);
-                    });
-                    if (!isActiveOnDay) continue;
-
-                    // Get expected timespan from the latest change before this day
-                    const changesBefore = this.medicationChanges.filter((c) => c.medication_id === med.id && this.convertYmdHiToYmd(c.at) <= dayStr && (c.type === 'Started' || c.type === 'Resumed' || c.type === 'Changed')).sort((a, b) => b.at.localeCompare(a.at));
-                    if (changesBefore.length === 0) continue;
-                    const latestChange = changesBefore[0];
-                    const timespan = latestChange.timespan;
-                    const expectedDose = latestChange.amount;
-                    // Check logs for this day
-                    const logsForDay = this.medicationLogs.filter((l) => l.med === med.name && l.at.substring(0, 10) === dayStr);
-                    const totalLogged = logsForDay.reduce((sum, l) => sum + l.dose, 0);
-                    // If timespan is 24h, we expect at least one log
-                    // For 12h, we expect at least two logs, etc. – simplified: if no logs at all, it's missed.
-                    if (logsForDay.length === 0) {
-                        this.metrics.missedDoses.push({
-                            date: dayStr,
-                            med: med.name,
-                            expectedDose: expectedDose,
-                            timespan: timespan,
-                        });
-                    }
-                }
-            }
-
-            // ---- ADHERENCE (existing with low flag) ----
             const getPrescriptionOnDate = (medId, dateStr) => {
                 let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= dateStr).sort((a, b) => b.at.localeCompare(a.at));
                 if (history.length === 0) return null;
@@ -1150,49 +1031,7 @@ export default function registerDashboard(Alpine) {
             this.metrics.totalUnits = totalUnits;
             this.metrics.overdoseUnits = overdoseUnits;
             this.metrics.underdoseUnits = underdoseUnits;
-
-            // ---- LOW ADHERENCE FLAG ----
-            this.metrics.lowAdherence = this.metrics.adherenceRate < 85;
         },
-
-        // ================================================================
-        // EMERGENCY INTERVENTION TRACKER
-        // ================================================================
-        getEmergencyInterventions() {
-            const emergencyMeds = this.medications.filter((m) => m.is_emergency).map((m) => m.name);
-            const interventions = [];
-            const logs = this.medicationLogs.filter((l) => emergencyMeds.includes(l.med));
-            for (let log of logs) {
-                const date = log.at.substring(0, 10);
-                const time = log.at.substring(11, 16);
-                // Find BP reading before ingestion (closest within 1 hour prior)
-                const beforePressures = this.pressures.filter((p) => p.at.substring(0, 10) === date && new Date(p.at) < new Date(log.at) && new Date(log.at) - new Date(p.at) <= 3600000).sort((a, b) => new Date(b.at) - new Date(a.at));
-                const before = beforePressures.length > 0 ? beforePressures[0] : null;
-                // Find BP reading after ingestion (closest within 2 hours after)
-                const afterPressures = this.pressures.filter((p) => p.at.substring(0, 10) === date && new Date(p.at) > new Date(log.at) && new Date(p.at) - new Date(log.at) <= 7200000).sort((a, b) => new Date(a.at) - new Date(b.at));
-                const after = afterPressures.length > 0 ? afterPressures[0] : null;
-                let efficacy = 'Değerlendirilemedi';
-                let success = false;
-                if (before && after) {
-                    const drop = before.sys - after.sys;
-                    success = drop >= 15;
-                    efficacy = success ? 'Başarılı' : 'Kısmi/Yetersiz';
-                }
-                interventions.push({
-                    date: date,
-                    time: time,
-                    med: log.med,
-                    dose: log.dose,
-                    before: before ? { sys: before.sys, dia: before.dia } : null,
-                    after: after ? { sys: after.sys, dia: after.dia } : null,
-                    success: success,
-                    efficacy: efficacy,
-                    drop: before && after ? before.sys - after.sys : null,
-                });
-            }
-            return interventions;
-        },
-
         setupFlowsheet() {
             let startPoint = new Date(this.startDate);
             let endPoint = new Date(this.endDate);
@@ -1523,12 +1362,9 @@ export default function registerDashboard(Alpine) {
             let bpText = '';
             const currentBpList = this.getFilteredPressures();
             if (currentBpList.length > 0) {
-                bpText = `${startStr} - ${endStr} tarihleri arasında toplam ${currentBpList.length} adet tansiyon ölçümü yapılmıştır. Dönem ortalaması ${this.metrics.avgSys}/${this.metrics.avgDia} mmHg olarak hesaplanmıştır ve bu genel olarak "${this.getBPStatusText(this.metrics.avgSys, this.metrics.avgDia)}" kategorisindedir.`;
+                bpText = `${startStr} - ${endStr} tarihleri arasında toplam ${currentBpList.length} adet tansiyon ölçümü yapılmıştır. Dönem ortalaması ${this.metrics.avgSys}/${this.metrics.avgDia} mmHg olarak hesaplanmıştır ve bu genel olarak "${this.metrics.bpStatusText}" kategorisindedir.`;
                 if (this.previousAvgBp !== '-') {
                     bpText += ` Bir önceki dönem ortalaması ile kıyaslandığında değişim trendi ${this.previousAvgBp} mmHg olarak gerçekleşmiştir.`;
-                }
-                if (this.metrics.bpAboveTarget) {
-                    bpText += ` ⚠️ UYARI: Ortalama tansiyonunuz Bentall hedefinin (130/80) üzerindedir. Antihipertansif tedavi gözden geçirilmelidir.`;
                 }
             } else {
                 bpText = `${startStr} - ${endStr} tarihleri arasında kaydedilmiş herhangi bir tansiyon ölçümü bulunmamaktadır.`;
@@ -1581,12 +1417,6 @@ export default function registerDashboard(Alpine) {
                     } else {
                         labText += ` Dönem sonu itibarıyla takip edilen tüm tahliller referans aralığı içerisinde normal seyretmektedir.`;
                     }
-                    if (this.metrics.infectionRisk) {
-                        labText += ` ⚠️ ENFEKSİYON RİSKİ: Dönem içinde CRP > 10 ve WBC > 10 birlikteliği tespit edilmiştir. Endokardit açısından dikkatli olunuz.`;
-                    }
-                    if (this.metrics.anemiaTrend !== 'Veri Yok' && this.metrics.anemiaTrend !== 'Veri Yetersiz') {
-                        labText += ` Anemi trendi: ${this.metrics.anemiaTrend}.`;
-                    }
                 } else {
                     labText = `Belirtilen tarihlerde hedeflenen kritik tahlil parametrelerine (INR, HGB, WBC, CRP) ait kayıt bulunamadı.`;
                 }
@@ -1633,12 +1463,6 @@ export default function registerDashboard(Alpine) {
             if (medDetails.length > 0) {
                 medText = `${startStr} ile ${endStr} tarihleri arasında tedavi şeması ve ilaç durumları: ${medDetails.join('; ')}.`;
                 medText += ` Bu dönem genelinde tedaviye uyum oranı %${this.metrics.adherenceRate} olarak kaydedilmiştir.`;
-                if (this.metrics.lowAdherence) {
-                    medText += ` ⚠️ UYARI: Uyum oranı %85'in altındadır. İlaç alımını düzenli hale getiriniz.`;
-                }
-                if (this.metrics.missedDoses.length > 0) {
-                    medText += ` Kaçırılan doz sayısı: ${this.metrics.missedDoses.length}.`;
-                }
             } else {
                 medText = `Seçilen dönemde aktif bir ilaç veya tedavi değişim kaydı bulunmamaktadır.`;
             }
@@ -1749,12 +1573,10 @@ export default function registerDashboard(Alpine) {
                     else if (diff < -3) periodTxt += `Bir önceki döneme göre genel tansiyon ortalamanız aşağı çekilmiş, tebrikler. `;
                     else periodTxt += `Geçmiş dönemle karşılaştırdığımızda genel ortalamanızı çok istikrarlı bir şekilde korumuşsunuz. `;
                 }
-                let wallStressWarning = '';
-                if (selBp.maxSys >= 135 || selBp.avgSys > 130 || selBp.avgDia > 80) {
-                    wallStressWarning = `<div class="mt-2 text-rose-700 bg-rose-50 border border-rose-200 p-2.5 rounded-lg shadow-sm">⚠️ <b>Damar Basıncı Uyarısı:</b> Bentall operasyonu geçirmiş biri olarak, bu dönemde tansiyonunuz <b>${selBp.maxSys} mmHg</b> seviyelerine çıkmış veya ortalama değerler hedefin (130/80) üzerinde seyretmiştir. Hedefimiz 120-130/70-80 bandıdır. Doktorunuzla antihipertansif dozlarını görüşmelisiniz.</div>`;
-                } else {
-                    wallStressWarning = `<div class="mt-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg shadow-sm">✅ <b>Damar Güvenliği:</b> Bu dönemdeki zirve tansiyonunuz (<b>${selBp.maxSys} mmHg</b>) ve ortalama değerleriniz (<b>${selBp.avgSys}/${selBp.avgDia}</b>) Bentall hastası için kabul edilebilir aralıktadır.</div>`;
-                }
+                let wallStressWarning =
+                    selBp.maxSys >= 135
+                        ? `<div class="mt-2 text-rose-700 bg-rose-50 border border-rose-200 p-2.5 rounded-lg shadow-sm">⚠️ <b>Damar Basıncı Uyarısı:</b> Bentall operasyonu geçirmiş biri olarak, bu dönemde tansiyonunuzun <b>${selBp.maxSys} mmHg</b> seviyelerine çıkması risklidir. Hedefimiz 120-130 bandının altında kalmaktır. Doktorunuzla antihipertansif dozlarını görüşmelisiniz.</div>`
+                        : `<div class="mt-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg shadow-sm">✅ <b>Damar Güvenliği:</b> Bu dönemdeki zirve tansiyonunuz (<b>${selBp.maxSys} mmHg</b>) onarılan aort damarınıza zarar vermeyecek kadar güvenli bir aralıkta.</div>`;
                 bpHtml += `<div class="text-[11px] sm:text-xs text-slate-700 leading-relaxed space-y-2"><p>${dayTxt}</p><p>${weekTxt}</p><p>${periodTxt}</p>${wallStressWarning}</div>`;
             } else {
                 bpHtml += `<p class="text-[11px] sm:text-xs text-slate-500 italic">Bu döneme ait herhangi bir tansiyon ölçüm kaydı bulunmamaktadır.</p>`;
@@ -1923,9 +1745,6 @@ export default function registerDashboard(Alpine) {
                         else if (hgb.val < hgb.prev - 0.5) pText += `Eski ${hgb.prev.toFixed(1)} ölçümünüze göre biraz düşüş görünüyor. `;
                     }
                     if (hgb.status === 'Düşük') pText += `<span class="text-amber-600 font-medium">Ancak hala normalin biraz altında; bu durum kalbin daha çok yorulmasına neden olur. Gerekirse doktorunuzdan demir/vitamin takviyesi talep edebilirsiniz.</span>`;
-                    if (this.metrics.anemiaTrend && this.metrics.anemiaTrend !== 'Veri Yok' && this.metrics.anemiaTrend !== 'Veri Yetersiz') {
-                        pText += ` Anemi trendi: <b>${this.metrics.anemiaTrend}</b>.`;
-                    }
                     paragraphs.push(pText);
                 }
                 let otherAbnormals = [];
@@ -2042,7 +1861,6 @@ export default function registerDashboard(Alpine) {
                     medicationSummaryText += `Öksürük refleksini baskılayan <b><i>Levopront</i></b> ise göğüs dikişlerinizi sarsıntılardan korumak ve akciğer konforunuzu sağlamak için tedaviye eklenmiş. `;
                 }
             }
-            // ---- ACİL DURUM İLACI ANALİZİ (eski halinden alındı) ----
             let emergencyMeds = this.medications.filter((m) => m.is_emergency).map((m) => m.name.toLowerCase());
             let emergencyLogs = this.medicationLogs.filter((l) => emergencyMeds.includes(l.med.toLowerCase()) && l.at.substring(0, 10) >= startDate && l.at.substring(0, 10) <= endDate).sort((a, b) => a.at.localeCompare(b.at));
             if (emergencyLogs.length > 0) {
@@ -2725,14 +2543,15 @@ export default function registerDashboard(Alpine) {
             if (idx <= 0) return 'text-slate-400';
             return wObj.weight - sorted[idx - 1].weight > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
         },
-        // --- UPDATED BP STATUS with Bentall-specific target (130/80) ---
         getBPStatusText(sys, dia) {
-            if (sys >= 130 || dia >= 80) return 'Hedef Üstü';
-            return 'Hedef Aralıkta';
+            if (sys >= 140 || dia >= 90) return 'Hipertansiyon';
+            if (sys >= 130 || dia >= 85) return 'Prehipertansiyon';
+            return 'Normal';
         },
         getBPBadgeClass(sys, dia) {
             let s = this.getBPStatusText(sys, dia);
-            if (s === 'Hedef Üstü') return 'bg-rose-50 text-rose-700 border border-rose-200';
+            if (s === 'Hipertansiyon') return 'bg-rose-50 text-rose-700 border border-rose-200';
+            if (s === 'Prehipertansiyon') return 'bg-amber-50 text-amber-700 border border-amber-200';
             return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
         },
         updateFilters: debounce(function () {
