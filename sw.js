@@ -1,6 +1,6 @@
 // noinspection DuplicatedCode
 
-const CACHE_NAME = 'medilog_2026-07-21_00-27-20';
+const CACHE_NAME = 'medilog_2026-07-21_00-35-49';
 const STATIC_ASSETS = ['/panel.html', '/rapor.html', '/dist/output.css', '/dist/output.js', '/app.js', '/dist/icons/manifest.json', '/dist/icons/browserconfig.xml', '/dist/icons/favicon.ico'];
 
 const ICON_FILES = [
