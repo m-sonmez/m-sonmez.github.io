@@ -105,3 +105,14 @@ html {
 input[type='date']::-webkit-date-and-time-value {
     text-align: right !important;
 }
+
+.sidebar-desktop {
+    overscroll-behavior: contain;
+}
+
+.lg\:w-64,
+.lg\:w-16 {
+    transition-property: width;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}

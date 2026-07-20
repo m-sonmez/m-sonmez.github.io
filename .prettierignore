@@ -1,9 +1,3 @@
-# Ignore build artifacts and dependencies
-node_modules
-dist
-build
-coverage
-
-# Ignore backups and specific data dumps
 data/*.json
-
+dist/*
+node_modules
