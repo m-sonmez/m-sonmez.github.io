@@ -96,14 +96,14 @@
                                 </button>
                             </div>
 
-                            <div class="mt-2 flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
-                                <label class="text-[10px] font-medium whitespace-nowrap text-slate-500" for="startDate">Başlangıç:</label>
-                                <input :max="endDate" :min="firstD" @change="datePreset = 'custom'; updateFilters()" class="min-w-0 flex-1 appearance-none bg-transparent py-0.5 text-right text-[11px] font-semibold text-slate-700 outline-none" id="startDate" type="date" x-model="startDate" />
+                            <div class="mt-2 flex items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+                                <label class="flex-shrink-0 text-[10px] font-medium whitespace-nowrap text-slate-500" for="startDate">Başlangıç:</label>
+                                <input :max="endDate" :min="firstD" @change="datePreset = 'custom'; updateFilters()" class="min-w-0 appearance-none bg-transparent py-0.5 text-right text-[11px] font-semibold text-slate-700 outline-none" id="startDate" type="date" x-model="startDate" />
                             </div>
 
-                            <div class="mt-2 flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
-                                <label class="text-[10px] font-medium whitespace-nowrap text-slate-500" for="endDate">Bitiş:</label>
-                                <input :max="lastD" :min="startDate" @change="datePreset = 'custom'; updateFilters()" class="min-w-0 flex-1 appearance-none bg-transparent py-0.5 text-right text-[11px] font-semibold text-slate-700 outline-none" id="endDate" type="date" x-model="endDate" />
+                            <div class="mt-2 flex items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+                                <label class="flex-shrink-0 text-[10px] font-medium whitespace-nowrap text-slate-500" for="endDate">Bitiş:</label>
+                                <input :max="lastD" :min="startDate" @change="datePreset = 'custom'; updateFilters()" class="min-w-0 appearance-none bg-transparent py-0.5 text-right text-[11px] font-semibold text-slate-700 outline-none" id="endDate" type="date" x-model="endDate" />
                             </div>
                         </div>
                     </div>
