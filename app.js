@@ -189,6 +189,10 @@ export default function registerDashboard(Alpine) {
         get animSpeedLabel() {
             return ['x1/2', 'x1', 'x2', 'x4', 'x8'][this.animSpeedIndex];
         },
+        isMobile: false,
+        updateIsMobile() {
+            this.isMobile = window.innerWidth < 1024;
+        },
         isAtTop: true,
         toolbarOpen: true,
         loadingMetrics: false,
@@ -583,6 +587,9 @@ export default function registerDashboard(Alpine) {
                 });
             });
             this._loadInitialComponents();
+
+            this.updateIsMobile();
+            window.addEventListener('resize', this.updateIsMobile.bind(this));
         },
         _loadInitialComponents() {
             if (this.sections.summary) this.loadMetrics();
