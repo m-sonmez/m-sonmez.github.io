@@ -3,7 +3,16 @@
 @theme {
     --font-sans: 'Inter', sans-serif;
     --font-display: 'Outfit', sans-serif;
+
+    /* Container breakpoints – offset desktop sidebar (256px = 16rem) */
+    --container-lg: 80rem;
+    --container-xl: 96rem;
+    --container-2xl: 112rem;
 }
+
+/* ==========================================================================
+   Global & reset
+   ========================================================================== */
 
 html {
     scroll-behavior: smooth;
@@ -26,23 +35,28 @@ html {
     display: none !important;
 }
 
+/* ==========================================================================
+   Custom scrollbar
+   ========================================================================== */
+
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
-
 ::-webkit-scrollbar-track {
     background: #f8fafc;
 }
-
 ::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 9999px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+
+/* ==========================================================================
+   Base glass cards (used as composition parents)
+   ========================================================================== */
 
 .glass-card {
     background-color: #ffffff;
@@ -61,90 +75,32 @@ html {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.bg-emerald-50 {
-    background-color: #f0fdf4 !important;
-}
+/* ==========================================================================
+   Reusable UI component classes (Tailwind @apply)
+   ========================================================================== */
 
-.text-emerald-700 {
-    color: #047857 !important;
-    font-weight: 600 !important;
-}
-
-.border-emerald-200 {
-    border-color: rgba(167, 243, 208, 0.6) !important;
-}
-
-.bg-amber-50 {
-    background-color: #fffbeb !important;
-    font-weight: 600 !important;
-}
-
-.text-amber-700 {
-    color: #b45309 !important;
-    font-weight: 600 !important;
-}
-
-.border-amber-200 {
-    border-color: rgba(253, 230, 138, 0.6) !important;
-}
-
-.bg-rose-50 {
-    background-color: #fff1f2 !important;
-    font-weight: 600 !important;
-}
-
-.text-rose-700 {
-    color: #be123c !important;
-    font-weight: 600 !important;
-}
-
-.border-rose-200 {
-    border-color: rgba(254, 205, 211, 0.6) !important;
-}
-
-input[type='date']::-webkit-date-and-time-value {
-    text-align: right !important;
-}
-
-.sidebar-desktop {
-    overscroll-behavior: contain;
-}
-
-.lg\:w-64,
-.lg\:w-16 {
-    transition-property: width;
-    transition-duration: 300ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-input[type='date']::-webkit-datetime-edit {
-    text-align: right !important;
-}
-
-input[type='date']::-webkit-datetime-edit-fields-wrapper {
-    display: flex !important;
-    justify-content: flex-end !important;
-}
-
-/* ===== COMPONENT SASS/CSS COMPILATION ===== */
-
-/* Card Component Standardizations */
 .app-card {
-    @apply rounded-2xl p-6 shadow-sm transition-all duration-300;
+    /* glass-card stilini doğrudan uygula */
     background-color: #ffffff;
     border: 1px solid rgba(226, 232, 240, 0.6);
     box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.05),
         0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    border-radius: 1rem; /* rounded-2xl */
+    padding: 1.5rem; /* p-6 */
+    transition: all 0.3s ease;
 }
 
+.app-card-hover {
+    /* glass-card-hover stilini doğrudan uygula */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 .app-card-hover:hover {
     border-color: rgba(79, 70, 229, 0.2);
     box-shadow:
         0 10px 15px -3px rgba(79, 70, 229, 0.05),
         0 4px 6px -4px rgba(79, 70, 229, 0.05);
     transform: translateY(-1px);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-card-header {
@@ -155,7 +111,6 @@ input[type='date']::-webkit-datetime-edit-fields-wrapper {
     @apply font-display flex items-center gap-2 text-lg font-semibold text-slate-900;
 }
 
-/* Interactive Standardized Toggle Button */
 .btn-toggle-label {
     @apply flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50;
 }
@@ -165,10 +120,92 @@ input[type='date']::-webkit-datetime-edit-fields-wrapper {
 }
 
 .switch-slider {
-    @apply h-4 w-7 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3;
+    @apply relative h-4 w-7 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3;
 }
 
-/* Scrollable Table Wrappers */
 .table-scroll-container {
     @apply overflow-x-auto;
+}
+
+/* ==========================================================================
+   Custom status badges (already present, kept intact)
+   ========================================================================== */
+
+.bg-emerald-50 {
+    background-color: #f0fdf4 !important;
+}
+.text-emerald-700 {
+    color: #047857 !important;
+    font-weight: 600 !important;
+}
+.border-emerald-200 {
+    border-color: rgba(167, 243, 208, 0.6) !important;
+}
+
+.bg-amber-50 {
+    background-color: #fffbeb !important;
+    font-weight: 600 !important;
+}
+.text-amber-700 {
+    color: #b45309 !important;
+    font-weight: 600 !important;
+}
+.border-amber-200 {
+    border-color: rgba(253, 230, 138, 0.6) !important;
+}
+
+.bg-rose-50 {
+    background-color: #fff1f2 !important;
+    font-weight: 600 !important;
+}
+.text-rose-700 {
+    color: #be123c !important;
+    font-weight: 600 !important;
+}
+.border-rose-200 {
+    border-color: rgba(254, 205, 211, 0.6) !important;
+}
+
+/* ==========================================================================
+   Date input alignment
+   ========================================================================== */
+
+input[type='date']::-webkit-date-and-time-value {
+    text-align: right !important;
+}
+input[type='date']::-webkit-datetime-edit {
+    text-align: right !important;
+}
+input[type='date']::-webkit-datetime-edit-fields-wrapper {
+    display: flex !important;
+    justify-content: flex-end !important;
+}
+
+/* ==========================================================================
+   Sidebar transitions
+   ========================================================================== */
+
+.sidebar-desktop {
+    overscroll-behavior: contain;
+}
+.lg\:w-64,
+.lg\:w-16 {
+    transition-property: width;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   CSS Variables for chart target ranges & notification banners
+   ========================================================================== */
+
+:root {
+    --bp-target-sys-min: 110;
+    --bp-target-sys-max: 130;
+    --bp-target-dia-min: 70;
+    --bp-target-dia-max: 80;
+
+    --notification-banner-bg: #fef2f2;
+    --notification-banner-border: #fecaca;
+    --notification-banner-text: #991b1b;
 }
