@@ -28,6 +28,10 @@
         <meta content="#ffffff" name="msapplication-TileColor" />
         <meta content="./dist/icons/ms-icon-144x144.png" name="msapplication-TileImage" />
         <meta content="#ffffff" name="theme-color" />
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="msapplication-config" content="./dist/icons/browserconfig.xml" />
     </head>
     <body class="min-h-screen bg-slate-50 font-sans text-slate-700 antialiased selection:bg-indigo-500 selection:text-white" x-cloak x-data="dashboardApp()" x-init="initDashboard()">
         <div class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-slate-900 p-6 text-center text-white select-none max-[300px]:flex">
@@ -299,6 +303,12 @@
                 </aside>
 
                 <main class="min-w-0 flex-1 px-4 pb-16 sm:px-6 lg:px-8">
+                    <button @click="sidebarOpen = true" x-show="!sidebarOpen && isMobile" class="fixed top-2 left-2 z-50 rounded-lg border border-slate-200 bg-white/80 p-2 shadow-lg backdrop-blur-sm transition-colors hover:bg-slate-50 lg:hidden" aria-label="Menüyü aç">
+                        <svg class="h-6 w-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                        </svg>
+                    </button>
+
                     <div class="mx-auto mt-8 mb-8 grid max-w-7xl grid-cols-2 gap-6 lg:grid-cols-4 print:grid-cols-4" id="summary" x-cloak x-show="sections.summary" x-transition>
                         <div class="glass-card glass-card-hover order-1 flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-500 p-6 transition-all duration-300 lg:order-1" title="Son 7 gün ortalaması...">
                             <template x-if="loadingMetrics">

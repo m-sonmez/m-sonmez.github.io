@@ -1,3 +1,5 @@
+node_modules
 data/*.json
 dist/*
-node_modules
+!dist/icons/browserconfig.xml
+!dist/icons/manifest.json
