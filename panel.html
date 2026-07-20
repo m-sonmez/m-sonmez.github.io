@@ -29,9 +29,9 @@
         <meta content="./dist/icons/ms-icon-144x144.png" name="msapplication-TileImage" />
         <meta content="#ffffff" name="theme-color" />
 
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="msapplication-config" content="./dist/icons/browserconfig.xml" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
+        <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />
+        <meta content="./dist/icons/browserconfig.xml" name="msapplication-config" />
     </head>
     <body class="min-h-screen bg-slate-50 font-sans text-slate-700 antialiased selection:bg-indigo-500 selection:text-white" x-cloak x-data="dashboardApp()" x-init="initDashboard()">
         <div class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-slate-900 p-6 text-center text-white select-none max-[300px]:flex">
@@ -73,7 +73,7 @@
                         </button>
                     </div>
 
-                    <div class="sticky top-0 z-20 shrink-0 border-b border-slate-200/80 bg-slate-50/90 px-2 py-2 backdrop-blur-sm">
+                    <div class="sticky top-0 z-20 shrink-0 border-b border-slate-200/80 bg-slate-50/90 px-2 py-2 backdrop-blur-sm" x-show="sidebarOpen || !sidebarCollapsed">
                         <div class="group rounded-xl border border-slate-200/80 bg-slate-100/60 px-2 py-2 transition-colors hover:bg-slate-200/50">
                             <div class="flex items-center justify-center gap-1.5">
                                 <button :disabled="datePreset === 'all' || startDate === firstD" @click="shiftDatePeriod(-1)" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-95 disabled:pointer-events-none disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-40" x-cloak>
@@ -303,7 +303,7 @@
                 </aside>
 
                 <main class="min-w-0 flex-1 px-4 pb-16 sm:px-6 lg:px-8">
-                    <button @click="sidebarOpen = true" x-show="!sidebarOpen && isMobile" class="fixed top-2 left-2 z-50 rounded-lg border border-slate-200 bg-white/80 p-2 shadow-lg backdrop-blur-sm transition-colors hover:bg-slate-50 lg:hidden" aria-label="Menüyü aç">
+                    <button @click="sidebarOpen = true" aria-label="Menüyü aç" class="fixed top-2 left-2 z-50 rounded-lg border border-slate-200 bg-white/80 p-2 shadow-lg backdrop-blur-sm transition-colors hover:bg-slate-50 lg:hidden" x-show="!sidebarOpen && isMobile">
                         <svg class="h-6 w-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
                         </svg>
