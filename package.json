@@ -29,7 +29,7 @@
     "homepage": "https://m-sonmez.github.io/panel.html",
     "devDependencies": {
         "@tailwindcss/cli": "^4.3.0",
-        "concurrently": "^10.0.3",
+        "concurrently": "^9.2.4",
         "esbuild": "^0.28.1",
         "prettier": "^3.8.4",
         "prettier-plugin-tailwindcss": "^0.8.0",
