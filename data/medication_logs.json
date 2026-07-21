@@ -836,5 +836,5 @@
 {"at":"2026-07-21 07:08","model":"MedLog","user_id":1,"med":"Panto","dose":40},
 {"at":"2026-07-21 08:10","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
 {"at":"2026-07-21 09:05","model":"MedLog","user_id":1,"med":"EcopirinPro","dose":81},
-{"at":"2026-07-21 19:40","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
+{"at":"2026-07-21 19:40","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25}
 ]
