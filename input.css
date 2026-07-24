@@ -43,13 +43,16 @@ html {
     width: 6px;
     height: 6px;
 }
+
 ::-webkit-scrollbar-track {
     background: #f8fafc;
 }
+
 ::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
@@ -95,6 +98,7 @@ html {
     /* glass-card-hover stilini doğrudan uygula */
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .app-card-hover:hover {
     border-color: rgba(79, 70, 229, 0.2);
     box-shadow:
@@ -134,10 +138,12 @@ html {
 .bg-emerald-50 {
     background-color: #f0fdf4 !important;
 }
+
 .text-emerald-700 {
     color: #047857 !important;
     font-weight: 600 !important;
 }
+
 .border-emerald-200 {
     border-color: rgba(167, 243, 208, 0.6) !important;
 }
@@ -146,10 +152,12 @@ html {
     background-color: #fffbeb !important;
     font-weight: 600 !important;
 }
+
 .text-amber-700 {
     color: #b45309 !important;
     font-weight: 600 !important;
 }
+
 .border-amber-200 {
     border-color: rgba(253, 230, 138, 0.6) !important;
 }
@@ -158,10 +166,12 @@ html {
     background-color: #fff1f2 !important;
     font-weight: 600 !important;
 }
+
 .text-rose-700 {
     color: #be123c !important;
     font-weight: 600 !important;
 }
+
 .border-rose-200 {
     border-color: rgba(254, 205, 211, 0.6) !important;
 }
@@ -173,9 +183,11 @@ html {
 input[type='date']::-webkit-date-and-time-value {
     text-align: right !important;
 }
+
 input[type='date']::-webkit-datetime-edit {
     text-align: right !important;
 }
+
 input[type='date']::-webkit-datetime-edit-fields-wrapper {
     display: flex !important;
     justify-content: flex-end !important;
@@ -188,6 +200,7 @@ input[type='date']::-webkit-datetime-edit-fields-wrapper {
 .sidebar-desktop {
     overscroll-behavior: contain;
 }
+
 .lg\:w-64,
 .lg\:w-16 {
     transition-property: width;
