@@ -1577,5 +1577,5 @@
                                                                               {"at": "2026-07-23 11:16", "model": "TestItem", "test_id": 77, "id": 1577, "unit": "INR", "name": "INR (Koagülasyon)", "code": "INR", "result": "1.79", "reference_min": "0.85", "reference_max": "1.2", "description": "Koagülasyon"},
                                                                                 {"at": "2026-07-23 11:16", "model": "TestItem", "test_id": 77, "id": 1578, "unit": "sn", "name": "Protrombin Zamanı (PT)", "code": "PT", "result": "21", "reference_min": "10.5", "reference_max": "14", "description": "Koagülasyon"},
                                                                                   {"at": "2026-07-23 11:16", "model": "TestItem", "test_id": 77, "id": 1579, "unit": "%", "name": "Protrombin Aktivitesi (%)", "code": "PT%", "result": "42.2", "reference_min": "74.4", "reference_max": "130", "description": "Koagülasyon"}
-                                                                                  ]
+                                                                                
 ]
