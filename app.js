@@ -254,6 +254,8 @@ export default function registerDashboard(Alpine) {
         animScope: 'all',
         animTargetDate: null,
         animSpeedIndex: 2,
+        isInitializing: true, // Başlangıçta sayfa kaydırmasını önlemek için
+
         // --------------------------------------------------------------------
         // 2. HESAPLANMIŞ ÖZELLİKLER (COMPUTED GETTERS)
         // --------------------------------------------------------------------
@@ -678,12 +680,12 @@ export default function registerDashboard(Alpine) {
             this.determineGlobalDateLimits();
             if (this.tests.length > 0) {
                 let sorted = [...this.tests].sort((a, b) => new Date(b.at) - new Date(a.at));
-                this.selectLabSession(sorted[0].id);
+                this.selectLabSession(sorted[0].id, true); // skipScroll = true
             }
             if (this.reports.length > 0) {
                 const sortedReports = [...this.reports].sort((a, b) => new Date(b.at) - new Date(a.at));
                 if (this.sortedReports.length > 0) {
-                    this.selectReport(this.sortedReports[0].protocol_no || this.sortedReports[0].at);
+                    this.selectReport(this.sortedReports[0].protocol_no || this.sortedReports[0].at, true); // skipScroll = true
                 }
             }
             if (this.endDate) {
@@ -714,6 +716,9 @@ export default function registerDashboard(Alpine) {
 
             this.updateIsMobile();
             window.addEventListener('resize', this.updateIsMobile.bind(this));
+
+            // Başlangıç işlemleri tamamlandı, artık kaydırma yapabiliriz
+            this.isInitializing = false;
         },
         _loadInitialComponents() {
             if (this.sections.summary) this.loadMetrics();
@@ -906,21 +911,23 @@ export default function registerDashboard(Alpine) {
                 doRefresh();
             }
         },
-        selectReport(protocolNo) {
+        selectReport(protocolNo, skipScroll = false) {
             this.sections.reports = true;
             this.selectedReportId = protocolNo;
             this.selectedReportObj = this.reports.find((r) => (r.protocol_no || r.at) === protocolNo) || {};
 
-            this.$nextTick(() => {
-                const detail = document.getElementById('report');
-                if (detail) {
-                    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-                const target = document.querySelector(`[data-report-id="${protocolNo}"]`);
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            });
+            if (!skipScroll) {
+                this.$nextTick(() => {
+                    const detail = document.getElementById('report');
+                    if (detail) {
+                        detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    const target = document.querySelector(`[data-report-id="${protocolNo}"]`);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
         },
         loadBackupData() {
             this.corsError = true;
@@ -2848,22 +2855,24 @@ export default function registerDashboard(Alpine) {
             this.datePreset = 'custom';
             this.updateFilters();
         },
-        selectLabSession(id) {
+        selectLabSession(id, skipScroll = false) {
             this.sections.labFindings = true;
             this.selectedTestId = id;
             this.selectedTestObj = this.tests.find((t) => t.id === id) || {};
             this.selectedTestItems = this.testItems.filter((item) => item.test_id === id);
 
-            this.$nextTick(() => {
-                const detail = document.getElementById('test');
-                if (detail) {
-                    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-                const target = document.querySelector(`[data-test-id="${id}"]`);
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            });
+            if (!skipScroll) {
+                this.$nextTick(() => {
+                    const detail = document.getElementById('test');
+                    if (detail) {
+                        detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    const target = document.querySelector(`[data-test-id="${id}"]`);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
         },
         getHospitalName(id) {
             return this.hospitals.find((h) => h.id === id)?.name || 'Klinik Kurumu';
