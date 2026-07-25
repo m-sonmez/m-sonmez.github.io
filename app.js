@@ -1,22 +1,26 @@
-/* ==========================================================================
-   app.js – Klinik Dashboard Alpine.js Uygulaması
-   ========================================================================== */
+/* app.js – Klinik Dashboard Alpine.js Uygulaması */
 
-// Global charts container – must be defined before any chart operations.
+if (typeof window === 'undefined') {
+    globalThis.window = {
+        addEventListener: () => {},
+        clinicalCharts: {},
+        innerWidth: 1024,
+        scrollY: 0,
+        scrollX: 0,
+    };
+}
+
+/* Global charts container – must be defined before any chart operations. */
 window.clinicalCharts = window.clinicalCharts || {};
 
-// ==========================================================================
-// GLOBAL UTILITY FUNCTIONS
-// ==========================================================================
+/* GLOBAL UTILITY FUNCTIONS */
 
-/**
- * Debounce fonksiyonu: belirli bir bekleme süresi boyunca tekrarlanan
- * çağrıları engeller ve yalnızca son çağrıdan sonra fonksiyonun çalışmasını sağlar.
- *
- * @param {Function} func - Çalıştırılacak fonksiyon.
- * @param {number} wait - Bekleme süresi (milisaniye).
- * @returns {Function} Debounce edilmiş fonksiyon.
- */
+/* Debounce fonksiyonu: belirli bir bekleme süresi boyunca tekrarlanan */
+/* çağrıları engeller ve yalnızca son çağrıdan sonra fonksiyonun çalışmasını */
+/* sağlar. */
+/* @param {Function} func - Çalıştırılacak fonksiyon. */
+/* @param {number} wait - Bekleme süresi (milisaniye). */
+/* @returns {Function} Debounce edilmiş fonksiyon. */
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -25,15 +29,10 @@ function debounce(func, wait) {
     };
 }
 
-// ==========================================================================
-// ANİMASYON KONTROL FONKSİYONLARI (GLOBAL)
-// ==========================================================================
+/* ANİMASYON KONTROL FONKSİYONLARI (GLOBAL) */
 
-/**
- * Animasyonu sonlandırır (interval temizlenir) ve uygulama durumunu günceller.
- *
- * @param {boolean} [isPaused=false] - true ise durum 'paused', değilse 'idle' olur.
- */
+/* Animasyonu sonlandırır (interval temizlenir) ve uygulama durumunu günceller. */
+/* @param {boolean} [isPaused=false] - true ise durum 'paused', değilse 'idle' */
 window.endAnimation = function (isPaused = false) {
     if (window.timelineInterval) {
         clearInterval(window.timelineInterval);
@@ -46,10 +45,8 @@ window.endAnimation = function (isPaused = false) {
     }
 };
 
-/**
- * Animasyonun bir sonraki adımını çalıştırır: bitiş tarihini bir gün ilerletir
- * ve filtreleri günceller. Hedef tarihe ulaşıldığında animasyonu durdurur.
- */
+/* Animasyonun bir sonraki adımını çalıştırır: bitiş tarihini bir gün ilerletir */
+/* ve filtreleri günceller. Hedef tarihe ulaşıldığında animasyonu durdurur. */
 window.runTimelineStep = function () {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -65,14 +62,11 @@ window.runTimelineStep = function () {
     app.updateFilters();
 };
 
-/**
- * Animasyonu başlatır. Başlangıç ve bitiş tarihleri belirtilebilir.
- * Kapsam (tümü veya dönem) ve hız ayarlarına göre çalışır.
- *
- * @param {string|null} customStart - Başlangıç tarihi (YYYY-MM-DD).
- * @param {string|null} customEnd - Bitiş tarihi (YYYY-MM-DD).
- * @param {boolean} isResume - true ise mevcut durumdan devam eder.
- */
+/* Animasyonu başlatır. Başlangıç ve bitiş tarihleri belirtilebilir. */
+/* Kapsam (tümü veya dönem) ve hız ayarlarına göre çalışır. */
+/* @param {string|null} customStart - Başlangıç tarihi (YYYY-MM-DD). */
+/* @param {string|null} customEnd - Bitiş tarihi (YYYY-MM-DD). */
+/* @param {boolean} isResume - true ise mevcut durumdan devam eder. */
 window.startAnimation = function (customStart = null, customEnd = null, isResume = false) {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -84,7 +78,7 @@ window.startAnimation = function (customStart = null, customEnd = null, isResume
     let absoluteLimit = app.lastD < todayStr ? app.lastD : todayStr;
     if (targetDate > absoluteLimit) targetDate = absoluteLimit;
     if (initialStart > targetDate) {
-        console.error('❌ Hata: Başlangıç tarihi, hedef tarihinden büyük olamaz!');
+        console.error('Hata: Başlangıç tarihi, hedef tarihinden büyük olamaz!');
         app.animStatus = 'idle';
         return;
     }
@@ -102,10 +96,8 @@ window.startAnimation = function (customStart = null, customEnd = null, isResume
     window.timelineInterval = setInterval(window.runTimelineStep, intervals[app.animSpeedIndex]);
 };
 
-/**
- * Animasyon hızını günceller (kaydırıcı değiştiğinde çağrılır).
- * Sadece 'playing' durumunda interval yeniden oluşturulur.
- */
+/* Animasyon hızını günceller (kaydırıcı değiştiğinde çağrılır). */
+/* Sadece 'playing' durumunda interval yeniden oluşturulur. */
 window.updateAnimationSpeed = function () {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -116,9 +108,7 @@ window.updateAnimationSpeed = function () {
     }
 };
 
-// ==========================================================================
-// SERVICE WORKER KAYIT
-// ==========================================================================
+/* SERVICE WORKER KAYIT */
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -129,19 +119,13 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// ==========================================================================
-// ALPINE.JS DASHBOARD MODÜLÜ
-// ==========================================================================
+/* ALPINE.JS DASHBOARD MODÜLÜ */
 
-/**
- * Alpine.js için dashboardApp bileşenini kaydeder.
- * @param {Object} Alpine - Alpine.js örneği.
- */
+/* Alpine.js için dashboardApp bileşenini kaydeder. */
+/* @param {Object} Alpine - Alpine.js örneği. */
 export default function registerDashboard(Alpine) {
     Alpine.data('dashboardApp', () => ({
-        // --------------------------------------------------------------------
-        // 1. TEMEL DURUM (STATE)
-        // --------------------------------------------------------------------
+        /* 1. TEMEL DURUM (STATE) */
 
         flowsheetMode: 'grid',
         corsError: false,
@@ -178,12 +162,14 @@ export default function registerDashboard(Alpine) {
             outOfBoundsList: [],
             latestInr: null,
             latestHgb: null,
+            bpStatusText: '',
+            bpStatusClass: '',
         },
         flowsheetDays: [],
         allFlowsheetMeds: [],
         onlyMeds: false,
         uniqueMeds: [],
-        tooltip: { show: false, x: 0, y: 0, med: '', date: '', count: 0, times: [] },
+        tooltip: {show: false, x: 0, y: 0, med: '', date: '', count: 0, times: []},
         selectedTestId: null,
         selectedTestObj: {},
         selectedTestItems: [],
@@ -195,21 +181,21 @@ export default function registerDashboard(Alpine) {
         activeCellTooltip: null,
         medConversions: {},
         medConfig: {
-            Dilatrend: { target: 2.0, color: 'rgb(139, 92, 246)' },
-            BelocZOK: { target: 1.0, color: 'rgb(245, 158, 11)' },
-            Kapril: { target: 0.0, color: 'rgb(220, 38, 38)' },
-            Cordarone: { target: 1.0, color: 'rgb(71, 85, 105)' },
-            Tavanic: { target: 1.0, color: 'rgb(16, 185, 129)' },
-            Cipro: { target: 2.0, color: 'rgb(56, 189, 248)' },
-            Stafine: { target: 3.0, color: 'rgb(236, 72, 153)' },
-            Mikostatin: { target: 9.0, color: 'rgb(163, 230, 53)' },
-            Warfmadin: { target: 1.0, color: 'rgb(249, 115, 22)' },
-            EcopirinPro: { target: 1.0, color: 'rgb(20, 184, 166)' },
-            Panto: { target: 1.0, color: 'rgb(79, 70, 229)' },
-            Apikobal: { target: 1.0, color: 'rgb(250, 204, 21)' },
-            GeralginePlus: { target: 1.0, color: 'rgb(190, 24, 93)' },
-            Levopront: { target: 2.0, color: 'rgb(148, 163, 184)' },
-            Augmentin: { target: 2.0, color: 'rgb(16, 185, 129)' },
+            Dilatrend: {target: 2.0, color: 'rgb(139, 92, 246)'},
+            BelocZOK: {target: 1.0, color: 'rgb(245, 158, 11)'},
+            Kapril: {target: 0.0, color: 'rgb(220, 38, 38)'},
+            Cordarone: {target: 1.0, color: 'rgb(71, 85, 105)'},
+            Tavanic: {target: 1.0, color: 'rgb(16, 185, 129)'},
+            Cipro: {target: 2.0, color: 'rgb(56, 189, 248)'},
+            Stafine: {target: 3.0, color: 'rgb(236, 72, 153)'},
+            Mikostatin: {target: 9.0, color: 'rgb(163, 230, 53)'},
+            Warfmadin: {target: 1.0, color: 'rgb(249, 115, 22)'},
+            EcopirinPro: {target: 1.0, color: 'rgb(20, 184, 166)'},
+            Panto: {target: 1.0, color: 'rgb(79, 70, 229)'},
+            Apikobal: {target: 1.0, color: 'rgb(250, 204, 21)'},
+            GeralginePlus: {target: 1.0, color: 'rgb(190, 24, 93)'},
+            Levopront: {target: 2.0, color: 'rgb(148, 163, 184)'},
+            Augmentin: {target: 2.0, color: 'rgb(16, 185, 129)'},
         },
         medColors: {
             EcopirinPro: 'bg-orange-400',
@@ -254,11 +240,13 @@ export default function registerDashboard(Alpine) {
         animScope: 'all',
         animTargetDate: null,
         animSpeedIndex: 2,
-        isInitializing: true, // Başlangıçta sayfa kaydırmasını önlemek için
+        isInitializing: true,
 
-        // --------------------------------------------------------------------
-        // 2. HESAPLANMIŞ ÖZELLİKLER (COMPUTED GETTERS)
-        // --------------------------------------------------------------------
+        /* NEW: Patient clinical context (loaded from users.json) */
+
+        clinicalContext: {},
+
+        /* 2. HESAPLANMIŞ ÖZELLİKLER (COMPUTED GETTERS) */
 
         get animSpeedLabel() {
             return ['x1/2', 'x1', 'x2', 'x4', 'x8'][this.animSpeedIndex];
@@ -275,7 +263,7 @@ export default function registerDashboard(Alpine) {
         loadingLabCharts: false,
         loadingFlowsheet: false,
         loadingInsights: false,
-        _loaded: { metrics: false, timeline: false, bpChart: false, labCharts: false, flowsheet: false },
+        _loaded: {metrics: false, timeline: false, bpChart: false, labCharts: false, flowsheet: false},
         sidebarOpen: false,
         sidebarCollapsed: false,
         userMenuOpen: false,
@@ -300,9 +288,7 @@ export default function registerDashboard(Alpine) {
             return Math.ceil(this.sortedReports.length / this.itemsPerPage) || 1;
         },
 
-        // --------------------------------------------------------------------
-        // 3. METOTLAR (METHODS)
-        // --------------------------------------------------------------------
+        /* 3. METOTLAR (METHODS) */
 
         goToTestPage(page) {
             if (page >= 1 && page <= this.totalTestPages) {
@@ -466,7 +452,7 @@ export default function registerDashboard(Alpine) {
             }
             testsInWindow.sort((a, b) => new Date(b.at) - new Date(a.at));
             if (testsInWindow.length > 0) {
-                return testsInWindow.map((t) => ({ ...t, outOfRange: false }));
+                return testsInWindow.map((t) => ({...t, outOfRange: false}));
             } else {
                 let historicalTests = this.tests.filter((t) => t.at.substring(0, 10) <= this.endDate);
                 if (this.hideSpecialTests) {
@@ -480,7 +466,7 @@ export default function registerDashboard(Alpine) {
                 }
                 historicalTests.sort((a, b) => new Date(b.at) - new Date(a.at));
                 if (historicalTests.length > 0) {
-                    return [{ ...historicalTests[0], outOfRange: true }];
+                    return [{...historicalTests[0], outOfRange: true}];
                 }
                 return [];
             }
@@ -567,13 +553,13 @@ export default function registerDashboard(Alpine) {
                 let mStr = String(prevMonthIndex + 1).padStart(2, '0');
                 let dStr = String(dayNum).padStart(2, '0');
                 let fullDate = `${prevYear}-${mStr}-${dStr}`;
-                days.push({ dayNum: dayNum, dateStr: fullDate, isCurrentMonth: false });
+                days.push({dayNum: dayNum, dateStr: fullDate, isCurrentMonth: false});
             }
             for (let i = 1; i <= totalDaysInMonth; i++) {
                 let mStr = String(month + 1).padStart(2, '0');
                 let dStr = String(i).padStart(2, '0');
                 let fullDate = `${year}-${mStr}-${dStr}`;
-                days.push({ dayNum: i, dateStr: fullDate, isCurrentMonth: true });
+                days.push({dayNum: i, dateStr: fullDate, isCurrentMonth: true});
             }
             let remainingCells = 42 - days.length;
             let nextMonthIndex = month === 11 ? 0 : month + 1;
@@ -582,7 +568,7 @@ export default function registerDashboard(Alpine) {
                 let mStr = String(nextMonthIndex + 1).padStart(2, '0');
                 let dStr = String(i).padStart(2, '0');
                 let fullDate = `${nextYear}-${mStr}-${dStr}`;
-                days.push({ dayNum: i, dateStr: fullDate, isCurrentMonth: false });
+                days.push({dayNum: i, dateStr: fullDate, isCurrentMonth: false});
             }
             return days;
         },
@@ -592,7 +578,7 @@ export default function registerDashboard(Alpine) {
                 this.$nextTick(() => {
                     const target = document.getElementById('day');
                     if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        target.scrollIntoView({behavior: 'smooth', block: 'start'});
                     }
                 });
             }
@@ -664,9 +650,7 @@ export default function registerDashboard(Alpine) {
         selectedReportId: null,
         selectedReportObj: {},
 
-        // --------------------------------------------------------------------
-        // 4. YAŞAM DÖNGÜSÜ VE VERİ YÜKLEME
-        // --------------------------------------------------------------------
+        /* 4. YAŞAM DÖNGÜSÜ VE VERİ YÜKLEME */
 
         async initDashboard() {
             try {
@@ -680,12 +664,12 @@ export default function registerDashboard(Alpine) {
             this.determineGlobalDateLimits();
             if (this.tests.length > 0) {
                 let sorted = [...this.tests].sort((a, b) => new Date(b.at) - new Date(a.at));
-                this.selectLabSession(sorted[0].id, true); // skipScroll = true
+                this.selectLabSession(sorted[0].id, true);
             }
             if (this.reports.length > 0) {
                 const sortedReports = [...this.reports].sort((a, b) => new Date(b.at) - new Date(a.at));
                 if (this.sortedReports.length > 0) {
-                    this.selectReport(this.sortedReports[0].protocol_no || this.sortedReports[0].at, true); // skipScroll = true
+                    this.selectReport(this.sortedReports[0].protocol_no || this.sortedReports[0].at, true);
                 }
             }
             if (this.endDate) {
@@ -717,7 +701,6 @@ export default function registerDashboard(Alpine) {
             this.updateIsMobile();
             window.addEventListener('resize', this.updateIsMobile.bind(this));
 
-            // Başlangıç işlemleri tamamlandı, artık kaydırma yapabiliriz
             this.isInitializing = false;
         },
         _loadInitialComponents() {
@@ -829,9 +812,12 @@ export default function registerDashboard(Alpine) {
 
         async loadAllData(cacheBust = false) {
             const suffix = cacheBust ? '?t=' + Date.now() : '';
-            const [u, h, m, mc, ml, p, w, t, ti, r] = await Promise.all([
+            const [u, h, cc, m, mc, ml, p, w, t, ti, r] = await Promise.all([
                 fetch('data/users.json' + suffix).then((r) => r.json()),
                 fetch('data/hospitals.json' + suffix).then((r) => r.json()),
+                fetch('data/clinical_context.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
                 fetch('data/medications.json' + suffix).then((r) => r.json()),
                 fetch('data/medication_changes.json' + suffix).then((r) => r.json()),
                 fetch('data/medication_logs.json' + suffix).then((r) => r.json()),
@@ -841,8 +827,10 @@ export default function registerDashboard(Alpine) {
                 fetch('data/test_items.json' + suffix).then((r) => r.json()),
                 fetch('data/reports.json' + suffix).then((r) => r.json()),
             ]);
-            this.user = u[0] || {};
+            this.user = Array.isArray(u) && u.length > 0 ? u[0] : {};
             this.hospitals = h;
+            /* clinical_context.json is now merged into users.json, but keep for compatibility */
+            this.clinicalContext = cc && cc.length > 0 ? cc[0] : this.user.clinical_context || {};
             this.medications = m;
             this.medicationChanges = mc;
             this.medicationLogs = ml;
@@ -906,25 +894,20 @@ export default function registerDashboard(Alpine) {
                         doRefresh();
                     }
                 };
-                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' }, [messageChannel.port2]);
+                navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHE'}, [messageChannel.port2]);
             } else {
                 doRefresh();
             }
         },
         selectReport(protocolNo, skipScroll = false) {
-            this.sections.reports = true;
             this.selectedReportId = protocolNo;
             this.selectedReportObj = this.reports.find((r) => (r.protocol_no || r.at) === protocolNo) || {};
 
             if (!skipScroll) {
                 this.$nextTick(() => {
                     const detail = document.getElementById('report');
-                    if (detail) {
-                        detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                    const target = document.querySelector(`[data-report-id="${protocolNo}"]`);
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (detail && window.innerWidth < 1024) {
+                        detail.scrollIntoView({behavior: 'smooth', block: 'start'});
                     }
                 });
             }
@@ -988,7 +971,7 @@ export default function registerDashboard(Alpine) {
         },
         get latestKilo() {
             const filtered = this.weights.filter((w) => w.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
-            return filtered.length > 0 ? { val: filtered[0].weight, date: filtered[0].at.substring(0, 10) } : { val: '-', date: null };
+            return filtered.length > 0 ? {val: filtered[0].weight, date: filtered[0].at.substring(0, 10)} : {val: '-', date: null};
         },
         get previousKilo() {
             const filtered = this.weights.filter((w) => w.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
@@ -1015,7 +998,7 @@ export default function registerDashboard(Alpine) {
             if (targetPressures.length === 0) return null;
             const s = targetPressures.reduce((a, b) => a + b.sys, 0) / targetPressures.length;
             const d = targetPressures.reduce((a, b) => a + b.dia, 0) / targetPressures.length;
-            return { sys: Math.round(s), dia: Math.round(d) };
+            return {sys: Math.round(s), dia: Math.round(d)};
         },
         get latestBp() {
             const avg = this._getBpAvgInRange(6, 0);
@@ -1064,9 +1047,9 @@ export default function registerDashboard(Alpine) {
             let tests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
             for (let t of tests) {
                 let item = this.testItems.find((ti) => ti.test_id === t.id && ti.code === 'INR');
-                if (item) return { val: parseFloat(item.result).toFixed(2), date: t.at.substring(0, 10) };
+                if (item) return {val: parseFloat(item.result).toFixed(2), date: t.at.substring(0, 10)};
             }
-            return { val: '-', date: null };
+            return {val: '-', date: null};
         },
         get previousInr() {
             let tests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
@@ -1084,9 +1067,9 @@ export default function registerDashboard(Alpine) {
             let tests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
             for (let t of tests) {
                 let item = this.testItems.find((ti) => ti.test_id === t.id && ti.code === 'HGB');
-                if (item) return { val: parseFloat(item.result).toFixed(1), date: t.at.substring(0, 10) };
+                if (item) return {val: parseFloat(item.result).toFixed(1), date: t.at.substring(0, 10)};
             }
-            return { val: '-', date: null };
+            return {val: '-', date: null};
         },
         get previousHgb() {
             let tests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
@@ -1121,9 +1104,13 @@ export default function registerDashboard(Alpine) {
             if (fps.length > 0) {
                 this.metrics.avgSys = Math.round(fps.reduce((acc, curr) => acc + curr.sys, 0) / fps.length);
                 this.metrics.avgDia = Math.round(fps.reduce((acc, curr) => acc + curr.dia, 0) / fps.length);
+                this.metrics.bpStatusText = this.getBPStatusText(this.metrics.avgSys, this.metrics.avgDia);
+                this.metrics.bpStatusClass = this.getBPBadgeClass(this.metrics.avgSys, this.metrics.avgDia);
             } else {
                 this.metrics.avgSys = 0;
                 this.metrics.avgDia = 0;
+                this.metrics.bpStatusText = 'Veri Yok';
+                this.metrics.bpStatusClass = 'bg-slate-100 text-slate-500 border-slate-200';
             }
             let inRangeW = this.getFilteredWeights();
             let weightBeforeStart = [...this.weights].filter((w) => w.at.substring(0, 10) < this.startDate).sort((a, b) => new Date(b.at) - new Date(a.at));
@@ -1287,10 +1274,10 @@ export default function registerDashboard(Alpine) {
                 let dateParts = l.at.substring(0, 10).split('-');
                 let formattedDate = `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}`;
                 let time = l.at.substring(11, 16);
-                return { ...l, tooltipStr: `* ${m}x : ${formattedDate} ${time}` };
+                return {...l, tooltipStr: `* ${m}x : ${formattedDate} ${time}`};
             });
             let displayValue = parseFloat(totalTablets.toFixed(2)).toString();
-            return { count: filtered.length, displayValue: displayValue, logs: displayLogs };
+            return {count: filtered.length, displayValue: displayValue, logs: displayLogs};
         },
         getMedicationStatusOnDate(medId, dateStr) {
             const med = this.medications.find((m) => m.id === medId);
@@ -1384,18 +1371,18 @@ export default function registerDashboard(Alpine) {
                         if (['Started', 'Resumed', 'Changed', 'Taken'].includes(c.type)) {
                             if (curStart === null) curStart = c.at;
                             if (c.type === 'Taken') {
-                                segments.push({ s: c.at, e: c.at });
+                                segments.push({s: c.at, e: c.at});
                                 curStart = null;
                             }
                         } else if (['Ended', 'Paused'].includes(c.type)) {
                             if (curStart !== null) {
-                                segments.push({ s: curStart, e: c.at });
+                                segments.push({s: curStart, e: c.at});
                                 curStart = null;
                             }
                         }
                     });
-                    if (curStart !== null) segments.push({ s: curStart, e: null });
-                    return { name: m.name, segments };
+                    if (curStart !== null) segments.push({s: curStart, e: null});
+                    return {name: m.name, segments};
                 })
                 .filter((m) => m.segments.length > 0)
                 .sort((a, b) => {
@@ -1430,7 +1417,7 @@ export default function registerDashboard(Alpine) {
                             });
                         }
                     });
-                    return { name: med.name, segments: filteredSegments };
+                    return {name: med.name, segments: filteredSegments};
                 })
                 .filter((med) => med.segments.length > 0);
         },
@@ -1447,7 +1434,7 @@ export default function registerDashboard(Alpine) {
                 const currentDate = new Date(currentMillis);
                 const day = currentDate.getDate();
                 const monthStr = months[currentDate.getMonth()];
-                labels.push({ text: `${day} ${monthStr}`, isFirstOfMonth: day === 1, percentage: (i / steps) * 100 });
+                labels.push({text: `${day} ${monthStr}`, isFirstOfMonth: day === 1, percentage: (i / steps) * 100});
             }
             return labels;
         },
@@ -1534,7 +1521,7 @@ export default function registerDashboard(Alpine) {
             for (let test of sortedTests) {
                 let item = this.testItems.find((ti) => ti.test_id === test.id && ti.code === code);
                 if (item) {
-                    return { val: item.result, date: this.formatTurkishDate(test.at.substring(0, 10)) };
+                    return {val: item.result, date: this.formatTurkishDate(test.at.substring(0, 10))};
                 }
             }
             return null;
@@ -1544,7 +1531,7 @@ export default function registerDashboard(Alpine) {
             this.tests.forEach((t) => {
                 let item = this.testItems.find((ti) => ti.test_id === t.id && ti.code === code);
                 if (item) {
-                    allPoints.push({ val: parseFloat(item.result), date: t.at.substring(0, 10), rawDate: t.at });
+                    allPoints.push({val: parseFloat(item.result), date: t.at.substring(0, 10), rawDate: t.at});
                 }
             });
             allPoints.sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
@@ -1607,16 +1594,16 @@ export default function registerDashboard(Alpine) {
                         this.testItems
                             .filter((item) => item.test_id === t.id && item.code === code)
                             .forEach((item) => {
-                                items.push({ val: parseFloat(item.result), date: t.at });
+                                items.push({val: parseFloat(item.result), date: t.at});
                             });
                     });
                     items.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    return { latest: items[0], previous: items[1] };
+                    return {latest: items[0], previous: items[1]};
                 };
                 const targetCodes = ['INR', 'HGB', 'WBC', 'CRP'];
                 let labDetails = [];
                 targetCodes.forEach((code) => {
-                    const { latest, previous } = getLatestAndPrevValue(code);
+                    const {latest, previous} = getLatestAndPrevValue(code);
                     if (latest) {
                         let detail = `${code}: ${latest.val}`;
                         if (previous) {
@@ -1685,6 +1672,20 @@ export default function registerDashboard(Alpine) {
             }
             return `KLİNİK DEĞERLENDİRME RAPORU (${startStr} - ${endStr})\n\n` + `1. TANSİYON TRENDİ:\n${bpText}\n\n` + `2. KİLO VE SIVI DURUMU:\n${weightText}\n\n` + `3. LABORATUVAR ANALİZLERİ:\n${labText}\n\n` + `4. İLAÇ TEDAVİSİ VE UYUM:\n${medText}`;
         },
+
+        /* Helper to get patient-specific narrative placeholders */
+
+        get clinicalNarrative() {
+            const ctx = this.clinicalContext;
+            /* Remove hardcoded fallback strings; return empty values if not present */
+            return {
+                surgeryType: ctx.surgery_type || '',
+                valveType: ctx.valve_type || '',
+                targetBpMax: ctx.target_bp_sys_max || null,
+                targetBpMin: ctx.target_bp_sys_min || null,
+            };
+        },
+
         generateDynamicInsight(startDate, endDate) {
             if (!startDate || !endDate) {
                 return `<div class="p-4 sm:p-6 text-center text-xs sm:text-sm font-medium text-slate-400 italic bg-slate-50/50 rounded-xl border border-dashed border-slate-200">Klinik verileriniz analiz ediliyor, lütfen geçerli bir tarih aralığı seçtiğinizden emin olun...</div>`;
@@ -1750,13 +1751,28 @@ export default function registerDashboard(Alpine) {
                 let last = sorted[sorted.length - 1].weight;
                 let maxWtRec = records.reduce((max, r) => (r.weight > max.weight ? r : max), records[0]);
                 let minWtRec = records.reduce((min, r) => (r.weight < min.weight ? r : min), records[0]);
-                return { first, last, diff: parseFloat((last - first).toFixed(1)), count: records.length, maxWtRec, minWtRec };
+                return {first, last, diff: parseFloat((last - first).toFixed(1)), count: records.length, maxWtRec, minWtRec};
             };
             let allPressures = getRecordsInRange(this.pressures, startDate, endDate);
             let allWeights = getRecordsInRange(this.weights, startDate, endDate);
             let allDates = [...allPressures, ...allWeights].sort((a, b) => b.at.localeCompare(a.at));
             let lastRecordDateStr = allDates.length > 0 ? allDates[0].at.substring(0, 10) : endDate;
-            let insight = `<div class="mb-4 pb-4 border-b border-slate-100"><p class="text-[11px] sm:text-xs font-medium text-slate-600 leading-relaxed">Seçmiş olduğunuz <b>${this.formatFullDate(startDate)}</b> ile <b>${this.formatFullDate(endDate)}</b> tarihleri arasındaki <b>${periodDays} günlük</b> klinik veri akışınız yapay zeka destekli sistemimiz tarafından incelendi. Mekanik aort kapak ve diseksiyon onarımı öykünüze özel olarak derlenen analiz raporunuz aşağıdadır:</p></div>`;
+
+            const narr = this.clinicalNarrative;
+            const surgeryType = narr.surgeryType || '';
+            const valveType = narr.valveType || '';
+            const targetBpMax = narr.targetBpMax || 140;
+            const targetBpMin = narr.targetBpMin || 90;
+
+            /* Başlangıç Metni */
+            let historyText = '';
+            if (valveType || surgeryType) {
+                historyText = `${valveType ? valveType + (surgeryType ? ' ve ' : '') : ''}${surgeryType ? surgeryType + ' ' : ''}öykünüze özel olarak derlenen `;
+            } else {
+                historyText = `Klinik öykünüze özel olarak derlenen `;
+            }
+
+            let insight = `<div class="mb-4 pb-4 border-b border-slate-100"><p class="text-[11px] sm:text-xs font-medium text-slate-600 leading-relaxed">Seçmiş olduğunuz <b>${this.formatFullDate(startDate)}</b> ile <b>${this.formatFullDate(endDate)}</b> tarihleri arasındaki <b>${periodDays} günlük</b> klinik veri akışınız yapay zeka destekli sistemimiz tarafından incelendi. ${historyText}analiz raporunuz aşağıdadır:</p></div>`;
             let bpHtml = `<div class="mb-5 sm:mb-6"><h4 class="text-xs sm:text-sm font-bold tracking-tight text-indigo-700 mb-2 flex items-center gap-2"><span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-200"></span> 1. Tansiyon ve Aort Stresi (Hemodinami)</h4><div class="pl-3 sm:pl-4 border-l-2 border-slate-100 space-y-3">`;
             let selBp = getBpStats(allPressures);
             if (selBp) {
@@ -1791,8 +1807,8 @@ export default function registerDashboard(Alpine) {
                     else periodTxt += `Geçmiş dönemle karşılaştırdığımızda genel ortalamanızı çok istikrarlı bir şekilde korumuşsunuz. `;
                 }
                 let wallStressWarning =
-                    selBp.maxSys >= 135
-                        ? `<div class="mt-2 text-rose-700 bg-rose-50 border border-rose-200 p-2.5 rounded-lg shadow-sm">⚠️ <b>Damar Basıncı Uyarısı:</b> Bentall operasyonu geçirmiş biri olarak, bu dönemde tansiyonunuzun <b>${selBp.maxSys} mmHg</b> seviyelerine çıkması risklidir. Hedefimiz 120-130 bandının altında kalmaktır. Doktorunuzla antihipertansif dozlarını görüşmelisiniz.</div>`
+                    selBp.maxSys >= targetBpMax
+                        ? `<div class="mt-2 text-rose-700 bg-rose-50 border border-rose-200 p-2.5 rounded-lg shadow-sm">⚠️ <b>Damar Basıncı Uyarısı:</b> ${surgeryType ? surgeryType + ' ' : ''}operasyonu geçirmiş biri olarak, bu dönemde tansiyonunuzun <b>${selBp.maxSys} mmHg</b> seviyelerine çıkması risklidir. Hedefimiz ${targetBpMax} mmHg altında kalmaktır. Doktorunuzla antihipertansif dozlarını görüşmelisiniz.</div>`
                         : `<div class="mt-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg shadow-sm">✅ <b>Damar Güvenliği:</b> Bu dönemdeki zirve tansiyonunuz (<b>${selBp.maxSys} mmHg</b>) onarılan aort damarınıza zarar vermeyecek kadar güvenli bir aralıkta.</div>`;
                 bpHtml += `<div class="text-[11px] sm:text-xs text-slate-700 leading-relaxed space-y-2"><p>${dayTxt}</p><p>${weekTxt}</p><p>${periodTxt}</p>${wallStressWarning}</div>`;
             } else {
@@ -1859,7 +1875,7 @@ export default function registerDashboard(Alpine) {
                         }
                     }
                     let prev = prevItem ? parseFloat(prevItem.result) : null;
-                    return { val, prev, status, name: curr.name, prevDate };
+                    return {val, prev, status, name: curr.name, prevDate};
                 };
                 let inr = getLabData('INR'),
                     pt = getLabData('PT'),
@@ -1949,7 +1965,7 @@ export default function registerDashboard(Alpine) {
                     if (wbc) pText += `Beyaz kan hücresi (WBC) ${wbc.val.toFixed(2)} çıkarken${wbc.prev ? `,geçmişte bu ${wbc.prev.toFixed(2)}imiş` : ''}. `;
                     if (crp) pText += `Akut iltihap (CRP) değeriniz ${crp.val.toFixed(1)} olarak görülüyor${crp.prev ? `(önceki:${crp.prev.toFixed(1)})` : ''}. `;
                     if ((wbc && wbc.status === 'Yüksek') || (crp && crp.status === 'Yüksek')) {
-                        pText += `<span class="text-rose-600 font-bold">Bu değerlerin yüksek kalması, mekanik kalp kapağınıza enfeksiyon oturması riski (endokardit) nedeniyle istenmeyen bir durumdur; ateşe ve halsizliğe karşı tetikte olunuz.</span>`;
+                        pText += `<span class="text-rose-600 font-bold">Bu değerlerin yüksek kalması, ${valveType}nize enfeksiyon oturması riski (endokardit) nedeniyle istenmeyen bir durumdur; ateşe ve halsizliğe karşı tetikte olunuz.</span>`;
                     } else {
                         pText += `<span class="text-emerald-600 font-bold">Vücutta aktif veya tehlikeli bir enfeksiyon görünmüyor, değerler gayet temiz.</span>`;
                     }
@@ -1990,7 +2006,7 @@ export default function registerDashboard(Alpine) {
             }
             labHtml += `</div></div>`;
             insight += labHtml;
-            let medHtml = `<div><h4 class="text-xs sm:text-sm font-bold tracking-tight text-indigo-700 mb-2 flex items-center gap-2"><span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-teal-500 shadow-sm shadow-teal-200"></span> 4. İlaç Yönetimi: Uyum ve Tedavi Güncellemeleri</h4><div class="pl-3 sm:pl-4 border-l-2 border-slate-100 space-y-3">`;
+            let medHtml = `<div><h4 class="text-xs sm:text-sm font-bold tracking-tight text-indigo-700 mb-2 flex items-center gap-2"><span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-teal-50-shadow-sm shadow-teal-200"></span> 4. İlaç Yönetimi: Uyum ve Tedavi Güncellemeleri</h4><div class="pl-3 sm:pl-4 border-l-2 border-slate-100 space-y-3">`;
             const oldStart = this.startDate;
             const oldEnd = this.endDate;
             this.startDate = startDate;
@@ -2162,12 +2178,12 @@ export default function registerDashboard(Alpine) {
                     let mChanges = allChanges.filter((c) => c.medication_id === med.id);
                     if (mChanges.length > 0) {
                         let latestDate = mChanges[mChanges.length - 1].at;
-                        changedMeds.push({ med, mChanges, latestDate });
+                        changedMeds.push({med, mChanges, latestDate});
                     }
                 });
                 changedMeds.sort((a, b) => b.latestDate.localeCompare(a.latestDate));
                 let hasChangeOutput = false;
-                changedMeds.forEach(({ med, mChanges }) => {
+                changedMeds.forEach(({med, mChanges}) => {
                     let prev = this.medicationChanges
                         .filter((c) => c.medication_id === med.id && c.at.substring(0, 10) < startDate)
                         .sort((a, b) => a.at.localeCompare(b.at))
@@ -2230,36 +2246,37 @@ export default function registerDashboard(Alpine) {
             return insight;
         },
         getInsightPeriods(baseEnd, baseStart, excludePreset = null) {
+            if (!baseEnd || !baseStart) return [];
             const end = new Date(baseEnd);
             const start = new Date(baseStart);
+            if (isNaN(end.getTime()) || isNaN(start.getTime())) return [];
             const periods = [];
             const addPeriod = (label, startDate, endDate) => {
                 if (excludePreset && label === excludePreset) return;
                 if (startDate > endDate) return;
                 if (startDate < new Date(baseStart)) return;
-                periods.push({ label: label, start: startDate.toISOString().split('T')[0], end: endDate.toISOString().split('T')[0] });
+                periods.push({label: label, start: startDate.toISOString().split('T')[0], end: endDate.toISOString().split('T')[0]});
             };
             addPeriod('all', start, end);
             const presets = [
-                { label: 'last3', days: 3 },
-                { label: 'last7', days: 7 },
-                { label: 'last10', days: 10 },
-                { label: 'last15', days: 15 },
-                { label: 'last30', days: 30 },
-                { label: 'last45', days: 45 },
-                { label: 'last60', days: 60 },
-                { label: 'last90', days: 90 },
+                {label: 'last3', days: 3},
+                {label: 'last7', days: 7},
+                {label: 'last10', days: 10},
+                {label: 'last15', days: 15},
+                {label: 'last30', days: 30},
+                {label: 'last45', days: 45},
+                {label: 'last60', days: 60},
+                {label: 'last90', days: 90},
             ];
-            presets.forEach(({ label, days }) => {
+            presets.forEach(({label, days}) => {
                 let dStart = new Date(end);
                 dStart.setDate(dStart.getDate() - (days - 1));
                 addPeriod(label, dStart, end);
             });
             return periods;
         },
-        // --------------------------------------------------------------------
-        // 5. GRAFİK İŞLEMLERİ
-        // --------------------------------------------------------------------
+
+        /* 5. GRAFİK İŞLEMLERİ */
 
         destroyAllCharts() {
             if (window.clinicalCharts) {
@@ -2330,18 +2347,18 @@ export default function registerDashboard(Alpine) {
                         if (readingsInWindow.length > 0) {
                             let avgSys = readingsInWindow.reduce((sum, p) => sum + p.sys, 0) / readingsInWindow.length;
                             let avgDia = readingsInWindow.reduce((sum, p) => sum + p.dia, 0) / readingsInWindow.length;
-                            chartData.push({ x: dateObj, sys: Math.round(avgSys), dia: Math.round(avgDia) });
+                            chartData.push({x: dateObj, sys: Math.round(avgSys), dia: Math.round(avgDia)});
                         } else {
                             if (this.pressures.some((p) => p.at.substring(0, 10) === currentIsoDate)) {
-                                chartData.push({ x: dateObj, sys: null, dia: null });
+                                chartData.push({x: dateObj, sys: null, dia: null});
                             }
                         }
                     }
                 } else {
-                    chartData = fps.map((p) => ({ x: new Date(p.at), sys: p.sys, dia: p.dia }));
+                    chartData = fps.map((p) => ({x: new Date(p.at), sys: p.sys, dia: p.dia}));
                 }
-                let sysData = chartData.map((d) => ({ x: d.x, y: d.sys }));
-                let diaData = chartData.map((d) => ({ x: d.x, y: d.dia }));
+                let sysData = chartData.map((d) => ({x: d.x, y: d.sys}));
+                let diaData = chartData.map((d) => ({x: d.x, y: d.dia}));
                 let allVals = chartData.flatMap((d) => [d.sys, d.dia]).filter((v) => v !== null && !isNaN(v));
                 let bpMin = allVals.length > 0 ? Math.max(0, Math.floor(Math.min(...allVals) - 10)) : 50;
                 let bpMax = allVals.length > 0 ? Math.ceil(Math.max(...allVals) + 10) : 170;
@@ -2384,9 +2401,9 @@ export default function registerDashboard(Alpine) {
                         responsive: true,
                         maintainAspectRatio: false,
                         animation: false,
-                        interaction: { mode: 'index', intersect: false },
+                        interaction: {mode: 'index', intersect: false},
                         plugins: {
-                            legend: { display: false },
+                            legend: {display: false},
                             tooltip: {
                                 callbacks: {
                                     title: function (tooltipItems) {
@@ -2399,8 +2416,8 @@ export default function registerDashboard(Alpine) {
                         scales: {
                             x: {
                                 type: 'time',
-                                time: { unit: 'day', displayFormats: { day: 'D MMM' } },
-                                grid: { display: false },
+                                time: {unit: 'day', displayFormats: {day: 'D MMM'}},
+                                grid: {display: false},
                                 ticks: {
                                     callback: function (value) {
                                         const date = new Date(value);
@@ -2409,7 +2426,7 @@ export default function registerDashboard(Alpine) {
                                     },
                                 },
                             },
-                            y: { ticks: { stepSize: 10 }, min: bpMin, max: bpMax, grid: { color: 'rgba(226, 232, 240, 0.6)' } },
+                            y: {ticks: {stepSize: 10}, min: bpMin, max: bpMax, grid: {color: 'rgba(226, 232, 240, 0.6)'}},
                         },
                     },
                 });
@@ -2417,7 +2434,7 @@ export default function registerDashboard(Alpine) {
             let fws = [...this.getFilteredWeights()].sort((a, b) => new Date(a.at) - new Date(b.at));
             let wCtx = document.getElementById('weightLineChart')?.getContext('2d');
             if (wCtx && fws.length > 0) {
-                let weightData = fws.map((w) => ({ x: new Date(w.at), y: w.weight }));
+                let weightData = fws.map((w) => ({x: new Date(w.at), y: w.weight}));
                 let weightsPool = weightData.map((d) => d.y);
                 let minW = Math.max(0, Math.floor(Math.min(...weightsPool) - 2));
                 let maxW = Math.ceil(Math.max(...weightsPool) + 2);
@@ -2442,7 +2459,7 @@ export default function registerDashboard(Alpine) {
                         maintainAspectRatio: false,
                         animation: false,
                         plugins: {
-                            legend: { display: false },
+                            legend: {display: false},
                             tooltip: {
                                 callbacks: {
                                     title: function (tooltipItems) {
@@ -2455,8 +2472,8 @@ export default function registerDashboard(Alpine) {
                         scales: {
                             x: {
                                 type: 'time',
-                                time: { unit: 'day', displayFormats: { day: 'D MMM' } },
-                                grid: { display: false },
+                                time: {unit: 'day', displayFormats: {day: 'D MMM'}},
+                                grid: {display: false},
                                 ticks: {
                                     callback: function (value) {
                                         const date = new Date(value);
@@ -2465,7 +2482,7 @@ export default function registerDashboard(Alpine) {
                                     },
                                 },
                             },
-                            y: { min: minW, max: maxW, grid: { color: 'rgba(226, 232, 240, 0.6)' } },
+                            y: {min: minW, max: maxW, grid: {color: 'rgba(226, 232, 240, 0.6)'}},
                         },
                     },
                 });
@@ -2502,7 +2519,7 @@ export default function registerDashboard(Alpine) {
             }
             let datasets = [];
             medsToShow.forEach((medName) => {
-                let cfg = this.medConfig[medName] || { color: 'rgb(100, 116, 139)' };
+                let cfg = this.medConfig[medName] || {color: 'rgb(100, 116, 139)'};
                 let values = daysKeys.map((date) => {
                     let iso = date.toISOString().split('T')[0];
                     let dayLogs = this.medicationLogs.filter((l) => l.med.toLowerCase() === medName.toLowerCase() && l.at.substring(0, 10) === iso);
@@ -2510,7 +2527,7 @@ export default function registerDashboard(Alpine) {
                     let totalDose = dayLogs.reduce((sum, l) => sum + l.dose, 0);
                     return totalDose / base_dose;
                 });
-                let data = daysKeys.map((date, idx) => ({ x: date, y: values[idx] }));
+                let data = daysKeys.map((date, idx) => ({x: date, y: values[idx]}));
                 datasets.push({
                     label: medName,
                     data: data,
@@ -2522,7 +2539,7 @@ export default function registerDashboard(Alpine) {
             });
             window.clinicalCharts['focus'] = new Chart(canvas.getContext('2d'), {
                 type: 'bar',
-                data: { datasets: datasets },
+                data: {datasets: datasets},
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -2540,9 +2557,9 @@ export default function registerDashboard(Alpine) {
                     scales: {
                         x: {
                             type: 'time',
-                            time: { unit: 'day', displayFormats: { day: 'D MMM' } },
-                            grid: { display: false },
-                            border: { display: false },
+                            time: {unit: 'day', displayFormats: {day: 'D MMM'}},
+                            grid: {display: false},
+                            border: {display: false},
                             ticks: {
                                 callback: function (value) {
                                     const date = new Date(value);
@@ -2550,7 +2567,7 @@ export default function registerDashboard(Alpine) {
                                 },
                             },
                         },
-                        y: { beginAtZero: true, grid: { color: 'rgba(226, 232, 240, 0.6)' }, border: { display: false } },
+                        y: {beginAtZero: true, grid: {color: 'rgba(226, 232, 240, 0.6)'}, border: {display: false}},
                     },
                 },
             });
@@ -2562,24 +2579,24 @@ export default function registerDashboard(Alpine) {
         },
         _renderLabTrendChartsInternal() {
             const targets = [
-                { id: 'inrLabChart', code: 'INR', label: 'INR', color: 'rgb(249, 115, 22)' },
-                { id: 'ptChart', code: 'PT', label: 'PT (sn)', color: 'rgb(217, 119, 6)' },
-                { id: 'apttChart', code: 'APTT', label: 'aPTT (sn)', color: 'rgb(234, 179, 8)' },
-                { id: 'hgbChart', code: 'HGB', label: 'HGB', color: 'rgb(185, 28, 28)' },
-                { id: 'hctChart', code: 'HCT', label: 'HCT', color: 'rgb(239, 68, 68)' },
-                { id: 'rbcChart', code: 'RBC', label: 'RBC', color: 'rgb(244, 63, 94)' },
-                { id: 'pltChart', code: 'PLT', label: 'PLT', color: 'rgb(16, 185, 129)' },
-                { id: 'wbcChart', code: 'WBC', label: 'WBC', color: 'rgb(79, 70, 229)' },
-                { id: 'crpChart', code: 'CRP', label: 'CRP', color: 'rgb(236, 72, 153)' },
-                { id: 'lymChart', code: 'LYM', label: 'Lenfosit', color: 'rgb(148, 163, 184)' },
-                { id: 'neuChart', code: 'NEU', label: 'NEU', color: 'rgb(139, 92, 246)' },
-                { id: 'creaChart', code: 'CREA', label: 'CREA', color: 'rgb(20, 184, 166)' },
-                { id: 'bunChart', code: 'BUN', label: 'BUN', color: 'rgb(6, 182, 212)' },
-                { id: 'altChart', code: 'ALT', label: 'ALT', color: 'rgb(163, 230, 53)' },
-                { id: 'gluChart', code: 'GLU', label: 'GLU', color: 'rgb(217, 70, 239)' },
-                { id: 'naChart', code: 'NA', label: 'Sodyum', color: 'rgb(14, 165, 233)' },
-                { id: 'kChart', code: 'K', label: 'Potasyum', color: 'rgb(225, 29, 72)' },
-                { id: 'caChart', code: 'CA', label: 'Kalsiyum', color: 'rgb(245, 158, 11)' },
+                {id: 'inrLabChart', code: 'INR', label: 'INR', color: 'rgb(249, 115, 22)'},
+                {id: 'ptChart', code: 'PT', label: 'PT (sn)', color: 'rgb(217, 119, 6)'},
+                {id: 'apttChart', code: 'APTT', label: 'aPTT (sn)', color: 'rgb(234, 179, 8)'},
+                {id: 'hgbChart', code: 'HGB', label: 'HGB', color: 'rgb(185, 28, 28)'},
+                {id: 'hctChart', code: 'HCT', label: 'HCT', color: 'rgb(239, 68, 68)'},
+                {id: 'rbcChart', code: 'RBC', label: 'RBC', color: 'rgb(244, 63, 94)'},
+                {id: 'pltChart', code: 'PLT', label: 'PLT', color: 'rgb(16, 185, 129)'},
+                {id: 'wbcChart', code: 'WBC', label: 'WBC', color: 'rgb(79, 70, 229)'},
+                {id: 'crpChart', code: 'CRP', label: 'CRP', color: 'rgb(236, 72, 153)'},
+                {id: 'lymChart', code: 'LYM', label: 'Lenfosit', color: 'rgb(148, 163, 184)'},
+                {id: 'neuChart', code: 'NEU', label: 'NEU', color: 'rgb(139, 92, 246)'},
+                {id: 'creaChart', code: 'CREA', label: 'CREA', color: 'rgb(20, 184, 166)'},
+                {id: 'bunChart', code: 'BUN', label: 'BUN', color: 'rgb(6, 182, 212)'},
+                {id: 'altChart', code: 'ALT', label: 'ALT', color: 'rgb(163, 230, 53)'},
+                {id: 'gluChart', code: 'GLU', label: 'GLU', color: 'rgb(217, 70, 239)'},
+                {id: 'naChart', code: 'NA', label: 'Sodyum', color: 'rgb(14, 165, 233)'},
+                {id: 'kChart', code: 'K', label: 'Potasyum', color: 'rgb(225, 29, 72)'},
+                {id: 'caChart', code: 'CA', label: 'Kalsiyum', color: 'rgb(245, 158, 11)'},
             ];
             const self = this;
             const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
@@ -2604,8 +2621,8 @@ export default function registerDashboard(Alpine) {
                             val: parseFloat(match.result),
                             date: s.at.substring(0, 10),
                             rawDate: s.at,
-                            refMin: match.reference_min ? parseFloat(match.reference_min) : null,
-                            refMax: match.reference_max ? parseFloat(match.reference_max) : null,
+                            refMin: match.reference_min !== null && match.reference_min !== '' ? parseFloat(match.reference_min) : null,
+                            refMax: match.reference_max !== null && match.reference_max !== '' ? parseFloat(match.reference_max) : null,
                         });
                     }
                 });
@@ -2631,9 +2648,9 @@ export default function registerDashboard(Alpine) {
                     }
                 }
                 if (finalPoints.length === 0) return;
-                let dData = finalPoints.map((p) => ({ x: new Date(p.rawDate), y: p.val }));
-                let minData = finalPoints.map((p) => ({ x: new Date(p.rawDate), y: p.refMin }));
-                let maxData = finalPoints.map((p) => ({ x: new Date(p.rawDate), y: p.refMax }));
+                let dData = finalPoints.map((p) => ({x: new Date(p.rawDate), y: p.val}));
+                let minData = finalPoints.map((p) => ({x: new Date(p.rawDate), y: p.refMin}));
+                let maxData = finalPoints.map((p) => ({x: new Date(p.rawDate), y: p.refMax}));
                 let ctx = canvasEl.getContext('2d');
                 window.clinicalCharts[tgt.id] = new Chart(ctx, {
                     type: 'line',
@@ -2680,7 +2697,7 @@ export default function registerDashboard(Alpine) {
                         maintainAspectRatio: false,
                         animation: false,
                         plugins: {
-                            legend: { display: false },
+                            legend: {display: false},
                             tooltip: {
                                 callbacks: {
                                     title: function (tooltipItems) {
@@ -2699,31 +2716,33 @@ export default function registerDashboard(Alpine) {
                         scales: {
                             x: {
                                 type: 'time',
-                                time: { unit: 'day', displayFormats: { day: 'D MMM' } },
-                                grid: { display: false },
+                                time: {unit: 'day', displayFormats: {day: 'D MMM'}},
+                                grid: {display: false},
                                 ticks: {
-                                    font: { size: 8 },
+                                    font: {size: 8},
                                     callback: function (value) {
                                         const date = new Date(value);
                                         return date.getDate() + ' ' + months[date.getMonth()];
                                     },
                                 },
                             },
-                            y: { grid: { color: 'rgba(226, 232, 240, 0.4)' }, ticks: { font: { size: 8 } } },
+                            y: {grid: {color: 'rgba(226, 232, 240, 0.4)'}, ticks: {font: {size: 8}}},
                         },
                     },
                 });
             });
         },
-        // --------------------------------------------------------------------
-        // 6. YARDIMCI FONKSİYONLAR (LAB, BP, AĞIRLIK, VB.)
-        // --------------------------------------------------------------------
+
+        /* 6. YARDIMCI FONKSİYONLAR (LAB, BP, AĞIRLIK, VB.) */
 
         getLabItemStatus(item) {
-            if (!item.reference_min || !item.reference_max) return 'Normal';
+            if (!item) return 'Normal';
             let val = parseFloat(item.result);
-            if (val < parseFloat(item.reference_min)) return 'Düşük';
-            if (val > parseFloat(item.reference_max)) return 'Yüksek';
+            if (isNaN(val)) return 'Normal';
+            let hasMin = item.reference_min !== null && item.reference_min !== undefined && item.reference_min !== '';
+            let hasMax = item.reference_max !== null && item.reference_max !== undefined && item.reference_max !== '';
+            if (hasMin && !isNaN(parseFloat(item.reference_min)) && val < parseFloat(item.reference_min)) return 'Düşük';
+            if (hasMax && !isNaN(parseFloat(item.reference_max)) && val > parseFloat(item.reference_max)) return 'Yüksek';
             return 'Normal';
         },
         getLabItemClass(item) {
@@ -2856,7 +2875,6 @@ export default function registerDashboard(Alpine) {
             this.updateFilters();
         },
         selectLabSession(id, skipScroll = false) {
-            this.sections.labFindings = true;
             this.selectedTestId = id;
             this.selectedTestObj = this.tests.find((t) => t.id === id) || {};
             this.selectedTestItems = this.testItems.filter((item) => item.test_id === id);
@@ -2864,12 +2882,8 @@ export default function registerDashboard(Alpine) {
             if (!skipScroll) {
                 this.$nextTick(() => {
                     const detail = document.getElementById('test');
-                    if (detail) {
-                        detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                    const target = document.querySelector(`[data-test-id="${id}"]`);
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (detail && window.innerWidth < 1024) {
+                        detail.scrollIntoView({behavior: 'smooth', block: 'start'});
                     }
                 });
             }
@@ -2918,7 +2932,7 @@ export default function registerDashboard(Alpine) {
             let d = new Date(dayStr);
             const days = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
             const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-            return { dow: days[d.getDay()], date: `${d.getDate()} ${months[d.getMonth()]}` };
+            return {dow: days[d.getDay()], date: `${d.getDate()} ${months[d.getMonth()]}`};
         },
         showTooltip(med, day, event) {
             let data = this.getMedLogForDay(med, day);
@@ -2968,7 +2982,7 @@ export default function registerDashboard(Alpine) {
         },
         navigateToTest(testId) {
             this.sections.labFindings = true;
-            this.selectLabSession(testId);
+            this.selectLabSession(testId, true);
 
             const allTests = this.filteredTests;
             const index = allTests.findIndex((t) => t.id === testId);
@@ -2978,20 +2992,14 @@ export default function registerDashboard(Alpine) {
             }
 
             this.$nextTick(() => {
-                const detailEl = document.getElementById('test');
-                if (detailEl) detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                const testItem = document.querySelector(`[data-test-id="${testId}"]`);
-                if (testItem) {
-                    testItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                window.location.hash = '#test';
             });
 
             if (window.innerWidth < 1024) this.sidebarOpen = false;
         },
         navigateToReport(protocolNo) {
             this.sections.reports = true;
-            this.selectReport(protocolNo);
+            this.selectReport(protocolNo, true);
 
             const allReports = this.sortedReports;
             const index = allReports.findIndex((r) => (r.protocol_no || r.at) === protocolNo);
@@ -3001,13 +3009,7 @@ export default function registerDashboard(Alpine) {
             }
 
             this.$nextTick(() => {
-                const detailEl = document.getElementById('report');
-                if (detailEl) detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                const reportItem = document.querySelector(`[data-report-id="${protocolNo}"]`);
-                if (reportItem) {
-                    reportItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                window.location.hash = '#report';
             });
 
             if (window.innerWidth < 1024) this.sidebarOpen = false;
@@ -3047,29 +3049,29 @@ export default function registerDashboard(Alpine) {
         },
         getDailyEvents(dateStr) {
             let events = [];
-            const currentAt = new Intl.DateTimeFormat('sv', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
+            const currentAt = new Intl.DateTimeFormat('sv', {dateStyle: 'short', timeStyle: 'short'}).format(new Date());
 
             this.medicationLogs.forEach((l) => {
                 if (l.at.startsWith(dateStr)) {
                     let isEmergency = this.isEmergencyMed(l.med);
-                    events.push({ ...l, type: 'med', time: l.at.substring(11, 16), isEmergency });
+                    events.push({...l, type: 'med', time: l.at.substring(11, 16), isEmergency});
                 }
             });
 
             this.pressures.forEach((p) => {
-                if (p.at.startsWith(dateStr)) events.push({ ...p, type: 'bp', time: p.at.substring(11, 16) });
+                if (p.at.startsWith(dateStr)) events.push({...p, type: 'bp', time: p.at.substring(11, 16)});
             });
 
             this.weights.forEach((w) => {
-                if (w.at.startsWith(dateStr)) events.push({ ...w, type: 'weight', time: w.at.substring(11, 16) });
+                if (w.at.startsWith(dateStr)) events.push({...w, type: 'weight', time: w.at.substring(11, 16)});
             });
 
             this.tests.forEach((t) => {
-                if (t.at.startsWith(dateStr)) events.push({ ...t, type: 'test', time: t.at.substring(11, 16) });
+                if (t.at.startsWith(dateStr)) events.push({...t, type: 'test', time: t.at.substring(11, 16)});
             });
 
             this.reports.forEach((r) => {
-                if (r.at.startsWith(dateStr)) events.push({ ...r, type: 'report', time: r.at.substring(11, 16), at: r.at });
+                if (r.at.startsWith(dateStr)) events.push({...r, type: 'report', time: r.at.substring(11, 16), at: r.at});
             });
 
             this.medicationChanges.forEach((c) => {
@@ -3125,76 +3127,36 @@ export default function registerDashboard(Alpine) {
 
             return events;
         },
-        // --------------------------------------------------------------------
-        // 7. VERİ İNDİRME
-        // --------------------------------------------------------------------
+
+        /* 7. VERİ İNDİRME */
 
         async downloadRawMedicalData(mode = 'all') {
             try {
-                const [u, h, m, mc, ml, p, w, t, ti, r] = await Promise.all([
-                    fetch('data/users.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/hospitals.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/medications.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/medication_changes.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/medication_logs.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/pressures.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/weights.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/tests.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/test_items.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                    fetch('data/reports.json')
-                        .then((r) => r.json())
-                        .catch(() => []),
-                ]);
-                const patientData = u && u.length > 0 ? { name: u[0].name, email: u[0].email } : { name: 'Alaattin Sönmez', email: 'admin@medilog.test' };
+                if (!this.user || !this.user.name) {
+                    alert('Hasta bilgileri yüklenemedi. Lütfen sayfayı yenileyin.');
+                    return;
+                }
+
+                const user = this.user;
+                const patientData = {...user};
+                const ctx = this.clinicalContext || {};
+                const h = this.hospitals || [];
+                const m = this.medications || [];
+                const mc = this.medicationChanges || [];
+                const ml = this.medicationLogs || [];
+                const p = this.pressures || [];
+                const w = this.weights || [];
+                const t = this.tests || [];
+                const ti = this.testItems || [];
+                const r = this.reports || [];
+
                 const clinicalContextSummary = {
-                    patient_summary: 'Alaattin Sönmez (64 yaş, Erkek), 19 Şubat 2026 tarihinde, akut Tip A Aort Diseksiyonu ve Ciddi Aort Kapak Yetmezliği nedeniyle sırtına ve omurgasına yayılan, ani başlayan, yırtıcı karakterde şiddetli göğüs ve sırt ağrısı yaşamıştır.',
-                    anatomical_surgical_modifications: [
-                        'Dilate nativ asendan aort rezeke edildi (5.3 cm anevrizma); 32mm polyester Dacron vasküler greft ile replase edildi (değiştirildi).',
-                        'Yetersiz nativ aort kapağı, 25mm Carbomedics çift yapraklı metalik mekanik protez kalp kapağı ile replase edildi.',
-                        'Koroner arter butonları vasküler grefte implante edildi (Bentall Prosedürü 20 Şubat 2026 tarihinde tamamlandı).',
-                        'Selektif antegrad serebral perfüzyon amacıyla sol brakiyal arter ve sağ common karotid artere (CCA) cerrahi kanülasyon uygulandı; ardından primer vasküler onarım sağlandı.',
-                    ],
-                    emergency_referral_pathway_feb_19_2026: [
-                        {
-                            time: '17:21 - 17:22',
-                            hospital: 'Defne Devlet Hastanesi',
-                            clinical_actions: 'İlk acil başvuru. Kardiyak troponin bazal değeri ölçüldü. Hipertansif kriz tanısı konuldu. Acilen sevk edildi.',
-                        },
-                        {
-                            time: '20:17 - 20:30',
-                            hospital: 'Mustafa Kemal Üniversitesi Araştırma Hastanesi',
-                            clinical_actions: 'Sistemik antikoagülasyon veya majör cerrahi öncesinde intrakraniyal kanama veya akut inmeyi ekarte etmek amacıyla acil kranyal değerlendirme (Diffüzyon MRG ve Kontrastsız Beyin BT) yapıldı.',
-                        },
-                        {
-                            time: '21:42',
-                            hospital: 'Kırıkhan Devlet Hastanesi',
-                            clinical_actions: 'Kontrastlı Göğüs ve Batın BT Anjiyografisi tamamlandı. Aort kökünden iliak bifurkasyona kadar uzanan DeBakey Tip I / Stanford Tip A Aort Diseksiyonu ve asendan aort anevrizması doğrulandı.',
-                        },
-                        {
-                            time: '23:30',
-                            hospital: 'Özel İskenderun Gelişim Hastanesi',
-                            clinical_actions: 'Doğrudan acil yatış sağlandı. Preoperatif hazırlıklar tamamlandı ve derin hipotermik sirkülatuar arrest altında acil açık kalp ameliyatı (Bentall Prosedürü) uygulandı.',
-                        },
-                    ],
+                    patient_summary: ctx.patient_summary || '',
+                    anatomical_surgical_modifications: ctx.anatomical_surgical_modifications || [],
+                    emergency_referral_pathway: ctx.emergency_referral_pathway || [],
+                    clinical_timeline: ctx.clinical_timeline || [],
                 };
+
                 let filteredChanges = mc;
                 let filteredLogs = ml;
                 let filteredPressures = p;
@@ -3203,6 +3165,7 @@ export default function registerDashboard(Alpine) {
                 let filteredTestItems = ti;
                 let filteredReports = r;
                 let clinicalInsightsData = {};
+
                 if (mode === 'period') {
                     const start = this.startDate;
                     const end = this.endDate;
@@ -3217,11 +3180,11 @@ export default function registerDashboard(Alpine) {
                     clinicalInsightsData = {
                         selected_period: {
                             label: 'Seçili Dönem',
-                            range: { start: this.startDate, end: this.endDate },
+                            range: {start: this.startDate, end: this.endDate},
                             insights: [
                                 {
                                     period: 'all',
-                                    range: { start: this.startDate, end: this.endDate },
+                                    range: {start: this.startDate, end: this.endDate},
                                     html: this.generateDynamicInsight(this.startDate, this.endDate),
                                 },
                             ],
@@ -3244,28 +3207,29 @@ export default function registerDashboard(Alpine) {
                     clinicalInsightsData = {
                         selected_period: {
                             label: 'Seçili Dönem',
-                            range: { start: this.startDate, end: this.endDate },
+                            range: {start: this.startDate, end: this.endDate},
                             insights: selectedPeriods.map((p) => ({
                                 period: p.label,
-                                range: { start: p.start, end: p.end },
+                                range: {start: p.start, end: p.end},
                                 html: this.generateDynamicInsight(p.start, p.end),
                             })),
                         },
                         all_time: {
                             label: 'Tüm Zamanlar',
-                            range: { start: this.firstD, end: this.lastD },
+                            range: {start: this.firstD, end: this.lastD},
                             insights: allTimePeriods.map((p) => ({
                                 period: p.label,
-                                range: { start: p.start, end: p.end },
+                                range: {start: p.start, end: p.end},
                                 html: this.generateDynamicInsight(p.start, p.end),
                             })),
                         },
                     };
                 }
+
                 const masterOutput = {
                     export_date: new Date().toISOString(),
                     export_mode: mode === 'period' ? 'Selected Period Only' : 'All Historical Data',
-                    date_range: mode === 'period' ? { start: this.startDate, end: this.endDate } : 'All-Time',
+                    date_range: mode === 'period' ? {start: this.startDate, end: this.endDate} : 'All-Time',
                     patient: patientData,
                     clinical_context: clinicalContextSummary,
                     clinical_evaluation_report: this.periodicClinicalReport,
@@ -3280,8 +3244,9 @@ export default function registerDashboard(Alpine) {
                     lab_test_results: filteredTestItems,
                     reports: filteredReports,
                 };
+
                 const minifiedJson = JSON.stringify(masterOutput);
-                const blob = new Blob([minifiedJson], { type: 'application/json' });
+                const blob = new Blob([minifiedJson], {type: 'application/json'});
                 const url = URL.createObjectURL(blob);
                 const slugifiedName = patientData.name
                     .toLowerCase()
@@ -3310,4 +3275,51 @@ export default function registerDashboard(Alpine) {
             }
         },
     }));
+}
+
+/* EXPOSE UTILITY FUNCTIONS FOR TESTING (Node environment) */
+
+export {debounce};
+export function getBPStatusText(sys, dia) {
+    if (sys >= 140 || dia >= 90) return 'Hipertansiyon';
+    if (sys >= 130 || dia >= 85) return 'Prehipertansiyon';
+    return 'Normal';
+}
+export function getBPBadgeClass(sys, dia) {
+    let s = getBPStatusText(sys, dia);
+    if (s === 'Hipertansiyon') return 'bg-rose-50 text-rose-700 border border-rose-200';
+    if (s === 'Prehipertansiyon') return 'bg-amber-50 text-amber-700 border border-amber-200';
+    return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+}
+export function getLabItemStatus(item) {
+    if (!item) return 'Normal';
+    let val = parseFloat(item.result);
+    if (isNaN(val)) return 'Normal';
+    let hasMin = item.reference_min !== null && item.reference_min !== undefined && item.reference_min !== '';
+    let hasMax = item.reference_max !== null && item.reference_max !== undefined && item.reference_max !== '';
+    if (hasMin && !isNaN(parseFloat(item.reference_min)) && val < parseFloat(item.reference_min)) return 'Düşük';
+    if (hasMax && !isNaN(parseFloat(item.reference_max)) && val > parseFloat(item.reference_max)) return 'Yüksek';
+    return 'Normal';
+}
+export function formatTurkishDate(isoDate) {
+    if (!isoDate) return '-';
+    const datePart = isoDate.includes(' ') ? isoDate.split(' ')[0] : isoDate;
+    const parts = datePart.split('-');
+    if (parts.length !== 3) return isoDate;
+    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+}
+export function formatFullDate(dateInput) {
+    if (!dateInput) return '';
+    let d;
+    if (typeof dateInput === 'string') {
+        const datePart = dateInput.substring(0, 10);
+        d = new Date(datePart);
+    } else if (dateInput instanceof Date) {
+        d = dateInput;
+    } else {
+        return '';
+    }
+    if (isNaN(d.getTime())) return '';
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }

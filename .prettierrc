@@ -4,6 +4,7 @@
     "singleQuote": true,
     "tabWidth": 4,
     "trailingComma": "all",
+    "bracketSpacing": false,
     "bracketSameLine": true,
     "singleAttributePerLine": false,
     "htmlWhitespaceSensitivity": "ignore",

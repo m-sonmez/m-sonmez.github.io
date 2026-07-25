@@ -3,7 +3,8 @@
 **Software Architect & Full-Stack Developer**  
 _Specialized in Laravel, PHP, and High-Performance Systems_
 
-Welcome to my personal landing page. I am a software architect and developer dedicated to building scalable, high-performance web applications and robust system architectures.
+Welcome to my personal landing page. I am a software architect and developer dedicated to building scalable,
+high-performance web applications and robust system architectures.
 
 ---
 

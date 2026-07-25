@@ -1,12 +1,8 @@
-/* ==========================================================================
-   input.css – Tailwind CSS entry with custom theming and global styles
-   ========================================================================== */
+/* input.css – Tailwind CSS entry with custom theming and global styles */
 
 @import 'tailwindcss';
 
-/* --------------------------------------------------------------------------
-   Theme customizations (fonts, container breakpoints)
-   -------------------------------------------------------------------------- */
+/* Theme customizations (fonts, container breakpoints) */
 @theme {
     --font-sans: 'Inter', sans-serif;
     --font-display: 'Outfit', sans-serif;
@@ -17,9 +13,7 @@
     --container-2xl: 112rem;
 }
 
-/* ==========================================================================
-   Global & reset
-   ========================================================================== */
+/* Global & reset */
 
 html {
     scroll-behavior: smooth;
@@ -42,9 +36,7 @@ html {
     display: none !important;
 }
 
-/* ==========================================================================
-   Custom scrollbar
-   ========================================================================== */
+/* Custom scrollbar */
 
 ::-webkit-scrollbar {
     width: 6px;
@@ -64,9 +56,7 @@ html {
     background: #94a3b8;
 }
 
-/* ==========================================================================
-   Base glass cards (used as composition parents)
-   ========================================================================== */
+/* Base glass cards (used as composition parents) */
 
 .glass-card {
     background-color: #ffffff;
@@ -85,9 +75,7 @@ html {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ==========================================================================
-   Reusable UI component classes (Tailwind @apply)
-   ========================================================================== */
+/* Reusable UI component classes (Tailwind @apply) */
 
 .app-card {
     /* glass-card stilini doğrudan uygula */
@@ -138,9 +126,7 @@ html {
     @apply overflow-x-auto;
 }
 
-/* ==========================================================================
-   Custom status badges (already present, kept intact)
-   ========================================================================== */
+/* Custom status badges (already present, kept intact) */
 
 .bg-emerald-50 {
     background-color: #f0fdf4 !important;
@@ -183,9 +169,7 @@ html {
     border-color: rgba(254, 205, 211, 0.6) !important;
 }
 
-/* ==========================================================================
-   Date input alignment
-   ========================================================================== */
+/* Date input alignment */
 
 input[type='date']::-webkit-date-and-time-value {
     text-align: right !important;
@@ -200,9 +184,7 @@ input[type='date']::-webkit-datetime-edit-fields-wrapper {
     justify-content: flex-end !important;
 }
 
-/* ==========================================================================
-   Sidebar transitions
-   ========================================================================== */
+/* Sidebar transitions */
 
 .sidebar-desktop {
     overscroll-behavior: contain;
@@ -215,9 +197,7 @@ input[type='date']::-webkit-datetime-edit-fields-wrapper {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ==========================================================================
-   CSS Variables for chart target ranges & notification banners
-   ========================================================================== */
+/* CSS Variables for chart target ranges & notification banners */
 
 :root {
     --bp-target-sys-min: 110;

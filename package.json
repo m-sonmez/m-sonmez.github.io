@@ -22,7 +22,7 @@
     "keywords": [],
     "author": "Murat Sönmez",
     "license": "ISC",
-    "type": "commonjs",
+    "type": "module",
     "bugs": {
         "url": "https://github.com/m-sonmez/m-sonmez.github.io/issues"
     },
