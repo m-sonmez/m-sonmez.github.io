@@ -2724,31 +2724,135 @@ export default function registerDashboard(Alpine) {
             let m = this.medications.find((x) => x.name.toLowerCase() === medName.toLowerCase());
             return m ? m.is_emergency : false;
         },
+        navigateToTest(testId) {
+            this.sections.labFindings = true;
+            this.selectLabSession(testId);
+            this.$nextTick(() => {
+                const el = document.getElementById('lab-findings');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            if (window.innerWidth < 1024) this.sidebarOpen = false;
+        },
+        navigateToReport(protocolNo) {
+            this.sections.reports = true;
+            this.selectReport(protocolNo);
+            this.$nextTick(() => {
+                const el = document.getElementById('reports');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            if (window.innerWidth < 1024) this.sidebarOpen = false;
+        },
+        getEventBgClass(e) {
+            if (e.isPlan) {
+                return 'bg-slate-100 border-slate-300 border-dashed opacity-60 grayscale-[50%]';
+            }
+
+            if (e.type === 'bp') {
+                const status = this.getBPStatusText(e.sys, e.dia);
+                if (status === 'Normal') {
+                    return 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100';
+                }
+                if (status === 'Prehipertansiyon') {
+                    return 'bg-amber-50 border-amber-300 hover:bg-amber-100';
+                }
+                if (status === 'Hipertansiyon') {
+                    return 'bg-rose-100 border-rose-300 hover:bg-rose-200';
+                }
+                return 'bg-white border-slate-200 hover:bg-slate-50';
+            }
+
+            if (e.type === 'med' && e.isEmergency) {
+                return 'bg-rose-100 border-rose-400 animate-pulse hover:bg-rose-200';
+            }
+
+            const map = {
+                med: 'bg-indigo-100/70 border-indigo-200 hover:bg-indigo-200/70',
+                weight: 'bg-sky-100/70 border-sky-200 hover:bg-sky-200/70',
+                test: 'cursor-pointer bg-teal-100/70 border-teal-200 hover:bg-teal-200/70',
+                report: 'cursor-pointer bg-violet-100/70 border-violet-200 hover:bg-violet-200/70',
+                medchange: 'bg-amber-100/70 border-amber-200 hover:bg-amber-200/70',
+            };
+
+            return map[e.type] || 'bg-white border-slate-200 hover:bg-slate-50';
+        },
         getDailyEvents(dateStr) {
             let events = [];
             const currentAt = new Intl.DateTimeFormat('sv', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
+
             this.medicationLogs.forEach((l) => {
                 if (l.at.startsWith(dateStr)) {
                     let isEmergency = this.isEmergencyMed(l.med);
                     events.push({ ...l, type: 'med', time: l.at.substring(11, 16), isEmergency });
                 }
             });
+
             this.pressures.forEach((p) => {
                 if (p.at.startsWith(dateStr)) events.push({ ...p, type: 'bp', time: p.at.substring(11, 16) });
             });
+
             this.weights.forEach((w) => {
                 if (w.at.startsWith(dateStr)) events.push({ ...w, type: 'weight', time: w.at.substring(11, 16) });
             });
+
             this.tests.forEach((t) => {
                 if (t.at.startsWith(dateStr)) events.push({ ...t, type: 'test', time: t.at.substring(11, 16) });
             });
+
             this.reports.forEach((r) => {
                 if (r.at.startsWith(dateStr)) events.push({ ...r, type: 'report', time: r.at.substring(11, 16), at: r.at });
             });
+
+            this.medicationChanges.forEach((c) => {
+                if (c.at.substring(0, 10) === dateStr) {
+                    const med = this.medications.find((m) => m.id === c.medication_id);
+                    const medName = med ? med.name : 'İlaç';
+                    const unit = med ? med.unit : '';
+                    let description = '';
+
+                    switch (c.type) {
+                        case 'Started':
+                            description = `Başladı (${c.amount} ${unit})`;
+                            break;
+                        case 'Ended':
+                            description = 'Bitti';
+                            break;
+                        case 'Paused':
+                            description = 'Ara';
+                            break;
+                        case 'Resumed':
+                            description = `Devam (${c.amount} ${unit})`;
+                            break;
+                        case 'Changed':
+                            description = `Doz (${c.amount} ${unit})`;
+                            break;
+                        case 'Taken':
+                            description = `Alındı (${c.amount} ${unit})`;
+                            break;
+                        default:
+                            description = c.type;
+                    }
+
+                    if (c.type !== 'Taken') {
+                        events.push({
+                            type: 'medchange',
+                            time: c.at.substring(11, 16),
+                            med: medName,
+                            changeType: c.type,
+                            amount: c.amount,
+                            timespan: c.timespan,
+                            description: description,
+                            isPlan: false,
+                        });
+                    }
+                }
+            });
+
             events.sort((a, b) => a.time.localeCompare(b.time));
+
             events.forEach((e) => {
                 e.isPlan = e.at > currentAt;
             });
+
             return events;
         },
         async downloadRawMedicalData(mode = 'all') {
