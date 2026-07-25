@@ -2895,22 +2895,22 @@ export default function registerDashboard(Alpine) {
 
                     switch (c.type) {
                         case 'Started':
-                            description = `Başladı (${c.amount} ${unit})`;
+                            description = `Başlandı (${c.amount} ${unit} ${medName})`;
                             break;
                         case 'Ended':
-                            description = 'Bitti';
+                            description = `Bırakıldı (${medName})`;
                             break;
                         case 'Paused':
-                            description = 'Ara';
+                            description = `Ara Verildi (${medName})`;
                             break;
                         case 'Resumed':
-                            description = `Devam (${c.amount} ${unit})`;
+                            description = `Devam Edildi (${c.amount} ${unit} ${medName})`;
                             break;
                         case 'Changed':
-                            description = `Doz (${c.amount} ${unit})`;
+                            description = `Doz Değişti (${c.amount} ${unit} ${medName})`;
                             break;
                         case 'Taken':
-                            description = `Alındı (${c.amount} ${unit})`;
+                            description = `Alındı (${c.amount} ${unit} ${medName})`;
                             break;
                         default:
                             description = c.type;

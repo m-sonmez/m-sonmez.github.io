@@ -1167,7 +1167,7 @@
                                                         <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.sys + '/' + dayEvent.dia + ' mmHg'"></span>
                                                     </template>
                                                     <template x-if="dayEvent.type === 'med'">
-                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="parseFloat((dayEvent.dose / (medConversions[dayEvent.med] || 1)).toFixed(2)) + ' x'"></span>
+                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="parseFloat((dayEvent.dose / (medConversions[dayEvent.med] || 1)).toFixed(2)) + ' x ' + dayEvent.med"></span>
                                                     </template>
                                                     <template x-if="dayEvent.type === 'weight'">
                                                         <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.weight + ' kg'"></span>
