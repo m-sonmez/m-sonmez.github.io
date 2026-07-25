@@ -1,5 +1,12 @@
+/* ==========================================================================
+   input.css – Tailwind CSS entry with custom theming and global styles
+   ========================================================================== */
+
 @import 'tailwindcss';
 
+/* --------------------------------------------------------------------------
+   Theme customizations (fonts, container breakpoints)
+   -------------------------------------------------------------------------- */
 @theme {
     --font-sans: 'Inter', sans-serif;
     --font-display: 'Outfit', sans-serif;
