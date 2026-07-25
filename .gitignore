@@ -1,9 +1,9 @@
 # Dependencies
-node_modules/
+node_modules
 
 # IDEs and editors
-.idea/
-.vscode/
+.idea
+.vscode
 *.swp
 
 # OS files
@@ -11,18 +11,16 @@ node_modules/
 Thumbs.db
 
 # LERD
-/.gemini/
-/.cursor/
-/node_modules/
-/.vscode/
-/.github/
-/.ai/
-/.claude/
-/.junie/
-/.mcp.json
-/.lerd.yaml
-/AGENTS.md
-/GEMINI.md
-/package-lock.json
-
-#sw.js
+.gemini
+.cursor
+node_modules
+.vscode
+.github
+.ai
+.claude
+.junie
+.mcp.json
+.lerd.yaml
+AGENTS.md
+GEMINI.md
+package-lock.json
