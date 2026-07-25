@@ -1,13 +1,23 @@
 <!doctype html>
+<!-- ==========================================================================
+   panel.html – Klinik Takip Dashboard Ana Sayfası
+   ========================================================================== -->
 <html lang="tr">
     <head>
         <meta charset="UTF-8" />
         <meta content="width=device-width, initial-scale=1.0" name="viewport" />
         <title x-text="user.name ? user.name + ' | Klinik Takip Dashboard' : 'Kapsamlı Klinik Takip Dashboard'">Kapsamlı Klinik Takip Dashboard</title>
+
+        <!-- Google Fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+        <!-- Tailwind compiled CSS -->
         <link href="./dist/output.css" rel="stylesheet" />
+
+        <!-- Alpine / Chart.js bundle -->
         <script src="./dist/output.js" type="module"></script>
 
+        <!-- Apple Touch Icons -->
         <link href="./dist/icons/apple-icon-57x57.png" rel="apple-touch-icon" sizes="57x57" />
         <link href="./dist/icons/apple-icon-60x60.png" rel="apple-touch-icon" sizes="60x60" />
         <link href="./dist/icons/apple-icon-72x72.png" rel="apple-touch-icon" sizes="72x72" />
@@ -18,22 +28,29 @@
         <link href="./dist/icons/apple-icon-152x152.png" rel="apple-touch-icon" sizes="152x152" />
         <link href="./dist/icons/apple-icon-180x180.png" rel="apple-touch-icon" sizes="180x180" />
 
+        <!-- Favicon & Android Icons -->
         <link href="./dist/icons/favicon.ico" rel="icon" type="image/x-icon" />
         <link href="./dist/icons/android-icon-192x192.png" rel="icon" sizes="192x192" type="image/png" />
         <link href="./dist/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png" />
         <link href="./dist/icons/favicon-96x96.png" rel="icon" sizes="96x96" type="image/png" />
         <link href="./dist/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png" />
 
+        <!-- Web App Manifest / PWA -->
         <link href="./dist/icons/manifest.json" rel="manifest" />
         <meta content="#ffffff" name="msapplication-TileColor" />
         <meta content="./dist/icons/ms-icon-144x144.png" name="msapplication-TileImage" />
         <meta content="#ffffff" name="theme-color" />
 
+        <!-- iOS / Windows PWA meta -->
         <meta content="yes" name="apple-mobile-web-app-capable" />
         <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />
         <meta content="./dist/icons/browserconfig.xml" name="msapplication-config" />
     </head>
+
     <body class="min-h-screen bg-slate-50 font-sans text-slate-700 antialiased selection:bg-indigo-500 selection:text-white" x-cloak x-data="dashboardApp()" x-init="initDashboard()">
+        <!-- ================================================================
+EKRAN ÇOK KÜÇÜK UYARISI (max-[384px])
+================================================================ -->
         <div class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-slate-900 p-6 text-center text-white select-none max-[384px]:flex">
             <div class="mb-4 rounded-full bg-amber-500/10 p-3 text-amber-400">
                 <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,7 +60,12 @@
             <h3 class="font-display text-lg font-bold tracking-tight">Ekran Çok Küçük</h3>
             <p class="mt-2 text-xs leading-relaxed text-slate-400">Verilerin düzgün görüntülenebilmesi için lütfen telefonunuzu yan çevirin, daha büyük bir ekran veya bilgisayar kullanın.</p>
         </div>
+
+        <!-- ================================================================
+ANA UYGULAMA KAPSAMI (max-[384px] hariç)
+================================================================ -->
         <div class="block max-[384px]:hidden">
+            <!-- CORS Hatası Uyarısı -->
             <template x-if="corsError">
                 <div class="sticky top-0 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2.5 text-center text-xs font-semibold text-white shadow-md">
                     <svg class="h-4 w-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,10 +74,19 @@
                     <span>Dinamik JSON verileri tarayıcı güvenlik politikası nedeniyle yerel dosyadan doğrudan çekilemedi. Panel korumalı simüle veriler ile başlatıldı. Gerçek analiz akışı için lütfen projeyi bir yerel sunucu (VS Code Live Server vb.) üzerinden çalıştırın.</span>
                 </div>
             </template>
+
+            <!-- ============================================================
+SIDEBAR + ANA İÇERİK (LG+ flex)
+============================================================ -->
             <div class="items-stretch lg:flex lg:flex-1">
+                <!-- Mobil overlay (sidebar arkası) -->
                 <div @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" style="display: none" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-end="opacity-100" x-transition:enter-start="opacity-0" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-end="opacity-0" x-transition:leave-start="opacity-100"></div>
 
+                <!-- ==========================================================
+SIDEBAR
+========================================================== -->
                 <aside :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full lg:translate-x-0': !sidebarOpen, 'lg:w-14': sidebarCollapsed, 'lg:w-64': !sidebarCollapsed }" class="fixed inset-y-0 left-0 z-[60] flex w-64 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:shadow-none">
+                    <!-- Sidebar Başlık / Logo -->
                     <div class="relative flex h-16 shrink-0 items-center justify-between border-b border-slate-100 px-4">
                         <div class="flex items-center gap-1.5 overflow-hidden whitespace-nowrap transition-opacity duration-300" x-show="!sidebarCollapsed || isMobile">
                             <span class="text-lg font-black tracking-tight text-indigo-600">Klinik</span>
@@ -73,8 +104,10 @@
                         </button>
                     </div>
 
+                    <!-- Tarih Filtreleri (sticky) -->
                     <div class="sticky top-0 z-20 shrink-0 border-b border-slate-200/80 bg-slate-50/90 px-2 py-2 backdrop-blur-sm" x-show="sidebarOpen || !sidebarCollapsed">
                         <div class="group rounded-xl border border-slate-200/80 bg-slate-100/60 px-2 py-2 transition-colors hover:bg-slate-200/50">
+                            <!-- Preset Butonları (önceki / sonraki) -->
                             <div class="flex items-center justify-center gap-1.5">
                                 <button :disabled="datePreset === 'all' || startDate === firstD" @click="shiftDatePeriod(-1)" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-95 disabled:pointer-events-none disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-40" x-cloak>
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,11 +133,13 @@
                                 </button>
                             </div>
 
+                            <!-- Başlangıç Tarihi -->
                             <div class="mt-2 flex items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
                                 <label class="flex-shrink-0 text-[10px] font-medium whitespace-nowrap text-slate-500" for="startDate">Başlangıç:</label>
                                 <input :max="endDate" :min="firstD" @change="datePreset = 'custom'; updateFilters()" class="min-w-0 appearance-none bg-transparent py-0.5 text-right text-[11px] font-semibold text-slate-700 outline-none" id="startDate" type="date" x-model="startDate" />
                             </div>
 
+                            <!-- Bitiş Tarihi -->
                             <div class="mt-2 flex items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
                                 <label class="flex-shrink-0 text-[10px] font-medium whitespace-nowrap text-slate-500" for="endDate">Bitiş:</label>
                                 <input :max="lastD" :min="startDate" @change="datePreset = 'custom'; updateFilters()" class="min-w-0 appearance-none bg-transparent py-0.5 text-right text-[11px] font-semibold text-slate-700 outline-none" id="endDate" type="date" x-model="endDate" />
@@ -112,9 +147,11 @@
                         </div>
                     </div>
 
+                    <!-- Navigasyon Menüsü -->
                     <nav class="custom-scrollbar flex-1 space-y-1.5 overflow-y-auto p-2.5 select-none">
                         <div class="my-1.5 border-t border-slate-100"></div>
 
+                        <!-- Yenile Butonu -->
                         <div class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <button :disabled="refreshing" :title="sidebarCollapsed ? 'Verileri Yenile' : ''" @click="refreshApp()" class="flex min-w-0 flex-1 items-center outline-none focus:outline-none">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-slate-500 transition-transform group-hover:scale-110">
@@ -133,6 +170,7 @@
 
                         <div class="my-1.5 border-t border-slate-100"></div>
 
+                        <!-- Tümünü Göster / Gizle -->
                         <div class="group mb-1 flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-100/60 px-2 py-2 transition-colors hover:bg-slate-200/50">
                             <button :title="sidebarCollapsed ? (Object.values(sections).every(Boolean) ? 'Tümünü Gizle' : 'Tümünü Göster') : ''" @click="let state = !Object.values(sections).every(Boolean); Object.keys(sections).forEach(k => sections[k] = state)" class="flex min-w-0 flex-1 items-center outline-none focus:outline-none">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-slate-500 transition-transform group-hover:scale-110">
@@ -151,6 +189,7 @@
 
                         <div class="my-1.5 border-t border-slate-100"></div>
 
+                        <!-- Özet & Metrikler -->
                         <div :class="!sections.summary ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'Özet & Klinik Metrikler' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#summary">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-rose-500 transition-transform group-hover:scale-110">
@@ -164,6 +203,7 @@
                             </label>
                         </div>
 
+                        <!-- Tansiyon & Kilo -->
                         <div :class="!sections.charts ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'Tansiyon & Kilo Grafikleri' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#charts">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-blue-500 transition-transform group-hover:scale-110">
@@ -177,6 +217,7 @@
                             </label>
                         </div>
 
+                        <!-- Zaman Akışı -->
                         <div :class="!sections.prescriptions ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'Reçeteler & Zaman Akışı' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#prescriptions">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-indigo-500 transition-transform group-hover:scale-110">
@@ -190,6 +231,7 @@
                             </label>
                         </div>
 
+                        <!-- İlaç Matrisi -->
                         <div :class="!sections.flowsheet ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'İlaç Matrisi (Flowsheet)' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#flowsheet">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-violet-500 transition-transform group-hover:scale-110">
@@ -203,6 +245,7 @@
                             </label>
                         </div>
 
+                        <!-- İnteraktif Takvim -->
                         <div :class="!sections.calendar ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'İnteraktif Takvim' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#calendar">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-amber-500 transition-transform group-hover:scale-110">
@@ -216,6 +259,7 @@
                             </label>
                         </div>
 
+                        <!-- Tahlil Trendleri -->
                         <div :class="!sections.labTrends ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'Tahlil Trendleri' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#lab-trends">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-orange-500 transition-transform group-hover:scale-110">
@@ -229,6 +273,7 @@
                             </label>
                         </div>
 
+                        <!-- Tetkik & Bulgular -->
                         <div :class="!sections.labFindings ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'Tetkik & Bulgular' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#lab-findings">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-teal-500 transition-transform group-hover:scale-110">
@@ -242,6 +287,7 @@
                             </label>
                         </div>
 
+                        <!-- Raporlar -->
                         <div :class="!sections.reports ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'Epikrizler & Raporlar' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#reports">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-slate-500 transition-transform group-hover:scale-110">
@@ -255,6 +301,7 @@
                             </label>
                         </div>
 
+                        <!-- Klinik Analiz -->
                         <div :class="!sections.clinicalReport ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
                             <a :title="sidebarCollapsed ? 'Klinik Değerlendirme' : ''" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="flex min-w-0 flex-1 items-center outline-none" href="#clinical-report">
                                 <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-indigo-500 transition-transform group-hover:scale-110">
@@ -269,6 +316,7 @@
                         </div>
                     </nav>
 
+                    <!-- Alt Çubuk (Animasyon, İndirme, Versiyon) -->
                     <div class="mt-auto shrink-0 border-t border-slate-100 bg-slate-50/50 p-3">
                         <div class="flex flex-col gap-2" x-show="!sidebarCollapsed || isMobile">
                             <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
@@ -302,6 +350,7 @@
                             <div class="text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase">v1.1 &middot; Klinik Dashboard</div>
                         </div>
 
+                        <!-- Daraltılmış Sidebar İkonları -->
                         <div class="flex flex-col items-center gap-2" x-show="sidebarCollapsed && !isMobile">
                             <button :class="animStatus === 'playing' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'" @click="toggleAnimation()" class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors" title="Animasyon Oynat/Duraklat">
                                 <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" x-show="animStatus !== 'playing'">
@@ -320,14 +369,22 @@
                     </div>
                 </aside>
 
+                <!-- ==========================================================
+ANA İÇERİK
+========================================================== -->
                 <main class="min-w-0 flex-1 px-4 pb-16 sm:px-6 lg:px-8">
+                    <!-- Mobil Menü Açma Butonu -->
                     <button @click="sidebarOpen = true" aria-label="Menüyü aç" class="fixed top-2 left-2 z-50 rounded-lg border border-slate-200 bg-white/80 p-2 shadow-lg backdrop-blur-sm transition-colors hover:bg-slate-50 lg:hidden" x-show="!sidebarOpen && isMobile">
                         <svg class="h-6 w-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
                         </svg>
                     </button>
 
+                    <!-- ==========================================================
+    BÖLÜM 1: ÖZET & METRİKLER (#summary)
+    ========================================================== -->
                     <div class="mx-auto mt-8 mb-8 grid max-w-7xl grid-cols-2 gap-2 lg:grid-cols-4 print:grid-cols-4" id="summary" x-cloak x-show="sections.summary" x-transition>
+                        <!-- Haftalık Tansiyon -->
                         <div class="glass-card glass-card-hover order-1 flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-500 p-6 transition-all duration-300 lg:order-1" title="Son 7 gün ortalaması...">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
@@ -357,6 +414,8 @@
                                 </div>
                             </template>
                         </div>
+
+                        <!-- Son Kilo -->
                         <div :title="latestKilo.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestKilo.date) : ''" class="glass-card glass-card-hover order-3 flex flex-col justify-between rounded-2xl border-b-4 border-b-blue-500 p-6 transition-all duration-300 lg:order-2">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
@@ -386,6 +445,8 @@
                                 </div>
                             </template>
                         </div>
+
+                        <!-- Son INR -->
                         <div :title="latestInr.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestInr.date) : ''" class="glass-card glass-card-hover order-5 flex flex-col justify-between rounded-2xl border-b-4 border-b-amber-500 p-6 transition-all duration-300 lg:order-3">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
@@ -415,6 +476,8 @@
                                 </div>
                             </template>
                         </div>
+
+                        <!-- Son HGB -->
                         <div :title="latestHgb.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestHgb.date) : ''" class="glass-card glass-card-hover order-6 flex flex-col justify-between rounded-2xl border-b-4 border-b-emerald-500 p-6 transition-all duration-300 lg:order-4">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
@@ -444,6 +507,8 @@
                                 </div>
                             </template>
                         </div>
+
+                        <!-- Ortalama Tansiyon -->
                         <div class="glass-card glass-card-hover order-2 flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-400 p-6 transition-all duration-300 lg:order-5">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
@@ -480,6 +545,8 @@
                                 </div>
                             </template>
                         </div>
+
+                        <!-- Kilo Değişimi -->
                         <div class="glass-card glass-card-hover order-4 flex flex-col justify-between rounded-2xl border-b-4 border-b-blue-400 p-6 transition-all duration-300 lg:order-6">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
@@ -510,6 +577,8 @@
                                 </div>
                             </template>
                         </div>
+
+                        <!-- İlaç Uyumu -->
                         <div class="glass-card glass-card-hover order-7 flex flex-col justify-between rounded-2xl border-b-4 border-b-indigo-500 p-6 transition-all duration-300 lg:order-7">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
@@ -540,6 +609,8 @@
                                 </div>
                             </template>
                         </div>
+
+                        <!-- Anormal Tahliller -->
                         <div class="glass-card glass-card-hover order-8 flex flex-col justify-between rounded-2xl border-b-4 border-b-amber-400 p-6 transition-all duration-300 lg:order-8">
                             <template x-if="loadingMetrics">
                                 <div class="flex h-full items-center justify-center py-4">
@@ -574,8 +645,13 @@
                             </template>
                         </div>
                     </div>
+
+                    <!-- ==========================================================
+    BÖLÜM 2: TANSİYON & KİLO GRAFİKLERİ (#charts)
+    ========================================================== -->
                     <div class="mx-auto mt-6 max-w-7xl" id="charts" x-show="sections.charts">
                         <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
+                            <!-- Kan Basıncı Grafiği -->
                             <div class="order-1 lg:order-1">
                                 <div class="glass-card rounded-2xl p-6 shadow-sm">
                                     <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
@@ -613,6 +689,8 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Ağırlık Grafiği -->
                             <div class="order-3 lg:order-2">
                                 <div class="glass-card rounded-2xl p-6 shadow-sm">
                                     <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
@@ -644,6 +722,8 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Kan Basıncı Tablosu -->
                             <div class="order-2 lg:order-3">
                                 <div class="glass-card rounded-2xl p-6 shadow-sm" x-data="{ showAllBp: false }">
                                     <div class="mb-5 flex flex-col flex-row items-center items-start justify-between gap-2">
@@ -685,6 +765,8 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Ağırlık Tablosu -->
                             <div class="order-4 lg:order-4">
                                 <div class="glass-card rounded-2xl p-6 shadow-sm" x-data="{ showAllWt: false }">
                                     <div class="mb-5 flex flex-col flex-row items-center items-start justify-between gap-2">
@@ -728,6 +810,10 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ==========================================================
+    BÖLÜM 3: ZAMAN AKIŞI & REÇETELER (#prescriptions)
+    ========================================================== -->
                     <div class="mx-auto mt-6 max-w-7xl space-y-6" id="prescriptions" x-cloak x-show="sections.prescriptions" x-transition>
                         <div class="glass-card rounded-2xl p-6 shadow-sm print:hidden">
                             <div class="mb-4 text-xs font-bold tracking-wider text-slate-400 uppercase">İlaç Filtresi</div>
@@ -779,8 +865,10 @@
                                 </template>
                             </div>
                         </div>
+
                         <div class="grid grid-cols-1 gap-2 lg:grid-cols-3">
                             <div class="space-y-6 lg:col-span-2">
+                                <!-- İlaç Zaman Akışı Grafiği -->
                                 <div class="glass-card overflow-hidden rounded-2xl p-6 shadow-sm">
                                     <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
                                         <span class="h-6 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
@@ -845,6 +933,8 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Tedavi Kronolojisi -->
                                 <div class="glass-card rounded-2xl p-6 shadow-sm">
                                     <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
                                         <svg class="h-5 w-5 shrink-0 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -888,6 +978,8 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Sağ Panel: Aktif / Pasif İlaçlar -->
                             <div class="space-y-6">
                                 <div class="glass-card rounded-2xl p-6 shadow-sm">
                                     <h2 class="font-display mb-5 flex items-center gap-2 text-lg font-semibold text-slate-900">
@@ -908,6 +1000,7 @@
                                             <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-4 text-center text-xs font-medium text-slate-400">Aktif ilaç kaydı bulunamadı.</div>
                                         </template>
                                     </div>
+
                                     <h2 class="font-display mt-6 mb-4 flex items-center gap-1.5 text-base font-bold text-slate-900">
                                         <span class="h-5 w-1 shrink-0 rounded-full bg-slate-400"></span>
                                         Pasif İlaçlar
@@ -930,6 +1023,10 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ==========================================================
+    BÖLÜM 4: İLAÇ MATRİSİ (#flowsheet)
+    ========================================================== -->
                     <div class="mx-auto mt-6 max-w-7xl space-y-6" id="flowsheet" x-cloak x-show="sections.flowsheet" x-transition>
                         <div class="glass-card rounded-2xl p-6 shadow-sm">
                             <div class="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
@@ -945,13 +1042,16 @@
                                     <button :class="flowsheetMode === 'chart' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 border border-slate-200'" @click="flowsheetMode = 'chart'; $nextTick(() => renderFocusChart())" class="flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition sm:flex-none">Grafik Karşılaştır</button>
                                 </div>
                             </div>
+
                             <div class="flex h-64 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50" x-show="loadingFlowsheet">
                                 <div class="flex flex-col items-center gap-2">
                                     <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
                                     <span class="text-xs font-medium text-slate-400">İlaç matrisi yükleniyor...</span>
                                 </div>
                             </div>
+
                             <div x-show="!loadingFlowsheet">
+                                <!-- Grid Modu -->
                                 <div class="relative" x-show="flowsheetMode === 'grid'">
                                     <div @scroll="activeCellTooltip = null" class="custom-scrollbar overflow-x-auto rounded-xl border border-slate-200/60 bg-slate-50/50">
                                         <table class="w-full border-collapse text-left">
@@ -994,6 +1094,8 @@
                                         </table>
                                     </div>
                                 </div>
+
+                                <!-- Grafik Modu -->
                                 <div class="space-y-4" x-show="flowsheetMode === 'chart'">
                                     <div class="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
                                         <template :key="medName" x-for="medName in allFlowsheetMeds">
@@ -1008,6 +1110,8 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Tooltip'lar -->
                             <div :style="'left: ' + tooltip.x + 'px; top: ' + tooltip.y + 'px;'" class="pointer-events-none absolute z-50 min-w-[180px] rounded-xl border border-slate-200 bg-white/95 p-3 text-xs shadow-md backdrop-blur-md transition-all duration-100" x-cloak x-show="tooltip.show">
                                 <div class="font-display mb-1.5 flex justify-between gap-2 border-b border-slate-100 pb-1 font-bold text-slate-900">
                                     <span x-text="tooltip.med"></span>
@@ -1026,6 +1130,7 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div :class="activeCellTooltip?.isTop ? '-translate-y-full -mt-2' : 'mt-2'" :style="`left: ${activeCellTooltip?.x}px; top: ${activeCellTooltip?.y}px;`" @click.away="activeCellTooltip = null" class="absolute z-50 w-52 -translate-x-1/2 rounded-xl bg-slate-900/95 p-3 text-left text-white shadow-md backdrop-blur-md" x-cloak x-show="activeCellTooltip">
                                 <div class="font-display mb-1.5 flex justify-between gap-2 border-b border-slate-700 pb-1 font-bold">
                                     <span x-text="activeCellTooltip?.med"></span>
@@ -1047,6 +1152,9 @@
                         </div>
                     </div>
 
+                    <!-- ==========================================================
+    BÖLÜM 5: İNTERAKTİF TAKVİM (#calendar)
+    ========================================================== -->
                     <div class="mx-auto mt-6 grid max-w-7xl grid-cols-1 items-start gap-2 lg:grid-cols-[1fr_384px]" id="calendar" x-cloak x-show="sections.calendar" x-transition>
                         <div class="glass-card rounded-2xl p-6 shadow-sm">
                             <div class="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1098,7 +1206,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="glass-card rounded-2xl p-6 shadow-sm">
+
+                        <!-- Sağ Panel: Gün Detayı -->
+                        <div class="glass-card rounded-2xl p-6 shadow-sm" id="day">
                             <div class="mb-4 flex flex-col flex-row items-center items-start justify-between gap-2 border-b border-slate-100 pb-4">
                                 <h3 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Gün Detayı</h3>
                                 <label class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50">
@@ -1216,6 +1326,10 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ==========================================================
+    BÖLÜM 6: TAHLİL TRENDLERİ (#lab-trends)
+    ========================================================== -->
                     <div class="mx-auto mt-6 max-w-7xl space-y-6" id="lab-trends" x-cloak x-show="sections.labTrends" x-transition>
                         <div class="glass-card mt-8 rounded-2xl p-6 shadow-sm">
                             <div class="mb-5">
@@ -1235,108 +1349,126 @@
                             </div>
                             <div x-show="!loadingLabCharts">
                                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                                    <!-- INR -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">INR (Koagülasyon)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="inrLabChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- PT -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">PT (Sn)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="ptChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- APTT -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">aPTT (Sn)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="apttChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- HGB -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">HGB (Hemoglobin)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="hgbChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- HCT -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">HCT (Hematokrit)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="hctChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- RBC -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">RBC (Alyuvar)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="rbcChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- PLT -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">PLT (Trombosit)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="pltChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- WBC -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">WBC (Akyuvar)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="wbcChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- CRP -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">CRP (İltihap)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="crpChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- Lenfosit -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">Lenfosit (LYM#)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="lymChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- NEU -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">NEU (Nötrofil)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="neuChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- CREA -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">CREA (Kreatinin)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="creaChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- BUN -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">BUN (Üre)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="bunChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- ALT -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">ALT (Karaciğer)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="altChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- GLU -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">GLU (Kan Şekeri)</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="gluChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- Sodyum -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">Sodyum</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="naChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- Potasyum -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">Potasyum</div>
                                         <div class="relative h-[160px] w-full">
                                             <canvas id="kChart"></canvas>
                                         </div>
                                     </div>
+                                    <!-- Kalsiyum -->
                                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                                         <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">Kalsiyum</div>
                                         <div class="relative h-[160px] w-full">
@@ -1348,7 +1480,11 @@
                         </div>
                     </div>
 
+                    <!-- ==========================================================
+    BÖLÜM 7: TETKİK & BULGULAR (#lab-findings)
+    ========================================================== -->
                     <div class="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-2 lg:grid-cols-[384px_1fr]" id="lab-findings" x-cloak x-show="sections.labFindings" x-transition>
+                        <!-- Sol: Tahlil Listesi -->
                         <div class="space-y-3">
                             <div class="flex flex-col items-start justify-between gap-2 pl-1 sm:flex-row sm:items-center">
                                 <h3 class="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">Tahliller</h3>
@@ -1365,8 +1501,8 @@
                             </div>
                             <div class="custom-scrollbar space-y-2 pr-1">
                                 <div class="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
-                                    <template :key="test.id" x-for="test in filteredTests">
-                                        <div :class="selectedTestId === test.id ? 'bg-indigo-50/70 text-indigo-900' : 'hover:bg-slate-50 text-slate-700'" @click="selectLabSession(test.id)" class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition">
+                                    <template :key="test.id" x-for="test in paginatedTests">
+                                        <div :class="selectedTestId === test.id ? 'bg-indigo-50/70 text-indigo-900' : 'hover:bg-slate-50 text-slate-700'" :data-test-id="test.id" @click="selectLabSession(test.id)" class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition">
                                             <div class="min-w-0 flex-1">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="font-bold text-slate-800" x-text="test.title"></span>
@@ -1386,10 +1522,19 @@
                                 <template x-if="filteredTests.length === 0">
                                     <p class="p-2 text-xs font-medium text-slate-400">Filtrelenmiş dönemde tahlil seansı bulunmamaktadır.</p>
                                 </template>
+                                <div class="flex items-center justify-between border-t border-slate-100 pt-3 text-xs" x-show="totalTestPages > 1">
+                                    <span class="text-slate-500" x-text="testPage + ' / ' + totalTestPages"></span>
+                                    <div class="flex gap-1">
+                                        <button :disabled="testPage === 1" @click="goToTestPage(testPage - 1)" class="rounded border border-slate-200 px-2.5 py-1 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40">Önceki</button>
+                                        <button :disabled="testPage === totalTestPages" @click="goToTestPage(testPage + 1)" class="rounded border border-slate-200 px-2.5 py-1 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40">Sonraki</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Sağ: Seçili Tahlil Detayları -->
                         <div>
-                            <div class="glass-card rounded-2xl p-6 shadow-sm">
+                            <div class="glass-card rounded-2xl p-6 shadow-sm" id="test">
                                 <div class="mb-4 border-b border-slate-100 pb-3">
                                     <h3 class="font-display text-base font-semibold text-slate-900" x-text="selectedTestObj.title ? selectedTestObj.title + ' Bulguları' : 'Tahlil Seçiniz'"></h3>
                                     <p class="mt-0.5 text-xs font-medium text-slate-400" x-text="selectedTestObj.at ? formatFullDate(selectedTestObj.at) : ''"></p>
@@ -1440,15 +1585,19 @@
                         </div>
                     </div>
 
+                    <!-- ==========================================================
+    BÖLÜM 8: RAPORLAR (#reports)
+    ========================================================== -->
                     <div class="mx-auto mt-8 grid max-w-7xl grid-cols-1 items-start gap-2 lg:grid-cols-[384px_1fr]" id="reports" x-cloak x-show="sections.reports" x-transition>
+                        <!-- Sol: Rapor Listesi -->
                         <div class="space-y-3">
                             <div class="flex flex-col items-start justify-between gap-2 pl-1 sm:flex-row sm:items-center">
                                 <h3 class="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">Raporlar</h3>
                             </div>
                             <div class="custom-scrollbar overflow-y-auto pr-1">
                                 <div class="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
-                                    <template x-for="report in sortedReports">
-                                        <div :class="selectedReportId === (report.protocol_no || report.at) ? 'bg-indigo-50/70 text-indigo-900 border-l-4 border-l-indigo-600' : 'hover:bg-slate-50 text-slate-700'" @click="selectReport(report.protocol_no || report.at)" class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition">
+                                    <template x-for="report in paginatedReports">
+                                        <div :class="selectedReportId === (report.protocol_no || report.at) ? 'bg-indigo-50/70 text-indigo-900 border-l-4 border-l-indigo-600' : 'hover:bg-slate-50 text-slate-700'" :data-report-id="report.protocol_no || report.at" @click="selectReport(report.protocol_no || report.at)" class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition">
                                             <div class="min-w-0 flex-1">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="font-bold text-slate-800" x-text="report.title"></span>
@@ -1465,10 +1614,19 @@
                                         <div class="p-4 text-center text-xs font-medium text-slate-400">Filtrelenen dönemde rapor bulunamadı.</div>
                                     </template>
                                 </div>
+                                <div class="flex items-center justify-between border-t border-slate-100 pt-3 text-xs" x-show="totalReportPages > 1">
+                                    <span class="text-slate-500" x-text="reportPage + ' / ' + totalReportPages"></span>
+                                    <div class="flex gap-1">
+                                        <button :disabled="reportPage === 1" @click="goToReportPage(reportPage - 1)" class="rounded border border-slate-200 px-2.5 py-1 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40">Önceki</button>
+                                        <button :disabled="reportPage === totalReportPages" @click="goToReportPage(reportPage + 1)" class="rounded border border-slate-200 px-2.5 py-1 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40">Sonraki</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Sağ: Seçili Rapor Detayları -->
                         <div>
-                            <div class="glass-card rounded-2xl p-6 shadow-sm">
+                            <div class="glass-card rounded-2xl p-6 shadow-sm" id="report">
                                 <div class="mb-4 flex flex-col items-start gap-2 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <h3 class="font-display text-base font-semibold text-slate-900" x-text="selectedReportObj.title || 'Rapor Seçiniz'"></h3>
@@ -1551,6 +1709,9 @@
                         </div>
                     </div>
 
+                    <!-- ==========================================================
+    BÖLÜM 9: KLİNİK ANALİZ RAPORU (#clinical-report)
+    ========================================================== -->
                     <div class="mx-auto mt-6 max-w-7xl space-y-6" id="clinical-report" x-cloak x-show="sections.clinicalReport" x-transition>
                         <div class="glass-card rounded-2xl border-l-4 border-l-indigo-500 p-6 shadow-sm">
                             <div class="mb-5 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -1568,6 +1729,9 @@
                 </main>
             </div>
 
+            <!-- ============================================================
+YUKARI ÇIK BUTONU
+============================================================ -->
             <div :class="show ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'" @scroll.window="show = window.scrollY > 300;clearTimeout(timeout);if (show) { timeout = setTimeout(() => show = false, 3000); }" class="fixed right-6 bottom-6 z-[100] transition-all duration-500 ease-in-out" x-data="{ show: false, timeout: null }">
                 <button @click="window.scrollTo({ top: 0, behavior: 'smooth' })" class="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 transition-all hover:scale-110 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 focus:outline-none active:scale-95" title="Yukarı Çık">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,8 +1,17 @@
 // noinspection DuplicatedCode
 
-const CACHE_NAME = 'medilog_2026-07-25_12-25-03';
+/* ==========================================================================
+   Service Worker Template
+   This file is processed by bump-sw.js to generate a versioned sw.js.
+   The medilog_2026-07-25_15-06-54 placeholder is replaced with a timestamp.
+   ========================================================================== */
+
+const CACHE_NAME = 'medilog_2026-07-25_15-06-54';
+
+// Static assets that are part of the app shell.
 const STATIC_ASSETS = ['/panel.html', '/rapor.html', '/dist/output.css', '/dist/output.js', '/app.js', '/dist/icons/manifest.json', '/dist/icons/browserconfig.xml', '/dist/icons/favicon.ico'];
 
+// All icon files (various sizes and formats).
 const ICON_FILES = [
     '/dist/icons/android-icon-36x36.png',
     '/dist/icons/android-icon-48x48.png',
@@ -30,10 +39,15 @@ const ICON_FILES = [
     '/dist/icons/ms-icon-310x310.png',
 ];
 
+// Data files (JSON) that are cached for offline access.
 const DATA_FILES = ['/data/hospitals.json', '/data/medication_changes.json', '/data/medication_logs.json', '/data/medications.json', '/data/pressures.json', '/data/reports.json', '/data/test_items.json', '/data/tests.json', '/data/users.json', '/data/weights.json'];
 
+// Combine all URLs to be cached.
 const CACHE_URLS = STATIC_ASSETS.concat(ICON_FILES, DATA_FILES);
 
+/* --------------------------------------------------------------------------
+   Install event: cache all static assets and data files.
+   -------------------------------------------------------------------------- */
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches
@@ -46,6 +60,9 @@ self.addEventListener('install', (event) => {
     );
 });
 
+/* --------------------------------------------------------------------------
+   Activate event: remove old caches and claim clients.
+   -------------------------------------------------------------------------- */
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches
@@ -57,9 +74,14 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+/* --------------------------------------------------------------------------
+   Fetch event: serve from cache if available, with network fallback and
+   background updates for data files.
+   -------------------------------------------------------------------------- */
 self.addEventListener('fetch', (event) => {
     const request = event.request;
 
+    // Only handle GET requests for same-origin resources.
     if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
         event.respondWith(fetch(request));
         return;
@@ -68,6 +90,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {
+                // For data files, attempt a background network update.
                 if (request.url.includes('/data/')) {
                     event.waitUntil(
                         fetch(request)
@@ -84,6 +107,7 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse;
             }
 
+            // Not in cache: fetch from network and cache the response.
             return fetch(request)
                 .then((networkResponse) => {
                     if (!networkResponse.ok) {
@@ -103,6 +127,10 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
+/* --------------------------------------------------------------------------
+   Message event: listen for 'CLEAR_CACHE' messages to delete all caches.
+   Used by the app to force a refresh after clearing the service worker cache.
+   -------------------------------------------------------------------------- */
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'CLEAR_CACHE') {
         event.waitUntil(

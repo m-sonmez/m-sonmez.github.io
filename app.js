@@ -1,5 +1,22 @@
+/* ==========================================================================
+   app.js – Klinik Dashboard Alpine.js Uygulaması
+   ========================================================================== */
+
+// Global charts container – must be defined before any chart operations.
 window.clinicalCharts = window.clinicalCharts || {};
 
+// ==========================================================================
+// GLOBAL UTILITY FUNCTIONS
+// ==========================================================================
+
+/**
+ * Debounce fonksiyonu: belirli bir bekleme süresi boyunca tekrarlanan
+ * çağrıları engeller ve yalnızca son çağrıdan sonra fonksiyonun çalışmasını sağlar.
+ *
+ * @param {Function} func - Çalıştırılacak fonksiyon.
+ * @param {number} wait - Bekleme süresi (milisaniye).
+ * @returns {Function} Debounce edilmiş fonksiyon.
+ */
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -8,6 +25,15 @@ function debounce(func, wait) {
     };
 }
 
+// ==========================================================================
+// ANİMASYON KONTROL FONKSİYONLARI (GLOBAL)
+// ==========================================================================
+
+/**
+ * Animasyonu sonlandırır (interval temizlenir) ve uygulama durumunu günceller.
+ *
+ * @param {boolean} [isPaused=false] - true ise durum 'paused', değilse 'idle' olur.
+ */
 window.endAnimation = function (isPaused = false) {
     if (window.timelineInterval) {
         clearInterval(window.timelineInterval);
@@ -20,6 +46,10 @@ window.endAnimation = function (isPaused = false) {
     }
 };
 
+/**
+ * Animasyonun bir sonraki adımını çalıştırır: bitiş tarihini bir gün ilerletir
+ * ve filtreleri günceller. Hedef tarihe ulaşıldığında animasyonu durdurur.
+ */
 window.runTimelineStep = function () {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -35,6 +65,14 @@ window.runTimelineStep = function () {
     app.updateFilters();
 };
 
+/**
+ * Animasyonu başlatır. Başlangıç ve bitiş tarihleri belirtilebilir.
+ * Kapsam (tümü veya dönem) ve hız ayarlarına göre çalışır.
+ *
+ * @param {string|null} customStart - Başlangıç tarihi (YYYY-MM-DD).
+ * @param {string|null} customEnd - Bitiş tarihi (YYYY-MM-DD).
+ * @param {boolean} isResume - true ise mevcut durumdan devam eder.
+ */
 window.startAnimation = function (customStart = null, customEnd = null, isResume = false) {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -64,6 +102,10 @@ window.startAnimation = function (customStart = null, customEnd = null, isResume
     window.timelineInterval = setInterval(window.runTimelineStep, intervals[app.animSpeedIndex]);
 };
 
+/**
+ * Animasyon hızını günceller (kaydırıcı değiştiğinde çağrılır).
+ * Sadece 'playing' durumunda interval yeniden oluşturulur.
+ */
 window.updateAnimationSpeed = function () {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -74,6 +116,10 @@ window.updateAnimationSpeed = function () {
     }
 };
 
+// ==========================================================================
+// SERVICE WORKER KAYIT
+// ==========================================================================
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker
@@ -83,8 +129,20 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// ==========================================================================
+// ALPINE.JS DASHBOARD MODÜLÜ
+// ==========================================================================
+
+/**
+ * Alpine.js için dashboardApp bileşenini kaydeder.
+ * @param {Object} Alpine - Alpine.js örneği.
+ */
 export default function registerDashboard(Alpine) {
     Alpine.data('dashboardApp', () => ({
+        // --------------------------------------------------------------------
+        // 1. TEMEL DURUM (STATE)
+        // --------------------------------------------------------------------
+
         flowsheetMode: 'grid',
         corsError: false,
         datePreset: 'all',
@@ -196,6 +254,10 @@ export default function registerDashboard(Alpine) {
         animScope: 'all',
         animTargetDate: null,
         animSpeedIndex: 2,
+        // --------------------------------------------------------------------
+        // 2. HESAPLANMIŞ ÖZELLİKLER (COMPUTED GETTERS)
+        // --------------------------------------------------------------------
+
         get animSpeedLabel() {
             return ['x1/2', 'x1', 'x2', 'x4', 'x8'][this.animSpeedIndex];
         },
@@ -215,6 +277,41 @@ export default function registerDashboard(Alpine) {
         sidebarOpen: false,
         sidebarCollapsed: false,
         userMenuOpen: false,
+        testPage: 1,
+        reportPage: 1,
+        itemsPerPage: 5,
+
+        get paginatedTests() {
+            const start = (this.testPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return this.filteredTests.slice(start, end);
+        },
+        get totalTestPages() {
+            return Math.ceil(this.filteredTests.length / this.itemsPerPage) || 1;
+        },
+        get paginatedReports() {
+            const start = (this.reportPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return this.sortedReports.slice(start, end);
+        },
+        get totalReportPages() {
+            return Math.ceil(this.sortedReports.length / this.itemsPerPage) || 1;
+        },
+
+        // --------------------------------------------------------------------
+        // 3. METOTLAR (METHODS)
+        // --------------------------------------------------------------------
+
+        goToTestPage(page) {
+            if (page >= 1 && page <= this.totalTestPages) {
+                this.testPage = page;
+            }
+        },
+        goToReportPage(page) {
+            if (page >= 1 && page <= this.totalReportPages) {
+                this.reportPage = page;
+            }
+        },
         closeSidebar() {
             this.sidebarOpen = false;
         },
@@ -490,6 +587,12 @@ export default function registerDashboard(Alpine) {
         selectCalendarDay(dateStr) {
             if (dateStr >= this.firstD && dateStr <= this.lastD) {
                 this.selectedCalendarDayStr = dateStr;
+                this.$nextTick(() => {
+                    const target = document.getElementById('day');
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
             }
         },
         getDayWithEvents(dateStr) {
@@ -558,6 +661,11 @@ export default function registerDashboard(Alpine) {
         reports: [],
         selectedReportId: null,
         selectedReportObj: {},
+
+        // --------------------------------------------------------------------
+        // 4. YAŞAM DÖNGÜSÜ VE VERİ YÜKLEME
+        // --------------------------------------------------------------------
+
         async initDashboard() {
             try {
                 await this.loadAllData(false);
@@ -595,6 +703,12 @@ export default function registerDashboard(Alpine) {
                         this._triggerLoader(key);
                     }
                 });
+            });
+            this.$watch('showOnlyOutOfBoundsTests', () => {
+                this.testPage = 1;
+            });
+            this.$watch('hideSpecialTests', () => {
+                this.testPage = 1;
             });
             this._loadInitialComponents();
 
@@ -793,8 +907,20 @@ export default function registerDashboard(Alpine) {
             }
         },
         selectReport(protocolNo) {
+            this.sections.reports = true;
             this.selectedReportId = protocolNo;
             this.selectedReportObj = this.reports.find((r) => (r.protocol_no || r.at) === protocolNo) || {};
+
+            this.$nextTick(() => {
+                const detail = document.getElementById('report');
+                if (detail) {
+                    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                const target = document.querySelector(`[data-report-id="${protocolNo}"]`);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
         },
         loadBackupData() {
             this.corsError = true;
@@ -2124,6 +2250,10 @@ export default function registerDashboard(Alpine) {
             });
             return periods;
         },
+        // --------------------------------------------------------------------
+        // 5. GRAFİK İŞLEMLERİ
+        // --------------------------------------------------------------------
+
         destroyAllCharts() {
             if (window.clinicalCharts) {
                 Object.keys(window.clinicalCharts).forEach((key) => {
@@ -2578,6 +2708,10 @@ export default function registerDashboard(Alpine) {
                 });
             });
         },
+        // --------------------------------------------------------------------
+        // 6. YARDIMCI FONKSİYONLAR (LAB, BP, AĞIRLIK, VB.)
+        // --------------------------------------------------------------------
+
         getLabItemStatus(item) {
             if (!item.reference_min || !item.reference_max) return 'Normal';
             let val = parseFloat(item.result);
@@ -2659,6 +2793,9 @@ export default function registerDashboard(Alpine) {
                 this.calendarMonth = parseInt(parts[1]) - 1;
                 this.selectedCalendarDayStr = this.endDate;
             }
+            this.testPage = 1;
+            this.reportPage = 1;
+
             const isAnimating = this.animStatus === 'playing';
             if (this.sections.summary) this.loadMetrics(!isAnimating);
             if (this.sections.prescriptions) this.loadTimeline(!isAnimating);
@@ -2712,9 +2849,21 @@ export default function registerDashboard(Alpine) {
             this.updateFilters();
         },
         selectLabSession(id) {
+            this.sections.labFindings = true;
             this.selectedTestId = id;
             this.selectedTestObj = this.tests.find((t) => t.id === id) || {};
             this.selectedTestItems = this.testItems.filter((item) => item.test_id === id);
+
+            this.$nextTick(() => {
+                const detail = document.getElementById('test');
+                if (detail) {
+                    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                const target = document.querySelector(`[data-test-id="${id}"]`);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
         },
         getHospitalName(id) {
             return this.hospitals.find((h) => h.id === id)?.name || 'Klinik Kurumu';
@@ -2811,19 +2960,47 @@ export default function registerDashboard(Alpine) {
         navigateToTest(testId) {
             this.sections.labFindings = true;
             this.selectLabSession(testId);
+
+            const allTests = this.filteredTests;
+            const index = allTests.findIndex((t) => t.id === testId);
+            if (index !== -1) {
+                const page = Math.floor(index / this.itemsPerPage) + 1;
+                this.testPage = page;
+            }
+
             this.$nextTick(() => {
-                const el = document.getElementById('lab-findings');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const detailEl = document.getElementById('test');
+                if (detailEl) detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                const testItem = document.querySelector(`[data-test-id="${testId}"]`);
+                if (testItem) {
+                    testItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             });
+
             if (window.innerWidth < 1024) this.sidebarOpen = false;
         },
         navigateToReport(protocolNo) {
             this.sections.reports = true;
             this.selectReport(protocolNo);
+
+            const allReports = this.sortedReports;
+            const index = allReports.findIndex((r) => (r.protocol_no || r.at) === protocolNo);
+            if (index !== -1) {
+                const page = Math.floor(index / this.itemsPerPage) + 1;
+                this.reportPage = page;
+            }
+
             this.$nextTick(() => {
-                const el = document.getElementById('reports');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const detailEl = document.getElementById('report');
+                if (detailEl) detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                const reportItem = document.querySelector(`[data-report-id="${protocolNo}"]`);
+                if (reportItem) {
+                    reportItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
             });
+
             if (window.innerWidth < 1024) this.sidebarOpen = false;
         },
         getEventBgClass(e) {
@@ -2939,6 +3116,10 @@ export default function registerDashboard(Alpine) {
 
             return events;
         },
+        // --------------------------------------------------------------------
+        // 7. VERİ İNDİRME
+        // --------------------------------------------------------------------
+
         async downloadRawMedicalData(mode = 'all') {
             try {
                 const [u, h, m, mc, ml, p, w, t, ti, r] = await Promise.all([
