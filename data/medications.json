@@ -13,5 +13,6 @@
     {"at":"2026-03-26 22:28","model":"Med","id":3,"unit":"mg","base_dose":750,"name":"Cipro","is_emergency":false},
     {"at":"2026-04-09 09:01","model":"Med","id":2,"unit":"mg","base_dose":50,"name":"BelocZOK","is_emergency":false},
     {"at":"2026-04-17 14:34","model":"Med","id":8,"unit":"mg","base_dose":25,"name":"Kapril","is_emergency":true},
-    {"at":"2026-05-12 20:58","model":"Med","id":15,"unit":"mg","base_dose":1000,"name":"Augmentin","is_emergency":false}
+    {"at":"2026-05-12 20:58","model":"Med","id":15,"unit":"mg","base_dose":1000,"name":"Augmentin","is_emergency":false},
+    {"at":"2026-07-24 17:00","model":"Med","id":16,"unit":"mg","base_dose":100,"name":"Coraspin","is_emergency":false}
 ]

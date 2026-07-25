@@ -41,9 +41,5 @@
     {"at":"2026-05-13 21:29","model":"MedChange","user_id":1,"medication_id":14,"id":40,"amount":20,"timespan":168,"type":"Changed"},
     {"at":"2026-05-19 09:01","model":"MedChange","user_id":1,"medication_id":15,"id":41,"amount":0,"timespan":12,"type":"Ended"},
     {"at":"2026-06-09 09:14","model":"MedChange","user_id":1,"medication_id":15,"id":42,"amount":1000,"timespan":12,"type":"Started"},
-    {"at":"2026-06-15 21:16","model":"MedChange","user_id":1,"medication_id":15,"id":43,"amount":0,"timespan":12,"type":"Ended"},
-    {"at":"2026-07-21 22:00","model":"MedChange","user_id":1,"medication_id":14,"id":44,"amount":0,"timespan":168,"type":"Paused"},
-    {"at":"2026-07-21 22:00","model":"MedChange","user_id":1,"medication_id":6,"id":45,"amount":0,"timespan":24,"type":"Paused"},
-    {"at":"2026-07-21 22:00","model":"MedChange","user_id":1,"medication_id":11,"id":46,"amount":0,"timespan":24,"type":"Paused"},
-    {"at":"2026-07-22 22:00","model":"MedChange","user_id":1,"medication_id":5,"id":47,"amount":0,"timespan":12,"type":"Paused"}
+    {"at":"2026-06-15 21:16","model":"MedChange","user_id":1,"medication_id":15,"id":43,"amount":0,"timespan":12,"type":"Ended"}
 ]

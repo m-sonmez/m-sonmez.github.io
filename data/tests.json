@@ -74,5 +74,6 @@
     {"at":"2026-05-22 13:30","model":"Test","user_id":1,"hospital_id":1,"id":20,"description":"INR Kontrolü","title":"Koagülasyon Paneli"},
     {"at":"2026-06-15 12:36","model":"Test","user_id":1,"hospital_id":2,"id":21,"description":"Son Durum Değerlendirmesi","title":"Kapsamlı Check-up Paneli"},
     {"at":"2026-07-15 15:21","model":"Test","user_id":1,"hospital_id":2,"id":76,"description":"Kapsamlı laboratuvar değerlendirmesi (Tam Kan Sayımı, Biyokimya, Koagülasyon)","title":"Geniş Biyokimya ve Hemogram Paneli"},
-    {"at":"2026-07-23 11:15","model":"Test","user_id":1,"hospital_id":1,"id":77,"description":"Acil Servis ve KVC Kontrol Laboratuvar Paneli","title":"Rutin Biyokimya, Hemogram ve Koagülasyon Paneli"}
+    {"at":"2026-07-23 11:15","model":"Test","user_id":1,"hospital_id":1,"id":77,"description":"KVC Kontrol Laboratuvar Paneli","title":"Rutin Biyokimya, Hemogram ve Koagülasyon Paneli"},
+    {"at":"2026-07-25 00:07","model":"Test","user_id":1,"hospital_id":1,"id":78,"description":"KVC Kontrol Laboratuvar Paneli","title":"Rutin Biyokimya, Hemogram ve Koagülasyon Paneli"}
 ]
