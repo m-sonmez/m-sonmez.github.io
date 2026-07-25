@@ -67,7 +67,6 @@
     {"at":"2026-03-31 01:10","model":"Test","user_id":1,"hospital_id":1,"id":13,"description":"Rutin Kontrol","title":"Enfeksiyon ve Hemogram Paneli"},
     {"at":"2026-04-08 16:01","model":"Test","user_id":1,"hospital_id":1,"id":14,"description":"INR Kontrolü","title":"Koagülasyon Paneli"},
     {"at":"2026-04-20 20:31","model":"Test","user_id":1,"hospital_id":5,"id":15,"description":"Tam Kan Sayımı","title":"Hemogram Paneli"},
-    {"at":"2026-04-20 20:32","model":"Test","user_id":1,"hospital_id":5,"id":23,"description":"INR ve Koagülasyon Takibi","title":"Koagülasyon Paneli"},
     {"at":"2026-04-20 22:51","model":"Test","user_id":1,"hospital_id":2,"id":16,"description":"Rutin Kontrol","title":"Koagülasyon Paneli"},
     {"at":"2026-05-05 11:36","model":"Test","user_id":1,"hospital_id":1,"id":17,"description":"Son Durum Değerlendirmesi","title":"Kapsamlı Check-up Paneli"},
     {"at":"2026-05-12 15:27","model":"Test","user_id":1,"hospital_id":1,"id":18,"description":"Rutin Kontrol","title":"Koagülasyon Paneli"},
