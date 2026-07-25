@@ -191,6 +191,7 @@ export default function registerDashboard(Alpine) {
             reports: false,
             clinicalReport: false,
         },
+        refreshing: false,
         animStatus: 'idle',
         animScope: 'all',
         animTargetDate: null,
@@ -559,7 +560,7 @@ export default function registerDashboard(Alpine) {
         selectedReportObj: {},
         async initDashboard() {
             try {
-                await this.loadAllData();
+                await this.loadAllData(false);
             } catch (e) {
                 console.warn('Asenkron JSON yükleme kesintisi, yerleşik verilere dönülüyor:', e);
                 this.corsError = true;
@@ -684,18 +685,42 @@ export default function registerDashboard(Alpine) {
                 this.loadingFlowsheet = false;
             }
         },
-        async loadAllData() {
+        updateGlobalDateLimits() {
+            let pool = [];
+            this.pressures.forEach((p) => pool.push(p.at.substring(0, 10)));
+            this.weights.forEach((w) => pool.push(w.at.substring(0, 10)));
+            this.tests.forEach((t) => pool.push(t.at.substring(0, 10)));
+            this.medicationLogs.forEach((ml) => pool.push(ml.at.substring(0, 10)));
+            this.medicationChanges.forEach((mc) => pool.push(mc.at.substring(0, 10)));
+            if (pool.length > 0) {
+                pool = [...new Set(pool)].sort();
+                this.validDatesPool = pool;
+                this.firstD = pool[0];
+                this.lastD = pool[pool.length - 1];
+            } else {
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                this.lastD = todayStr;
+                const firstDObj = new Date();
+                firstDObj.setDate(today.getDate() - 30);
+                this.firstD = firstDObj.toISOString().split('T')[0];
+                this.validDatesPool = [];
+            }
+        },
+
+        async loadAllData(cacheBust = false) {
+            const suffix = cacheBust ? '?t=' + Date.now() : '';
             const [u, h, m, mc, ml, p, w, t, ti, r] = await Promise.all([
-                fetch('data/users.json').then((r) => r.json()),
-                fetch('data/hospitals.json').then((r) => r.json()),
-                fetch('data/medications.json').then((r) => r.json()),
-                fetch('data/medication_changes.json').then((r) => r.json()),
-                fetch('data/medication_logs.json').then((r) => r.json()),
-                fetch('data/pressures.json').then((r) => r.json()),
-                fetch('data/weights.json').then((r) => r.json()),
-                fetch('data/tests.json').then((r) => r.json()),
-                fetch('data/test_items.json').then((r) => r.json()),
-                fetch('data/reports.json').then((r) => r.json()),
+                fetch('data/users.json' + suffix).then((r) => r.json()),
+                fetch('data/hospitals.json' + suffix).then((r) => r.json()),
+                fetch('data/medications.json' + suffix).then((r) => r.json()),
+                fetch('data/medication_changes.json' + suffix).then((r) => r.json()),
+                fetch('data/medication_logs.json' + suffix).then((r) => r.json()),
+                fetch('data/pressures.json' + suffix).then((r) => r.json()),
+                fetch('data/weights.json' + suffix).then((r) => r.json()),
+                fetch('data/tests.json' + suffix).then((r) => r.json()),
+                fetch('data/test_items.json' + suffix).then((r) => r.json()),
+                fetch('data/reports.json' + suffix).then((r) => r.json()),
             ]);
             this.user = u[0] || {};
             this.hospitals = h;
@@ -707,6 +732,65 @@ export default function registerDashboard(Alpine) {
             this.tests = t;
             this.testItems = ti;
             this.reports = r;
+        },
+
+        afterDataRefresh() {
+            this.medConversions = {};
+            this.medications.forEach((m) => (this.medConversions[m.name] = m.base_dose));
+
+            this.updateGlobalDateLimits();
+
+            if (this.startDate < this.firstD) this.startDate = this.firstD;
+            if (this.endDate > this.lastD) this.endDate = this.lastD;
+            if (this.startDate > this.endDate) this.startDate = this.endDate;
+
+            this.populateMedTimeline();
+            this.updateVisibleMeds();
+            this.setupFlowsheet();
+            this.calculateMetrics();
+
+            this.renderMainCharts();
+            this.renderLabTrendCharts();
+            if (this.flowsheetMode === 'chart') {
+                this.renderFocusChart();
+            }
+
+            if (this.endDate) {
+                const parts = this.endDate.split('-');
+                this.calendarYear = parseInt(parts[0]);
+                this.calendarMonth = parseInt(parts[1]) - 1;
+                this.selectedCalendarDayStr = this.endDate;
+            }
+
+            this.refreshing = false;
+        },
+
+        refreshApp() {
+            if (this.refreshing) return;
+            this.refreshing = true;
+
+            const doRefresh = () => {
+                this.loadAllData(true)
+                    .then(() => this.afterDataRefresh())
+                    .catch((err) => {
+                        console.error('Refresh failed:', err);
+                        this.refreshing = false;
+                    });
+            };
+
+            if (navigator.serviceWorker.controller) {
+                const messageChannel = new MessageChannel();
+                messageChannel.port1.onmessage = (event) => {
+                    if (event.data.status === 'cleared') {
+                        doRefresh();
+                    } else {
+                        doRefresh();
+                    }
+                };
+                navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' }, [messageChannel.port2]);
+            } else {
+                doRefresh();
+            }
         },
         selectReport(protocolNo) {
             this.selectedReportId = protocolNo;

@@ -102,3 +102,18 @@ self.addEventListener('fetch', (event) => {
         }),
     );
 });
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'CLEAR_CACHE') {
+        event.waitUntil(
+            caches
+                .keys()
+                .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+                .then(() => {
+                    if (event.ports && event.ports.length) {
+                        event.ports[0].postMessage({ status: 'cleared' });
+                    }
+                }),
+        );
+    }
+});

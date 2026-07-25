@@ -1,6 +1,6 @@
 // noinspection DuplicatedCode
 
-const CACHE_NAME = 'medilog_2026-07-25_11-36-20';
+const CACHE_NAME = 'medilog_2026-07-25_12-04-17';
 const STATIC_ASSETS = ['/panel.html', '/rapor.html', '/dist/output.css', '/dist/output.js', '/app.js', '/dist/icons/manifest.json', '/dist/icons/browserconfig.xml', '/dist/icons/favicon.ico'];
 
 const ICON_FILES = [
@@ -101,4 +101,19 @@ self.addEventListener('fetch', (event) => {
                 });
         }),
     );
+});
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'CLEAR_CACHE') {
+        event.waitUntil(
+            caches
+                .keys()
+                .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+                .then(() => {
+                    if (event.ports && event.ports.length) {
+                        event.ports[0].postMessage({ status: 'cleared' });
+                    }
+                }),
+        );
+    }
 });
