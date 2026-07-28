@@ -76,7 +76,7 @@
     {"at":"2026-07-15 15:21","model":"Test","user_id":1,"hospital_id":2,"id":76,"description":"Kapsamlı laboratuvar değerlendirmesi (Tam Kan Sayımı, Biyokimya, Koagülasyon)","title":"Geniş Biyokimya ve Hemogram Paneli"},
     {"at":"2026-07-23 11:15","model":"Test","user_id":1,"hospital_id":1,"id":77,"description":"KVC Kontrol Laboratuvar Paneli","title":"Rutin Biyokimya, Hemogram ve Koagülasyon Paneli"},
     {"at":"2026-07-25 00:07","model":"Test","user_id":1,"hospital_id":1,"id":78,"description":"KVC Kontrol Laboratuvar Paneli","title":"Rutin Biyokimya, Hemogram ve Koagülasyon Paneli"},
-  {"at":"2026-07-26 01:05","model":"Test","user_id":1,"hospital_id":1,"id":79,"description":"KVC kontrol laboratuvar paneli","title":"Koagülasyon ve Hemogram Paneli"},
-  {"at":"2026-07-27 00:21","model":"Test","user_id":1,"hospital_id":1,"id":80,"description":"KVC kontrol laboratuvar paneli","title":"Koagülasyon ve Hemogram Paneli"},
-  {"at":"2026-07-28 00:37","model":"Test","user_id":1,"hospital_id":1,"id":81,"description":"KVC kontrol laboratuvar paneli - Tam Kan Sayımı","title":"Hemogram Paneli"}
+    {"at":"2026-07-26 01:05","model":"Test","user_id":1,"hospital_id":1,"id":79,"description":"KVC kontrol laboratuvar paneli","title":"Koagülasyon ve Hemogram Paneli"},
+    {"at":"2026-07-27 00:21","model":"Test","user_id":1,"hospital_id":1,"id":80,"description":"KVC kontrol laboratuvar paneli","title":"Koagülasyon ve Hemogram Paneli"},
+    {"at":"2026-07-28 00:37","model":"Test","user_id":1,"hospital_id":1,"id":81,"description":"KVC kontrol laboratuvar paneli - Tam Kan Sayımı","title":"Hemogram Paneli"}
 ]
