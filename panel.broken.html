@@ -1,0 +1,1629 @@
+<!-- panel.html – Klinik Takip Dashboard Ana Sayfası -->
+
+<!doctype html>
+<html lang="tr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title x-text="user.name ? user.name + ' | Klinik Takip Dashboard' : 'Kapsamlı Klinik Takip Dashboard'">Kapsamlı Klinik Takip Dashboard</title>
+
+        <!-- Google Fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+        <!-- Tailwind compiled CSS -->
+        <link href="./dist/output.css" rel="stylesheet" />
+
+        <!-- Alpine / Chart.js bundle -->
+        <script src="./dist/output.js" type="module"></script>
+
+        <!-- Apple Touch Icons -->
+        <link href="./dist/icons/apple-icon-57x57.png" rel="apple-touch-icon" sizes="57x57" />
+        <link href="./dist/icons/apple-icon-60x60.png" rel="apple-touch-icon" sizes="60x60" />
+        <link href="./dist/icons/apple-icon-72x72.png" rel="apple-touch-icon" sizes="72x72" />
+        <link href="./dist/icons/apple-icon-76x76.png" rel="apple-touch-icon" sizes="76x76" />
+        <link href="./dist/icons/apple-icon-114x114.png" rel="apple-touch-icon" sizes="114x114" />
+        <link href="./dist/icons/apple-icon-120x120.png" rel="apple-touch-icon" sizes="120x120" />
+        <link href="./dist/icons/apple-icon-144x144.png" rel="apple-touch-icon" sizes="144x144" />
+        <link href="./dist/icons/apple-icon-152x152.png" rel="apple-touch-icon" sizes="152x152" />
+        <link href="./dist/icons/apple-icon-180x180.png" rel="apple-touch-icon" sizes="180x180" />
+
+        <!-- Favicon & Android Icons -->
+        <link href="./dist/icons/favicon.ico" rel="icon" type="image/x-icon" />
+        <link href="./dist/icons/android-icon-192x192.png" rel="icon" sizes="192x192" type="image/png" />
+        <link href="./dist/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png" />
+        <link href="./dist/icons/favicon-96x96.png" rel="icon" sizes="96x96" type="image/png" />
+        <link href="./dist/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png" />
+
+        <!-- Web App Manifest / PWA -->
+        <link href="./dist/icons/manifest.json" rel="manifest" />
+        <meta content="#ffffff" name="msapplication-TileColor" />
+        <meta content="./dist/icons/ms-icon-144x144.png" name="msapplication-TileImage" />
+        <meta content="#ffffff" name="theme-color" />
+
+        <!-- iOS / Windows PWA meta -->
+        <meta content="yes" name="apple-mobile-web-app-capable" />
+        <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />
+        <meta content="./dist/icons/browserconfig.xml" name="msapplication-config" />
+    </head>
+
+    <body class="min-h-screen bg-slate-50 font-sans text-slate-700 antialiased selection:bg-indigo-500 selection:text-white" x-cloak x-data="dashboardApp()" x-init="initDashboard()">
+        <!-- EKRAN ÇOK KÜÇÜK UYARISI (max-[384px]) -->
+
+        <div class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-slate-900 p-6 text-center text-white select-none max-[384px]:flex">
+            <div class="mb-4 rounded-full bg-amber-500/10 p-3 text-amber-400">
+                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                </svg>
+            </div>
+            <h3 class="font-display text-lg font-bold tracking-tight">Ekran Çok Küçük</h3>
+            <p class="mt-2 text-xs leading-relaxed text-slate-400">Verilerin düzgün görüntülenebilmesi için lütfen telefonunuzu yan çevirin, daha büyük bir ekran veya bilgisayar kullanın.</p>
+        </div>
+
+        <!-- ANA UYGULAMA KAPSAMI (max-[384px] hariç) -->
+
+        <div class="block max-[384px]:hidden">
+            <!-- CORS Hatası Uyarısı -->
+            <template x-if="corsError">
+                <div class="sticky top-0 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2.5 text-center text-xs font-semibold text-white shadow-md">
+                    <svg class="h-4 w-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                    </svg>
+                    <span>Dinamik JSON verileri tarayıcı güvenlik politikası nedeniyle yerel dosyadan doğrudan çekilemedi. Panel korumalı simüle veriler ile başlatıldı. Gerçek analiz akışı için lütfen projeyi bir yerel sunucu (VS Code Live Server vb.) üzerinden çalıştırın.</span>
+                </div>
+            </template>
+
+            <!-- SIDEBAR + ANA İÇERİK (LG+ flex) -->
+
+            <div class="items-stretch lg:flex lg:flex-1">
+                <!-- Mobil overlay (sidebar arkası) -->
+                <div @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" style="display: none" x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-end="opacity-100" x-transition:enter-start="opacity-0" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-end="opacity-0" x-transition:leave-start="opacity-100"></div>
+
+                <!-- SIDEBAR -->
+
+                <aside :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full lg:translate-x-0': !sidebarOpen, 'lg:w-14': sidebarCollapsed, 'lg:w-64': !sidebarCollapsed }" class="fixed inset-y-0 left-0 z-[60] flex w-64 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:shadow-none">
+                    <!-- Sidebar Başlık / Logo -->
+                    <div class="relative flex h-16 shrink-0 items-center justify-between border-b border-slate-100 px-4">
+                        <div class="flex items-center gap-1.5 overflow-hidden whitespace-nowrap transition-opacity duration-300" x-show="!sidebarCollapsed || isMobile">
+                            <span class="text-lg font-black tracking-tight text-indigo-600">Klinik</span>
+                            <span class="text-lg font-medium tracking-tight text-slate-500">Takip</span>
+                        </div>
+                        <button :class="sidebarCollapsed ? 'left-0 right-0' : ''" @click="sidebarCollapsed = !sidebarCollapsed" class="hidden h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-indigo-600 focus:outline-none lg:flex" title="Menüyü Daralt/Genişlet">
+                            <svg :class="sidebarCollapsed ? 'rotate-180' : ''" class="mx-auto h-5 w-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M11 19l-7-7 7-7m8 14l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </button>
+                        <button @click="sidebarOpen = false" class="p-1 text-slate-400 transition-colors hover:text-rose-600 focus:outline-none lg:hidden">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Tarih Filtreleri (sticky) -->
+                    <div class="sticky top-0 z-20 shrink-0 border-b border-slate-200/80 bg-slate-50/90 px-2 py-2 backdrop-blur-sm" x-show="sidebarOpen || !sidebarCollapsed">
+                        <div class="group rounded-xl border border-slate-200/80 bg-slate-100/60 px-2 py-2 transition-colors hover:bg-slate-200/50">
+                            <!-- Preset Butonları (önceki / sonraki) -->
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button :disabled="datePreset === 'all' || startDate === firstD" @click="shiftDatePeriod(-1)" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-95 disabled:pointer-events-none disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-40" x-cloak>
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
+                                    </svg>
+                                </button>
+                                <select @change="applyDatePreset()" class="h-8 w-auto min-w-[90px] rounded-lg border border-slate-300 bg-slate-50 px-2 py-0.5 text-center text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" x-model="datePreset">
+                                    <option value="all">Tümü</option>
+                                    <option value="3">Son 3 Gün</option>
+                                    <option value="7">Son 7 Gün</option>
+                                    <option value="10">Son 10 Gün</option>
+                                    <option value="15">Son 15 Gün</option>
+                                    <option value="30">Son 30 Gün</option>
+                                    <option value="45">Son 45 Gün</option>
+                                    <option value="60">Son 60 Gün</option>
+                                    <option value="90">Son 90 Gün</option>
+                                    <option value="custom">Özel Aralık</option>
+                                </select>
+                                <button :disabled="datePreset === 'all' || endDate >= lastD" @click="shiftDatePeriod(1)" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-indigo-600 active:scale-95 disabled:pointer-events-none disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-40" x-cloak>
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Başlangıç Tarihi -->
+                            <div class="mt-2 flex items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+                                <label class="flex-shrink-0 text-[10px] font-medium whitespace-nowrap text-slate-500" for="startDate">Başlangıç:</label>
+                                <input :max="endDate" :min="firstD" @change="datePreset = 'custom'; updateFilters()" class="min-w-0 appearance-none bg-transparent py-0.5 text-right text-[11px] font-semibold text-slate-700 outline-none" id="startDate" type="date" x-model="startDate" />
+                            </div>
+
+                            <!-- Bitiş Tarihi -->
+                            <div class="mt-2 flex items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-1.5 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+                                <label class="flex-shrink-0 text-[10px] font-medium whitespace-nowrap text-slate-500" for="endDate">Bitiş:</label>
+                                <input :max="lastD" :min="startDate" @change="datePreset = 'custom'; updateFilters()" class="min-w-0 appearance-none bg-transparent py-0.5 text-right text-[11px] font-semibold text-slate-700 outline-none" id="endDate" type="date" x-model="endDate" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigasyon Menüsü -->
+                    <nav class="custom-scrollbar flex-1 space-y-1.5 overflow-y-auto p-2.5 select-none">
+                        <div class="my-1.5 border-t border-slate-100"></div>
+
+                        <!-- Yenile Butonu -->
+                        <div class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <button :disabled="refreshing" :title="sidebarCollapsed ? 'Verileri Yenile' : ''" @click="refreshApp()" class="flex min-w-0 flex-1 items-center outline-none focus:outline-none">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-slate-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!refreshing">
+                                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                    </svg>
+                                    <svg class="h-5 w-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="refreshing">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" fill="currentColor"></path>
+                                    </svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile" x-text="refreshing ? 'Yenileniyor...' : 'Yenile'"></span>
+                            </button>
+                            <div class="w-7"></div>
+                        </div>
+
+                        <div class="my-1.5 border-t border-slate-100"></div>
+
+                        <!-- Tümünü Göster / Gizle -->
+                        <div class="group mb-1 flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-100/60 px-2 py-2 transition-colors hover:bg-slate-200/50">
+                            <button :title="sidebarCollapsed ? (Object.values(sections).every(Boolean) ? 'Tümünü Gizle' : 'Tümünü Göster') : ''" @click="let state = !Object.values(sections).every(Boolean); Object.keys(sections).forEach(k => sections[k] = state)" class="flex min-w-0 flex-1 items-center outline-none focus:outline-none">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-slate-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                    </svg>
+                                </span>
+                                <span class="truncate text-[11px] font-extrabold tracking-wide whitespace-nowrap text-slate-600 uppercase transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile" x-text="Object.values(sections).every(Boolean) ? 'Tümünü Gizle' : 'Tümünü Göster'"></span>
+                            </button>
+                            <label :title="Object.values(sections).every(Boolean) ? 'Tümünü Gizle' : 'Tümünü Göster'" class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input :checked="Object.values(sections).every(Boolean)" @change="let state = $el.checked; Object.keys(sections).forEach(k => sections[k] = state)" class="peer sr-only" type="checkbox" />
+                                <div class="h-4 w-7 rounded-full bg-slate-300 shadow-inner transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <div class="my-1.5 border-t border-slate-100"></div>
+
+                        <!-- Özet & Metrikler -->
+                        <div :class="!sections.summary ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'Özet & Klinik Metrikler' : ''" @click.prevent="sections.summary = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('summary').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#summary">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-rose-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">Özet & Metrikler</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" title="Görünürlüğü Aç/Kapat" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.summary" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <!-- Tansiyon & Kilo -->
+                        <div :class="!sections.charts ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'Tansiyon & Kilo Grafikleri' : ''" @click.prevent="sections.charts = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('charts').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#charts">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-blue-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">Tansiyon & Kilo</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.charts" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <!-- Zaman Akışı -->
+                        <div :class="!sections.prescriptions ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'Reçeteler & Zaman Akışı' : ''" @click.prevent="sections.prescriptions = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('prescriptions').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#prescriptions">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-indigo-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">Zaman Akışı</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.prescriptions" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <!-- İlaç Matrisi -->
+                        <div :class="!sections.flowsheet ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'İlaç Matrisi (Flowsheet)' : ''" @click.prevent="sections.flowsheet = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('flowsheet').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#flowsheet">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-violet-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">İlaç Matrisi</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.flowsheet" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <!-- İnteraktif Takvim -->
+                        <div :class="!sections.calendar ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'İnteraktif Takvim' : ''" @click.prevent="sections.calendar = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('calendar').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#calendar">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-amber-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">İnteraktif Takvim</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.calendar" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <!-- Tahlil Trendleri -->
+                        <div :class="!sections.labTrends ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'Tahlil Trendleri' : ''" @click.prevent="sections.labTrends = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('lab-trends').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#lab-trends">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-orange-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">Tahlil Trendleri</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.labTrends" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <!-- Tetkik & Bulgular -->
+                        <div :class="!sections.labFindings ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'Tetkik & Bulgular' : ''" @click.prevent="sections.labFindings = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('lab-findings').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#lab-findings">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-teal-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">Tetkik & Bulgular</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.labFindings" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <!-- Raporlar -->
+                        <div :class="!sections.reports ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'Epikrizler & Raporlar' : ''" @click.prevent="sections.reports = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('reports').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#reports">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-slate-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">Raporlar</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.reports" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+
+                        <!-- Klinik Analiz -->
+                        <div :class="!sections.clinicalReport ? 'opacity-50 grayscale' : ''" class="group flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-slate-50">
+                            <a :title="sidebarCollapsed ? 'Klinik Değerlendirme' : ''" @click.prevent="sections.clinicalReport = true; if(window.innerWidth < 1024) sidebarOpen = false; $nextTick(() => document.getElementById('clinical-report').scrollIntoView({behavior: 'smooth', block: 'start'}))" class="flex min-w-0 flex-1 items-center outline-none" href="#clinical-report">
+                                <span :class="sidebarCollapsed ? 'mx-auto' : 'mr-2.5'" class="flex shrink-0 items-center justify-center text-indigo-500 transition-transform group-hover:scale-110">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                </span>
+                                <span class="truncate text-xs font-bold whitespace-nowrap text-slate-600 transition-colors group-hover:text-indigo-600" x-show="!sidebarCollapsed || isMobile">Klinik Analiz</span>
+                            </a>
+                            <label class="relative ml-2 inline-flex shrink-0 cursor-pointer items-center" x-show="!sidebarCollapsed || isMobile">
+                                <input class="peer sr-only" type="checkbox" x-model="sections.clinicalReport" />
+                                <div class="h-4 w-7 rounded-full bg-slate-200 shadow-inner transition-colors peer-checked:bg-indigo-500 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                            </label>
+                        </div>
+                    </nav>
+
+                    <!-- Alt Çubuk (Animasyon, İndirme, Versiyon) -->
+                    <div class="mt-auto shrink-0 border-t border-slate-100 bg-slate-50/50 p-3">
+                        <div class="flex flex-col gap-2" x-show="!sidebarCollapsed || isMobile">
+                            <div class="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
+                                <button :class="animStatus !== 'idle' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-50 hover:text-indigo-600'" :disabled="animStatus !== 'idle'" @click="animScope = (animScope === 'period' ? 'all' : 'period')" class="rounded px-2 py-1 text-[10px] font-bold text-slate-500 uppercase transition-colors" title="Animasyon Kapsamı" x-text="animScope === 'period' ? 'Dönem' : 'Tümü'"></button>
+                                <div class="h-4 w-px bg-slate-200"></div>
+                                <div class="flex items-center gap-1.5 px-1" title="Animasyon Hızı">
+                                    <span class="w-5 text-center text-[9px] font-black text-slate-400" x-text="animSpeedLabel"></span>
+                                    <input @input="window.updateAnimationSpeed()" class="h-1.5 w-14 cursor-pointer appearance-none rounded-lg bg-slate-200 accent-indigo-600" max="4" min="0" step="1" type="range" x-model.number="animSpeedIndex" />
+                                </div>
+                                <div class="h-4 w-px bg-slate-200"></div>
+                                <div class="flex items-center gap-1">
+                                    <button :class="animStatus === 'playing' ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600'" :title="animStatus === 'playing' ? 'Duraklat' : (animStatus === 'paused' ? 'Devam Et' : 'Oynat')" @click="toggleAnimation()" class="flex h-6 w-6 items-center justify-center rounded text-white shadow-sm transition-all active:scale-95">
+                                        <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20" x-show="animStatus !== 'playing'">
+                                            <path d="M6 4l10 6-10 6V4z" />
+                                        </svg>
+                                        <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20" x-cloak x-show="animStatus === 'playing'">
+                                            <path d="M5 4h3v12H5V4zm7 0h3v12h-3V4z" />
+                                        </svg>
+                                    </button>
+                                    <button @click="stopAnimation()" class="flex h-6 w-6 items-center justify-center rounded bg-rose-500 text-white shadow-sm transition-all hover:bg-rose-600 active:scale-95" title="Animasyonu Durdur" x-cloak x-show="animStatus === 'paused'">
+                                        <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M5 5h10v10H5z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 print:hidden">
+                                <button @click="downloadRawMedicalData('all')" class="flex-1 rounded-lg border border-slate-200 bg-white py-1.5 text-[10px] font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-indigo-600 focus:outline-none">Tümünü İndir</button>
+                                <button @click="downloadRawMedicalData('period')" class="flex-1 rounded-lg bg-indigo-600 py-1.5 text-[10px] font-bold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none">Dönemi İndir</button>
+                            </div>
+                            <div class="text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase">v1.1 &middot; Klinik Dashboard</div>
+                        </div>
+
+                        <!-- Daraltılmış Sidebar İkonları -->
+                        <div class="flex flex-col items-center gap-2" x-show="sidebarCollapsed && !isMobile">
+                            <button :class="animStatus === 'playing' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'" @click="toggleAnimation()" class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors" title="Animasyon Oynat/Duraklat">
+                                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" x-show="animStatus !== 'playing'">
+                                    <path d="M6 4l10 6-10 6V4z" />
+                                </svg>
+                                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" x-cloak x-show="animStatus === 'playing'">
+                                    <path d="M5 4h3v12H5V4zm7 0h3v12h-3V4z" />
+                                </svg>
+                            </button>
+                            <button @click="downloadRawMedicalData('all')" class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:text-indigo-600" title="Tüm Veriyi İndir">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- ANA İÇERİK -->
+
+                <main class="min-w-0 flex-1 px-4 pb-16 sm:px-6 lg:px-8">
+                    <!-- Mobil Menü Açma Butonu -->
+                    <button @click="sidebarOpen = true" aria-label="Menüyü aç" class="fixed top-2 left-2 z-50 rounded-lg border border-slate-200 bg-white/80 p-2 shadow-lg backdrop-blur-sm transition-colors hover:bg-slate-50 lg:hidden" x-show="!sidebarOpen && isMobile">
+                        <svg class="h-6 w-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                        </svg>
+                    </button>
+
+                    <!-- BÖLÜM 1: ÖZET & METRİKLER (#summary) -->
+
+                    <div class="mx-auto mt-8 mb-8 grid max-w-7xl grid-cols-2 gap-2 lg:grid-cols-4 print:grid-cols-4" id="summary" x-cloak x-show="sections.summary" x-transition>
+                        <!-- Haftalık Tansiyon -->
+                        <div class="glass-card glass-card-hover order-1 flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-500 p-6 transition-all duration-300 lg:order-1" title="Son 7 gün ortalaması...">
+                            <template x-if="loadingMetrics">
+                                <div class="flex h-full items-center justify-center py-4">
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                                </div>
+                            </template>
+                            <template x-if="!loadingMetrics">
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Haftalık Tansiyon</span>
+                                        <span class="rounded-xl border border-rose-100 bg-rose-50 p-2 text-rose-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900" x-text="latestBp === '-' ? 'Yok' : latestBp.split(' ')[0]"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="latestBp !== '-'">mmHg</span>
+                                        </div>
+                                        <div class="mt-1 flex flex-col gap-0.5">
+                                            <span class="text-xs font-semibold text-slate-500" x-text="latestBp === '-' ? 'Ölçüm bulunamadı' : previousBp"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="latestBp !== '-'">Önceki hafta kıyaslaması</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Son Kilo -->
+                        <div :title="latestKilo.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestKilo.date) : ''" class="glass-card glass-card-hover order-3 flex flex-col justify-between rounded-2xl border-b-4 border-b-blue-500 p-6 transition-all duration-300 lg:order-2">
+                            <template x-if="loadingMetrics">
+                                <div class="flex h-full items-center justify-center py-4">
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                                </div>
+                            </template>
+                            <template x-if="!loadingMetrics">
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Son Kilo</span>
+                                        <span class="rounded-xl border border-blue-100 bg-blue-50 p-2 text-blue-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900" x-text="latestKilo.val === '-' ? 'Yok' : latestKilo.val"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="latestKilo.val !== '-'">kg</span>
+                                        </div>
+                                        <div class="mt-1 flex flex-col gap-0.5">
+                                            <span class="text-xs font-semibold text-slate-500" x-text="latestKilo.val === '-' ? 'Ölçüm bulunamadı' : previousKilo + ' kg'"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-text="latestKilo.val === '-' ? '' : (latestKilo.date ? formatTurkishDate(latestKilo.date) : 'Ölçüm tarihi yok')"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Son INR -->
+                        <div :title="latestInr.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestInr.date) : ''" class="glass-card glass-card-hover order-5 flex flex-col justify-between rounded-2xl border-b-4 border-b-amber-500 p-6 transition-all duration-300 lg:order-3">
+                            <template x-if="loadingMetrics">
+                                <div class="flex h-full items-center justify-center py-4">
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                                </div>
+                            </template>
+                            <template x-if="!loadingMetrics">
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Son INR</span>
+                                        <span class="rounded-xl border border-amber-100 bg-amber-50 p-2 text-amber-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900" x-text="latestInr.val === '-' ? 'Yok' : latestInr.val"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="latestInr.val !== '-'">Ratio</span>
+                                        </div>
+                                        <div class="mt-1 flex flex-col gap-0.5">
+                                            <span class="text-xs font-semibold text-slate-500" x-text="latestInr.val === '-' ? 'Kayıt bulunamadı' : previousInr"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-text="latestInr.val === '-' ? '' : (latestInr.date ? formatTurkishDate(latestInr.date) : 'Laboratuvar tarihi yok')"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Son HGB -->
+                        <div :title="latestHgb.date ? 'Geçerli Ölçüm Tarihi: ' + formatTurkishDate(latestHgb.date) : ''" class="glass-card glass-card-hover order-6 flex flex-col justify-between rounded-2xl border-b-4 border-b-emerald-500 p-6 transition-all duration-300 lg:order-4">
+                            <template x-if="loadingMetrics">
+                                <div class="flex h-full items-center justify-center py-4">
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                                </div>
+                            </template>
+                            <template x-if="!loadingMetrics">
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Son HGB</span>
+                                        <span class="rounded-xl border border-emerald-100 bg-emerald-50 p-2 text-emerald-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900" x-text="latestHgb.val === '-' ? 'Yok' : latestHgb.val"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="latestHgb.val !== '-'">g/dL</span>
+                                        </div>
+                                        <div class="mt-1 flex flex-col gap-0.5">
+                                            <span class="text-xs font-semibold text-slate-500" x-text="latestHgb.val === '-' ? 'Kayıt bulunamadı' : previousHgb + ' g/dL'"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-text="latestHgb.val === '-' ? '' : (latestHgb.date ? formatTurkishDate(latestHgb.date) : 'Laboratuvar tarihi yok')"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Ortalama Tansiyon -->
+                        <div class="glass-card glass-card-hover order-2 flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-400 p-6 transition-all duration-300 lg:order-5">
+                            <template x-if="loadingMetrics">
+                                <div class="flex h-full items-center justify-center py-4">
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                                </div>
+                            </template>
+                            <template x-if="!loadingMetrics">
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Ortalama Tansiyon</span>
+                                        <span class="rounded-xl border border-rose-100 bg-rose-50 p-2 text-rose-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900" x-text="getFilteredPressures().length === 0 ? 'Yok' : (metrics.avgSys + '/' + metrics.avgDia)"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="getFilteredPressures().length > 0">mmHg</span>
+                                        </div>
+                                        <div class="mt-1 flex flex-col gap-0.5">
+                                            <!--<div class="flex items-center" x-show="getFilteredPressures().length > 0">
+                                        <span :class="metrics.bpStatusClass" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold tracking-widest uppercase shadow-sm" x-text="metrics.bpStatusText"></span>
+                                    </div>-->
+                                            <span class="text-[10px] font-semibold text-slate-500" x-show="getFilteredPressures().length > 0 && previousAvgBp !== '-'">
+                                                <span class="font-bold text-slate-600" x-text="previousAvgBp"></span>
+                                            </span>
+                                            <span class="text-xs font-semibold text-slate-500" x-show="getFilteredPressures().length === 0">Ölçüm bulunamadı</span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="getFilteredPressures().length > 0 && previousAvgBp === '-'">Önceki dönem verisi yok</span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="getFilteredPressures().length > 0 && previousAvgBp !== '-'">Önceki dönem kıyaslaması</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Kilo Değişimi -->
+                        <div class="glass-card glass-card-hover order-4 flex flex-col justify-between rounded-2xl border-b-4 border-b-blue-400 p-6 transition-all duration-300 lg:order-6">
+                            <template x-if="loadingMetrics">
+                                <div class="flex h-full items-center justify-center py-4">
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                                </div>
+                            </template>
+                            <template x-if="!loadingMetrics">
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Kilo Değişimi</span>
+                                        <span class="rounded-xl border border-blue-100 bg-blue-50 p-2 text-blue-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900" x-text="getFilteredWeights().length === 0 ? 'Yok' : Math.abs(metrics.weightDelta).toFixed(1)"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-show="getFilteredWeights().length > 0">kg</span>
+                                            <span :class="metrics.weightDelta > 0 ? 'text-rose-500' : (metrics.weightDelta < 0 ? 'text-emerald-500' : 'text-slate-400')" class="ml-1 text-sm font-black" x-show="getFilteredWeights().length > 0" x-text="metrics.weightDelta > 0 ? '↑' : (metrics.weightDelta < 0 ? '↓' : '-')"></span>
+                                        </div>
+                                        <div class="mt-1 flex flex-col gap-0.5">
+                                            <span class="text-xs font-semibold text-slate-500" x-text="getFilteredWeights().length === 0 ? 'Ölçüm bulunamadı' : 'Dönem Başı: ' + (metrics.startWeight || '-') + ' kg'"></span>
+                                            <span class="text-[10px] font-medium text-slate-400" x-text="getFilteredWeights().length === 0 ? '' : (startDate ? formatTurkishDate(startDate) : 'Ölçüm tarihi yok')"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- İlaç Uyumu -->
+                        <div class="glass-card glass-card-hover order-7 flex flex-col justify-between rounded-2xl border-b-4 border-b-indigo-500 p-6 transition-all duration-300 lg:order-7">
+                            <template x-if="loadingMetrics">
+                                <div class="flex h-full items-center justify-center py-4">
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                                </div>
+                            </template>
+                            <template x-if="!loadingMetrics">
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">İlaç Uyumu</span>
+                                        <span class="rounded-xl border border-indigo-100 bg-indigo-50 p-2 text-indigo-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900" x-text="metrics.adherenceRate + '%'"></span>
+                                            <span class="text-[10px] font-medium text-slate-400">Uyum Oranı</span>
+                                        </div>
+                                        <div class="mt-1 flex h-7 flex-col justify-end">
+                                            <div class="h-1.5 w-full overflow-hidden rounded-full border border-slate-200 bg-slate-100">
+                                                <div :style="'width: ' + metrics.adherenceRate + '%'" class="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Anormal Tahliller -->
+                        <div class="glass-card glass-card-hover order-8 flex flex-col justify-between rounded-2xl border-b-4 border-b-amber-400 p-6 transition-all duration-300 lg:order-8">
+                            <template x-if="loadingMetrics">
+                                <div class="flex h-full items-center justify-center py-4">
+                                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                                </div>
+                            </template>
+                            <template x-if="!loadingMetrics">
+                                <div>
+                                    <div class="mb-2 flex items-center justify-between">
+                                        <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Anormal Tahliller</span>
+                                        <span class="rounded-xl border border-amber-100 bg-amber-50 p-2 text-amber-500">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-baseline gap-1">
+                                            <span class="font-display text-2xl font-extrabold tracking-tight text-slate-900" x-text="metrics.outOfBoundsCount"></span>
+                                            <span class="text-[10px] font-medium text-slate-400">Parametre</span>
+                                        </div>
+                                        <div class="mt-1 flex h-7 flex-col justify-end">
+                                            <div class="flex scrollbar-none gap-1.5 overflow-x-auto pb-0.5" x-show="metrics.outOfBoundsList.length > 0">
+                                                <template x-for="item in metrics.outOfBoundsList">
+                                                    <span :class="item.status === 'Yüksek' ? 'text-rose-700 bg-rose-50 border-rose-200/60' : 'text-amber-700 bg-amber-50 border-amber-200/60'" class="rounded border px-1.5 py-0.5 text-[9px] font-bold whitespace-nowrap shadow-sm" x-text="item.code"></span>
+                                                </template>
+                                            </div>
+                                            <div class="text-[10px] leading-6 font-medium text-emerald-600" x-show="metrics.outOfBoundsList.length === 0">Tümü normal sınırlarda.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- BÖLÜM 2: TANSİYON & KİLO GRAFİKLERİ (#charts) -->
+
+                    <div class="mx-auto mt-6 max-w-7xl" id="charts" x-show="sections.charts && (getFilteredPressures().length > 0 || getFilteredWeights().length > 0)">
+                        <div class="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_384px]">
+                            <!-- Kan Basıncı Grafiği -->
+                            <div class="order-1 lg:order-1" x-show="getFilteredPressures().length > 0">
+                                <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                    <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
+                                        <h2 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Kan Basıncı</h2>
+                                    </div>
+                                    <div class="relative h-[280px] w-full">
+                                        <template x-if="loadingBpChart">
+                                            <div class="absolute inset-0 flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+                                                <div class="flex flex-col items-center gap-2">
+                                                    <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
+                                                    <span class="text-xs font-medium text-slate-400">Tansiyon grafiği yükleniyor...</span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!loadingBpChart">
+                                            <template x-if="getFilteredPressures().length > 0">
+                                                <canvas class="absolute inset-0 h-full w-full" id="bpLineChart"></canvas>
+                                            </template>
+                                            <template x-if="getFilteredPressures().length === 0">
+                                                <div class="absolute inset-0 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
+                                                    <svg class="mb-2 h-8 w-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                    </svg>
+                                                    <span class="text-xs font-medium text-slate-400">Bu tarih aralığında tansiyon ölçümü bulunmamaktadır.</span>
+                                                </div>
+                                            </template>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ağırlık Grafiği -->
+                            <div class="order-3 lg:order-2">
+                                <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                    <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2">
+                                        <h2 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Ağırlık</h2>
+                                        <div class="invisible h-7 w-7"></div>
+                                    </div>
+                                    <div class="relative h-[280px] w-full">
+                                        <template x-if="loadingBpChart">
+                                            <div class="absolute inset-0 flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50">
+                                                <div class="flex flex-col items-center gap-2">
+                                                    <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
+                                                    <span class="text-xs font-medium text-slate-400">Kilo grafiği yükleniyor...</span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!loadingBpChart">
+                                            <template x-if="getFilteredWeights().length > 0">
+                                                <canvas class="absolute inset-0 h-full w-full" id="weightLineChart"></canvas>
+                                            </template>
+                                            <template x-if="getFilteredWeights().length === 0">
+                                                <div class="absolute inset-0 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
+                                                    <svg class="mb-2 h-8 w-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                    </svg>
+                                                    <span class="text-xs font-medium text-slate-400">Bu tarih aralığında kilo ölçümü bulunmamaktadır.</span>
+                                                </div>
+                                            </template>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kan Basıncı Tablosu -->
+                            <div class="order-2 lg:order-3">
+                                <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                    <div class="mb-5 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                                        <h2 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Kan Basıncı</h2>
+                                        <label class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50">
+                                            <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase">Tümünü Göster</span>
+                                            <div class="relative inline-flex items-center">
+                                                <input class="peer sr-only" type="checkbox" x-model="showAllBp" />
+                                                <div class="h-4 w-7 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="custom-scrollbar overflow-x-auto">
+                                        <table class="w-full min-w-[384px] text-left text-xs">
+                                            <thead class="sticky top-0 border-b border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase">
+                                                <tr>
+                                                    <th class="py-2.5 pl-2">Kayıt Zamanı</th>
+                                                    <th class="py-2.5 text-center">Kan Basıncı</th>
+                                                    <th class="py-2.5 pr-2 text-right">Değerlendirme</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100 font-medium text-slate-600">
+                                                <template :key="bp.at" x-for="bp in getFilteredPressures().slice((pulsePage-1)*pulseItemsPerPage, pulsePage*pulseItemsPerPage)">
+                                                    <tr class="transition hover:bg-slate-50">
+                                                        <td class="py-2.5 pl-2 font-semibold whitespace-nowrap text-slate-700" x-text="bp.at"></td>
+                                                        <td class="py-2.5 text-center font-extrabold whitespace-nowrap text-slate-900" x-text="bp.sys + '/' + bp.dia + ' mmHg'"></td>
+                                                        <td class="py-2.5 pr-2 text-right whitespace-nowrap">
+                                                            <span :class="getBPBadgeClass(bp.sys, bp.dia)" class="rounded-md px-2 py-0.5 text-[9px] font-black" x-text="getBPStatusText(bp.sys, bp.dia)"></span>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                                <template x-if="getFilteredPressures().length === 0">
+                                                    <tr>
+                                                        <td class="py-4 text-center text-slate-400" colspan="3">Bu tarih aralığında ölçüm bulunmamaktadır.</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                        <div class="mt-2 flex items-center justify-between px-2" x-show="getFilteredPressures().length > pulseItemsPerPage">
+                                            <button @click.prevent="pulsePage = Math.max(1, pulsePage - 1)" :disabled="pulsePage === 1" class="text-xs font-bold text-indigo-600 disabled:cursor-not-allowed disabled:text-slate-300">Önceki</button>
+                                            <span class="text-[10px] text-slate-400" x-text="pulsePage + ' / ' + Math.ceil(getFilteredPressures().length / pulseItemsPerPage)"></span>
+                                            <button @click.prevent="pulsePage = Math.min(Math.ceil(getFilteredPressures().length / pulseItemsPerPage), pulsePage + 1)" :disabled="pulsePage === Math.ceil(getFilteredPressures().length / pulseItemsPerPage)" class="text-xs font-bold text-indigo-600 disabled:cursor-not-allowed disabled:text-slate-300">Sonraki</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ağırlık Tablosu -->
+                            <div class="order-4 lg:order-4" x-show="getFilteredWeights().length > 0">
+                                <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                    <div class="mb-5 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                                        <h2 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Ağırlık</h2>
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex flex-col items-end" x-show="idealWeight">
+                                                <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">İdeal Kilo</span>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-sm font-black text-slate-700" x-text="idealWeight + ' kg'"></span>
+                                                    <span class="rounded px-1.5 py-0.5 text-[10px] font-bold" :class="currentWeightDelta > 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'" x-show="currentWeightDelta" x-text="'Δ ' + currentWeightDelta"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="custom-scrollbar overflow-x-auto">
+                                        <table class="w-full min-w-[384px] text-left text-xs">
+                                            <thead class="sticky top-0 border-b border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase">
+                                                <tr>
+                                                    <th class="py-2.5 pl-2">Ölçüm Tarihi</th>
+                                                    <th class="py-2.5 text-center">Vücut Kütlesi</th>
+                                                    <th class="py-2.5 pr-2 text-right">Kronolojik Değişim</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100 font-medium text-slate-600">
+                                                <template :key="wt.at" x-for="wt in getFilteredWeights().slice((weightPage-1)*weightItemsPerPage, weightPage*weightItemsPerPage)">
+                                                    <tr class="transition hover:bg-slate-50">
+                                                        <td class="py-2.5 pl-2 font-semibold whitespace-nowrap text-slate-700" x-text="wt.at"></td>
+                                                        <td class="py-2.5 text-center font-black whitespace-nowrap text-slate-900" x-text="wt.weight + ' kg'"></td>
+                                                        <td class="py-2.5 pr-2 text-right whitespace-nowrap">
+                                                            <span :class="getWeightDiffClass(wt)" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold" x-text="calculateIndividualWeightDiff(wt)"></span>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                                <template x-if="getFilteredWeights().length === 0">
+                                                    <tr>
+                                                        <td class="py-4 text-center text-slate-400" colspan="3">Bu tarih aralığında ağırlık ölçümü bulunmamaktadır.</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                        <div class="mt-2 flex items-center justify-between px-2" x-show="getFilteredWeights().length > weightItemsPerPage">
+                                            <button @click.prevent="weightPage = Math.max(1, weightPage - 1)" :disabled="weightPage === 1" class="text-xs font-bold text-indigo-600 disabled:cursor-not-allowed disabled:text-slate-300">Önceki</button>
+                                            <span class="text-[10px] text-slate-400" x-text="weightPage + ' / ' + Math.ceil(getFilteredWeights().length / weightItemsPerPage)"></span>
+                                            <button @click.prevent="weightPage = Math.min(Math.ceil(getFilteredWeights().length / weightItemsPerPage), weightPage + 1)" :disabled="weightPage === Math.ceil(getFilteredWeights().length / weightItemsPerPage)" class="text-xs font-bold text-indigo-600 disabled:cursor-not-allowed disabled:text-slate-300">Sonraki</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BÖLÜM 3: ZAMAN AKIŞI & REÇETELER (#prescriptions) -->
+
+                    <div class="mx-auto mt-6 max-w-7xl space-y-6" id="prescriptions" x-cloak x-show="sections.prescriptions && medicationChanges.length > 0" x-transition>
+                        <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm print:hidden">
+                            <div class="mb-4 text-xs font-bold tracking-wider text-slate-400 uppercase">İlaç Filtresi</div>
+                            <div class="mb-0 flex flex-col items-stretch justify-between gap-2 border-b border-slate-100 pb-4 md:flex-row md:items-center">
+                                <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                                    <div :class="isGroupActive('Kan Sulandırıcılar') ? 'bg-orange-100 border-orange-200 ring-2 ring-orange-500/20' : 'bg-slate-50 border-slate-200 hover:bg-orange-50'" @click="toggleGroup('Kan Sulandırıcılar')" class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 transition-all duration-200 sm:rounded-lg">
+                                        <span class="h-2 w-2 shrink-0 rounded-full bg-orange-500 shadow-sm"></span>
+                                        <span class="truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">Kan Sulandırıcılar</span>
+                                    </div>
+                                    <div :class="isGroupActive('Tansiyon & Kalp') ? 'bg-blue-100 border-blue-200 ring-2 ring-blue-500/20' : 'bg-slate-50 border-slate-200 hover:bg-blue-50'" @click="toggleGroup('Tansiyon & Kalp')" class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 transition-all duration-200 sm:rounded-lg">
+                                        <span class="h-2 w-2 shrink-0 rounded-full bg-blue-500 shadow-sm"></span>
+                                        <span class="truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">Tansiyon & Kalp</span>
+                                    </div>
+                                    <div :class="isGroupActive('Antibiyotik / Antifungal') ? 'bg-emerald-100 border-emerald-200 ring-2 ring-emerald-500/20' : 'bg-slate-50 border-slate-200 hover:bg-emerald-50'" @click="toggleGroup('Antibiyotik / Antifungal')" class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 transition-all duration-200 sm:rounded-lg">
+                                        <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-sm"></span>
+                                        <span class="truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">Antibiyotik / Anti.</span>
+                                    </div>
+                                    <div :class="isGroupActive('Ağrı Kesici') ? 'bg-purple-100 border-purple-200 ring-2 ring-purple-500/20' : 'bg-slate-50 border-slate-200 hover:bg-purple-50'" @click="toggleGroup('Ağrı Kesici')" class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 transition-all duration-200 sm:rounded-lg">
+                                        <span class="h-2 w-2 shrink-0 rounded-full bg-purple-500 shadow-sm"></span>
+                                        <span class="truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">Ağrı Kesici</span>
+                                    </div>
+                                    <div :class="isGroupActive('Mide Koruması') ? 'bg-rose-100 border-rose-200 ring-2 ring-rose-500/20' : 'bg-slate-50 border-slate-200 hover:bg-rose-50'" @click="toggleGroup('Mide Koruması')" class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 transition-all duration-200 sm:rounded-lg">
+                                        <span class="h-2 w-2 shrink-0 rounded-full bg-rose-500 shadow-sm"></span>
+                                        <span class="truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">Mide Koruması</span>
+                                    </div>
+                                    <div :class="isGroupActive('Solunum / Öksürük') ? 'bg-sky-100 border-sky-200 ring-2 ring-sky-500/20' : 'bg-slate-50 border-slate-200 hover:bg-sky-50'" @click="toggleGroup('Solunum / Öksürük')" class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 transition-all duration-200 sm:rounded-lg">
+                                        <span class="h-2 w-2 shrink-0 rounded-full bg-sky-500 shadow-sm"></span>
+                                        <span class="truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">Solunum / Öksürük</span>
+                                    </div>
+                                    <div :class="isGroupActive('Vitamin / Takviye') ? 'bg-yellow-100 border-yellow-200 ring-2 ring-yellow-500/20' : 'bg-slate-50 border-slate-200 hover:bg-yellow-50'" @click="toggleGroup('Vitamin / Takviye')" class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 transition-all duration-200 sm:rounded-lg">
+                                        <span class="h-2 w-2 shrink-0 rounded-full bg-yellow-500 shadow-sm"></span>
+                                        <span class="truncate text-[10px] font-bold text-slate-700 sm:text-[11px]">Vitamin / Takviye</span>
+                                    </div>
+                                </div>
+                                <label @click.stop class="mt-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 px-4 py-2 transition-all hover:bg-indigo-50 sm:w-auto md:mt-0">
+                                    <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase">Güncel</span>
+                                    <div class="relative inline-flex items-center">
+                                        <input @change="updateVisibleMeds(); setupFlowsheet()" class="peer sr-only" type="checkbox" x-model="onlyActive" />
+                                        <div class="h-4 w-8 rounded-full bg-slate-300 transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-4"></div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="mt-4 flex flex-wrap items-center gap-2">
+                                <button :class="selectedMed.length === 0 ? 'bg-slate-800 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" @click="clearMedSelection()" class="px-4 py-2 text-[11px] font-black tracking-wide uppercase transition-all active:scale-95 sm:rounded-lg">Tümü</button>
+                                <button :class="selectedMed.length === 1 && selectedMed[0] === 'NONE' ? 'bg-slate-800 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" @click="selectedMed = ['NONE']; updateVisibleMeds(); setupFlowsheet()" class="px-4 py-2 text-[11px] font-black tracking-wide uppercase transition-all active:scale-95 sm:rounded-lg">Hiçbiri</button>
+                                <div class="mx-1 hidden h-6 w-px bg-slate-200 sm:block"></div>
+                                <template x-for="medName in [...new Set(medTimeline.map((e) => e.med))]">
+                                    <button :class="selectedMed.includes(medName) ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-200' : 'bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600'" @click="toggleMed(medName)" class="border px-3 py-2 text-[11px] font-bold transition-all active:scale-95 sm:rounded-lg" x-text="medName"></button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-2 lg:grid-cols-3">
+                            <div class="space-y-6 lg:col-span-2">
+                                <!-- İlaç Zaman Akışı Grafiği -->
+                                <div class="glass-card overflow-hidden rounded-2xl p-6 shadow-sm">
+                                    <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                                        <span class="h-6 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+                                        <span>İlaç Zaman Akışı</span>
+                                    </h2>
+                                    <div class="flex h-48 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50" x-show="loadingTimeline">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
+                                            <span class="text-xs font-medium text-slate-400">Zaman akışı yükleniyor...</span>
+                                        </div>
+                                    </div>
+                                    <div x-show="!loadingTimeline">
+                                        <div class="custom-scrollbar w-full overflow-x-auto pb-2">
+                                            <div class="relative min-w-[650px] pr-2">
+                                                <div class="relative z-20 mb-4 flex items-center border-b border-slate-200 pb-2 text-[10px] font-bold text-slate-500 uppercase">
+                                                    <div class="sticky left-0 z-30 w-28 shrink-0 bg-white pr-2 font-bold text-slate-500">İlaç Adı</div>
+                                                    <div class="relative h-5 flex-grow">
+                                                        <template :key="idx" x-for="(label, idx) in timelineLabels">
+                                                            <span :class="{ 'text-slate-400': idx === 0 || idx === timelineLabels.length - 1, 'font-bold text-indigo-600': label.isFirstOfMonth }" :style="`left: ${label.percentage}%; transform: translateX(${idx === 0 ? '0' : idx === timelineLabels.length - 1 ? '-100%' : '-50%'})`" class="absolute text-[10px] whitespace-nowrap transition-all duration-300" x-text="label.text"></span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                                <div class="pointer-events-none absolute top-8 right-0 bottom-0 left-28 z-0 flex justify-between">
+                                                    <template :key="idx" x-for="(label, idx) in timelineLabels">
+                                                        <div :style="`left: ${label.percentage}%`" class="h-full border-l border-dashed border-slate-200/60"></div>
+                                                    </template>
+                                                </div>
+                                                <div class="relative z-10 space-y-3">
+                                                    <template :key="med.name" x-for="med in visibleMeds">
+                                                        <div class="group flex items-center rounded-lg py-1 transition-colors duration-150 hover:bg-slate-100/50">
+                                                            <div class="sticky left-0 z-20 flex w-28 shrink-0 cursor-default items-center bg-white pr-3 shadow-[2px_0_10px_rgba(241,245,249,0.95)]">
+                                                                <span :class="medColors[med.name] || 'bg-slate-400'" class="mr-2 h-2 w-2 shrink-0 rounded-full shadow-sm ring-4 ring-slate-100"></span>
+                                                                <div :title="med.name" class="truncate text-xs font-bold text-slate-700" x-text="med.name"></div>
+                                                            </div>
+                                                            <div class="relative flex h-6 flex-grow overflow-hidden rounded-md border border-slate-200 bg-slate-50 shadow-inner">
+                                                                <template x-for="seg in med.segments">
+                                                                    <div
+                                                                        :class="medColors[med.name] || 'bg-indigo-600'"
+                                                                        :style="`left: ${seg.left}%; width: ${seg.width}%`"
+                                                                        :title="`${med.name}: ${formatFullDate(seg.rawStart)} - ${seg.rawEnd === 'Devam Ediyor' ? 'Devam Ediyor' : formatFullDate(seg.rawEnd)}`"
+                                                                        @click="activeTooltip = {med: med.name, start: seg.rawStart, end: seg.rawEnd}"
+                                                                        class="absolute h-full cursor-pointer rounded border border-black/5 opacity-80 shadow-sm transition-all duration-200 hover:scale-y-105 hover:opacity-100 hover:brightness-105"></div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="visibleMeds.length === 0">
+                                                        <div class="mt-4 mr-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-10 text-center text-xs font-medium text-slate-400">Seçilen filtrelere uygun ilaç aktiflik kaydı bulunamadı.</div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-xs" x-cloak x-show="activeTooltip" x-transition>
+                                            <div>
+                                                <span class="font-bold text-indigo-600 uppercase" x-text="activeTooltip?.med"></span>
+                                                :
+                                                <span class="text-slate-600" x-text="formatFullDate(activeTooltip?.start)"></span>
+                                                -
+                                                <span class="text-slate-600" x-text="activeTooltip?.end === 'Devam Ediyor' ? 'Devam Ediyor' : formatFullDate(activeTooltip?.end)"></span>
+                                            </div>
+                                            <button @click="activeTooltip = null" class="px-2 text-lg font-bold text-indigo-500 hover:text-slate-800">&times;</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tedavi Kronolojisi -->
+                                <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                    <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                                        <svg class="h-5 w-5 shrink-0 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                        </svg>
+                                        <span>Tedavi Kronolojisi</span>
+                                    </h2>
+                                    <div class="flex h-48 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50" x-show="loadingTimeline">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
+                                            <span class="text-xs font-medium text-slate-400">Tedavi kayıtları yükleniyor...</span>
+                                        </div>
+                                    </div>
+                                    <div x-show="!loadingTimeline">
+                                        <div class="">
+                                            <div class="relative ml-3 space-y-4 border-l border-slate-200 pl-6">
+                                                <template :key="dayEvent.date + dayEvent.med + index" x-for="(dayEvent, index) in filteredTimeline.slice((timelinePage-1)*timelineItemsPerPage, timelinePage*timelineItemsPerPage)">
+                                                    <div class="group relative">
+                                                        <div :class="dayEvent.type === 'end' ? 'bg-rose-500' : dayEvent.type === 'start' ? 'bg-emerald-500' : dayEvent.type === 'pause' ? 'bg-amber-500' : 'bg-blue-500'" class="absolute top-3 -left-[30.5px] flex h-3 w-3 items-center justify-center rounded-full shadow-sm ring-4 ring-white transition-transform group-hover:scale-125 print:hidden"></div>
+                                                        <div class="rounded-lg border border-slate-200/60 bg-slate-50 p-3 shadow-inner transition-colors hover:bg-slate-50/80 print:flex print:items-center print:gap-2 print:rounded-none print:border-none print:py-1 print:shadow-none">
+                                                            <div class="mb-1.5 flex items-center justify-between print:hidden">
+                                                                <div class="flex items-center gap-2">
+                                                                    <span class="font-mono text-[10px] font-bold text-slate-500" x-text="formatTurkishDate(dayEvent.date)"></span>
+                                                                </div>
+                                                                <div class="flex items-center gap-2">
+                                                                    <span class="text-[9px] font-bold text-slate-400" x-show="getTabletCount(dayEvent)" x-text="getTabletCount(dayEvent)"></span>
+                                                                    <span :class="getMedColor(getMedByName(dayEvent.med))" class="flex items-center gap-1 rounded border px-1.5 py-0.5 text-[8px] font-black tracking-wide uppercase shadow-sm">
+                                                                        <span x-html="getMedIcon(getMedByName(dayEvent.med))" class="scale-75"></span>
+                                                                        <span x-text="dayEvent.med"></span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <span class="hidden font-mono font-bold text-slate-500 print:block" x-text="formatTurkishDate(dayEvent.date)"></span>
+                                                            <p class="text-[11px] leading-relaxed font-semibold text-slate-700" x-html="dayEvent.msg"></p>
+                                                            <span class="ml-auto hidden text-[10px] font-bold text-slate-400 print:block" x-text="getTabletCount(dayEvent)"></span>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                <template x-if="filteredTimeline.length === 0">
+                                                    <p class="text-xs font-medium text-slate-400">Seçilen tarih aralığında kaydedilmiş herhangi bir reçete veya dozaj değişikliği bulunmamaktadır.</p>
+                                                </template>
+                                            </div>
+                                            <div class="mt-4 flex items-center justify-between px-2" x-show="filteredTimeline.length > timelineItemsPerPage">
+                                                <button @click.prevent="timelinePage = Math.max(1, timelinePage - 1)" :disabled="timelinePage === 1" class="text-xs font-bold text-indigo-600 disabled:cursor-not-allowed disabled:text-slate-300">Önceki</button>
+                                                <span class="text-[10px] text-slate-400" x-text="timelinePage + ' / ' + Math.ceil(filteredTimeline.length / timelineItemsPerPage)"></span>
+                                                <button @click.prevent="timelinePage = Math.min(Math.ceil(filteredTimeline.length / timelineItemsPerPage), timelinePage + 1)" :disabled="timelinePage === Math.ceil(filteredTimeline.length / timelineItemsPerPage)" class="text-xs font-bold text-indigo-600 disabled:cursor-not-allowed disabled:text-slate-300">Sonraki</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sağ Panel: Aktif / Pasif İlaçlar -->
+                            <div class="space-y-6">
+                                <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                    <h2 class="font-display mb-5 flex items-center gap-2 text-lg font-semibold text-slate-900">
+                                        <span class="h-5 w-1 shrink-0 rounded-full bg-emerald-500"></span>
+                                        Aktif İlaçlar
+                                    </h2>
+                                    <div class="space-y-2.5">
+                                        <template :key="med.id" x-for="med in activeMeds">
+                                            <div class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/60 bg-slate-50 p-3 shadow-inner sm:flex-row sm:items-center" :class="getMedColor(med).replace('bg-', 'bg-').replace('-100', '-50/50').replace('text-', 'text-').replace('border-', 'border-')">
+                                                <div class="flex items-center gap-2">
+                                                    <div x-html="getMedIcon(med)" :class="getMedColor(med).split(' ')[1]"></div>
+                                                    <div>
+                                                        <h4 class="text-xs font-bold text-slate-800" x-text="med.name"></h4>
+                                                        <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="getCurrentDoseText(med.id)"></p>
+                                                    </div>
+                                                </div>
+                                                <span :class="med.is_emergency ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'" class="self-start rounded-md border px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide uppercase sm:self-auto" x-text="med.is_emergency ? 'Acil Durum' : 'Rutin'"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="activeMeds.length === 0">
+                                            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-4 text-center text-xs font-medium text-slate-400">Aktif ilaç kaydı bulunamadı.</div>
+                                        </template>
+                                    </div>
+
+                                    <h2 class="font-display mt-6 mb-4 flex items-center gap-1.5 text-base font-bold text-slate-900">
+                                        <span class="h-5 w-1 shrink-0 rounded-full bg-slate-400"></span>
+                                        Pasif İlaçlar
+                                    </h2>
+                                    <div class="space-y-2.5">
+                                        <template :key="med.id" x-for="med in passiveMeds">
+                                            <div class="flex flex-col justify-between gap-2 rounded-xl border border-slate-200/40 bg-slate-100/60 p-3 opacity-65 sm:flex-row sm:items-center">
+                                                <div class="flex items-center gap-2">
+                                                    <div x-html="getMedIcon(med)" class="text-slate-400"></div>
+                                                    <div>
+                                                        <h4 class="text-xs font-bold text-slate-600 line-through" x-text="med.name"></h4>
+                                                        <p class="mt-0.5 text-[10px] font-medium text-slate-400" x-text="getLastPrescribedDoseText(med.id)"></p>
+                                                    </div>
+                                                </div>
+                                                <span class="self-start rounded border border-slate-300 bg-slate-200/80 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-slate-500 uppercase sm:self-auto">Kullanımda Değil</span>
+                                            </div>
+                                        </template>
+                                        <template x-if="passiveMeds.length === 0">
+                                            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-4 text-center text-xs font-medium text-slate-400">Pasif/Geçmiş ilaç kaydı bulunamadı.</div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BÖLÜM 4: İLAÇ MATRİSİ (#flowsheet) -->
+
+                    <div class="mx-auto mt-6 max-w-7xl space-y-6" id="flowsheet" x-cloak x-show="sections.flowsheet && uniqueMeds.length > 0" x-transition>
+                        <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <div class="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                                        <span class="h-5 w-1 shrink-0 rounded-full bg-indigo-600"></span>
+                                        <span>İlaç Matrisi</span>
+                                    </h2>
+                                    <p class="mt-0.5 text-xs font-medium text-slate-400">Seçilen tarih aralığı sonundan geriye doğru 14 günlük kullanım loglarının frekans ve dozaj dağılımı.</p>
+                                </div>
+                                <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                                    <button :class="flowsheetMode === 'grid' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 border border-slate-200'" @click="flowsheetMode = 'grid'; selectedMed = []" class="flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition sm:flex-none">Çizelge</button>
+                                    <button :class="flowsheetMode === 'chart' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 border border-slate-200'" @click="flowsheetMode = 'chart'; $nextTick(() => renderFocusChart())" class="flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition sm:flex-none">Grafik Karşılaştır</button>
+                                </div>
+                            </div>
+
+                            <div class="flex h-64 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50" x-show="loadingFlowsheet">
+                                <div class="flex flex-col items-center gap-2">
+                                    <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
+                                    <span class="text-xs font-medium text-slate-400">İlaç matrisi yükleniyor...</span>
+                                </div>
+                            </div>
+
+                            <div x-show="!loadingFlowsheet">
+                                <!-- Grid Modu -->
+                                <div class="relative" x-show="flowsheetMode === 'grid'">
+                                    <div @scroll="activeCellTooltip = null" class="custom-scrollbar overflow-x-auto rounded-xl border border-slate-200/60 bg-slate-50/50">
+                                        <table class="w-full border-collapse text-left">
+                                            <thead>
+                                                <tr class="border-b border-slate-200 bg-slate-100 text-[10px] font-bold text-slate-500 uppercase">
+                                                    <th class="sticky left-0 z-20 min-w-[160px] border-r border-slate-200 bg-slate-100 px-4 py-3 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">Etkin Madde / İlaç</th>
+                                                    <template :key="day" x-for="day in flowsheetDays">
+                                                        <th class="min-w-[55px] px-2 py-3 text-center">
+                                                            <div class="text-[9px] text-slate-400" x-text="formatFlowsheetHeader(day).dow"></div>
+                                                            <div class="mt-0.5 font-black text-slate-800" x-text="formatFlowsheetHeader(day).date"></div>
+                                                        </th>
+                                                    </template>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-200 bg-white text-xs font-medium">
+                                                <template :key="med" x-for="med in uniqueMeds">
+                                                    <tr class="transition hover:bg-slate-50/40">
+                                                        <td class="font-display sticky left-0 z-20 border-r border-slate-200 bg-white px-4 py-3.5 font-bold text-slate-900 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                                            <div x-text="med"></div>
+                                                            <div class="mt-0.5 font-sans text-[9px] font-normal text-slate-400" x-text="getMedicationUnitByName(med)"></div>
+                                                        </td>
+                                                        <template :key="day" x-for="day in flowsheetDays">
+                                                            <td class="relative px-2 py-3.5 text-center">
+                                                                <div class="relative flex items-center justify-center">
+                                                                    <template x-if="getMedLogForDay(med, day).count > 0">
+                                                                        <div
+                                                                            @click.stop="let rect = $event.currentTarget.getBoundingClientRect();let tooltipWidth = 208;let x = window.scrollX + rect.left + rect.width / 2;let minX = 10 + tooltipWidth / 2;let maxX = window.innerWidth - 10 - tooltipWidth / 2;if (x < minX) x = minX;if (x > maxX) x = maxX;let isTop = rect.top > 180;let y = isTop ? (window.scrollY + rect.top) : (window.scrollY + rect.bottom);activeCellTooltip = (activeCellTooltip && activeCellTooltip.key === med + day) ? null : {key: med + day,med: med,day: day,x: Math.round(x),y: Math.round(y),isTop: isTop,displayValue: getMedLogForDay(med, day).displayValue,logs: getMedLogForDay(med, day).logs}"
+                                                                            class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-[11px] font-bold text-indigo-600 shadow-sm transition hover:bg-indigo-600 hover:text-white"
+                                                                            x-text="getMedLogForDay(med, day).displayValue"></div>
+                                                                    </template>
+                                                                    <template x-if="getMedLogForDay(med, day).count === 0">
+                                                                        <span class="font-bold text-slate-300">-</span>
+                                                                    </template>
+                                                                </div>
+                                                            </td>
+                                                        </template>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Grafik Modu -->
+                                <div class="space-y-4" x-show="flowsheetMode === 'chart'">
+                                    <div class="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                        <template :key="medName" x-for="medName in allFlowsheetMeds">
+                                            <button :class="selectedMed.includes(medName) ? 'bg-indigo-600 text-white font-bold border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'" @click="toggleMed(medName); renderFocusChart()" class="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition active:scale-95">
+                                                <span :style="`background-color: ${medConfig[medName]?.color || 'rgb(139, 92, 246)'}`" class="h-2 w-2 shrink-0 rounded-full"></span>
+                                                <span x-text="medName"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                    <div class="relative h-[380px] w-full rounded-xl border border-slate-200 bg-white p-4">
+                                        <canvas id="focusChartCanvas"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tooltip'lar -->
+                            <div :style="'left: ' + tooltip.x + 'px; top: ' + tooltip.y + 'px;'" class="pointer-events-none absolute z-50 min-w-[180px] rounded-xl border border-slate-200 bg-white/95 p-3 text-xs shadow-md backdrop-blur-md transition-all duration-100" x-cloak x-show="tooltip.show">
+                                <div class="font-display mb-1.5 flex justify-between gap-2 border-b border-slate-100 pb-1 font-bold text-slate-900">
+                                    <span x-text="tooltip.med"></span>
+                                    <span class="font-sans text-[10px] font-normal text-slate-400" x-text="tooltip.date"></span>
+                                </div>
+                                <div class="space-y-1 font-medium text-slate-600">
+                                    <div>
+                                        Toplam:
+                                        <span class="font-bold text-indigo-600" x-text="tooltip.count + ' Doz'"></span>
+                                    </div>
+                                    <div class="mt-1 text-[10px] text-slate-400">Alım Saatleri:</div>
+                                    <div class="flex flex-col gap-0.5 border-l border-indigo-400 pl-1.5">
+                                        <template :key="time" x-for="time in tooltip.times">
+                                            <span class="text-[10px] font-bold text-slate-700" x-text="time"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div :class="activeCellTooltip?.isTop ? '-translate-y-full -mt-2' : 'mt-2'" :style="`left: ${activeCellTooltip?.x}px; top: ${activeCellTooltip?.y}px;`" @click.away="activeCellTooltip = null" class="absolute z-50 w-52 -translate-x-1/2 rounded-xl bg-slate-900/95 p-3 text-left text-white shadow-md backdrop-blur-md" x-cloak x-show="activeCellTooltip">
+                                <div class="font-display mb-1.5 flex justify-between gap-2 border-b border-slate-700 pb-1 font-bold">
+                                    <span x-text="activeCellTooltip?.med"></span>
+                                    <span class="text-[10px] font-normal text-slate-400" x-text="formatTurkishDate(activeCellTooltip?.day)"></span>
+                                </div>
+                                <div class="space-y-1">
+                                    <div>
+                                        Toplam:
+                                        <span class="font-bold text-indigo-400" x-text="activeCellTooltip?.displayValue + ' Doz'"></span>
+                                    </div>
+                                    <div class="mt-1 text-[10px] font-semibold text-slate-400">Alım Saatleri:</div>
+                                    <div class="flex flex-col gap-0.5 border-l border-indigo-500 pl-1.5">
+                                        <template :key="time" x-for="time in (activeCellTooltip?.logs || []).map((l) => l.tooltipStr)">
+                                            <span class="text-[10px] font-bold text-slate-200" x-text="time"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BÖLÜM 5: İNTERAKTİF TAKVİM (#calendar) -->
+
+                    <div class="mx-auto mt-6 grid max-w-7xl grid-cols-1 items-start gap-2 lg:grid-cols-[1fr_384px]" id="calendar" x-cloak x-show="sections.calendar" x-transition>
+                        <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <div class="mb-6 flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h2 class="font-display flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                                        <span class="h-5 w-1 shrink-0 rounded-full bg-indigo-600"></span>
+                                        <span>İnteraktif Takvim</span>
+                                    </h2>
+                                    <p class="mt-0.5 text-xs font-medium text-slate-400">Tüm klinik verilerin kronolojik saat dağılımı</p>
+                                </div>
+                                <div class="flex w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm sm:w-auto">
+                                    <button :class="{ 'opacity-30 cursor-not-allowed': !canGoPrevMonth() }" :disabled="!canGoPrevMonth()" @click="prevCalendarMonth()" class="text-slate-500 transition hover:text-indigo-600 active:scale-90">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
+                                        </svg>
+                                    </button>
+                                    <span class="font-display w-32 text-center text-sm font-bold whitespace-nowrap text-slate-800 select-none" x-text="calendarMonthName + ' ' + calendarYear"></span>
+                                    <button :class="{ 'opacity-30 cursor-not-allowed': !canGoNextMonth() }" :disabled="!canGoNextMonth()" @click="nextCalendarMonth()" class="text-slate-500 transition hover:text-indigo-600 active:scale-90">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold tracking-wider whitespace-nowrap text-slate-400 uppercase">
+                                    <div>Pzt</div>
+                                    <div>Sal</div>
+                                    <div>Çar</div>
+                                    <div>Per</div>
+                                    <div>Cum</div>
+                                    <div>Cmt</div>
+                                    <div>Paz</div>
+                                </div>
+                                <div class="grid grid-cols-7 gap-1.5">
+                                    <template :key="day.dateStr + '-' + idx" x-for="(day, idx) in calendarDays">
+                                        <div :class="getCalendarDayClass(day)" @click="selectCalendarDay(day.dateStr)" class="relative flex h-11 cursor-pointer flex-col justify-between rounded-xl border p-1 transition-all duration-150 hover:border-indigo-400 hover:bg-slate-50/50 sm:h-16 sm:p-2">
+                                            <span :class="day.dateStr === (new Date().toISOString().split('T')[0]) ? 'bg-indigo-600 text-white font-bold h-4 w-4 sm:h-5 sm:w-5 rounded-full flex items-center justify-center -m-0.5 sm:-m-1' : 'text-slate-700 font-semibold'" class="self-start text-[10px] whitespace-nowrap sm:text-xs" x-text="day.dayNum"></span>
+                                            <div class="mt-0.5 flex h-3 max-h-[12px] flex-wrap gap-0.5 overflow-hidden sm:mt-1 sm:h-6 sm:max-h-[24px] sm:gap-1">
+                                                <template :key="logIdx" x-for="(log, logIdx) in getDailyEvents(day.dateStr).slice(0, 4)">
+                                                    <span :class="log.type === 'med' ? (medColors[log.med] || 'bg-slate-500') : (log.type === 'bp' ? 'bg-rose-400' : log.type === 'weight' ? 'bg-blue-400' : log.type === 'test' ? 'bg-teal-400' : 'bg-indigo-400')" :title="log.type === 'med' ? log.med + ' (' + log.dose + ' mg)' : log.type" class="h-1 w-1 shrink-0 rounded-full shadow-sm sm:h-1.5 sm:w-1.5"></span>
+                                                </template>
+                                                <template x-if="getDailyEvents(day.dateStr).length > 4">
+                                                    <span class="shrink-0 text-[7px] leading-none font-black whitespace-nowrap text-indigo-600 sm:text-[8px]" x-text="'+' + (getDailyEvents(day.dateStr).length - 4)"></span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sağ Panel: Gün Detayı -->
+                        <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" id="day">
+                            <div class="mb-4 flex flex-col items-start justify-between gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
+                                <h3 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Gün Detayı</h3>
+                                <label class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50">
+                                    <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase">Sadece İlaçlar</span>
+                                    <div class="relative inline-flex items-center">
+                                        <input class="peer sr-only" type="checkbox" x-model="onlyMeds" />
+                                        <div class="h-4 w-7 rounded-full bg-slate-300 shadow-inner transition-colors peer-checked:bg-indigo-600 after:absolute after:top-[2px] after:left-[2px] after:h-3 after:w-3 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-3"></div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="mb-5 flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/80 p-1.5 shadow-inner">
+                                <button :disabled="!canGoPrev" @click="goToPrevDay()" class="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-white text-slate-500 shadow-sm transition-all hover:border-indigo-300 hover:text-indigo-600 active:scale-95 disabled:pointer-events-none disabled:opacity-40" title="Önceki İşlem Günü">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
+                                    </svg>
+                                </button>
+                                <div class="flex flex-1 flex-col items-center justify-center overflow-hidden px-2 text-center">
+                                    <span class="truncate text-xs font-extrabold tracking-tight text-slate-800 sm:text-sm" x-text="formatFullDate(selectedCalendarDayStr)"></span>
+                                    <span class="mt-0.5 text-[9px] font-bold tracking-widest text-slate-400 uppercase" x-text="(onlyMeds ? getDailyEvents(selectedCalendarDayStr).filter(e => e.type === 'med').length : getDailyEvents(selectedCalendarDayStr).length) + ' Kayıt Bulundu'"></span>
+                                </div>
+                                <button :disabled="!canGoNext" @click="goToNextDay()" class="flex h-8 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 bg-white text-slate-500 shadow-sm transition-all hover:border-indigo-300 hover:text-indigo-600 active:scale-95 disabled:pointer-events-none disabled:opacity-40" title="Sonraki İşlem Günü">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="space-y-3 pr-1">
+                                <template x-if="getDailyEvents(selectedCalendarDayStr).length > 0">
+                                    <div class="flex flex-col gap-2">
+                                        <template :key="idx" x-for="(dayEvent, idx) in getDailyEvents(selectedCalendarDayStr).filter(e => !onlyMeds || (e.type === 'med' || e.type === 'medchange'))">
+                                            <div :class="getEventBgClass(dayEvent)" @click="dayEvent.type === 'test' ? navigateToTest(dayEvent.id) : (dayEvent.type === 'report' ? navigateToReport(dayEvent.protocol_no || dayEvent.at) : null)" class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 shadow-sm transition-colors">
+                                                <div class="flex min-w-0 flex-1 items-center gap-2">
+                                                    <span :class="dayEvent.isPlan ? 'text-slate-500' : 'text-slate-700'" class="font-mono text-[11px] font-bold whitespace-nowrap" x-text="dayEvent.time + (dayEvent.isPlan ? ' (Plan)' : '')"></span>
+                                                    <template x-if="dayEvent.type === 'bp'">
+                                                        <svg class="h-4 w-4 shrink-0 text-rose-500" fill="currentColor" viewBox="0 0 24 24">
+                                                            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                        </svg>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'med'">
+                                                        <svg class="h-4 w-4 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <rect height="8" rx="4" stroke-width="2" width="20" x="2" y="8" />
+                                                            <line stroke-linecap="round" stroke-width="1.5" x1="12" x2="12" y1="8" y2="16" />
+                                                        </svg>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'medchange'">
+                                                        <svg class="h-4 w-4 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                                        </svg>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'weight'">
+                                                        <svg class="h-4 w-4 shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                                        </svg>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'test'">
+                                                        <svg class="h-4 w-4 shrink-0 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                                        </svg>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'report'">
+                                                        <svg class="h-4 w-4 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                                        </svg>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'bp'">
+                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.sys + '/' + dayEvent.dia + ' mmHg'"></span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'med'">
+                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="parseFloat((dayEvent.dose / (medConversions[dayEvent.med] || 1)).toFixed(2)) + ' x ' + dayEvent.med"></span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'weight'">
+                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.weight + ' kg'"></span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'test'">
+                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.title"></span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'report'">
+                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.title"></span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'medchange'">
+                                                        <span class="truncate text-xs font-bold text-slate-900" x-text="dayEvent.description"></span>
+                                                    </template>
+                                                </div>
+                                                <div class="flex-shrink-0">
+                                                    <template x-if="dayEvent.type === 'bp'">
+                                                        <span :class="getBPBadgeClass(dayEvent.sys, dayEvent.dia)" class="rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap uppercase shadow-sm" x-text="getBPStatusText(dayEvent.sys, dayEvent.dia)"></span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'med' || dayEvent.type === 'medchange'">
+                                                        <span :class="(dayEvent.isPlan ? 'bg-slate-400' : (medColors[dayEvent.med] || 'bg-slate-500')) + (dayEvent.isEmergency ? ' ring-2 ring-rose-500 ring-offset-1' : '')" class="rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm" x-text="dayEvent.med"></span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'weight'">
+                                                        <span class="rounded-full bg-blue-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Kilo</span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'test'">
+                                                        <span class="rounded-full bg-teal-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Tahlil</span>
+                                                    </template>
+                                                    <template x-if="dayEvent.type === 'report'">
+                                                        <span class="rounded-full bg-indigo-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Rapor</span>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template x-if="getDailyEvents(selectedCalendarDayStr).filter(e => !onlyMeds || (e.type === 'med' || e.type === 'medchange')).length === 0">
+                                    <div class="py-12 text-center">
+                                        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-400">
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-xs font-semibold whitespace-nowrap text-slate-400">Seçilen filtrede listelenecek işlem bulunamadı.</p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BÖLÜM 6: TAHLİL TRENDLERİ (#lab-trends) -->
+
+                    <div class="mx-auto mt-6 max-w-7xl space-y-6" id="lab-trends" x-cloak x-show="sections.labTrends && filteredTests.length > 0" x-transition>
+                        <div class="glass-card mt-8 rounded-2xl p-6 shadow-sm">
+                            <div class="mb-5">
+                                <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                                    <svg class="h-5 w-5 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                    </svg>
+                                    <span>Tahlil Değişim Eğilimleri</span>
+                                </h2>
+                                <p class="mt-0.5 text-xs font-medium text-slate-400">Seçilen global tarih filtresi aralığındaki tüm laboratuvar kayıtlarının kronolojik akış trendleri.</p>
+                            </div>
+                            <div class="flex h-96 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50" x-show="loadingLabCharts">
+                                <div class="flex flex-col items-center gap-2">
+                                    <div class="h-8 w-8 animate-spin rounded-full border-3 border-indigo-200 border-t-indigo-600"></div>
+                                    <span class="text-xs font-medium text-slate-400">Tahlil grafikleri yükleniyor...</span>
+                                </div>
+                            </div>
+                            <div x-show="!loadingLabCharts">
+                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                                    <template x-for="trend in availableLabTrends" :key="trend.id">
+                                        <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:shadow-md">
+                                            <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700" x-text="trend.label"></div>
+                                            <div class="relative h-[160px] w-full">
+                                                <canvas :id="trend.id"></canvas>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BÖLÜM 7: TETKİK & BULGULAR (#lab-findings) -->
+
+                    <div class="mx-auto mt-6 grid max-w-7xl grid-cols-1 gap-2 lg:grid-cols-[384px_1fr] print:block" id="lab-findings" x-cloak x-show="sections.labFindings && filteredTests.length > 0" x-transition>
+                        <!-- Sol: Tahlil Listesi -->
+                        <div class="space-y-3 print:hidden">
+                            <div class="flex flex-col items-start justify-between gap-2 pl-1 sm:flex-row sm:items-center">
+                                <h3 class="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">Tahliller</h3>
+                                <div class="flex items-center gap-2">
+                                    <label class="flex cursor-pointer items-center gap-1.5 select-none">
+                                        <input class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" type="checkbox" x-model="showOnlyOutOfBoundsTests" />
+                                        <span class="text-[10px] font-semibold text-slate-400">Sadece Sınır Dışı</span>
+                                    </label>
+                                    <label class="flex cursor-pointer items-center gap-1.5 select-none">
+                                        <input class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" type="checkbox" x-model="hideSpecialTests" />
+                                        <span class="text-[10px] font-semibold text-slate-400">Gizle: AKG & Crossmatch</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="custom-scrollbar space-y-2 pr-1">
+                                <div class="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+                                    <template :key="test.id" x-for="test in paginatedTests">
+                                        <div :class="selectedTestId === test.id ? 'bg-indigo-50/70 text-indigo-900' : 'hover:bg-slate-50 text-slate-700'" :data-test-id="test.id" @click="selectLabSession(test.id)" class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition">
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-bold text-slate-800" x-text="test.title"></span>
+                                                    <span class="font-mono text-[9px] text-slate-400" x-text="'(#' + test.id + ')'"></span>
+                                                    <template x-if="test.outOfRange">
+                                                        <span class="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" title="Önceki tahlil gösteriliyor"></span>
+                                                    </template>
+                                                </div>
+                                                <div class="mt-0.5 truncate text-[10px] font-normal text-slate-400" x-text="getHospitalName(test.hospital_id)"></div>
+                                            </div>
+                                            <div class="ml-2 shrink-0 text-right">
+                                                <div class="font-mono text-[10px] font-bold text-slate-500" x-text="formatTurkishDate(test.at.substring(0, 10))"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <template x-if="filteredTests.length === 0">
+                                    <p class="p-2 text-xs font-medium text-slate-400">Filtrelenmiş dönemde tahlil seansı bulunmamaktadır.</p>
+                                </template>
+                                <div class="flex items-center justify-between border-t border-slate-100 pt-3 text-xs" x-show="totalTestPages > 1">
+                                    <span class="text-slate-500" x-text="testPage + ' / ' + totalTestPages"></span>
+                                    <div class="flex gap-1">
+                                        <button :disabled="testPage === 1" @click="goToTestPage(testPage - 1)" class="rounded border border-slate-200 px-2.5 py-1 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40">Önceki</button>
+                                        <button :disabled="testPage === totalTestPages" @click="goToTestPage(testPage + 1)" class="rounded border border-slate-200 px-2.5 py-1 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40">Sonraki</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sağ: Seçili Tahlil Detayları -->
+                        <div>
+                            <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" id="test">
+                                <div class="mb-4 border-b border-slate-100 pb-3">
+                                    <h3 class="font-display text-base font-semibold text-slate-900" x-text="selectedTestObj.title ? selectedTestObj.title + ' Bulguları' : 'Tahlil Seçiniz'"></h3>
+                                    <p class="mt-0.5 text-xs font-medium text-slate-400" x-text="selectedTestObj.at ? formatFullDate(selectedTestObj.at) : ''"></p>
+                                </div>
+                                <div class="custom-scrollbar overflow-x-auto pr-1">
+                                    <table class="w-full min-w-[600px] text-left text-xs">
+                                        <thead class="border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase">
+                                            <tr>
+                                                <th class="p-2">Parametre</th>
+                                                <th class="p-2 text-right">Değer</th>
+                                                <th class="p-2 text-left">Birim</th>
+                                                <th class="p-2 text-center">Referans Aralığı</th>
+                                                <th class="p-2 text-center">Durum</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            <template :key="item.code" x-for="item in (showOnlyOutOfBoundsTests ? selectedTestItems.filter(i => getLabItemStatus(i) !== 'Normal') : selectedTestItems)">
+                                                <tr class="transition hover:bg-slate-50/60">
+                                                    <td class="p-2.5 font-semibold whitespace-nowrap text-slate-700">
+                                                        <span x-text="item.name"></span>
+                                                        <span class="font-mono text-[9px] text-slate-400" x-text="'(' + item.code + ')'"></span>
+                                                    </td>
+                                                    <td class="p-2.5 text-right font-black whitespace-nowrap text-slate-900">
+                                                        <span x-text="parseFloat(item.result).toFixed(2)"></span>
+                                                    </td>
+                                                    <td class="p-2.5 text-left text-[10px] font-bold whitespace-nowrap text-slate-400" x-text="item.unit"></td>
+                                                    <td class="p-2.5 text-center whitespace-nowrap text-slate-600">
+                                                        <span x-text="item.reference_min !== null ? parseFloat(item.reference_min).toFixed(2) : '-'"></span>
+                                                        <span class="text-slate-400">–</span>
+                                                        <span x-text="item.reference_max !== null ? parseFloat(item.reference_max).toFixed(2) : '-'"></span>
+                                                    </td>
+                                                    <td class="p-2.5 text-center whitespace-nowrap">
+                                                        <span :class="getLabItemClass(item)" class="rounded-md px-2 py-0.5 text-[9px] font-black" x-text="getLabItemStatus(item)"></span>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                            <template x-if="(showOnlyOutOfBoundsTests ? selectedTestItems.filter(i => getLabItemStatus(i) !== 'Normal') : selectedTestItems).length === 0">
+                                                <tr>
+                                                    <td class="py-4 text-center text-slate-400" colspan="5">
+                                                        <span x-text="showOnlyOutOfBoundsTests ? 'Bu tahlil seansında sınır dışı parametre bulunmamaktadır.' : 'Bu tahlil seansına ait parametre bulunmamaktadır.'"></span>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BÖLÜM 8: RAPORLAR (#reports) -->
+
+                    <div class="mx-auto mt-8 grid max-w-7xl grid-cols-1 items-start gap-2 lg:grid-cols-[384px_1fr]" id="reports" x-cloak x-show="sections.reports && reports.length > 0" x-transition>
+                        <!-- Sol: Rapor Listesi -->
+                        <div class="space-y-3">
+                            <div class="flex flex-col items-start justify-between gap-2 pl-1 sm:flex-row sm:items-center">
+                                <h3 class="text-[11px] font-extrabold tracking-wider text-slate-400 uppercase">Raporlar</h3>
+                            </div>
+                            <div class="">
+                                <div class="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+                                    <template x-for="report in paginatedReports">
+                                        <div :class="selectedReportId === (report.protocol_no || report.at) ? 'bg-indigo-50/70 text-indigo-900 border-l-4 border-l-indigo-600' : 'hover:bg-slate-50 text-slate-700'" :data-report-id="report.protocol_no || report.at" @click="selectReport(report.protocol_no || report.at)" class="flex cursor-pointer items-center justify-between px-3.5 py-2.5 text-xs font-semibold transition">
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-bold text-slate-800" x-text="report.title"></span>
+                                                    <span class="font-mono text-[9px] text-slate-400" x-text="'(#' + (report.protocol_no || 'Rapor') + ')'"></span>
+                                                </div>
+                                                <div class="mt-0.5 truncate text-[10px] font-normal text-slate-400" x-text="getHospitalName(report.hospital_id)"></div>
+                                            </div>
+                                            <div class="ml-2 shrink-0 text-right">
+                                                <div class="font-mono text-[10px] font-bold text-slate-500" x-text="formatTurkishDate(report.at.substring(0, 10))"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="sortedReports.length === 0">
+                                        <div class="p-4 text-center text-xs font-medium text-slate-400">Filtrelenen dönemde rapor bulunamadı.</div>
+                                    </template>
+                                </div>
+                                <div class="flex items-center justify-between border-t border-slate-100 pt-3 text-xs" x-show="totalReportPages > 1">
+                                    <span class="text-slate-500" x-text="reportPage + ' / ' + totalReportPages"></span>
+                                    <div class="flex gap-1">
+                                        <button :disabled="reportPage === 1" @click="goToReportPage(reportPage - 1)" class="rounded border border-slate-200 px-2.5 py-1 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40">Önceki</button>
+                                        <button :disabled="reportPage === totalReportPages" @click="goToReportPage(reportPage + 1)" class="rounded border border-slate-200 px-2.5 py-1 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40">Sonraki</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sağ: Seçili Rapor Detayları -->
+                        <div>
+                            <div class="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" id="report">
+                                <div class="mb-4 flex flex-col items-start gap-2 border-b border-slate-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <h3 class="font-display text-base font-semibold text-slate-900" x-text="selectedReportObj.title || 'Rapor Seçiniz'"></h3>
+                                        <p class="mt-0.5 text-xs font-medium text-slate-400" x-text="selectedReportObj.at ? formatFullDate(selectedReportObj.at) : ''"></p>
+                                    </div>
+                                    <span class="self-start rounded border border-indigo-100 bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600 sm:self-auto" x-text="selectedReportObj.report_type"></span>
+                                </div>
+                                <div class="space-y-4 text-xs">
+                                    <template x-if="selectedReportObj.doctor_name">
+                                        <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                                            <svg class="h-4 w-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                            </svg>
+                                            <span class="font-bold text-slate-700" x-text="selectedReportObj.doctor_title + ' ' + selectedReportObj.doctor_name"></span>
+                                            <span class="text-[10px] text-slate-400" x-show="selectedReportObj.doctor_reg_no" x-text="'(Tescil No: ' + selectedReportObj.doctor_reg_no + ')'"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="selectedReportObj.clinical_details">
+                                        <div class="space-y-2">
+                                            <h4 class="text-[10px] font-bold tracking-wide text-slate-800 uppercase">Klinik Bilgiler & Hikaye</h4>
+                                            <div class="space-y-2 rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 text-slate-600">
+                                                <p x-show="selectedReportObj.clinical_details.complaint">
+                                                    <strong class="text-slate-700">Şikayet:</strong>
+                                                    <span x-text="selectedReportObj.clinical_details.complaint"></span>
+                                                </p>
+                                                <p x-show="selectedReportObj.clinical_details.history">
+                                                    <strong class="font-bold text-slate-700">Öykü / Tarihçe:</strong>
+                                                    <span x-text="selectedReportObj.clinical_details.history"></span>
+                                                </p>
+                                                <p x-show="selectedReportObj.clinical_details.physical_exam">
+                                                    <strong class="text-slate-700">Fizik Muayene:</strong>
+                                                    <span x-text="selectedReportObj.clinical_details.physical_exam"></span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="selectedReportObj.radiology_findings && selectedReportObj.radiology_findings.length > 0">
+                                        <div class="space-y-2">
+                                            <h4 class="text-[10px] font-bold tracking-wide text-slate-800 uppercase">Radyolojik İnceleme Bulguları</h4>
+                                            <div class="space-y-1 rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5 leading-relaxed text-slate-600">
+                                                <template x-for="finding in selectedReportObj.radiology_findings">
+                                                    <p class="pb-1" x-text="finding"></p>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="selectedReportObj.clinical_details && selectedReportObj.clinical_details.surgery_note">
+                                        <div class="space-y-2">
+                                            <h4 class="text-[10px] font-bold tracking-wide text-slate-800 uppercase">Cerrahi Operasyon Detayları</h4>
+                                            <div class="rounded-xl border border-slate-200/70 bg-slate-50/50 bg-slate-900/5 p-3.5 font-mono text-[10px] leading-relaxed text-slate-600" x-text="selectedReportObj.clinical_details.surgery_note"></div>
+                                        </div>
+                                    </template>
+                                    <template x-if="selectedReportObj.conclusions && selectedReportObj.conclusions.length > 0">
+                                        <div class="space-y-2">
+                                            <h4 class="text-[10px] font-bold tracking-wide text-slate-800 uppercase">Sonuç ve Öneriler</h4>
+                                            <div class="space-y-1 rounded-xl border border-indigo-100 bg-indigo-50/30 p-3.5 font-semibold text-indigo-950">
+                                                <template x-for="conclusion in selectedReportObj.conclusions">
+                                                    <p x-text="conclusion"></p>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="selectedReportObj.implants && selectedReportObj.implants.length > 0">
+                                        <div class="space-y-2">
+                                            <h4 class="text-[10px] font-bold tracking-wide text-slate-800 uppercase">Cerrahi İmplant & Protez Detayları</h4>
+                                            <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                                                <template x-for="impl in selectedReportObj.implants">
+                                                    <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-inner">
+                                                        <div class="font-bold text-slate-800" x-text="impl.brand + ' - ' + impl.model"></div>
+                                                        <div class="mt-1 text-[10px] text-slate-400" x-text="impl.type"></div>
+                                                        <div class="mt-1.5 text-[10px] font-semibold text-slate-500" x-text="'Specs: ' + impl.specs"></div>
+                                                        <div class="mt-0.5 text-[10px] text-slate-500" x-text="'Serial/ID: ' + impl.serial"></div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BÖLÜM 9: KLİNİK ANALİZ RAPORU (#clinical-report) -->
+
+                    <div class="mx-auto mt-6 max-w-7xl space-y-6" id="clinical-report" x-cloak x-show="sections.clinicalReport" x-transition>
+                        <div class="glass-card rounded-2xl border-l-4 border-l-indigo-500 p-6 shadow-sm">
+                            <div class="mb-5 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <h2 class="font-display flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                                    <svg class="h-5 w-5 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                    </svg>
+                                    <span>Değerlendirme Raporu</span>
+                                </h2>
+                                <span class="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-bold tracking-wide text-slate-500 sm:ml-auto" x-text="formatTurkishDate(startDate) + ' - ' + formatTurkishDate(endDate)"></span>
+                            </div>
+                            <div class="space-y-2 text-sm leading-relaxed font-medium text-slate-600" x-html="generateDynamicInsight(startDate, endDate)"></div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- YUKARI ÇIK BUTONU -->
+
+            <div :class="show ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'" @scroll.window="show = window.scrollY > 300;clearTimeout(timeout);if (show) { timeout = setTimeout(() => show = false, 3000); }" class="fixed right-6 bottom-6 z-[100] transition-all duration-500 ease-in-out" x-data="{ show: false, timeout: null }">
+                <button @click="window.scrollTo({ top: 0, behavior: 'smooth' })" class="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 transition-all hover:scale-110 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 focus:outline-none active:scale-95" title="Yukarı Çık">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 15l7-7 7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </body>
+</html>
