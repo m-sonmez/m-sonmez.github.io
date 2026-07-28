@@ -2,9 +2,9 @@
 
 /* Service Worker Template */
 /* This file is processed by bump-sw.js to generate a versioned sw.js. */
-/* The medilog_2026-07-26_00-23-03 placeholder is replaced with a timestamp. */
+/* The medilog_2026-07-29_00-54-38 placeholder is replaced with a timestamp. */
 
-const CACHE_NAME = 'medilog_2026-07-26_00-23-03';
+const CACHE_NAME = 'medilog_2026-07-29_00-54-38';
 
 /* Static assets that are part of the app shell. */
 const STATIC_ASSETS = ['/panel.html', '/rapor.html', '/dist/output.css', '/dist/output.js', '/app.js', '/dist/icons/manifest.json', '/dist/icons/browserconfig.xml', '/dist/icons/favicon.ico'];
@@ -37,8 +37,7 @@ const ICON_FILES = [
     '/dist/icons/ms-icon-310x310.png',
 ];
 
-/* Data files (JSON) that are cached for offline access. */
-const DATA_FILES = ['/data/hospitals.json', '/data/medication_changes.json', '/data/medication_logs.json', '/data/medications.json', '/data/pressures.json', '/data/reports.json', '/data/test_items.json', '/data/tests.json', '/data/users.json', '/data/weights.json'];
+const DATA_FILES = ['/data/hospitals.json', '/data/medication_changes.json', '/data/medication_logs.json', '/data/medications.json', '/data/pressures.json', '/data/reports.json', '/data/test_items.json', '/data/tests.json', '/data/users.json', '/data/weights.json', '/data/clinical_context.json', '/data/pulse.json', '/data/saturation.json', '/data/sleep.json', '/data/glucose.json', '/data/temperatures.json', '/data/symptoms.json', '/data/appointments.json'];
 
 /* Combine all URLs to be cached. */
 const CACHE_URLS = STATIC_ASSETS.concat(ICON_FILES, DATA_FILES);
@@ -127,6 +126,8 @@ self.addEventListener('message', (event) => {
             caches
                 .keys()
                 .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+                .then(() => self.clients.claim())
+                .then(() => self.clients.claim())
                 .then(() => {
                     if (event.ports && event.ports.length) {
                         event.ports[0].postMessage({status: 'cleared'});

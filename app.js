@@ -248,6 +248,50 @@ export default function registerDashboard(Alpine) {
 
         /* 2. HESAPLANMIŞ ÖZELLİKLER (COMPUTED GETTERS) */
 
+        get idealWeight() {
+            if (!this.user || !this.user.height_cm || !this.user.gender) return null;
+            let h = this.user.height_cm;
+            // Lorentz formula
+            if (this.user.gender.toLowerCase() === 'erkek') {
+                return (h - 100 - (h - 150) / 4).toFixed(1);
+            } else {
+                return (h - 100 - (h - 150) / 2).toFixed(1);
+            }
+        },
+        get currentWeightDelta() {
+            let iw = this.idealWeight;
+            if (!iw) return null;
+            let weights = this.getFilteredWeights();
+            if (weights.length === 0) return null;
+            let cw = parseFloat(weights[0].weight);
+            let diff = (cw - parseFloat(iw)).toFixed(1);
+            return diff > 0 ? '+' + diff : diff;
+        },
+
+        getMedByName(name) {
+            if (!this.medications) return {};
+            return this.medications.find((m) => m.name === name) || {};
+        },
+        getMedIcon(med) {
+            let form = med.form || 'tablet';
+            if (form === 'injection') {
+                return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 3l-6 6M21 9l-6 6m0 0L7 23l-4-4L17 5l4 4z"></path></svg>';
+            }
+            if (form === 'drops' || form === 'syrup') {
+                return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2.25c-3.15 4.5-5.25 7.875-5.25 10.5a5.25 5.25 0 0010.5 0c0-2.625-2.1-6-5.25-10.5z"></path></svg>';
+            }
+            // default tablet
+            return '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5a9 9 0 01-15 0m15 0a9 9 0 00-15 0m15 0H4.5"></path></svg>';
+        },
+        getMedColor(med) {
+            let c = med.color || 'slate';
+            return 'bg-' + c + '-100 text-' + c + '-700 border-' + c + '-200';
+        },
+        getMedDot(med) {
+            let c = med.color || 'slate';
+            return 'bg-' + c + '-500';
+        },
+
         get animSpeedLabel() {
             return ['x1/2', 'x1', 'x2', 'x4', 'x8'][this.animSpeedIndex];
         },
@@ -270,6 +314,39 @@ export default function registerDashboard(Alpine) {
         testPage: 1,
         reportPage: 1,
         itemsPerPage: 5,
+
+        get availableLabTrends() {
+            let uniqueCodes = new Set();
+            let trends = [];
+
+            this.testItems.forEach((item) => {
+                let code = item.code.toUpperCase();
+                let normalizedCode = code;
+                if (code === 'NEU#') normalizedCode = 'NEU';
+                if (code === 'LYM#') normalizedCode = 'LYM';
+                if (code === 'SODYUM') normalizedCode = 'NA';
+                if (code === 'POTASYUM') normalizedCode = 'K';
+                if (code === 'KALSİYUM' || code === 'KALSIYUM') normalizedCode = 'CA';
+                if (code === 'GLUKOZ' || code === 'ŞEKER') normalizedCode = 'GLU';
+
+                if (!uniqueCodes.has(normalizedCode)) {
+                    uniqueCodes.add(normalizedCode);
+                    trends.push({
+                        id: 'labChart_' + normalizedCode,
+                        code: normalizedCode,
+                        label: item.name,
+                        color: this.getRandomColorForLab(normalizedCode),
+                    });
+                }
+            });
+            return trends.sort((a, b) => a.label.localeCompare(b.label));
+        },
+        getRandomColorForLab(code) {
+            const colors = ['rgb(249, 115, 22)', 'rgb(217, 119, 6)', 'rgb(234, 179, 8)', 'rgb(185, 28, 28)', 'rgb(239, 68, 68)', 'rgb(244, 63, 94)', 'rgb(16, 185, 129)', 'rgb(79, 70, 229)', 'rgb(236, 72, 153)', 'rgb(148, 163, 184)', 'rgb(139, 92, 246)', 'rgb(20, 184, 166)', 'rgb(6, 182, 212)', 'rgb(163, 230, 53)', 'rgb(217, 70, 239)', 'rgb(14, 165, 233)', 'rgb(225, 29, 72)', 'rgb(245, 158, 11)'];
+            let hash = 0;
+            for (let i = 0; i < code.length; i++) hash = code.charCodeAt(i) + ((hash << 5) - hash);
+            return colors[Math.abs(hash) % colors.length];
+        },
 
         get paginatedTests() {
             const start = (this.testPage - 1) * this.itemsPerPage;
@@ -812,33 +889,80 @@ export default function registerDashboard(Alpine) {
 
         async loadAllData(cacheBust = false) {
             const suffix = cacheBust ? '?t=' + Date.now() : '';
-            const [u, h, cc, m, mc, ml, p, w, t, ti, r] = await Promise.all([
-                fetch('data/users.json' + suffix).then((r) => r.json()),
-                fetch('data/hospitals.json' + suffix).then((r) => r.json()),
+            const [u, h, cc, m, mc, ml, p, w, t, ti, r, pulse, sat, slp, gluc, temp, symp, appt] = await Promise.all([
+                fetch('data/users.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/hospitals.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
                 fetch('data/clinical_context.json' + suffix)
                     .then((r) => r.json())
                     .catch(() => []),
-                fetch('data/medications.json' + suffix).then((r) => r.json()),
-                fetch('data/medication_changes.json' + suffix).then((r) => r.json()),
-                fetch('data/medication_logs.json' + suffix).then((r) => r.json()),
-                fetch('data/pressures.json' + suffix).then((r) => r.json()),
-                fetch('data/weights.json' + suffix).then((r) => r.json()),
-                fetch('data/tests.json' + suffix).then((r) => r.json()),
-                fetch('data/test_items.json' + suffix).then((r) => r.json()),
-                fetch('data/reports.json' + suffix).then((r) => r.json()),
+                fetch('data/medications.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/medication_changes.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/medication_logs.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/pressures.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/weights.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/tests.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/test_items.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/reports.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/pulse.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/saturation.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/sleep.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/glucose.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/temperatures.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/symptoms.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
+                fetch('data/appointments.json' + suffix)
+                    .then((r) => r.json())
+                    .catch(() => []),
             ]);
             this.user = Array.isArray(u) && u.length > 0 ? u[0] : {};
-            this.hospitals = h;
-            /* clinical_context.json is now merged into users.json, but keep for compatibility */
+            this.hospitals = h || [];
             this.clinicalContext = cc && cc.length > 0 ? cc[0] : this.user.clinical_context || {};
-            this.medications = m;
-            this.medicationChanges = mc;
-            this.medicationLogs = ml;
-            this.pressures = p;
-            this.weights = w;
-            this.tests = t;
-            this.testItems = ti;
-            this.reports = r;
+            this.medications = m || [];
+            this.medicationChanges = mc || [];
+            this.medicationLogs = ml || [];
+            this.pressures = p || [];
+            this.weights = w || [];
+            this.tests = t || [];
+            this.testItems = ti || [];
+            this.reports = r || [];
+            this.pulse = pulse || [];
+            this.saturation = sat || [];
+            this.sleep = slp || [];
+            this.glucose = gluc || [];
+            this.temperatures = temp || [];
+            this.symptoms = symp || [];
+            this.appointments = appt || [];
         },
 
         afterDataRefresh() {
@@ -1091,6 +1215,32 @@ export default function registerDashboard(Alpine) {
                 })
                 .sort((a, b) => new Date(b.at) - new Date(a.at));
         },
+
+        getFilteredPulse() {
+            return this.pulse.filter((i) => i.at.substring(0, 10) >= this.firstD && i.at.substring(0, 10) <= this.lastD);
+        },
+        getFilteredSaturation() {
+            return this.saturation.filter((i) => i.at.substring(0, 10) >= this.firstD && i.at.substring(0, 10) <= this.lastD);
+        },
+        getFilteredSleep() {
+            return this.sleep.filter((i) => i.at.substring(0, 10) >= this.firstD && i.at.substring(0, 10) <= this.lastD);
+        },
+        getFilteredGlucose() {
+            return this.glucose.filter((i) => i.at.substring(0, 10) >= this.firstD && i.at.substring(0, 10) <= this.lastD);
+        },
+        getFilteredTemperatures() {
+            return this.temperatures.filter((i) => i.at.substring(0, 10) >= this.firstD && i.at.substring(0, 10) <= this.lastD);
+        },
+        getFilteredSymptoms() {
+            return this.symptoms.filter((i) => i.at.substring(0, 10) >= this.firstD && i.at.substring(0, 10) <= this.lastD);
+        },
+        getFilteredAppointments() {
+            return this.appointments.filter((i) => i.at.substring(0, 10) >= this.firstD && i.at.substring(0, 10) <= this.lastD);
+        },
+        get hasVitalsData() {
+            return this.getFilteredPulse().length > 0 || this.getFilteredSaturation().length > 0 || this.getFilteredSleep().length > 0 || this.getFilteredGlucose().length > 0 || this.getFilteredTemperatures().length > 0 || this.getFilteredSymptoms().length > 0;
+        },
+
         getFilteredWeights() {
             return this.weights
                 .filter((w) => {
@@ -2291,7 +2441,7 @@ export default function registerDashboard(Alpine) {
             }
         },
         renderMainCharts() {
-            requestAnimationFrame(() => {
+            this.$nextTick(() => {
                 this._renderMainChartsInternal();
             });
         },
@@ -2490,7 +2640,7 @@ export default function registerDashboard(Alpine) {
         },
         renderFocusChart() {
             if (this.flowsheetMode !== 'chart') return;
-            requestAnimationFrame(() => {
+            this.$nextTick(() => {
                 this._renderFocusChartInternal();
             });
         },
@@ -2573,31 +2723,12 @@ export default function registerDashboard(Alpine) {
             });
         },
         renderLabTrendCharts() {
-            requestAnimationFrame(() => {
+            this.$nextTick(() => {
                 this._renderLabTrendChartsInternal();
             });
         },
         _renderLabTrendChartsInternal() {
-            const targets = [
-                {id: 'inrLabChart', code: 'INR', label: 'INR', color: 'rgb(249, 115, 22)'},
-                {id: 'ptChart', code: 'PT', label: 'PT (sn)', color: 'rgb(217, 119, 6)'},
-                {id: 'apttChart', code: 'APTT', label: 'aPTT (sn)', color: 'rgb(234, 179, 8)'},
-                {id: 'hgbChart', code: 'HGB', label: 'HGB', color: 'rgb(185, 28, 28)'},
-                {id: 'hctChart', code: 'HCT', label: 'HCT', color: 'rgb(239, 68, 68)'},
-                {id: 'rbcChart', code: 'RBC', label: 'RBC', color: 'rgb(244, 63, 94)'},
-                {id: 'pltChart', code: 'PLT', label: 'PLT', color: 'rgb(16, 185, 129)'},
-                {id: 'wbcChart', code: 'WBC', label: 'WBC', color: 'rgb(79, 70, 229)'},
-                {id: 'crpChart', code: 'CRP', label: 'CRP', color: 'rgb(236, 72, 153)'},
-                {id: 'lymChart', code: 'LYM', label: 'Lenfosit', color: 'rgb(148, 163, 184)'},
-                {id: 'neuChart', code: 'NEU', label: 'NEU', color: 'rgb(139, 92, 246)'},
-                {id: 'creaChart', code: 'CREA', label: 'CREA', color: 'rgb(20, 184, 166)'},
-                {id: 'bunChart', code: 'BUN', label: 'BUN', color: 'rgb(6, 182, 212)'},
-                {id: 'altChart', code: 'ALT', label: 'ALT', color: 'rgb(163, 230, 53)'},
-                {id: 'gluChart', code: 'GLU', label: 'GLU', color: 'rgb(217, 70, 239)'},
-                {id: 'naChart', code: 'NA', label: 'Sodyum', color: 'rgb(14, 165, 233)'},
-                {id: 'kChart', code: 'K', label: 'Potasyum', color: 'rgb(225, 29, 72)'},
-                {id: 'caChart', code: 'CA', label: 'Kalsiyum', color: 'rgb(245, 158, 11)'},
-            ];
+            const targets = this.availableLabTrends;
             const self = this;
             const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
             targets.forEach((tgt) => {
