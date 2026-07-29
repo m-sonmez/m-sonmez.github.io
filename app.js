@@ -142,6 +142,7 @@ export default function registerDashboard(Alpine) {
         selectedCalendarDayStr: null,
         showOnlyOutOfBoundsTests: false,
         hideSpecialTests: true,
+        showAllLabCharts: false,
         user: {},
         hospitals: [],
         medications: [],
@@ -424,10 +425,7 @@ export default function registerDashboard(Alpine) {
                 return d >= this.startDate && d <= this.endDate;
             });
             if (this.hideSpecialTests) {
-                testsInWindow = testsInWindow.filter((t) => {
-                    const title = t.title.toLowerCase();
-                    return !title.includes('arter kan gazı') && !title.includes('crossmatch');
-                });
+                testsInWindow = testsInWindow.filter((t) => !t.is_special);
             }
             if (this.showOnlyOutOfBoundsTests) {
                 testsInWindow = testsInWindow.filter((t) => this.testHasOutOfBounds(t.id));
@@ -438,10 +436,7 @@ export default function registerDashboard(Alpine) {
             } else {
                 let historicalTests = this.tests.filter((t) => t.at.substring(0, 10) <= this.endDate);
                 if (this.hideSpecialTests) {
-                    historicalTests = historicalTests.filter((t) => {
-                        const title = t.title.toLowerCase();
-                        return !title.includes('arter kan gazı') && !title.includes('crossmatch');
-                    });
+                    historicalTests = historicalTests.filter((t) => !t.is_special);
                 }
                 if (this.showOnlyOutOfBoundsTests) {
                     historicalTests = historicalTests.filter((t) => this.testHasOutOfBounds(t.id));
@@ -678,7 +673,14 @@ export default function registerDashboard(Alpine) {
             this.$watch('hideSpecialTests', () => {
                 this.testPage = 1;
             });
+            this.$watch('showAllLabCharts', () => {
+                this.renderLabTrendCharts();
+            });
             this._loadInitialComponents();
+
+            this.$nextTick(() => {
+                this.renderLabTrendCharts();
+            });
 
             this.updateIsMobile();
             window.addEventListener('resize', this.updateIsMobile.bind(this));
@@ -1880,9 +1882,11 @@ export default function registerDashboard(Alpine) {
                             else if (diff < -0.05) pText += `Bu, bir önceki ${inr.prev.toFixed(2)} ölçümünden biraz gerilediğini gösteriyor `;
                             else pText += `Bu, bir önceki tahlilinizle neredeyse tamamen aynı kalmış `;
                         }
-                        if (inr.val < 2.0) {
+                        const inrMin = this.clinicalContext.inr_target_min || 2.0;
+                        const inrMax = this.clinicalContext.inr_target_max || 3.0;
+                        if (inr.val < inrMin) {
                             pText += `ve <span class="text-rose-600 font-bold">maalesef sizin için gereken hedefin altında. Pıhtı riskine karşı doktorunuzun kan sulandırıcı hap dozajını artırması çok önemli.</span> `;
-                        } else if (inr.val > 3.0) {
+                        } else if (inr.val > inrMax) {
                             pText += `fakat <span class="text-orange-600 font-bold">istediğimiz değerin de üstünde. Kanınız fazla sulandığı için ufak çaplı kanama riski oluşabilir, tedbirli olmalısınız.</span> `;
                         } else {
                             pText += `ve <span class="text-emerald-600 font-bold">tam istediğimiz güvenli seviyelerde, bu sizin için çok iyi bir durum.</span> `;
@@ -2555,31 +2559,69 @@ export default function registerDashboard(Alpine) {
             });
         },
         renderLabTrendCharts() {
-            requestAnimationFrame(() => {
+            this.$nextTick(() => {
                 this._renderLabTrendChartsInternal();
             });
         },
+        get importantLabCodes() {
+            if (this.clinicalContext.important_lab_codes && Array.isArray(this.clinicalContext.important_lab_codes)) {
+                const res = this.clinicalContext.important_lab_codes;
+                return res;
+            }
+            const counts = {};
+            this.tests.forEach((t) => {
+                if (t.is_special) return;
+                const items = this.testItems.filter((item) => item.test_id === t.id);
+                items.forEach((item) => {
+                    const code = item.code.toUpperCase();
+                    counts[code] = (counts[code] || 0) + 1;
+                });
+            });
+            const sortedCodes = Object.keys(counts)
+                .sort((a, b) => counts[b] - counts[a])
+                .filter((code) => counts[code] >= 5);
+            if (sortedCodes.length === 0) {
+                const fallback = Object.keys(counts);
+                return fallback;
+            }
+            return sortedCodes;
+        },
+        get filteredLabTrendTargets() {
+            const important = this.importantLabCodes;
+            let targets = this.labTrendTargets;
+            if (!this.showAllLabCharts && important.length > 0) {
+                targets = targets.filter((tgt) => important.includes(tgt.code));
+                targets.sort((a, b) => important.indexOf(a.code) - important.indexOf(b.code));
+            }
+            return targets;
+        },
+        get labTrendTargets() {
+            const codes = new Set();
+            this.testItems.forEach((item) => codes.add(item.code.toUpperCase()));
+            const result = [];
+            codes.forEach((code) => {
+                const sample = this.testItems.find((item) => item.code.toUpperCase() === code);
+                if (sample) {
+                    result.push({
+                        id: 'chart_' + code.toLowerCase().replace(/[^a-z0-9]/g, (c) => '_' + c.charCodeAt(0).toString(16)),
+                        code: code,
+                        label: sample.name || code,
+                        color: this.getColorForCode(code),
+                    });
+                }
+            });
+            return result;
+        },
+        getColorForCode(code) {
+            const colors = ['rgb(249, 115, 22)', 'rgb(217, 119, 6)', 'rgb(234, 179, 8)', 'rgb(185, 28, 28)', 'rgb(239, 68, 68)', 'rgb(244, 63, 94)', 'rgb(16, 185, 129)', 'rgb(79, 70, 229)', 'rgb(236, 72, 153)', 'rgb(148, 163, 184)', 'rgb(139, 92, 246)', 'rgb(20, 184, 166)', 'rgb(6, 182, 212)', 'rgb(163, 230, 53)', 'rgb(217, 70, 239)', 'rgb(14, 165, 233)', 'rgb(225, 29, 72)', 'rgb(245, 158, 11)'];
+            let hash = 0;
+            for (let i = 0; i < code.length; i++) {
+                hash = code.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colors[Math.abs(hash) % colors.length];
+        },
         _renderLabTrendChartsInternal() {
-            const targets = [
-                {id: 'inrLabChart', code: 'INR', label: 'INR', color: 'rgb(249, 115, 22)'},
-                {id: 'ptChart', code: 'PT', label: 'PT (sn)', color: 'rgb(217, 119, 6)'},
-                {id: 'apttChart', code: 'APTT', label: 'aPTT (sn)', color: 'rgb(234, 179, 8)'},
-                {id: 'hgbChart', code: 'HGB', label: 'HGB', color: 'rgb(185, 28, 28)'},
-                {id: 'hctChart', code: 'HCT', label: 'HCT', color: 'rgb(239, 68, 68)'},
-                {id: 'rbcChart', code: 'RBC', label: 'RBC', color: 'rgb(244, 63, 94)'},
-                {id: 'pltChart', code: 'PLT', label: 'PLT', color: 'rgb(16, 185, 129)'},
-                {id: 'wbcChart', code: 'WBC', label: 'WBC', color: 'rgb(79, 70, 229)'},
-                {id: 'crpChart', code: 'CRP', label: 'CRP', color: 'rgb(236, 72, 153)'},
-                {id: 'lymChart', code: 'LYM', label: 'Lenfosit', color: 'rgb(148, 163, 184)'},
-                {id: 'neuChart', code: 'NEU', label: 'NEU', color: 'rgb(139, 92, 246)'},
-                {id: 'creaChart', code: 'CREA', label: 'CREA', color: 'rgb(20, 184, 166)'},
-                {id: 'bunChart', code: 'BUN', label: 'BUN', color: 'rgb(6, 182, 212)'},
-                {id: 'altChart', code: 'ALT', label: 'ALT', color: 'rgb(163, 230, 53)'},
-                {id: 'gluChart', code: 'GLU', label: 'GLU', color: 'rgb(217, 70, 239)'},
-                {id: 'naChart', code: 'NA', label: 'Sodyum', color: 'rgb(14, 165, 233)'},
-                {id: 'kChart', code: 'K', label: 'Potasyum', color: 'rgb(225, 29, 72)'},
-                {id: 'caChart', code: 'CA', label: 'Kalsiyum', color: 'rgb(245, 158, 11)'},
-            ];
+            const targets = this.filteredLabTrendTargets;
             const self = this;
             const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
             targets.forEach((tgt) => {
@@ -2770,8 +2812,13 @@ export default function registerDashboard(Alpine) {
             return wObj.weight - sorted[idx - 1].weight > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
         },
         getBPStatusText(sys, dia) {
-            if (sys >= 140 || dia >= 90) return 'Hipertansiyon';
-            if (sys >= 130 || dia >= 85) return 'Prehipertansiyon';
+            const ctx = this.clinicalContext;
+            const maxSys = ctx.target_bp_sys_max || 140;
+            const maxDia = ctx.target_bp_dia_max || 90;
+            if (sys >= maxSys || dia >= maxDia) return 'Hipertansiyon';
+            const preSys = maxSys - 10;
+            const preDia = maxDia - 5;
+            if (sys >= preSys || dia >= preDia) return 'Prehipertansiyon';
             return 'Normal';
         },
         getBPBadgeClass(sys, dia) {

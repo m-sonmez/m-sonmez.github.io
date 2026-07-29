@@ -1,22 +1,21 @@
 [
-
     {
-        "at":"2026-02-19 16:00",
-        "user_id":1,
-        "surgery_type":"Aort cerrahisi",
-        "valve_type":"kalp kapağı",
-        "target_bp_sys_max":120,
-        "target_bp_sys_min":90,
-        "target_bp_dia_max":90,
-        "target_bp_dia_min":60,
-        "patient_summary":"Alaattin Sönmez (64 yaş, Erkek), 19 Şubat 2026 tarihinde ani başlayan yırtıcı karakterde şiddetli göğüs ve sırt ağrısı şikayetiyle ambulansla Acil servise (Defne Devlet Hastanesi) başvurmuştur. Buradan sırasıyla MKÜ Hastanesi ve Kırıkhan Devlet Hastanesi'ne sevk edilip Akut Tip A Aort Diseksiyonu ve Ciddi Aort Kapak Yetmezliği teşhisi kesinleşerek Özel İskenderun Gelişim Hastanesi'nde acil Bentall ameliyatına alınmıştır. Postoperatif dönemde sternal yara enfeksiyonu, pürülan akıntı, kabızlık, Nisan ayı boyunca süren bulantı/kusma atakları ve hipertansif krizler yaşamıştır. 30-31 Mart tarihlerinde şiddetli kabızlık ve bulantı-kusma şikayetleri nedeniyle Gelişim Hastanesi'nde yatışı yapılmış; bu sırada sternal yara enfeksiyonu takibi de sürdürülmüştür. Süreç içerisinde pıhtılaşma takibi (INR) ve yara enfeksiyonu (Augmentin, Stafine) için defalarca hastane başvuruları olmuştur. 23 Temmuz 2026 tarihinde sternal insizyon bölgesinde dikiş ayrılması ve ağır enfeksiyon nedeniyle Gelişim Hastanesi'ne tekrar yatırılmış olup; yara bakımı, çoklu sütür atılması ve beyaz kan transfüzyonu gibi ağır bakım gerektiren müdahaleler uygulanmıştır. Halen tedavisi sürmektedir.",
-        "anatomical_surgical_modifications":[
+        "at": "2026-02-19 16:00",
+        "user_id": 1,
+        "surgery_type": "Aort cerrahisi",
+        "valve_type": "kalp kapağı",
+        "target_bp_sys_max": 120,
+        "target_bp_sys_min": 90,
+        "target_bp_dia_max": 90,
+        "target_bp_dia_min": 60,
+        "patient_summary": "Alaattin Sönmez (64 yaş, Erkek), 19 Şubat 2026 tarihinde ani başlayan yırtıcı karakterde şiddetli göğüs ve sırt ağrısı şikayetiyle ambulansla Acil servise (Defne Devlet Hastanesi) başvurmuştur. Buradan sırasıyla MKÜ Hastanesi ve Kırıkhan Devlet Hastanesi'ne sevk edilip Akut Tip A Aort Diseksiyonu ve Ciddi Aort Kapak Yetmezliği teşhisi kesinleşerek Özel İskenderun Gelişim Hastanesi'nde acil Bentall ameliyatına alınmıştır. Postoperatif dönemde sternal yara enfeksiyonu, pürülan akıntı, kabızlık, Nisan ayı boyunca süren bulantı/kusma atakları ve hipertansif krizler yaşamıştır. 30-31 Mart tarihlerinde şiddetli kabızlık ve bulantı-kusma şikayetleri nedeniyle Gelişim Hastanesi'nde yatışı yapılmış; bu sırada sternal yara enfeksiyonu takibi de sürdürülmüştür. Süreç içerisinde pıhtılaşma takibi (INR) ve yara enfeksiyonu (Augmentin, Stafine) için defalarca hastane başvuruları olmuştur. 23 Temmuz 2026 tarihinde sternal insizyon bölgesinde dikiş ayrılması ve ağır enfeksiyon nedeniyle Gelişim Hastanesi'ne tekrar yatırılmış olup; yara bakımı, çoklu sütür atılması ve beyaz kan transfüzyonu gibi ağır bakım gerektiren müdahaleler uygulanmıştır. Halen tedavisi sürmektedir.",
+        "anatomical_surgical_modifications": [
             "Dilate nativ asendan aort rezeke edildi (5.3 cm anevrizma); 32mm polyester Dacron vasküler greft ile replase edildi (değiştirildi).",
             "Yetersiz nativ aort kapağı, 25mm Carbomedics çift yapraklı metalik mekanik protez kalp kapağı ile replase edildi.",
             "Koroner arter butonları vasküler grefte implante edildi (Bentall Prosedürü 20 Şubat 2026 tarihinde tamamlandı).",
             "Selektif antegrad serebral perfüzyon amacıyla sağ brakiyal arter ve sağ common karotid artere (CCA) cerrahi kanülasyon uygulandı; ardından primer vasküler onarım sağlandı."
         ],
-        "clinical_timeline":[
+        "clinical_timeline": [
             {"at":"2026-02-19 17:21","type":"Acil Başvuru","hospital":"Defne Devlet Hastanesi","description":"Hasta ani başlayan yırtıcı karakterde şiddetli göğüs ve sırt ağrısı ile ambulansla acil servise getirildi. İlk müdahale yapıldı, EKG, kardiyak troponin ve biyokimya testleri alındı. Hipertansif kriz ve diseksiyon şüphesiyle acil ileri merkeze sevki sağlandı."},
             {"at":"2026-02-19 18:44","type":"Acil Başvuru","hospital":"Mustafa Kemal Üniversitesi Hastanesi","description":"Acil servise giriş yapıldı, hemogram paneli alındı. İntrakraniyal kanama ekartasyonu için acil Diffüzyon MRG (20:17) ve Kontrastsız Beyin BT (20:30) çekildi. Aktif kanama saptanmadı."},
             {"at":"2026-02-19 21:41","type":"Acil Başvuru","hospital":"Kırıkhan Devlet Hastanesi","description":"Kontrastlı Torasik ve Abdominal BT Anjiyografi çekildi. Aort kökünden iliak bifurkasyona dek uzanan Tip A Aort Diseksiyonu ve asendan aort anevrizması (5.3 cm) kesin tanısı kondu. Acil cerrahi için sevk edildi."},
@@ -32,11 +31,34 @@
             {"at":"2026-07-23 11:15","type":"Yatış","hospital":"Özel İskenderun Gelişim Hastanesi","description":"Sternal insizyon bölgesinde dikişlerin açılması (dehissens), şiddetli enfeksiyon ve doku defekti nedeniyle KVC servisine yatırıldı. Kapsamlı laboratuvar tahlili alındı. Çoklu sütür atıldı, beyaz kan transfüzyonu uygulandı ve yoğun yara bakımı başlatıldı."},
             {"at":"2026-07-28 11:15","type":"Taburcu","hospital":"Özel İskenderun Gelişim Hastanesi","description":"Taburcu oldu"}
         ],
-        "emergency_referral_pathway":[
+        "emergency_referral_pathway": [
             {"at":"2026-02-19 17:21","hospital":"Defne Devlet Hastanesi","clinical_actions":"İlk acil başvuru yapıldı. Ambulans ile getirilen hastanın EKG'si çekildi, kardiyak enzimleri (Troponin vb.) ve rutin biyokimyası çalışıldı. Hipertansif kriz tanısıyla ileri merkez sevki başlatıldı."},
             {"at":"2026-02-19 18:44","hospital":"Mustafa Kemal Üniversitesi Hastanesi","clinical_actions":"Nörolojik kanama komplikasyonunu ekarte etmek için acil Diffüzyon MRG ve Beyin BT çekildi. Kontrastlı madde öncesi güvenliği sağlandı."},
             {"at":"2026-02-19 21:41","hospital":"Kırıkhan Devlet Hastanesi","clinical_actions":"Kontrastlı Torakoabdominal BT Anjiyografi tamamlandı. 5.3 cm asendan aort anevrizması ve Tip A aort diseksiyonu kesin tanısı konularak acil cerrahiye sevk kararı alındı."},
             {"at":"2026-02-19 23:22","hospital":"Özel İskenderun Gelişim Hastanesi","clinical_actions":"KVC ekibi tarafından ameliyata hazırlık için acil yatışı yapıldı. Crossmatch ve pre-op testleri tamamlanıp sabah erken saatte acil açık kalp ameliyatından çıktı."}
+        ],
+        "inr_target_min": 2.0,
+        "inr_target_max": 3.0,
+        "important_lab_codes": [
+            "INR",
+            "PT",
+            "PT%",
+            "APTT",
+            "HGB",
+            "HCT",
+            "RBC",
+            "PLT",
+            "WBC",
+            "CRP",
+            "ALT",
+            "AST",
+            "CREA",
+            "BUN",
+            "LDH",
+            "NA",
+            "K",
+            "CA",
+            "GLU"
         ]
     }
 ]

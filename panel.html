@@ -1298,14 +1298,20 @@
 
                     <div class="mx-auto mt-6 max-w-7xl space-y-6" id="lab-trends" x-cloak x-show="sections.labTrends" x-transition>
                         <div class="glass-card mt-8 rounded-2xl p-6 shadow-sm">
-                            <div class="mb-5">
-                                <h2 class="font-display mb-5 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
-                                    <svg class="h-5 w-5 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-                                    </svg>
-                                    <span>Tahlil Değişim Eğilimleri</span>
-                                </h2>
-                                <p class="mt-0.5 text-xs font-medium text-slate-400">Seçilen global tarih filtresi aralığındaki tüm laboratuvar kayıtlarının kronolojik akış trendleri.</p>
+                            <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                                <div>
+                                    <h2 class="font-display mb-2 flex items-start gap-2 text-lg font-semibold text-slate-900 sm:items-center">
+                                        <svg class="h-5 w-5 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                        </svg>
+                                        <span>Tahlil Değişim Eğilimleri</span>
+                                    </h2>
+                                    <p class="mt-0.5 text-xs font-medium text-slate-400">Seçilen global tarih filtresi aralığındaki tüm laboratuvar kayıtlarının kronolojik akış trendleri.</p>
+                                </div>
+                                <label class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 select-none">
+                                    <input class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" type="checkbox" x-model="showAllLabCharts" />
+                                    <span class="text-xs font-semibold text-slate-600" x-text="showAllLabCharts ? 'Tümü' : 'Önemli'"></span>
+                                </label>
                             </div>
                             <div class="flex h-96 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50" x-show="loadingLabCharts">
                                 <div class="flex flex-col items-center gap-2">
@@ -1314,133 +1320,23 @@
                                 </div>
                             </div>
                             <div x-show="!loadingLabCharts">
-                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                                    <!-- INR -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">INR (Koagülasyon)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="inrLabChart"></canvas>
-                                        </div>
+                                <template x-if="filteredLabTrendTargets.length === 0">
+                                    <div class="flex h-32 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-slate-400">
+                                        <svg class="mb-2 h-6 w-6 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                        </svg>
+                                        <span class="text-xs font-semibold text-slate-500">Gösterilecek tahlil bulunamadı.</span>
                                     </div>
-                                    <!-- PT -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">PT (Sn)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="ptChart"></canvas>
+                                </template>
+                                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" x-show="filteredLabTrendTargets.length > 0">
+                                    <template x-for="tgt in filteredLabTrendTargets" :key="tgt.id">
+                                        <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                                            <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700" x-text="tgt.label"></div>
+                                            <div class="relative h-[160px] w-full">
+                                                <canvas :id="tgt.id"></canvas>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <!-- APTT -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">aPTT (Sn)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="apttChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- HGB -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">HGB (Hemoglobin)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="hgbChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- HCT -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">HCT (Hematokrit)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="hctChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- RBC -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">RBC (Alyuvar)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="rbcChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- PLT -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">PLT (Trombosit)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="pltChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- WBC -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">WBC (Akyuvar)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="wbcChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- CRP -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">CRP (İltihap)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="crpChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- Lenfosit -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">Lenfosit (LYM#)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="lymChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- NEU -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">NEU (Nötrofil)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="neuChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- CREA -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">CREA (Kreatinin)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="creaChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- BUN -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">BUN (Üre)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="bunChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- ALT -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">ALT (Karaciğer)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="altChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- GLU -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">GLU (Kan Şekeri)</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="gluChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- Sodyum -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">Sodyum</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="naChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- Potasyum -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">Potasyum</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="kChart"></canvas>
-                                        </div>
-                                    </div>
-                                    <!-- Kalsiyum -->
-                                    <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                                        <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700">Kalsiyum</div>
-                                        <div class="relative h-[160px] w-full">
-                                            <canvas id="caChart"></canvas>
-                                        </div>
-                                    </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
