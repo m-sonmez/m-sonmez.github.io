@@ -13,8 +13,7 @@
         "dev:serve": "concurrently -c \"#93c5fd,#c4b5fd,#fb7185\" --names \"css,js,server\" --kill-others --timestamp \"npm run dev:css\" \"npm run dev:js\" \"python3 -m http.server 3333\"",
         "format": "npx prettier --write ./",
         "ready": "npm install && npm run build && npm run format",
-        "serve": "npm run bump && npm install && npm run build && npm run format && npm run dev:serve",
-        "test": "node tests/app.test.js"
+        "serve": "npm run bump && npm install && npm run build && npm run format && npm run dev:serve"
     },
     "repository": {
         "type": "git",
