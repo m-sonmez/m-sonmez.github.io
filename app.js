@@ -180,49 +180,6 @@ export default function registerDashboard(Alpine) {
         activeTooltip: null,
         activeCellTooltip: null,
         medConversions: {},
-        medConfig: {
-            Dilatrend: {target: 2.0, color: 'rgb(139, 92, 246)'},
-            BelocZOK: {target: 1.0, color: 'rgb(245, 158, 11)'},
-            Kapril: {target: 0.0, color: 'rgb(220, 38, 38)'},
-            Cordarone: {target: 1.0, color: 'rgb(71, 85, 105)'},
-            Tavanic: {target: 1.0, color: 'rgb(16, 185, 129)'},
-            Cipro: {target: 2.0, color: 'rgb(56, 189, 248)'},
-            Stafine: {target: 3.0, color: 'rgb(236, 72, 153)'},
-            Mikostatin: {target: 9.0, color: 'rgb(163, 230, 53)'},
-            Warfmadin: {target: 1.0, color: 'rgb(249, 115, 22)'},
-            EcopirinPro: {target: 1.0, color: 'rgb(20, 184, 166)'},
-            Panto: {target: 1.0, color: 'rgb(79, 70, 229)'},
-            Apikobal: {target: 1.0, color: 'rgb(250, 204, 21)'},
-            GeralginePlus: {target: 1.0, color: 'rgb(190, 24, 93)'},
-            Levopront: {target: 2.0, color: 'rgb(148, 163, 184)'},
-            Augmentin: {target: 2.0, color: 'rgb(16, 185, 129)'},
-        },
-        medColors: {
-            EcopirinPro: 'bg-orange-400',
-            Warfmadin: 'bg-orange-600',
-            Kapril: 'bg-blue-400',
-            Dilatrend: 'bg-indigo-500',
-            BelocZOK: 'bg-amber-500',
-            Cordarone: 'bg-slate-500',
-            Augmentin: 'bg-emerald-400',
-            Cipro: 'bg-sky-400',
-            Tavanic: 'bg-emerald-600',
-            Stafine: 'bg-pink-500',
-            Mikostatin: 'bg-lime-400',
-            GeralginePlus: 'bg-pink-700',
-            Panto: 'bg-indigo-600',
-            Levopront: 'bg-sky-500',
-            Apikobal: 'bg-yellow-400',
-        },
-        medGroups: {
-            'Kan Sulandırıcılar': ['EcopirinPro', 'Warfmadin'],
-            'Tansiyon & Kalp': ['Kapril', 'Dilatrend', 'BelocZOK', 'Cordarone'],
-            'Antibiyotik / Antifungal': ['Augmentin', 'Cipro', 'Tavanic', 'Stafine', 'Mikostatin'],
-            'Ağrı Kesici': ['GeralginePlus'],
-            'Mide Koruması': ['Panto'],
-            'Solunum / Öksürük': ['Levopront'],
-            'Vitamin / Takviye': ['Apikobal'],
-        },
         bpViewMode: 'trend',
         sections: {
             summary: true,
@@ -241,6 +198,31 @@ export default function registerDashboard(Alpine) {
         animTargetDate: null,
         animSpeedIndex: 2,
         isInitializing: true,
+
+        get medColors() {
+            const map = {};
+            this.medications.forEach((m) => {
+                map[m.name] = m.color_class || 'bg-slate-400';
+            });
+            return map;
+        },
+        get medConfig() {
+            const map = {};
+            this.medications.forEach((m) => {
+                map[m.name] = {color: m.color_hex || '#94a3b8'};
+            });
+            return map;
+        },
+        get medGroups() {
+            const groups = {};
+            this.medications.forEach((m) => {
+                if (m.group) {
+                    if (!groups[m.group]) groups[m.group] = [];
+                    groups[m.group].push(m.name);
+                }
+            });
+            return groups;
+        },
 
         /* NEW: Patient clinical context (loaded from users.json) */
 
