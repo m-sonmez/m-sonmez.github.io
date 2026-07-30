@@ -1676,7 +1676,6 @@ export default function registerDashboard(Alpine) {
             const targetBpMax = narr.targetBpMax || 140;
             const targetBpMin = narr.targetBpMin || 90;
 
-            /* Başlangıç Metni */
             let historyText = '';
             if (valveType || surgeryType) {
                 historyText = `${valveType ? valveType + (surgeryType ? ' ve ' : '') : ''}${surgeryType ? surgeryType + ' ' : ''}öykünüze özel olarak derlenen `;
@@ -1684,7 +1683,7 @@ export default function registerDashboard(Alpine) {
                 historyText = `Klinik öykünüze özel olarak derlenen `;
             }
 
-            let insight = `<div class="mb-4 pb-4 border-b border-slate-100"><p class="text-[11px] sm:text-xs font-medium text-slate-600 leading-relaxed">Seçmiş olduğunuz <b>${this.formatFullDate(startDate)}</b> ile <b>${this.formatFullDate(endDate)}</b> tarihleri arasındaki <b>${periodDays} günlük</b> klinik veri akışınız yapay zeka destekli sistemimiz tarafından incelendi. ${historyText}analiz raporunuz aşağıdadır:</p></div>`;
+            let insight = `<div class="mb-4 pb-4 border-b border-slate-100"><p class="text-[11px] sm:text-xs font-medium text-slate-600 leading-relaxed">Seçmiş olduğunuz <b>${this.formatFullDate(startDate)}</b> ile <b>${this.formatFullDate(endDate)}</b> tarihleri arasındaki <b>${periodDays} günlük</b> klinik veri akışınız otomatik klinik değerlendirme sistemimiz tarafından incelendi. ${historyText}analiz raporunuz aşağıdadır:</p></div>`;
             let bpHtml = `<div class="mb-5 sm:mb-6"><h4 class="text-xs sm:text-sm font-bold tracking-tight text-indigo-700 mb-2 flex items-center gap-2"><span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-200"></span> 1. Tansiyon ve Aort Stresi (Hemodinami)</h4><div class="pl-3 sm:pl-4 border-l-2 border-slate-100 space-y-3">`;
             let selBp = getBpStats(allPressures);
             if (selBp) {
@@ -1839,24 +1838,33 @@ export default function registerDashboard(Alpine) {
                 }
                 if (alt || ast) {
                     let pText = `<b>Karaciğer Durumu:</b> Karaciğerinize gelirsek; `;
-                    if ((alt && alt.prev !== null) || (ast && ast.prev !== null)) {
-                        let improving = false;
-                        let worsening = false;
-                        if (alt && alt.prev && alt.val < alt.prev - 5) improving = true;
-                        if (alt && alt.prev && alt.val > alt.prev + 5) worsening = true;
-                        if (improving) {
-                            pText += `<span class="text-emerald-600 font-bold">Karaciğer yorgunluğunuz iyiye gidiyor.</span> `;
-                            if (alt) pText += `ALT değeriniz ${alt.prev.toFixed(0)}'den ${alt.val.toFixed(0)}'ye, `;
-                            if (ast) pText += `AST değeriniz ise ${ast.prev.toFixed(0)}'den ${ast.val.toFixed(0)}'ye düşmüş. `;
-                        } else if (worsening) {
-                            pText += `<span class="text-amber-600 font-bold">Karaciğer enzimlerinizde ilaç kullanımına veya beslenmeye bağlı hafif bir yükseliş/yorgunluk var.</span> `;
-                            if (alt) pText += `ALT ${alt.prev.toFixed(0)}'den ${alt.val.toFixed(0)}'ye, `;
-                            if (ast) pText += `AST ${ast.prev.toFixed(0)}'den ${ast.val.toFixed(0)}'ye çıkmış. `;
-                        } else {
-                            pText += `Enzimleriniz önceki ölçümlere oldukça paralel ve stabil seyrediyor (ALT: ${alt ? alt.val.toFixed(0) : '-'}, AST: ${ast ? ast.val.toFixed(0) : '-'}). `;
-                        }
+                    let altVal = alt ? alt.val : null;
+                    let astVal = ast ? ast.val : null;
+                    let altPrev = alt ? alt.prev : null;
+                    let astPrev = ast ? ast.prev : null;
+                    let altUpper = 40; // common upper limit
+                    let astUpper = 40;
+                    // Check absolute values
+                    let altAbnormal = altVal !== null && altVal > altUpper;
+                    let astAbnormal = astVal !== null && astVal > astUpper;
+                    if (altAbnormal || astAbnormal) {
+                        pText += `<span class="text-amber-600 font-bold">Karaciğer enzim seviyeleriniz normal referans aralığının üzerinde (ALT: ${altVal ? altVal.toFixed(0) : '-'}, AST: ${astVal ? astVal.toFixed(0) : '-'}). Bu durum ilaç yan etkisi, beslenme veya enfeksiyona bağlı olabilir. </span>`;
                     } else {
-                        pText += `ALT (${alt ? alt.val.toFixed(0) : '-'}) ve AST (${ast ? ast.val.toFixed(0) : '-'}) enzimleriniz normal seyrediyor. `;
+                        pText += `Enzim seviyeleriniz normal sınırlarda. `;
+                    }
+                    // Trend analysis
+                    if ((altPrev !== null && astPrev !== null) || altPrev !== null || astPrev !== null) {
+                        let altDiff = altVal !== null && altPrev !== null ? altVal - altPrev : 0;
+                        let astDiff = astVal !== null && astPrev !== null ? astVal - astPrev : 0;
+                        let improving = altDiff < -5 || astDiff < -5;
+                        let worsening = altDiff > 5 || astDiff > 5;
+                        if (improving) {
+                            pText += `Önceki tahlile göre enzimlerde düşüş görülüyor, karaciğer yorgunluğu azalıyor. `;
+                        } else if (worsening) {
+                            pText += `Önceki tahlile göre enzimlerde yükselme var, takip edilmesi önemli. `;
+                        } else {
+                            pText += `Önceki tahlille karşılaştırıldığında enzimler stabil seyrediyor. `;
+                        }
                     }
                     paragraphs.push(pText);
                 }
@@ -2157,6 +2165,7 @@ export default function registerDashboard(Alpine) {
             }
             medHtml += `</div></div>`;
             insight += medHtml;
+            insight += `<div class="mt-6 pt-4 border-t border-slate-200 text-[10px] text-slate-500 italic">Bu rapor otomatik olarak oluşturulmuş olup bilgilendirme amaçlıdır. Kesin tanı ve tedavi kararları için mutlaka hekiminize danışınız.</div>`;
             return insight;
         },
         getInsightPeriods(baseEnd, baseStart, excludePreset = null) {
@@ -2741,32 +2750,24 @@ export default function registerDashboard(Alpine) {
         },
         getBPStatusText(sys, dia) {
             const ctx = this.clinicalContext || {};
-
             const targetMaxSys = ctx.target_bp_sys_max || 140;
             const targetMaxDia = ctx.target_bp_dia_max || 90;
             const targetMinSys = ctx.target_bp_sys_min || 90;
             const targetMinDia = ctx.target_bp_dia_min || 60;
             if (sys < targetMinSys || dia < targetMinDia) return 'Hipo';
             if (sys >= 180 || dia >= 120) return 'Kriz';
-            if (sys >= 140 || dia >= 90) {
-                if (sys >= targetMaxSys || dia >= targetMaxDia) return 'HT+';
-                return 'HT';
-            }
-            if (sys >= 120 || dia >= 80) {
-                if (sys >= targetMaxSys || dia >= targetMaxDia) return 'Pre-HT+';
-                return 'Pre-HT';
-            }
+            if (sys >= 140 || dia >= 90) return 'HT';
+            if (sys >= targetMaxSys || dia >= targetMaxDia) return 'HT+';
+            if (sys >= 120 || dia >= 80) return 'Pre-HT';
             return 'Normal';
         },
         getBPBadgeClass(sys, dia) {
             const status = this.getBPStatusText(sys, dia);
-
             if (status === 'Kriz') return 'bg-rose-100 text-rose-800 border-rose-300';
-            if (status === 'HT+' || status === 'Pre-HT+') return 'bg-orange-100 text-orange-800 border-orange-300';
             if (status === 'HT') return 'bg-amber-100 text-amber-800 border-amber-300';
+            if (status === 'HT+') return 'bg-orange-100 text-orange-800 border-orange-300';
             if (status === 'Pre-HT') return 'bg-yellow-100 text-yellow-800 border-yellow-300';
             if (status === 'Hipo') return 'bg-blue-100 text-blue-800 border-blue-300';
-
             return 'bg-emerald-100 text-emerald-800 border-emerald-300';
         },
         updateFilters: debounce(function () {
