@@ -1173,13 +1173,33 @@ export default function registerDashboard(Alpine) {
             let displayValue = parseFloat(totalTablets.toFixed(2)).toString();
             return {count: filtered.length, displayValue: displayValue, logs: displayLogs};
         },
+        _getMedicationSegments(medId) {
+            const mChanges = this.medicationChanges.filter((c) => c.medication_id === medId).sort((a, b) => a.at.localeCompare(b.at));
+            let segments = [];
+            let curStart = null;
+            mChanges.forEach((c) => {
+                if (['Started', 'Resumed', 'Changed', 'Taken'].includes(c.type)) {
+                    if (curStart === null) curStart = c.at;
+                    if (c.type === 'Taken') {
+                        segments.push({s: c.at, e: c.at});
+                        curStart = null;
+                    }
+                } else if (['Ended', 'Paused'].includes(c.type)) {
+                    if (curStart !== null) {
+                        segments.push({s: curStart, e: c.at});
+                        curStart = null;
+                    }
+                }
+            });
+            if (curStart !== null) segments.push({s: curStart, e: null});
+            return segments;
+        },
         getMedicationStatusOnDate(medId, dateStr) {
             const med = this.medications.find((m) => m.id === medId);
             if (!med) return 'Passive';
-            const medData = this.detailedMeds.find((m) => m.name === med.name);
-            if (!medData) return 'Passive';
+            const segments = this._getMedicationSegments(medId);
             const date = dateStr;
-            const isActive = medData.segments.some((seg) => {
+            const isActive = segments.some((seg) => {
                 const segStart = this.convertYmdHiToYmd(seg.s);
                 const segEnd = seg.e ? this.convertYmdHiToYmd(seg.e) : null;
                 return segStart <= date && (segEnd === null || segEnd >= date);
@@ -1245,11 +1265,10 @@ export default function registerDashboard(Alpine) {
         isMedicationActiveInRange(medId) {
             const med = this.medications.find((m) => m.id === medId);
             if (!med) return false;
-            const medData = this.detailedMeds.find((m) => m.name === med.name);
-            if (!medData) return false;
+            const segments = this._getMedicationSegments(medId);
             const start = this.startDate;
             const end = this.endDate;
-            return medData.segments.some((seg) => {
+            return segments.some((seg) => {
                 const segStart = this.convertYmdHiToYmd(seg.s);
                 const segEnd = seg.e ? this.convertYmdHiToYmd(seg.e) : null;
                 return segStart <= end && (segEnd === null || segEnd >= start);
@@ -1949,11 +1968,18 @@ export default function registerDashboard(Alpine) {
                     activeDetails.push(`<b><i>${med.name}</i></b>`);
                 }
             });
-            let currentStr = activeDetails.length > 0 ? activeDetails.join(', ').replace(/, ([^,]*)$/, ' ve $1') : 'Yok';
+            let currentStr = activeDetails.length > 0 ? activeDetails.join(', ').replace(/, ([^,]*)$/, ' ve $1') : '';
             let additionalMedIds = Array.from(usedMedIds).filter((id) => !currentMedIds.has(id));
             let additionalMedNames = additionalMedIds.map((id) => `<b><i>${this.getMedicationName(id)}</i></b>`);
             let additionalStr = additionalMedNames.length > 0 ? additionalMedNames.join(', ').replace(/, ([^,]*)$/, ' ve $1') : '';
-            let medicationSummaryText = `İncelediğimiz dönemin sonu itibarıyla güncel tedavi şemanızda aktif olarak; ${currentStr} düzenli olarak kullanılmaktadır. `;
+
+            let medicationSummaryText = '';
+            if (activeDetails.length > 0) {
+                medicationSummaryText = `İncelediğimiz dönemin sonu itibarıyla güncel tedavi şemanızda aktif olarak; ${currentStr} düzenli olarak kullanılmaktadır. `;
+            } else {
+                medicationSummaryText = `İncelediğimiz dönemin sonu itibarıyla güncel tedavi şemanızda düzenli olarak kullanılan aktif bir ilaç bulunmamaktadır. `;
+            }
+
             if (additionalMedNames.length > 0) {
                 medicationSummaryText += `Belirttiğiniz bu periyotta güncel listenize ek olarak <b>${additionalStr}</b> ilaçlarına da başvurulmuştur. `;
                 let addNames = additionalMedIds.map((id) => this.getMedicationName(id));
