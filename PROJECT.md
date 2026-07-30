@@ -139,7 +139,6 @@ Bu dosya, Alpine bileşenini (`dashboardApp`) ve global utility fonksiyonların�
   hideSpecialTests: true,          // AKG & Crossmatch gizle
   user: {}, hospitals: [], medications: [], medicationChanges: [], medicationLogs: [],
   pressures: [], weights: [], tests: [], testItems: [],
-  metrics: { avgSys, avgDia, currentWeight, startWeight, weightDelta, adherenceRate, outOfBoundsCount, outOfBoundsList, latestInr, latestHgb, bpStatusText, bpStatusClass },
   flowsheetDays: [], allFlowsheetMeds: [], uniqueMeds: [],
   onlyMeds: false, // takvim gün detayında sadece ilaçları göster
   tooltip: { show, x, y, med, date, count, times },
@@ -193,7 +192,6 @@ Bu dosya, Alpine bileşenini (`dashboardApp`) ve global utility fonksiyonların�
 - `shiftDatePeriod(direction)` – seçili aralığı öne/geri kaydırır.
 - `updateFilters()` – debounce ile filtreleri günceller ve ilgili bölümleri yeniden yükler.
 - `snapDateToValid(dateStr)` – geçerli veri tarihlerine yakın olanı bulur.
-- `calculateMetrics()` – tansiyon ortalaması, kilo değişimi, ilaç uyumu (dinamik hospital exclusion ile), anormal tahliller vb. hesaplar.
 - `populateMedTimeline()` – `medicationChanges`’ten `medTimeline` oluşturur.
 - `updateVisibleMeds()` – `detailedMeds`’i günceller (ilaç segmentleri).
 - `setupFlowsheet()` – `flowsheetDays` ve `uniqueMeds`’i günceller.
@@ -283,7 +281,6 @@ Hastanın klinik özeti, cerrahi detaylar, acil sevk zinciri, zaman çizelgesi. 
 - `surgery_type`, `valve_type`, `target_bp_sys_max`, `target_bp_sys_min`, `target_bp_dia_max`, `target_bp_dia_min`
 - `patient_summary` – uzun metin özet
 - `anatomical_surgical_modifications` – yapılan cerrahi işlemler
-- `clinical_timeline` – olay listesi (tarih, tip, hastane, açıklama). Buradaki `"Yatış"` ve `"Taburcu"` olayları, ilaç uyumu hesaplamasında dinamik olarak hospital exclusion aralıklarını belirlemek için kullanılır.
 - `emergency_referral_pathway` – acil sevk basamakları
 
 #### `medications.json`
@@ -358,7 +355,6 @@ Bu dosyalar şu anda boş JSON dizisi (`[]`) içermektedir. Projede **yapısal �
 - Son HGB (en son hemoglobin, önceki ile karşılaştırma)
 - Ortalama Tansiyon (seçili dönem ortalaması, önceki dönem ile karşılaştırma)
 - Kilo Değişimi (dönem başı-sonu farkı)
-- İlaç Uyumu (% olarak, progress bar)
 - Anormal Tahliller (referans dışı parametre sayısı ve liste)
 
 Tüm metrikler `calculateMetrics()` ile güncellenir.
@@ -418,8 +414,6 @@ Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicatio
 
 ### 3.10. Bölüm 9: Klinik Analiz (`#clinical-report`)
 
-- `generateDynamicInsight(startDate, endDate)` ile oluşturulan uzun metinli analiz raporu. Tansiyon, kilo, laboratuvar, ilaç uyumu ve acil durum ilaç kullanımlarını yorumlar. Metin HTML olarak döndürülür ve `x-html` ile gösterilir.
-
 ---
 
 ## 4. Veri Akışı ve Önemli Mantık
@@ -431,27 +425,16 @@ Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicatio
 - `updateFilters()` debounce ile çağrılır ve ilgili bölümler yeniden yüklenir.
 - `snapDateToValid()` geçerli veri tarihlerine en yakın olanı seçer (input’lara girilen tarihleri düzeltmek için).
 
-### 4.2. İlaç Uyumu Hesaplaması (Dinamik Hospital Exclusion & Multi-Day Rolling)
-
 `calculateMetrics()` içinde yapılır.
 
 **Algoritma Özeti:**
 
 1. `clinical_context.json` içindeki `clinical_timeline` taranarak `"Yatış"` ve `"Taburcu"` olayları dinamik olarak tespit edilir. Her bir yatış aralığı (`{start, end}`) kaydedilir.
-2. İlaç uyumu hesaplanırken, her ilaç ve her gün için:
     - `medicationChanges` geçmişinden o gün geçerli doz ve sıklık (`timespan`) belirlenir.
     - Günlük ilaçlarda (`timespan <= 24`): Beklenen günlük doz ile `medicationLogs` kayıtları karşılaştırılır.
-    - Haftalık ilaçlarda (`timespan = 168`, örn. Warfmadin): 7 günlük kayan pencere içindeki toplam alım mg miktarı, haftalık reçete hedefiyle karşılaştırılır. Eğer hasta yatışta ise o günler %100 uyum kredisi alır.
-    - **Eğer gün yatış aralığına denk geliyorsa**, `actual = expected` kabul edilir (%100 uyum kredisi). Bu, hastane ortamında ilaçların hemşire tarafından düzenli verildiğini varsayar.
     - Yatışın son günü (taburcu günü) özel olarak işlenir: evde alınması gereken doz ile hastane dozu ayrıştırılır.
-3. **N-Günlük Uyum Oranları (3, 7, 10 Günlük):**  
-   Hedef gün dahil geçmiş N günün günlük uyum yüzdelerinin basit aritmetik ortalaması alınarak hesaplanır:
 
     $$\text{Uyum}_N(\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum}(\text{hedefGün} - k \text{ gün})$$
-
-    Bu formül, 3, 7 ve 10 günlük uyum kartlarında (dashboard’da gösterilen) kullanılır.
-
-4. Toplam başarılı, fazla ve eksik doz birimleri hesaplanır; genel uyum yüzdesi (`adherenceRate`) bulunur.
 
 **Not:** Bu algoritma, 30-31 Mart 2026 ve 23-28 Temmuz 2026 yatış dönemlerini doğru şekilde kapsar. `medication_changes.json` içindeki `Paused` ve `Resumed` kayıtları bu dönemlerle uyumlu hale getirilmiş ve tüm kayıtlara `reason` alanı eklenmiştir.
 
@@ -514,27 +497,23 @@ Testler `npm test` ile çalıştırılabilir (package.json’da `test` betiği t
 
 ### 6.2. Güncelleme Notları (v1.2 – Temmuz 2026)
 
-1. **Dynamic Hospital Exclusion Algorithm**  
-   İlaç uyum oranı hesaplamasında hastane yatış günleri (`clinical_timeline` verisinden dinamik olarak tespit edilerek) %100 uyum kredisi ile hesaplanmaktadır. Bu sayede hastane ortamında hemşire tarafından verilen ilaçların uyuma etkisi doğru şekilde modellenmiştir.
+1. **Dynamic Hospital Exclusion Algorithm**
 
 2. **Haftalık İlaç (Warfmadin) Doz Hesaplama**  
    `timespan = 168` olan ilaçlar (örn. Warfmadin) için 7 günlük kayan pencere içinde alınan toplam mg miktarı, reçete edilen haftalık toplam mg ile karşılaştırılır. Bu, haftalık dozajın doğru şekilde değerlendirilmesini sağlar.
 
-3. **N-Günlük Kayan Ortalama Uyum Formülü**  
-   3, 7 ve 10 günlük uyum oranları, hedef gün dahil geçmiş N günün günlük uyum yüzdelerinin basit aritmetik ortalaması olarak hesaplanır:
-
     $$\text{Uyum}_N(\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum}(\text{hedefGün} - k \text{ gün})$$
 
-4. **Zero Hard-Coding**  
+3. **Zero Hard-Coding**  
    `app.js` ve `panel.html` içerisindeki tüm hasta/tarih bağımlılıkları kaldırılmış, tamamen `data/*.json` kaynaklı dinamik mimariye geçilmiştir. Herhangi bir hasta verisi yüklendiğinde dashboard otomatik olarak doğru sonuçları üretmektedir.
 
-5. **Yatarak Tedavi İlaçları**  
+4. **Yatarak Tedavi İlaçları**  
    `medications.json` envanterine hastane sürecinde uygulanan Coraspin (ID: 16), Oksapar (ID: 17) ve Sulcid (ID: 18) enjeksiyon/yatarak tedavi ilaçları eklenmiştir. Bu ilaçlar, hastane yatış dönemlerinde `Paused`/`Resumed` mekanizması ile yönetilmektedir.
 
-6. **Test Runner**  
+5. **Test Runner**  
    `package.json` içine `npm test` betiği eklenmiştir (`node --test tests/*.test.js`). Böylece unit testler tek komutla çalıştırılabilir.
 
-7. **Boş Dosyaların Amaçları**  
+6. **Boş Dosyaların Amaçları**  
    `temperatures.json`, `glucose.json`, `pulse.json`, `saturation.json`, `sleep.json`, `symptoms.json`, `appointments.json` dosyaları, ileride eklenecek veri türleri için yapısal JSON şablonları olarak projede tutulmaktadır. `symptoms.json` ve `appointments.json` özellikle ilaç takibi ve klinik zaman çizelgesi ile entegre çalışacak şekilde tasarlanmıştır.
 
 ---

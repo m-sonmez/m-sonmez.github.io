@@ -158,7 +158,6 @@ export default function registerDashboard(Alpine) {
             currentWeight: 0,
             startWeight: 0,
             weightDelta: 0,
-            adherenceRate: 100,
             outOfBoundsCount: 0,
             outOfBoundsList: [],
             latestInr: null,
@@ -1130,95 +1129,6 @@ export default function registerDashboard(Alpine) {
             }
             this.metrics.outOfBoundsCount = outList.length;
             this.metrics.outOfBoundsList = outList;
-            const getPrescriptionOnDate = (medId, dateStr) => {
-                let history = this.medicationChanges.filter((c) => c.medication_id === medId && this.convertYmdHiToYmd(c.at) <= dateStr).sort((a, b) => b.at.localeCompare(a.at));
-                if (history.length === 0) return null;
-                let last = history[0];
-                if (['Ended', 'Paused'].includes(last.type) || last.amount === 0) {
-                    return null;
-                }
-                return last;
-            };
-            let startMs = new Date(this.startDate + 'T00:00:00');
-            let endMs = new Date(this.endDate + 'T23:59:59');
-            let daysArray = [];
-            let current = new Date(startMs);
-            while (current <= endMs) {
-                daysArray.push(new Date(current));
-                current.setDate(current.getDate() + 1);
-            }
-            let successUnits = 0;
-            let totalUnits = 0;
-            let overdoseUnits = 0;
-            let underdoseUnits = 0;
-            this.medications.forEach((med) => {
-                if (med.is_emergency) return;
-                daysArray.forEach((dObj) => {
-                    let dayStr = dObj.toISOString().split('T')[0];
-                    let rx = getPrescriptionOnDate(med.id, dayStr);
-                    if (rx && rx.timespan <= 24) {
-                        let expected = (24 / rx.timespan) * rx.amount;
-                        let logs = this.medicationLogs.filter((l) => l.med.toLowerCase() === med.name.toLowerCase() && l.at.substring(0, 10) === dayStr);
-                        let actual = logs.reduce((sum, l) => sum + (parseFloat(l.dose) || 0), 0);
-                        totalUnits++;
-                        if (actual === expected) {
-                            successUnits++;
-                        } else if (actual > expected) {
-                            overdoseUnits++;
-                        } else {
-                            underdoseUnits++;
-                        }
-                    }
-                });
-                let firstChange = this.medicationChanges.find((c) => c.medication_id === med.id && c.type === 'Started');
-                if (firstChange && firstChange.timespan === 168) {
-                    let rxStartMs = new Date(this.convertYmdHiToYmd(firstChange.at) + 'T00:00:00');
-                    let weekIdx = 0;
-                    while (true) {
-                        let wStart = new Date(rxStartMs);
-                        wStart.setDate(wStart.getDate() + weekIdx * 7);
-                        let wEnd = new Date(wStart);
-                        wEnd.setDate(wEnd.getDate() + 6);
-                        if (wStart.getTime() > endMs.getTime()) break;
-                        if (wEnd.getTime() >= startMs.getTime() && wEnd.getTime() <= endMs.getTime()) {
-                            let wStartStr = wStart.toISOString().split('T')[0];
-                            let wEndStr = wEnd.toISOString().split('T')[0];
-                            let rx = getPrescriptionOnDate(med.id, wStartStr);
-                            if (rx) {
-                                let expected = rx.amount;
-                                let logs = this.medicationLogs.filter((l) => {
-                                    if (l.med.toLowerCase() !== med.name.toLowerCase()) return false;
-                                    let lDate = l.at.substring(0, 10);
-                                    return lDate >= wStartStr && lDate <= wEndStr;
-                                });
-                                let actual = logs.reduce((sum, l) => sum + (parseFloat(l.dose) || 0), 0);
-                                totalUnits += 7;
-                                if (actual === expected) {
-                                    successUnits += 7;
-                                } else if (actual > expected) {
-                                    overdoseUnits += 7;
-                                } else {
-                                    underdoseUnits += 7;
-                                }
-                            }
-                        }
-                        weekIdx++;
-                    }
-                }
-            });
-            if (totalUnits > 0) {
-                this.metrics.adherenceRate = Math.min(100, Math.round((successUnits / totalUnits) * 100));
-                this.metrics.overdoseRate = Math.min(100, Math.round((overdoseUnits / totalUnits) * 100));
-                this.metrics.underdoseRate = Math.min(100, Math.round((underdoseUnits / totalUnits) * 100));
-            } else {
-                this.metrics.adherenceRate = 100;
-                this.metrics.overdoseRate = 0;
-                this.metrics.underdoseRate = 0;
-            }
-            this.metrics.successUnits = successUnits;
-            this.metrics.totalUnits = totalUnits;
-            this.metrics.overdoseUnits = overdoseUnits;
-            this.metrics.underdoseUnits = underdoseUnits;
         },
         setupFlowsheet() {
             let startPoint = new Date(this.startDate);
@@ -1650,11 +1560,10 @@ export default function registerDashboard(Alpine) {
             });
             if (medDetails.length > 0) {
                 medText = `${startStr} ile ${endStr} tarihleri arasında tedavi şeması ve ilaç durumları: ${medDetails.join('; ')}.`;
-                medText += ` Bu dönem genelinde tedaviye uyum oranı %${this.metrics.adherenceRate} olarak kaydedilmiştir.`;
             } else {
                 medText = `Seçilen dönemde aktif bir ilaç veya tedavi değişim kaydı bulunmamaktadır.`;
             }
-            return `KLİNİK DEĞERLENDİRME RAPORU (${startStr} - ${endStr})\n\n` + `1. TANSİYON TRENDİ:\n${bpText}\n\n` + `2. KİLO VE SIVI DURUMU:\n${weightText}\n\n` + `3. LABORATUVAR ANALİZLERİ:\n${labText}\n\n` + `4. İLAÇ TEDAVİSİ VE UYUM:\n${medText}`;
+            return `KLİNİK DEĞERLENDİRME RAPORU (${startStr} - ${endStr})\n\n` + `1. TANSİYON TRENDİ:\n${bpText}\n\n` + `2. KİLO VE SIVI DURUMU:\n${weightText}\n\n` + `3. LABORATUVAR ANALİZLERİ:\n${labText}\n\n` + `4. İLAÇ TEDAVİSİ:\n${medText}`;
         },
 
         /* Helper to get patient-specific narrative placeholders */
@@ -1992,21 +1901,14 @@ export default function registerDashboard(Alpine) {
             }
             labHtml += `</div></div>`;
             insight += labHtml;
-            let medHtml = `<div><h4 class="text-xs sm:text-sm font-bold tracking-tight text-indigo-700 mb-2 flex items-center gap-2"><span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-teal-50-shadow-sm shadow-teal-200"></span> 4. İlaç Yönetimi: Uyum ve Tedavi Güncellemeleri</h4><div class="pl-3 sm:pl-4 border-l-2 border-slate-100 space-y-3">`;
+            let medHtml = `<div><h4 class="text-xs sm:text-sm font-bold tracking-tight text-indigo-700 mb-2 flex items-center gap-2"><span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-teal-50-shadow-sm shadow-teal-200"></span> 4. İlaç Yönetimi ve Tedavi Güncellemeleri</h4><div class="pl-3 sm:pl-4 border-l-2 border-slate-100 space-y-3">`;
             const oldStart = this.startDate;
             const oldEnd = this.endDate;
             this.startDate = startDate;
             this.endDate = endDate;
             this.calculateMetrics();
-            const adherence = this.metrics.adherenceRate;
             this.startDate = oldStart;
             this.endDate = oldEnd;
-            let adherenceComment =
-                adherence >= 90
-                    ? `<b>Tedaviye uyum oranınızın yüksek olması (%${adherence}), tüm kritik parametrelerinizin stabil kalmasındaki en büyük etkendir.</b> Cerrahi dikiş hatlarınızın korunması ve protez kapağın pıhtıya karşı savunulması açısından bu disiplin hayati önem taşımaktadır.`
-                    : adherence >= 70
-                      ? `İlaç uyumunuz genel olarak kabul edilebilir bir düzeyde (<b>%${adherence}</b>) ancak zaman zaman aksamalar tespit edilmiş. Tansiyon ve kan sulandırıcılarınızı saati saatine almaya azami özen göstermelisiniz.`
-                      : `Maalesef ilaç uyumunuz <b>riskli derecede düşük (%${adherence})</b>. İlaçların aksatılması mekanik kapağınızın pıhtı tutmasına veya dikiş hatlarının hasar almasına zemin hazırlayabilir. Telefonunuza alarm kurmanızı tavsiye ederiz.`;
             let usedMedIds = new Set();
             let currentMedIds = new Set();
             this.medications.forEach((m) => {
@@ -2051,7 +1953,7 @@ export default function registerDashboard(Alpine) {
             let additionalMedIds = Array.from(usedMedIds).filter((id) => !currentMedIds.has(id));
             let additionalMedNames = additionalMedIds.map((id) => `<b><i>${this.getMedicationName(id)}</i></b>`);
             let additionalStr = additionalMedNames.length > 0 ? additionalMedNames.join(', ').replace(/, ([^,]*)$/, ' ve $1') : '';
-            let medicationSummaryText = `${adherenceComment}<br/><br/>İncelediğimiz dönemin sonu itibarıyla güncel tedavi şemanızda aktif olarak; ${currentStr} düzenli olarak kullanılmaktadır. `;
+            let medicationSummaryText = `İncelediğimiz dönemin sonu itibarıyla güncel tedavi şemanızda aktif olarak; ${currentStr} düzenli olarak kullanılmaktadır. `;
             if (additionalMedNames.length > 0) {
                 medicationSummaryText += `Belirttiğiniz bu periyotta güncel listenize ek olarak <b>${additionalStr}</b> ilaçlarına da başvurulmuştur. `;
                 let addNames = additionalMedIds.map((id) => this.getMedicationName(id));
@@ -3059,36 +2961,39 @@ export default function registerDashboard(Alpine) {
         },
         getEventBgClass(e) {
             if (e.isPlan) {
-                return 'bg-slate-100 border-slate-300 border-dashed opacity-60 grayscale-[50%]';
+                return 'bg-slate-50 border-slate-200 border-dashed opacity-50 grayscale-[50%]';
             }
 
             if (e.type === 'bp') {
                 const status = this.getBPStatusText(e.sys, e.dia);
                 if (status === 'Normal') {
-                    return 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100';
+                    return 'bg-emerald-50/40 border-emerald-100/80 hover:bg-emerald-50/80';
                 }
-                if (status === 'Prehipertansiyon') {
-                    return 'bg-amber-50 border-amber-300 hover:bg-amber-100';
+                if (status === 'Pre-HT' || status === 'Pre-HT+') {
+                    return 'bg-amber-100 border-amber-300 hover:bg-amber-200';
                 }
-                if (status === 'Hipertansiyon') {
-                    return 'bg-rose-100 border-rose-300 hover:bg-rose-200';
+                if (status === 'HT' || status === 'HT+' || status === 'Kriz') {
+                    return 'bg-rose-200 border-rose-400 hover:bg-rose-300 shadow-sm';
                 }
-                return 'bg-white border-slate-200 hover:bg-slate-50';
+                if (status === 'Hipo') {
+                    return 'bg-sky-100 border-sky-300 hover:bg-sky-200';
+                }
+                return 'bg-slate-50/30 border-slate-100 hover:bg-slate-50/50';
             }
 
             if (e.type === 'med' && e.isEmergency) {
-                return 'bg-rose-100 border-rose-400 animate-pulse hover:bg-rose-200';
+                return 'bg-rose-200 border-rose-500 animate-pulse hover:bg-rose-300 shadow-sm';
             }
 
             const map = {
-                med: 'bg-indigo-100/70 border-indigo-200 hover:bg-indigo-200/70',
-                weight: 'bg-sky-100/70 border-sky-200 hover:bg-sky-200/70',
-                test: 'cursor-pointer bg-teal-100/70 border-teal-200 hover:bg-teal-200/70',
-                report: 'cursor-pointer bg-violet-100/70 border-violet-200 hover:bg-violet-200/70',
-                medchange: 'bg-amber-100/70 border-amber-200 hover:bg-amber-200/70',
+                med: 'bg-indigo-50/20 border-indigo-100/40 hover:bg-indigo-50/40',
+                weight: 'bg-sky-50/70 border-sky-200 hover:bg-sky-100',
+                test: 'cursor-pointer bg-teal-100 border-teal-300 hover:bg-teal-200 shadow-sm',
+                report: 'cursor-pointer bg-violet-100 border-violet-300 hover:bg-violet-200 shadow-sm',
+                medchange: 'bg-amber-50/10 border-amber-100/30 hover:bg-amber-50/30',
             };
 
-            return map[e.type] || 'bg-white border-slate-200 hover:bg-slate-50';
+            return map[e.type] || 'bg-slate-50/30 border-slate-100 hover:bg-slate-50/50';
         },
         getDailyEvents(dateStr) {
             let events = [];
