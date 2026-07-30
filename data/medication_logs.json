@@ -887,6 +887,6 @@
 {"at":"2026-07-30 18:27","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
 {"at":"2026-07-30 19:25","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
 {"at":"2026-07-30 20:00","model":"MedLog","user_id":1,"med":"Augmentin","dose":1000},
-{"at":"2026-07-30 21:30","model":"MedLog","user_id":1,"med":"Oksapar","dose":0.6},
-{"at":"2026-07-30 22:00","model":"MedLog","user_id":1,"med":"Cipro","dose":750}
+{"at":"2026-07-30 21:26","model":"MedLog","user_id":1,"med":"Oksapar","dose":0.6},
+{"at":"2026-07-30 21:52","model":"MedLog","user_id":1,"med":"Cipro","dose":750}
 ]
