@@ -3076,6 +3076,33 @@ export default function registerDashboard(Alpine) {
             return events;
         },
 
+        getDailyEventsSummary(dateStr, onlyMeds) {
+            const events = this.getDailyEvents(dateStr);
+            const filtered = events.filter((e) => !onlyMeds || e.type === 'med' || e.type === 'medchange');
+
+            const counts = {};
+            filtered.forEach((e) => {
+                counts[e.type] = (counts[e.type] || 0) + 1;
+            });
+
+            const labels = {
+                bp: 'Tansiyon',
+                med: 'İlaç',
+                weight: 'Kilo',
+                test: 'Tahlil',
+                report: 'Rapor',
+                medchange: 'İlaç Değişimi',
+            };
+
+            const result = [];
+            ['test', 'report', 'bp', 'weight', 'med', 'medchange'].forEach((type) => {
+                if (counts[type]) {
+                    result.push({label: labels[type], count: counts[type], type: type});
+                }
+            });
+            return result;
+        },
+
         /* 7. VERİ İNDİRME */
 
         async downloadRawMedicalData(mode = 'all') {

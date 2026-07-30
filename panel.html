@@ -700,9 +700,9 @@
                                         <table class="w-full min-w-[384px] text-left text-xs">
                                             <thead class="sticky top-0 border-b border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase">
                                                 <tr>
-                                                    <th class="py-2.5 pl-2">Kayıt Zamanı</th>
+                                                    <th class="py-2.5 pl-2">Ölçüm Zamanı</th>
                                                     <th class="py-2.5 text-center">Kan Basıncı</th>
-                                                    <th class="py-2.5 pr-2 text-right">Değerlendirme</th>
+                                                    <th class="py-2.5 pr-2 text-right">Durum</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-slate-100 font-medium text-slate-600">
@@ -743,9 +743,9 @@
                                         <table class="w-full min-w-[384px] text-left text-xs">
                                             <thead class="sticky top-0 border-b border-slate-200 bg-white text-[10px] font-bold text-slate-400 uppercase">
                                                 <tr>
-                                                    <th class="py-2.5 pl-2">Ölçüm Tarihi</th>
-                                                    <th class="py-2.5 text-center">Vücut Kütlesi</th>
-                                                    <th class="py-2.5 pr-2 text-right">Kronolojik Değişim</th>
+                                                    <th class="py-2.5 pl-2">Ölçüm Zamanı</th>
+                                                    <th class="py-2.5 text-center">Ağırlık</th>
+                                                    <th class="py-2.5 pr-2 text-right">Değişim</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-slate-100 font-medium text-slate-600">
@@ -1144,7 +1144,7 @@
 
                         <!-- Sağ Panel: Gün Detayı -->
                         <div class="glass-card rounded-2xl p-6 shadow-sm" id="day">
-                            <div class="mb-4 flex flex-col items-start justify-between gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
+                            <div class="mb-4 flex flex-row items-center justify-between gap-2 border-b border-slate-100 pb-4">
                                 <h3 class="font-display flex items-center gap-2 text-lg font-semibold text-slate-900">Gün Detayı</h3>
                                 <label class="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1 transition select-none hover:bg-indigo-50">
                                     <span class="text-[10px] font-black tracking-tight text-indigo-700 uppercase">Sadece İlaçlar</span>
@@ -1170,78 +1170,105 @@
                                     </svg>
                                 </button>
                             </div>
+
+                            <template x-if="getDailyEventsSummary(selectedCalendarDayStr, onlyMeds).length > 0">
+                                <div class="mb-4 flex flex-wrap justify-center gap-2 text-[10px] font-bold text-slate-600">
+                                    <template x-for="summary in getDailyEventsSummary(selectedCalendarDayStr, onlyMeds)">
+                                        <div class="flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2 py-1 shadow-sm">
+                                            <span x-text="summary.label"></span>
+                                            <span class="rounded-md bg-slate-100 px-1.5 py-0.5 text-slate-800" x-text="summary.count"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                             <div class="space-y-3 pr-1">
                                 <template x-if="getDailyEvents(selectedCalendarDayStr).length > 0">
-                                    <div class="flex flex-col gap-2">
-                                        <template :key="idx" x-for="(dayEvent, idx) in getDailyEvents(selectedCalendarDayStr).filter(e => !onlyMeds || (e.type === 'med' || e.type === 'medchange'))">
-                                            <div :class="getEventBgClass(dayEvent)" @click="dayEvent.type === 'test' ? navigateToTest(dayEvent.id) : (dayEvent.type === 'report' ? navigateToReport(dayEvent.protocol_no || dayEvent.at) : null)" class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 shadow-sm transition-colors">
-                                                <div class="flex min-w-0 flex-1 items-center gap-2">
-                                                    <span :class="dayEvent.isPlan ? 'text-slate-500' : 'text-slate-700'" class="font-mono text-[11px] font-bold whitespace-nowrap" x-text="dayEvent.time + (dayEvent.isPlan ? ' (Plan)' : '')"></span>
-                                                    <template x-if="dayEvent.type === 'bp'">
-                                                        <svg class="h-4 w-4 shrink-0 text-rose-500" fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                        </svg>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'med'">
-                                                        <svg class="h-4 w-4 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <rect height="8" rx="4" stroke-width="2" width="20" x="2" y="8" />
-                                                            <line stroke-linecap="round" stroke-width="1.5" x1="12" x2="12" y1="8" y2="16" />
-                                                        </svg>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'medchange'">
-                                                        <svg class="h-4 w-4 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-                                                        </svg>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'weight'">
-                                                        <svg class="h-4 w-4 shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-                                                        </svg>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'test'">
-                                                        <svg class="h-4 w-4 shrink-0 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-                                                        </svg>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'report'">
-                                                        <svg class="h-4 w-4 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
-                                                        </svg>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'bp'">
-                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.sys + '/' + dayEvent.dia + ' mmHg'"></span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'med'">
-                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="parseFloat((dayEvent.dose / (medConversions[dayEvent.med] || 1)).toFixed(2)) + ' x ' + dayEvent.med"></span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'weight'">
-                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.weight + ' kg'"></span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'test'">
-                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.title"></span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'report'">
-                                                        <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.title"></span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'medchange'">
-                                                        <span class="truncate text-xs font-bold text-slate-900" x-text="dayEvent.description"></span>
-                                                    </template>
+                                    <div class="flex flex-col">
+                                        <div class="flex flex-col gap-2">
+                                            <template :key="'nm_'+idx" x-for="(dayEvent, idx) in getDailyEvents(selectedCalendarDayStr).filter(e => (!onlyMeds || e.type === 'med') && e.type !== 'medchange')">
+                                                <div :class="getEventBgClass(dayEvent)" @click="dayEvent.type === 'test' ? navigateToTest(dayEvent.id) : (dayEvent.type === 'report' ? navigateToReport(dayEvent.protocol_no || dayEvent.at) : null)" class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 shadow-sm transition-colors">
+                                                    <div class="flex min-w-0 flex-1 items-center gap-2">
+                                                        <span :class="dayEvent.isPlan ? 'text-slate-500' : 'text-slate-700'" class="font-mono text-[11px] font-bold whitespace-nowrap" x-text="dayEvent.time + (dayEvent.isPlan ? ' (Plan)' : '')"></span>
+                                                        <template x-if="dayEvent.type === 'bp'">
+                                                            <svg class="h-4 w-4 shrink-0 text-rose-500" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                            </svg>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'med'">
+                                                            <svg class="h-4 w-4 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <rect height="8" rx="4" stroke-width="2" width="20" x="2" y="8" />
+                                                                <line stroke-linecap="round" stroke-width="1.5" x1="12" x2="12" y1="8" y2="16" />
+                                                            </svg>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'weight'">
+                                                            <svg class="h-4 w-4 shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                                            </svg>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'test'">
+                                                            <svg class="h-4 w-4 shrink-0 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                                            </svg>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'report'">
+                                                            <svg class="h-4 w-4 shrink-0 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                                            </svg>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'bp'">
+                                                            <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.sys + '/' + dayEvent.dia + ' mmHg'"></span>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'med'">
+                                                            <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="parseFloat((dayEvent.dose / (medConversions[dayEvent.med] || 1)).toFixed(2)) + ' x ' + dayEvent.med"></span>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'weight'">
+                                                            <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.weight + ' kg'"></span>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'test'">
+                                                            <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.title"></span>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'report'">
+                                                            <span :class="dayEvent.isPlan ? 'text-slate-600' : 'text-slate-900'" class="truncate text-xs font-bold" x-text="dayEvent.title"></span>
+                                                        </template>
+                                                    </div>
+                                                    <div class="flex-shrink-0">
+                                                        <template x-if="dayEvent.type === 'bp'">
+                                                            <span :class="getBPBadgeClass(dayEvent.sys, dayEvent.dia)" class="rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap uppercase shadow-sm" x-text="getBPStatusText(dayEvent.sys, dayEvent.dia)"></span>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'med'">
+                                                            <span :class="(dayEvent.isPlan ? 'bg-slate-400' : (medColors[dayEvent.med] || 'bg-slate-500')) + (dayEvent.isEmergency ? ' ring-2 ring-rose-500 ring-offset-1' : '')" class="rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm" x-text="dayEvent.med"></span>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'weight'">
+                                                            <span class="rounded-full bg-blue-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Kilo</span>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'test'">
+                                                            <span class="rounded-full bg-teal-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Tahlil</span>
+                                                        </template>
+                                                        <template x-if="dayEvent.type === 'report'">
+                                                            <span class="rounded-full bg-indigo-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Rapor</span>
+                                                        </template>
+                                                    </div>
                                                 </div>
-                                                <div class="flex-shrink-0">
-                                                    <template x-if="dayEvent.type === 'bp'">
-                                                        <span :class="getBPBadgeClass(dayEvent.sys, dayEvent.dia)" class="rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap uppercase shadow-sm" x-text="getBPStatusText(dayEvent.sys, dayEvent.dia)"></span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'med' || dayEvent.type === 'medchange'">
-                                                        <span :class="(dayEvent.isPlan ? 'bg-slate-400' : (medColors[dayEvent.med] || 'bg-slate-500')) + (dayEvent.isEmergency ? ' ring-2 ring-rose-500 ring-offset-1' : '')" class="rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm" x-text="dayEvent.med"></span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'weight'">
-                                                        <span class="rounded-full bg-blue-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Kilo</span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'test'">
-                                                        <span class="rounded-full bg-teal-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Tahlil</span>
-                                                    </template>
-                                                    <template x-if="dayEvent.type === 'report'">
-                                                        <span class="rounded-full bg-indigo-500 px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm">Rapor</span>
+                                            </template>
+                                        </div>
+
+                                        <template x-if="getDailyEvents(selectedCalendarDayStr).some(e => e.type === 'medchange')">
+                                            <div class="mt-4 border-t border-slate-100/80 pt-4 pb-2">
+                                                <h4 class="mb-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">İlaç Değişiklikleri</h4>
+                                                <div class="flex flex-col gap-2">
+                                                    <template :key="'mc_'+idx" x-for="(dayEvent, idx) in getDailyEvents(selectedCalendarDayStr).filter(e => e.type === 'medchange')">
+                                                        <div :class="getEventBgClass(dayEvent)" class="flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 shadow-sm transition-colors">
+                                                            <div class="flex min-w-0 flex-1 items-center gap-2">
+                                                                <span class="font-mono text-[11px] font-bold whitespace-nowrap text-slate-700" x-text="dayEvent.time"></span>
+                                                                <svg class="h-4 w-4 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                                                                </svg>
+                                                                <span class="truncate text-xs font-bold text-slate-900" x-text="dayEvent.description"></span>
+                                                            </div>
+                                                            <div class="flex-shrink-0">
+                                                                <span :class="(dayEvent.isPlan ? 'bg-slate-400' : (medColors[dayEvent.med] || 'bg-slate-500')) + (dayEvent.isEmergency ? ' ring-2 ring-rose-500 ring-offset-1' : '')" class="rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm" x-text="dayEvent.med"></span>
+                                                            </div>
+                                                        </div>
                                                     </template>
                                                 </div>
                                             </div>
