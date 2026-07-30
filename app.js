@@ -2812,20 +2812,34 @@ export default function registerDashboard(Alpine) {
             return wObj.weight - sorted[idx - 1].weight > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
         },
         getBPStatusText(sys, dia) {
-            const ctx = this.clinicalContext;
-            const maxSys = ctx.target_bp_sys_max || 140;
-            const maxDia = ctx.target_bp_dia_max || 90;
-            if (sys >= maxSys || dia >= maxDia) return 'Hipertansiyon';
-            const preSys = maxSys - 10;
-            const preDia = maxDia - 5;
-            if (sys >= preSys || dia >= preDia) return 'Prehipertansiyon';
+            const ctx = this.clinicalContext || {};
+
+            const targetMaxSys = ctx.target_bp_sys_max || 140;
+            const targetMaxDia = ctx.target_bp_dia_max || 90;
+            const targetMinSys = ctx.target_bp_sys_min || 90;
+            const targetMinDia = ctx.target_bp_dia_min || 60;
+            if (sys < targetMinSys || dia < targetMinDia) return 'Hipo';
+            if (sys >= 180 || dia >= 120) return 'Kriz';
+            if (sys >= 140 || dia >= 90) {
+                if (sys >= targetMaxSys || dia >= targetMaxDia) return 'HT+';
+                return 'HT';
+            }
+            if (sys >= 120 || dia >= 80) {
+                if (sys >= targetMaxSys || dia >= targetMaxDia) return 'Pre-HT+';
+                return 'Pre-HT';
+            }
             return 'Normal';
         },
         getBPBadgeClass(sys, dia) {
-            let s = this.getBPStatusText(sys, dia);
-            if (s === 'Hipertansiyon') return 'bg-rose-50 text-rose-700 border border-rose-200';
-            if (s === 'Prehipertansiyon') return 'bg-amber-50 text-amber-700 border border-amber-200';
-            return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+            const status = this.getBPStatusText(sys, dia);
+
+            if (status === 'Kriz') return 'bg-rose-100 text-rose-800 border-rose-300';
+            if (status === 'HT+' || status === 'Pre-HT+') return 'bg-orange-100 text-orange-800 border-orange-300';
+            if (status === 'HT') return 'bg-amber-100 text-amber-800 border-amber-300';
+            if (status === 'Pre-HT') return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+            if (status === 'Hipo') return 'bg-blue-100 text-blue-800 border-blue-300';
+
+            return 'bg-emerald-100 text-emerald-800 border-emerald-300';
         },
         updateFilters: debounce(function () {
             let todayStr = new Date().toISOString().split('T')[0];

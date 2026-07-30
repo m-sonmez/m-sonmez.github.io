@@ -4,9 +4,9 @@
         "user_id": 1,
         "surgery_type": "Aort cerrahisi",
         "valve_type": "kalp kapağı",
-        "target_bp_sys_max": 120,
+        "target_bp_sys_max": 130,
+        "target_bp_dia_max": 80,
         "target_bp_sys_min": 90,
-        "target_bp_dia_max": 90,
         "target_bp_dia_min": 60,
         "patient_summary": "Alaattin Sönmez (64 yaş, Erkek), 19 Şubat 2026 tarihinde ani başlayan yırtıcı karakterde şiddetli göğüs ve sırt ağrısı şikayetiyle ambulansla Acil servise (Defne Devlet Hastanesi) başvurmuştur. Buradan sırasıyla MKÜ Hastanesi ve Kırıkhan Devlet Hastanesi'ne sevk edilip Akut Tip A Aort Diseksiyonu ve Ciddi Aort Kapak Yetmezliği teşhisi kesinleşerek Özel İskenderun Gelişim Hastanesi'nde acil Bentall ameliyatına alınmıştır. Postoperatif dönemde sternal yara enfeksiyonu, pürülan akıntı, kabızlık, Nisan ayı boyunca süren bulantı/kusma atakları ve hipertansif krizler yaşamıştır. 30-31 Mart tarihlerinde şiddetli kabızlık ve bulantı-kusma şikayetleri nedeniyle Gelişim Hastanesi'nde yatışı yapılmış; bu sırada sternal yara enfeksiyonu takibi de sürdürülmüştür. Süreç içerisinde pıhtılaşma takibi (INR) ve yara enfeksiyonu (Augmentin, Stafine) için defalarca hastane başvuruları olmuştur. 23 Temmuz 2026 tarihinde sternal insizyon bölgesinde dikiş ayrılması ve ağır enfeksiyon nedeniyle Gelişim Hastanesi'ne tekrar yatırılmış olup; yara bakımı, çoklu sütür atılması ve beyaz kan transfüzyonu gibi ağır bakım gerektiren müdahaleler uygulanmıştır. Halen tedavisi sürmektedir.",
         "anatomical_surgical_modifications": [
