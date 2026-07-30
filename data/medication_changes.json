@@ -48,7 +48,7 @@
 {"at":"2026-07-23 06:59","model":"MedChange","user_id":1,"medication_id":11,"id":46,"amount":0,"timespan":24,"type":"Paused","reason":"Takibi hemşireler tarafından yapılacak (Hastane yatışı)"},
 {"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":17,"id":49,"amount":0.6,"timespan":12,"type":"Started","reason":"Hastane yatışı sırasında başlandı (Profilaktik antikoagülasyon)"},
 {"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":3,"id":52,"amount":750,"timespan":12,"type":"Started","reason":"Doktor tarafından başlandı (Antibiyotik, enfeksiyon tedavisi)"},
-{"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":5,"id":50,"amount":12.5,"timespan":12,"type":"Resumed","reason":"Taburculuk sonrası yeni doz ile devam edildi (Yükseltildi)"},
+{"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":5,"id":50,"amount":6.25,"timespan":12,"type":"Resumed","reason":"Taburculuk sonrası yeni doz ile devam edildi (Yükseltildi)"},
 {"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":6,"id":48,"amount":81,"timespan":24,"type":"Resumed","reason":"Taburculuk sonrası devam edildi"},
 {"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":11,"id":53,"amount":40,"timespan":24,"type":"Resumed","reason":"Taburculuk sonrası devam edildi"},
 {"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":15,"id":51,"amount":1000,"timespan":12,"type":"Started","reason":"Enfeksiyon şüphesi (Doku defekti, cerrahi yara enfeksiyonu)"}
