@@ -6,8 +6,16 @@
         "valve_type": "kalp kapağı",
         "target_bp_sys_max": 130,
         "target_bp_dia_max": 80,
-        "target_bp_sys_min": 90,
+        "target_bp_sys_min": 100,
         "target_bp_dia_min": 60,
+        "target_inr_min": 2.0,
+        "target_inr_max": 3.0,
+        "pt_reference_min": 16.0,
+        "pt_reference_max": 25.0,
+        "pt_percent_reference_min": 20.0,
+        "pt_percent_reference_max": 60.0,
+        "aptt_reference_min": 30.0,
+        "aptt_reference_max": 45.0,
         "patient_summary": "Alaattin Sönmez (64 yaş, Erkek), 19 Şubat 2026 tarihinde ani başlayan yırtıcı karakterde şiddetli göğüs ve sırt ağrısı şikayetiyle ambulansla Acil servise (Defne Devlet Hastanesi) başvurmuştur. Buradan sırasıyla MKÜ Hastanesi ve Kırıkhan Devlet Hastanesi'ne sevk edilip Akut Tip A Aort Diseksiyonu ve Ciddi Aort Kapak Yetmezliği teşhisi kesinleşerek Özel İskenderun Gelişim Hastanesi'nde acil Bentall ameliyatına alınmıştır. Postoperatif dönemde sternal yara enfeksiyonu, pürülan akıntı, kabızlık, Nisan ayı boyunca süren bulantı/kusma atakları ve hipertansif krizler yaşamıştır. 30-31 Mart tarihlerinde şiddetli kabızlık ve bulantı-kusma şikayetleri nedeniyle Gelişim Hastanesi'nde yatışı yapılmış; bu sırada sternal yara enfeksiyonu takibi de sürdürülmüştür. Süreç içerisinde pıhtılaşma takibi (INR) ve yara enfeksiyonu (Augmentin, Stafine) için defalarca hastane başvuruları olmuştur. 23 Temmuz 2026 tarihinde sternal insizyon bölgesinde dikiş ayrılması ve ağır enfeksiyon nedeniyle Gelişim Hastanesi'ne tekrar yatırılmış olup; yara bakımı, çoklu sütür atılması ve beyaz kan transfüzyonu gibi ağır bakım gerektiren müdahaleler uygulanmıştır. Halen tedavisi sürmektedir.",
         "anatomical_surgical_modifications": [
             "Dilate nativ asendan aort rezeke edildi (5.3 cm anevrizma); 32mm polyester Dacron vasküler greft ile replase edildi (değiştirildi).",
@@ -37,8 +45,6 @@
             {"at":"2026-02-19 21:41","hospital":"Kırıkhan Devlet Hastanesi","clinical_actions":"Kontrastlı Torakoabdominal BT Anjiyografi tamamlandı. 5.3 cm asendan aort anevrizması ve Tip A aort diseksiyonu kesin tanısı konularak acil cerrahiye sevk kararı alındı."},
             {"at":"2026-02-19 23:22","hospital":"Özel İskenderun Gelişim Hastanesi","clinical_actions":"KVC ekibi tarafından ameliyata hazırlık için acil yatışı yapıldı. Crossmatch ve pre-op testleri tamamlanıp sabah erken saatte acil açık kalp ameliyatından çıktı."}
         ],
-        "inr_target_min": 2.0,
-        "inr_target_max": 3.0,
         "important_lab_codes": [
             "INR",
             "PT",
