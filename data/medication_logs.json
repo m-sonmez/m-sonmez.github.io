@@ -918,7 +918,6 @@
 {"at":"2026-08-02 10:00","model":"MedLog","user_id":1,"med":"Cipro","dose":750},
 {"at":"2026-08-02 17:30","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
 {"at":"2026-08-02 20:00","model":"MedLog","user_id":1,"med":"Augmentin","dose":1000},
-{"at":"2026-08-02 21:00","model":"MedLog","user_id":1,"med":"Oksapar","dose":0.6},
 {"at":"2026-08-02 21:30","model":"MedLog","user_id":1,"med":"Warfmadin","dose":2.5},
 {"at":"2026-08-02 22:00","model":"MedLog","user_id":1,"med":"Cipro","dose":750}
 ]
