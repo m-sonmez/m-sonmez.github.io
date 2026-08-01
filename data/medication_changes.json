@@ -52,6 +52,6 @@
 {"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":6,"id":48,"amount":81,"timespan":24,"type":"Resumed","reason":"Taburculuk sonrası devam edildi"},
 {"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":11,"id":53,"amount":40,"timespan":24,"type":"Resumed","reason":"Taburculuk sonrası devam edildi"},
 {"at":"2026-07-28 13:59","model":"MedChange","user_id":1,"medication_id":15,"id":51,"amount":1000,"timespan":12,"type":"Started","reason":"Enfeksiyon şüphesi (Doku defekti, cerrahi yara enfeksiyonu)"},
-{"at":"2026-08-01 20:58","model":"MedChange","user_id":1,"medication_id":17,"id":54,"amount":0,"timespan":12,"type":"Ended","reason":"Warfmadin'e geçildi."},
-{"at":"2026-08-01 20:59","model":"MedChange","user_id":1,"medication_id":14,"id":55,"amount":20,"timespan":168,"type":"Resumed","reason":"Oksapar sonlandırıldı. Eski doz ile devam."}
+{"at":"2026-08-01 20:59","model":"MedChange","user_id":1,"medication_id":14,"id":55,"amount":20,"timespan":168,"type":"Resumed","reason":"Oksapar sonlandırıldı. Eski doz ile devam."},
+{"at":"2026-08-02 20:59","model":"MedChange","user_id":1,"medication_id":17,"id":54,"amount":0,"timespan":12,"type":"Ended","reason":"Warfmadin'e geçildi."}
 ]

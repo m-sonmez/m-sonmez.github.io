@@ -1680,5 +1680,9 @@
 {"at":"2026-07-28 00:37","model":"TestItem","test_id":81,"id":1691,"unit":"10^12/L","name":"Eritrosit Sayısı","code":"RBC","result":"3.26","reference_min":"4.28","reference_max":"5.58","description":"Hemogram"},
 {"at":"2026-07-28 00:37","model":"TestItem","test_id":81,"id":1692,"unit":"%","name":"RDW-CV","code":"RDW-CV","result":"17.0","reference_min":"12.3","reference_max":"14.3","description":"Hemogram"},
 {"at":"2026-07-28 00:37","model":"TestItem","test_id":81,"id":1693,"unit":"fL","name":"RDW-SD","code":"RDW-SD","result":"51.6","reference_min":"37.8","reference_max":"46.1","description":"Hemogram"},
-{"at":"2026-07-28 00:37","model":"TestItem","test_id":81,"id":1694,"unit":"10^9/L","name":"Lökosit Sayısı","code":"WBC","result":"8.80","reference_min":"3.99","reference_max":"10.3","description":"Hemogram"}
+{"at":"2026-07-28 00:37","model":"TestItem","test_id":81,"id":1694,"unit":"10^9/L","name":"Lökosit Sayısı","code":"WBC","result":"8.80","reference_min":"3.99","reference_max":"10.3","description":"Hemogram"},
+{"at":"2026-07-31 13:34","model":"TestItem","test_id":82,"id":1695,"unit":"INR","name":"INR","code":"INR","result":"1.1800","reference_min":"0.8000","reference_max":"1.2000","description":"Koagülasyon"},
+{"at":"2026-07-31 13:34","model":"TestItem","test_id":82,"id":1696,"unit":"sn","name":"Protrombin Zamanı (PT)","code":"PT","result":"11.9000","reference_min":"9.6000","reference_max":"12.0000","description":"Koagülasyon"},
+{"at":"2026-07-31 13:34","model":"TestItem","test_id":82,"id":1697,"unit":"%","name":"Protrombin Aktivitesi (%)","code":"PT%","result":"102.6000","reference_min":"74.4000","reference_max":"130.0000","description":"Koagülasyon"},
+{"at":"2026-07-31 13:34","model":"TestItem","test_id":82,"id":1698,"unit":"sn","name":"aPTT","code":"APTT","result":"40.5000","reference_min":"23.9000","reference_max":"33.2000","description":"Koagülasyon"}
 ]
