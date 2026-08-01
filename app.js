@@ -198,6 +198,7 @@ export default function registerDashboard(Alpine) {
         animTargetDate: null,
         animSpeedIndex: 2,
         isInitializing: true,
+        _effectiveCache: {},
 
         get medColors() {
             const map = {};
@@ -1809,8 +1810,8 @@ export default function registerDashboard(Alpine) {
                             else if (diff < -0.05) pText += `Bu, bir önceki ${inr.prev.toFixed(2)} ölçümünden biraz gerilediğini gösteriyor `;
                             else pText += `Bu, bir önceki tahlilinizle neredeyse tamamen aynı kalmış `;
                         }
-                        const inrMin = this.clinicalContext.inr_target_min || 2.0;
-                        const inrMax = this.clinicalContext.inr_target_max || 3.0;
+                        const inrMin = this.clinicalContext.target_inr_min || 2.0;
+                        const inrMax = this.clinicalContext.target_inr_max || 3.0;
                         if (inr.val < inrMin) {
                             pText += `ve <span class="text-rose-600 font-bold">maalesef sizin için gereken hedefin altında. Pıhtı riskine karşı doktorunuzun kan sulandırıcı hap dozajını artırması çok önemli.</span> `;
                         } else if (inr.val > inrMax) {
@@ -2578,12 +2579,13 @@ export default function registerDashboard(Alpine) {
                         return itemCode === tgt.code || (tgt.code === 'NEU' && itemCode === 'NEU#') || (tgt.code === 'LYM' && itemCode === 'LYM#') || (tgt.code === 'NA' && itemCode === 'SODYUM') || (tgt.code === 'K' && itemCode === 'POTASYUM') || (tgt.code === 'CA' && (itemCode === 'KALSİYUM' || itemCode === 'KALSIYUM'));
                     });
                     if (match) {
+                        const effective = this.getEffectiveReference(match);
                         allPoints.push({
                             val: parseFloat(match.result),
                             date: s.at.substring(0, 10),
                             rawDate: s.at,
-                            refMin: match.reference_min !== null && match.reference_min !== '' ? parseFloat(match.reference_min) : null,
-                            refMax: match.reference_max !== null && match.reference_max !== '' ? parseFloat(match.reference_max) : null,
+                            refMin: effective.min,
+                            refMax: effective.max,
                         });
                     }
                 });
@@ -2696,14 +2698,53 @@ export default function registerDashboard(Alpine) {
 
         /* 6. YARDIMCI FONKSİYONLAR (LAB, BP, AĞIRLIK, VB.) */
 
+        getEffectiveReference(item) {
+            if (!item) return {min: null, max: null};
+            const cacheKey = item.id + '_' + (item.reference_min || '') + (item.reference_max || '');
+            if (this._effectiveCache && this._effectiveCache[cacheKey]) {
+                return this._effectiveCache[cacheKey];
+            }
+            const code = item.code.toUpperCase();
+            const ctx = this.clinicalContext || {};
+            let min = item.reference_min !== null && item.reference_min !== '' ? parseFloat(item.reference_min) : null;
+            let max = item.reference_max !== null && item.reference_max !== '' ? parseFloat(item.reference_max) : null;
+
+            if (code === 'INR') {
+                if (ctx.target_inr_min !== undefined) min = ctx.target_inr_min;
+                if (ctx.target_inr_max !== undefined) max = ctx.target_inr_max;
+            } else if (code === 'PT') {
+                if (ctx.pt_reference_min !== undefined) min = ctx.pt_reference_min;
+                if (ctx.pt_reference_max !== undefined) max = ctx.pt_reference_max;
+            } else if (code === 'PT%') {
+                if (ctx.pt_percent_reference_min !== undefined) min = ctx.pt_percent_reference_min;
+                if (ctx.pt_percent_reference_max !== undefined) max = ctx.pt_percent_reference_max;
+            } else if (code === 'APTT') {
+                if (ctx.aptt_reference_min !== undefined) min = ctx.aptt_reference_min;
+                if (ctx.aptt_reference_max !== undefined) max = ctx.aptt_reference_max;
+            }
+
+            const result = {min, max};
+            if (!this._effectiveCache) this._effectiveCache = {};
+            this._effectiveCache[cacheKey] = result;
+            return result;
+        },
+
+        getEffectiveRangeDisplay(item) {
+            const {min, max} = this.getEffectiveReference(item);
+            const minStr = min !== null && !isNaN(min) ? min.toFixed(2) : '-';
+            const maxStr = max !== null && !isNaN(max) ? max.toFixed(2) : '-';
+            return `${minStr} – ${maxStr}`;
+        },
+
         getLabItemStatus(item) {
             if (!item) return 'Normal';
-            let val = parseFloat(item.result);
+            const val = parseFloat(item.result);
             if (isNaN(val)) return 'Normal';
-            let hasMin = item.reference_min !== null && item.reference_min !== undefined && item.reference_min !== '';
-            let hasMax = item.reference_max !== null && item.reference_max !== undefined && item.reference_max !== '';
-            if (hasMin && !isNaN(parseFloat(item.reference_min)) && val < parseFloat(item.reference_min)) return 'Düşük';
-            if (hasMax && !isNaN(parseFloat(item.reference_max)) && val > parseFloat(item.reference_max)) return 'Yüksek';
+            const {min, max} = this.getEffectiveReference(item);
+            const hasMin = min !== null && !isNaN(min);
+            const hasMax = max !== null && !isNaN(max);
+            if (hasMin && val < min) return 'Düşük';
+            if (hasMax && val > max) return 'Yüksek';
             return 'Normal';
         },
         getLabItemClass(item) {
@@ -2719,20 +2760,19 @@ export default function registerDashboard(Alpine) {
             return 'bg-emerald-500 ring-4 ring-emerald-100';
         },
         getRangeZoneStyle(item) {
-            if (!item.reference_min || !item.reference_max) return 'left: 0%; width: 100%;';
-            let min = parseFloat(item.reference_min);
-            let max = parseFloat(item.reference_max);
-            let span = max * 1.4;
-            let left = Math.min((min / span) * 100, 75);
-            let width = Math.min(((max - min) / span) * 100, 95 - left);
+            const {min, max} = this.getEffectiveReference(item);
+            if (min === null || max === null) return 'left: 0%; width: 100%;';
+            const span = max * 1.4;
+            const left = Math.min((min / span) * 100, 75);
+            const width = Math.min(((max - min) / span) * 100, 95 - left);
             return `left: ${left.toFixed(1)}%; width: ${width.toFixed(1)}%;`;
         },
         getPointerPositionStyle(item) {
-            let val = parseFloat(item.result);
-            if (!item.reference_max) return 'left: 50%;';
-            let max = parseFloat(item.reference_max);
-            let span = max * 1.4;
-            let pct = Math.min((val / span) * 100, 96);
+            const val = parseFloat(item.result);
+            const {max} = this.getEffectiveReference(item);
+            if (max === null || isNaN(max)) return 'left: 50%;';
+            const span = max * 1.4;
+            const pct = Math.min((val / span) * 100, 96);
             return `left: ${pct.toFixed(1)}%;`;
         },
         calculateIndividualWeightDiff(wObj) {
@@ -2757,7 +2797,7 @@ export default function registerDashboard(Alpine) {
             if (sys < targetMinSys || dia < targetMinDia) return 'Hipo';
             if (sys >= 180 || dia >= 120) return 'Kriz';
             if (sys >= 140 || dia >= 90) return 'HT';
-            if (sys >= targetMaxSys || dia >= targetMaxDia) return 'HT+';
+            if (sys >= targetMaxSys || dia >= targetMaxDia) return '~HT';
             if (sys >= 120 || dia >= 80) return 'Pre-HT';
             return 'Normal';
         },
@@ -2765,7 +2805,7 @@ export default function registerDashboard(Alpine) {
             const status = this.getBPStatusText(sys, dia);
             if (status === 'Kriz') return 'bg-rose-100 text-rose-800 border-rose-300';
             if (status === 'HT') return 'bg-amber-100 text-amber-800 border-amber-300';
-            if (status === 'HT+') return 'bg-orange-100 text-orange-800 border-orange-300';
+            if (status === '~HT') return 'bg-orange-100 text-orange-800 border-orange-300';
             if (status === 'Pre-HT') return 'bg-yellow-100 text-yellow-800 border-yellow-300';
             if (status === 'Hipo') return 'bg-blue-100 text-blue-800 border-blue-300';
             return 'bg-emerald-100 text-emerald-800 border-emerald-300';
@@ -2999,7 +3039,7 @@ export default function registerDashboard(Alpine) {
                 if (status === 'Pre-HT' || status === 'Pre-HT+') {
                     return 'bg-amber-100 border-amber-300 hover:bg-amber-200';
                 }
-                if (status === 'HT' || status === 'HT+' || status === 'Kriz') {
+                if (status === 'HT' || status === '~HT' || status === 'Kriz') {
                     return 'bg-rose-200 border-rose-400 hover:bg-rose-300 shadow-sm';
                 }
                 if (status === 'Hipo') {

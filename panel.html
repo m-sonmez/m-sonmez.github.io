@@ -1417,11 +1417,7 @@
                                                         <span x-text="parseFloat(item.result).toFixed(2)"></span>
                                                     </td>
                                                     <td class="p-2.5 text-left text-[10px] font-bold whitespace-nowrap text-slate-400" x-text="item.unit"></td>
-                                                    <td class="p-2.5 text-center whitespace-nowrap text-slate-600">
-                                                        <span x-text="item.reference_min !== null ? parseFloat(item.reference_min).toFixed(2) : '-'"></span>
-                                                        <span class="text-slate-400">–</span>
-                                                        <span x-text="item.reference_max !== null ? parseFloat(item.reference_max).toFixed(2) : '-'"></span>
-                                                    </td>
+                                                    <td class="p-2.5 text-center whitespace-nowrap text-slate-600" x-text="getEffectiveRangeDisplay(item)"></td>
                                                     <td class="p-2.5 text-center whitespace-nowrap">
                                                         <span :class="getLabItemClass(item)" class="rounded-md px-2 py-0.5 text-[9px] font-black" x-text="getLabItemStatus(item)"></span>
                                                     </td>
