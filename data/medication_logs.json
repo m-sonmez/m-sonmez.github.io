@@ -932,7 +932,7 @@
 {"at":"2026-08-03 21:25","model":"MedLog","user_id":1,"med":"Warfmadin","dose":5},
 {"at":"2026-08-03 21:45","model":"MedLog","user_id":1,"med":"Cipro","dose":750},
 {"at":"2026-08-04 07:47","model":"MedLog","user_id":1,"med":"Panto","dose":40},
-{"at":"2026-08-04 07:52","model":"MedLog","user_id":1,"med":"Coversyl","dose":null},
+{"at":"2026-08-04 07:52","model":"MedLog","user_id":1,"med":"Coversyl","dose":5},
 {"at":"2026-08-04 08:12","model":"MedLog","user_id":1,"med":"Augmentin","dose":1000},
 {"at":"2026-08-04 08:30","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
 {"at":"2026-08-04 08:40","model":"MedLog","user_id":1,"med":"EcopirinPro","dose":81},
