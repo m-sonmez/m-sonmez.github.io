@@ -395,5 +395,8 @@
   {"at":"2026-08-05 07:34","model":"Pressure","user_id":1,"sys":126,"dia":88},
   {"at":"2026-08-05 12:46","model":"Pressure","user_id":1,"sys":100,"dia":69},
   {"at":"2026-08-05 20:08","model":"Pressure","user_id":1,"sys":124,"dia":84},
-  {"at":"2026-08-06 07:20","model":"Pressure","user_id":1,"sys":126,"dia":86}
+  {"at":"2026-08-06 07:20","model":"Pressure","user_id":1,"sys":126,"dia":86},
+  {"at":"2026-08-06 09:00","model":"Pressure","user_id":1,"sys":118,"dia":81},
+  {"at":"2026-08-06 18:23","model":"Pressure","user_id":1,"sys":121,"dia":82},
+  {"at":"2026-08-06 21:10","model":"Pressure","user_id":1,"sys":110,"dia":76}
 ]
