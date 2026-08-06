@@ -108,16 +108,16 @@ window.updateAnimationSpeed = function () {
     }
 };
 
-/* SERVICE WORKER KAYIT */
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker
-            .register('/sw.js')
-            .then((reg) => console.log('SW registered:', reg))
-            .catch((err) => console.error('SW registration failed:', err));
-    });
-}
+// /* SERVICE WORKER KAYIT */
+//
+// if ('serviceWorker' in navigator) {
+//     window.addEventListener('load', () => {
+//         navigator.serviceWorker
+//             .register('/sw.js')
+//             .then((reg) => console.log('SW registered:', reg))
+//             .catch((err) => console.error('SW registration failed:', err));
+//     });
+// }
 
 /* ALPINE.JS DASHBOARD MODÜLÜ */
 
@@ -795,7 +795,7 @@ export default function registerDashboard(Alpine) {
         },
 
         async loadAllData(cacheBust = false) {
-            const suffix = cacheBust ? '?t=' + Date.now() : '';
+            const suffix = '?t=' + Date.now(); // always cache-bust
             const [u, h, cc, m, mc, ml, p, w, t, ti, r] = await Promise.all([
                 fetch('data/users.json' + suffix).then((r) => r.json()),
                 fetch('data/hospitals.json' + suffix).then((r) => r.json()),
@@ -811,6 +811,7 @@ export default function registerDashboard(Alpine) {
                 fetch('data/test_items.json' + suffix).then((r) => r.json()),
                 fetch('data/reports.json' + suffix).then((r) => r.json()),
             ]);
+
             this.user = Array.isArray(u) && u.length > 0 ? u[0] : {};
             this.hospitals = h;
             /* clinical_context.json is now merged into users.json, but keep for compatibility */
@@ -856,6 +857,35 @@ export default function registerDashboard(Alpine) {
             this.refreshing = false;
         },
 
+        // # refresh app with Service Worker
+        // refreshApp() {
+        //     if (this.refreshing) return;
+        //     this.refreshing = true;
+        //
+        //     const doRefresh = () => {
+        //         this.loadAllData(true)
+        //             .then(() => this.afterDataRefresh())
+        //             .catch((err) => {
+        //                 console.error('Refresh failed:', err);
+        //                 this.refreshing = false;
+        //             });
+        //     };
+        //
+        //     if (navigator.serviceWorker.controller) {
+        //         const messageChannel = new MessageChannel();
+        //         messageChannel.port1.onmessage = (event) => {
+        //             if (event.data.status === 'cleared') {
+        //                 doRefresh();
+        //             } else {
+        //                 doRefresh();
+        //             }
+        //         };
+        //         navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHE'}, [messageChannel.port2]);
+        //     } else {
+        //         doRefresh();
+        //     }
+        // },
+
         refreshApp() {
             if (this.refreshing) return;
             this.refreshing = true;
@@ -869,20 +899,9 @@ export default function registerDashboard(Alpine) {
                     });
             };
 
-            if (navigator.serviceWorker.controller) {
-                const messageChannel = new MessageChannel();
-                messageChannel.port1.onmessage = (event) => {
-                    if (event.data.status === 'cleared') {
-                        doRefresh();
-                    } else {
-                        doRefresh();
-                    }
-                };
-                navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHE'}, [messageChannel.port2]);
-            } else {
-                doRefresh();
-            }
+            doRefresh();
         },
+
         selectReport(protocolNo, skipScroll = false) {
             this.selectedReportId = protocolNo;
             this.selectedReportObj = this.reports.find((r) => (r.protocol_no || r.at) === protocolNo) || {};
