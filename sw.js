@@ -2,9 +2,9 @@
 
 /* Service Worker Template */
 /* This file is processed by bump-sw.js to generate a versioned sw.js. */
-/* The medilog_2026-08-06_21-25-21 placeholder is replaced with a timestamp. */
+/* The medilog_2026-08-07_12-23-30 placeholder is replaced with a timestamp. */
 
-const CACHE_NAME = 'medilog_2026-08-06_21-25-21';
+const CACHE_NAME = 'medilog_2026-08-07_12-23-30';
 
 /* Static assets that are part of the app shell. */
 const STATIC_ASSETS = ['/panel.html', '/rapor.html', '/dist/output.css', '/dist/output.js', '/app.js', '/dist/icons/manifest.json', '/dist/icons/browserconfig.xml', '/dist/icons/favicon.ico'];
