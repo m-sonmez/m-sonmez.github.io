@@ -81,5 +81,6 @@
   {"at":"2026-07-28 00:37","model":"Test","user_id":1,"hospital_id":1,"id":81,"description":"KVC kontrol laboratuvar paneli - Tam Kan Sayımı","title":"Hemogram Paneli"},
   {"at":"2026-07-31 13:34","model":"Test","user_id":1,"hospital_id":2,"id":82,"description":"INR ve Koagülasyon Takibi","title":"Koagülasyon Paneli"},
   {"at":"2026-08-03 14:16","model":"Test","user_id":1,"hospital_id":2,"id":83,"description":"INR ve Koagülasyon Takibi","title":"Koagülasyon Paneli"},
-  {"at":"2026-08-03 20:38","model":"Test","user_id":1,"hospital_id":2,"id":84,"description":"Tam Kan Sayımı","title":"Hemogram Paneli"}
+  {"at":"2026-08-03 20:38","model":"Test","user_id":1,"hospital_id":2,"id":84,"description":"Tam Kan Sayımı","title":"Hemogram Paneli"},
+  {"at":"2026-08-07 20:11","model":"Test","user_id":1,"hospital_id":2,"id":85,"description":"Kapsamlı laboratuvar değerlendirmesi (Tam Kan Sayımı, Biyokimya, Koagülasyon)","title":"Geniş Biyokimya ve Hemogram Paneli"}
 ]

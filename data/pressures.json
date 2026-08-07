@@ -400,5 +400,7 @@
   {"at":"2026-08-06 18:23","model":"Pressure","user_id":1,"sys":121,"dia":82},
   {"at":"2026-08-06 21:10","model":"Pressure","user_id":1,"sys":110,"dia":76},
   {"at":"2026-08-07 08:10","model":"Pressure","user_id":1,"sys":133,"dia":89},
-  {"at":"2026-08-07 09:30","model":"Pressure","user_id":1,"sys":120,"dia":82}
+  {"at":"2026-08-07 09:30","model":"Pressure","user_id":1,"sys":120,"dia":82},
+  {"at":"2026-08-07 11:51","model":"Pressure","user_id":1,"sys":125,"dia":84},
+  {"at":"2026-08-07 21:40","model":"Pressure","user_id":1,"sys":110,"dia":79}
 ]
