@@ -10,17 +10,8 @@ if (typeof window === 'undefined') {
     };
 }
 
-/* Global charts container – must be defined before any chart operations. */
 window.clinicalCharts = window.clinicalCharts || {};
 
-/* GLOBAL UTILITY FUNCTIONS */
-
-/* Debounce fonksiyonu: belirli bir bekleme süresi boyunca tekrarlanan */
-/* çağrıları engeller ve yalnızca son çağrıdan sonra fonksiyonun çalışmasını */
-/* sağlar. */
-/* @param {Function} func - Çalıştırılacak fonksiyon. */
-/* @param {number} wait - Bekleme süresi (milisaniye). */
-/* @returns {Function} Debounce edilmiş fonksiyon. */
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -29,10 +20,6 @@ function debounce(func, wait) {
     };
 }
 
-/* ANİMASYON KONTROL FONKSİYONLARI (GLOBAL) */
-
-/* Animasyonu sonlandırır (interval temizlenir) ve uygulama durumunu günceller. */
-/* @param {boolean} [isPaused=false] - true ise durum 'paused', değilse 'idle' */
 window.endAnimation = function (isPaused = false) {
     if (window.timelineInterval) {
         clearInterval(window.timelineInterval);
@@ -45,8 +32,6 @@ window.endAnimation = function (isPaused = false) {
     }
 };
 
-/* Animasyonun bir sonraki adımını çalıştırır: bitiş tarihini bir gün ilerletir */
-/* ve filtreleri günceller. Hedef tarihe ulaşıldığında animasyonu durdurur. */
 window.runTimelineStep = function () {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -62,11 +47,6 @@ window.runTimelineStep = function () {
     app.updateFilters();
 };
 
-/* Animasyonu başlatır. Başlangıç ve bitiş tarihleri belirtilebilir. */
-/* Kapsam (tümü veya dönem) ve hız ayarlarına göre çalışır. */
-/* @param {string|null} customStart - Başlangıç tarihi (YYYY-MM-DD). */
-/* @param {string|null} customEnd - Bitiş tarihi (YYYY-MM-DD). */
-/* @param {boolean} isResume - true ise mevcut durumdan devam eder. */
 window.startAnimation = function (customStart = null, customEnd = null, isResume = false) {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -96,8 +76,6 @@ window.startAnimation = function (customStart = null, customEnd = null, isResume
     window.timelineInterval = setInterval(window.runTimelineStep, intervals[app.animSpeedIndex]);
 };
 
-/* Animasyon hızını günceller (kaydırıcı değiştiğinde çağrılır). */
-/* Sadece 'playing' durumunda interval yeniden oluşturulur. */
 window.updateAnimationSpeed = function () {
     const appNode = document.querySelector('[x-data="dashboardApp()"]');
     const app = Alpine.$data(appNode);
@@ -108,25 +86,26 @@ window.updateAnimationSpeed = function () {
     }
 };
 
-// /* SERVICE WORKER KAYIT */
-//
-// if ('serviceWorker' in navigator) {
-//     window.addEventListener('load', () => {
-//         navigator.serviceWorker
-//             .register('/sw.js')
-//             .then((reg) => console.log('SW registered:', reg))
-//             .catch((err) => console.error('SW registration failed:', err));
-//     });
-// }
+export function getCanonicalCode(code) {
+    if (!code) return '';
+    const upper = code.toUpperCase();
+    const map = {
+        'EGFR': 'GFR_CKD_EPI',
+        'GFR': 'GFR_CKD_EPI',
+        'NEUT#': 'NEU#',
+        'NEUT%': 'NEU%',
+        'LYMPH#': 'LYM#',
+        'LYMPH%': 'LYM%',
+        'SODYUM': 'NA',
+        'POTASYUM': 'K',
+        'KALSIYUM': 'CA',
+        'KALSİYUM': 'CA'
+    };
+    return map[upper] || upper;
+}
 
-/* ALPINE.JS DASHBOARD MODÜLÜ */
-
-/* Alpine.js için dashboardApp bileşenini kaydeder. */
-/* @param {Object} Alpine - Alpine.js örneği. */
 export default function registerDashboard(Alpine) {
     Alpine.data('dashboardApp', () => ({
-        /* 1. TEMEL DURUM (STATE) */
-
         flowsheetMode: 'grid',
         corsError: false,
         datePreset: 'all',
@@ -225,11 +204,7 @@ export default function registerDashboard(Alpine) {
             return groups;
         },
 
-        /* NEW: Patient clinical context (loaded from users.json) */
-
         clinicalContext: {},
-
-        /* 2. HESAPLANMIŞ ÖZELLİKLER (COMPUTED GETTERS) */
 
         get animSpeedLabel() {
             return ['x1/2', 'x1', 'x2', 'x4', 'x8'][this.animSpeedIndex];
@@ -270,8 +245,6 @@ export default function registerDashboard(Alpine) {
         get totalReportPages() {
             return Math.ceil(this.sortedReports.length / this.itemsPerPage) || 1;
         },
-
-        /* 3. METOTLAR (METHODS) */
 
         goToTestPage(page) {
             if (page >= 1 && page <= this.totalTestPages) {
@@ -627,8 +600,6 @@ export default function registerDashboard(Alpine) {
         selectedReportId: null,
         selectedReportObj: {},
 
-        /* 4. YAŞAM DÖNGÜSÜ VE VERİ YÜKLEME */
-
         async initDashboard() {
             try {
                 await this.loadAllData(false);
@@ -795,7 +766,7 @@ export default function registerDashboard(Alpine) {
         },
 
         async loadAllData(cacheBust = false) {
-            const suffix = '?t=' + Date.now(); // always cache-bust
+            const suffix = '?t=' + Date.now();
             const [u, h, cc, m, mc, ml, p, w, t, ti, r] = await Promise.all([
                 fetch('data/users.json' + suffix).then((r) => r.json()),
                 fetch('data/hospitals.json' + suffix).then((r) => r.json()),
@@ -814,7 +785,6 @@ export default function registerDashboard(Alpine) {
 
             this.user = Array.isArray(u) && u.length > 0 ? u[0] : {};
             this.hospitals = h;
-            /* clinical_context.json is now merged into users.json, but keep for compatibility */
             this.clinicalContext = cc && cc.length > 0 ? cc[0] : this.user.clinical_context || {};
             this.medications = m;
             this.medicationChanges = mc;
@@ -856,35 +826,6 @@ export default function registerDashboard(Alpine) {
 
             this.refreshing = false;
         },
-
-        // # refresh app with Service Worker
-        // refreshApp() {
-        //     if (this.refreshing) return;
-        //     this.refreshing = true;
-        //
-        //     const doRefresh = () => {
-        //         this.loadAllData(true)
-        //             .then(() => this.afterDataRefresh())
-        //             .catch((err) => {
-        //                 console.error('Refresh failed:', err);
-        //                 this.refreshing = false;
-        //             });
-        //     };
-        //
-        //     if (navigator.serviceWorker.controller) {
-        //         const messageChannel = new MessageChannel();
-        //         messageChannel.port1.onmessage = (event) => {
-        //             if (event.data.status === 'cleared') {
-        //                 doRefresh();
-        //             } else {
-        //                 doRefresh();
-        //             }
-        //         };
-        //         navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHE'}, [messageChannel.port2]);
-        //     } else {
-        //         doRefresh();
-        //     }
-        // },
 
         refreshApp() {
             if (this.refreshing) return;
@@ -1049,7 +990,7 @@ export default function registerDashboard(Alpine) {
         get latestInr() {
             let tests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
             for (let t of tests) {
-                let item = this.testItems.find((ti) => ti.test_id === t.id && ti.code === 'INR');
+                let item = this.testItems.find((ti) => ti.test_id === t.id && getCanonicalCode(ti.code) === 'INR');
                 if (item) return {val: parseFloat(item.result).toFixed(2), date: t.at.substring(0, 10)};
             }
             return {val: '-', date: null};
@@ -1058,7 +999,7 @@ export default function registerDashboard(Alpine) {
             let tests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
             let found = [];
             for (let t of tests) {
-                let item = this.testItems.find((ti) => ti.test_id === t.id && ti.code === 'INR');
+                let item = this.testItems.find((ti) => ti.test_id === t.id && getCanonicalCode(ti.code) === 'INR');
                 if (item) found.push(parseFloat(item.result));
                 if (found.length === 2) break;
             }
@@ -1069,7 +1010,7 @@ export default function registerDashboard(Alpine) {
         get latestHgb() {
             let tests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
             for (let t of tests) {
-                let item = this.testItems.find((ti) => ti.test_id === t.id && ti.code === 'HGB');
+                let item = this.testItems.find((ti) => ti.test_id === t.id && getCanonicalCode(ti.code) === 'HGB');
                 if (item) return {val: parseFloat(item.result).toFixed(1), date: t.at.substring(0, 10)};
             }
             return {val: '-', date: null};
@@ -1078,7 +1019,7 @@ export default function registerDashboard(Alpine) {
             let tests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
             let found = [];
             for (let t of tests) {
-                let item = this.testItems.find((ti) => ti.test_id === t.id && ti.code === 'HGB');
+                let item = this.testItems.find((ti) => ti.test_id === t.id && getCanonicalCode(ti.code) === 'HGB');
                 if (item) found.push(parseFloat(item.result));
                 if (found.length === 2) break;
             }
@@ -1138,7 +1079,7 @@ export default function registerDashboard(Alpine) {
                     const status = this.getLabItemStatus(item);
                     if (status !== 'Normal') {
                         outList.push({
-                            code: item.code,
+                            code: getCanonicalCode(item.code),
                             result: item.result,
                             date: latestTest.at.substring(5, 10),
                             rawDate: latestTest.at,
@@ -1450,9 +1391,10 @@ export default function registerDashboard(Alpine) {
             return `${parts[2]}.${parts[1]}.${parts[0]}`;
         },
         getLastKnownLab(code) {
+            const targetCode = getCanonicalCode(code);
             const sortedTests = [...this.tests].filter((t) => t.at.substring(0, 10) <= this.endDate).sort((a, b) => new Date(b.at) - new Date(a.at));
             for (let test of sortedTests) {
-                let item = this.testItems.find((ti) => ti.test_id === test.id && ti.code === code);
+                let item = this.testItems.find((ti) => ti.test_id === test.id && getCanonicalCode(ti.code) === targetCode);
                 if (item) {
                     return {val: item.result, date: this.formatTurkishDate(test.at.substring(0, 10))};
                 }
@@ -1460,9 +1402,10 @@ export default function registerDashboard(Alpine) {
             return null;
         },
         getTrendDataForCode(code) {
+            const targetCode = getCanonicalCode(code);
             let allPoints = [];
             this.tests.forEach((t) => {
-                let item = this.testItems.find((ti) => ti.test_id === t.id && ti.code === code);
+                let item = this.testItems.find((ti) => ti.test_id === t.id && getCanonicalCode(ti.code) === targetCode);
                 if (item) {
                     allPoints.push({val: parseFloat(item.result), date: t.at.substring(0, 10), rawDate: t.at});
                 }
@@ -1522,10 +1465,11 @@ export default function registerDashboard(Alpine) {
             let validTests = this.tests.filter((t) => t.at.substring(0, 10) <= this.endDate);
             if (validTests.length > 0) {
                 const getLatestAndPrevValue = (code) => {
+                    const targetCode = getCanonicalCode(code);
                     let items = [];
                     validTests.forEach((t) => {
                         this.testItems
-                            .filter((item) => item.test_id === t.id && item.code === code)
+                            .filter((item) => item.test_id === t.id && getCanonicalCode(item.code) === targetCode)
                             .forEach((item) => {
                                 items.push({val: parseFloat(item.result), date: t.at});
                             });
@@ -1605,11 +1549,8 @@ export default function registerDashboard(Alpine) {
             return `KLİNİK DEĞERLENDİRME RAPORU (${startStr} - ${endStr})\n\n` + `1. TANSİYON TRENDİ:\n${bpText}\n\n` + `2. KİLO VE SIVI DURUMU:\n${weightText}\n\n` + `3. LABORATUVAR ANALİZLERİ:\n${labText}\n\n` + `4. İLAÇ TEDAVİSİ:\n${medText}`;
         },
 
-        /* Helper to get patient-specific narrative placeholders */
-
         get clinicalNarrative() {
             const ctx = this.clinicalContext;
-            /* Remove hardcoded fallback strings; return empty values if not present */
             return {
                 surgeryType: ctx.surgery_type || '',
                 valveType: ctx.valve_type || '',
@@ -1647,7 +1588,7 @@ export default function registerDashboard(Alpine) {
             const formatDateNatural = (dateStr) => {
                 if (!dateStr) return '';
                 let d = new Date(dateStr.substring(0, 10));
-                const m = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+                const m = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylü', 'Ekim', 'Kasım', 'Aralık'];
                 return `${d.getDate()} ${m[d.getMonth()]}`;
             };
             const getRecordsInRange = (arr, start, end) => {
@@ -1791,14 +1732,15 @@ export default function registerDashboard(Alpine) {
                 labHtml += `<p class="text-[11px] sm:text-xs text-slate-700 leading-relaxed">En güncel laboratuvar kan tahliliniz <b>${this.formatFullDate(latestTest.at.substring(0, 10))}</b> tarihinde yapılmış. Bu tahlil sonuçlarınızı geçmişteki tıbbi kayıtlarınızla birleştirip klinik olarak değerlendirdiğimde şu tabloyu görüyorum:</p>`;
                 let paragraphs = [];
                 const getLabData = (code) => {
-                    let curr = currTestItems.find((ti) => ti.code.toUpperCase() === code);
+                    const targetCode = getCanonicalCode(code);
+                    let curr = currTestItems.find((ti) => getCanonicalCode(ti.code) === targetCode);
                     if (!curr) return null;
                     let val = parseFloat(curr.result);
                     let status = this.getLabItemStatus(curr);
                     let prevItem = null;
                     let prevDate = null;
                     for (let i = 1; i < sortedTests.length; i++) {
-                        let pItem = this.testItems.find((ti) => ti.test_id === sortedTests[i].id && ti.code.toUpperCase() === code);
+                        let pItem = this.testItems.find((ti) => ti.test_id === sortedTests[i].id && getCanonicalCode(ti.code) === targetCode);
                         if (pItem) {
                             prevItem = pItem;
                             prevDate = sortedTests[i].at.substring(0, 10);
@@ -1862,9 +1804,8 @@ export default function registerDashboard(Alpine) {
                     let astVal = ast ? ast.val : null;
                     let altPrev = alt ? alt.prev : null;
                     let astPrev = ast ? ast.prev : null;
-                    let altUpper = 40; // common upper limit
+                    let altUpper = 40;
                     let astUpper = 40;
-                    // Check absolute values
                     let altAbnormal = altVal !== null && altVal > altUpper;
                     let astAbnormal = astVal !== null && astVal > astUpper;
                     if (altAbnormal || astAbnormal) {
@@ -1872,7 +1813,6 @@ export default function registerDashboard(Alpine) {
                     } else {
                         pText += `Enzim seviyeleriniz normal sınırlarda. `;
                     }
-                    // Trend analysis
                     if ((altPrev !== null && astPrev !== null) || altPrev !== null || astPrev !== null) {
                         let altDiff = altVal !== null && altPrev !== null ? altVal - altPrev : 0;
                         let astDiff = astVal !== null && astPrev !== null ? astVal - astPrev : 0;
@@ -1924,7 +1864,7 @@ export default function registerDashboard(Alpine) {
                 }
                 let otherAbnormals = [];
                 currTestItems.forEach((currItem) => {
-                    let code = currItem.code.toUpperCase();
+                    let code = getCanonicalCode(currItem.code);
                     if (!['INR', 'PT', 'APTT', 'PLT', 'ALT', 'AST', 'CREA', 'BUN', 'WBC', 'CRP', 'HGB', 'HCT'].includes(code)) {
                         if (this.getLabItemStatus(currItem) !== 'Normal') {
                             otherAbnormals.push(`${code} (${parseFloat(currItem.result).toFixed(2)})`);
@@ -2040,7 +1980,7 @@ export default function registerDashboard(Alpine) {
             let emergencyLogs = this.medicationLogs.filter((l) => emergencyMeds.includes(l.med.toLowerCase()) && l.at.substring(0, 10) >= startDate && l.at.substring(0, 10) <= endDate).sort((a, b) => a.at.localeCompare(b.at));
             if (emergencyLogs.length > 0) {
                 let emergencyInsights = [];
-                emergencyLogs.forEach((logItem, index) => {
+                emergencyLogs.forEach((logItem) => {
                     let changeDate = logItem.at.substring(0, 10);
                     let intakeTime = logItem.at.substring(11, 16);
                     let intakeMs = new Date(logItem.at.replace(' ', 'T')).getTime();
@@ -2219,8 +2159,6 @@ export default function registerDashboard(Alpine) {
             return periods;
         },
 
-        /* 5. GRAFİK İŞLEMLERİ */
-
         destroyAllCharts() {
             if (window.clinicalCharts) {
                 Object.keys(window.clinicalCharts).forEach((key) => {
@@ -2240,21 +2178,6 @@ export default function registerDashboard(Alpine) {
         },
         _renderMainChartsInternal() {
             const self = this;
-            const formatDateToDDMM = (dateStr) => {
-                if (!dateStr) return '';
-                const parts = dateStr.split(' ');
-                const datePart = parts[0];
-                const timePart = parts[1];
-                const dateArr = datePart.split('-');
-                if (dateArr.length === 3) {
-                    let formatted = dateArr[2] + '.' + dateArr[1];
-                    if (timePart) {
-                        formatted += ' ' + timePart.slice(0, 5);
-                    }
-                    return formatted;
-                }
-                return dateStr;
-            };
             if (window.clinicalCharts && window.clinicalCharts['bp']) {
                 try {
                     window.clinicalCharts['bp'].destroy();
@@ -2522,15 +2445,14 @@ export default function registerDashboard(Alpine) {
         },
         get importantLabCodes() {
             if (this.clinicalContext.important_lab_codes && Array.isArray(this.clinicalContext.important_lab_codes)) {
-                const res = this.clinicalContext.important_lab_codes;
-                return res;
+                return this.clinicalContext.important_lab_codes.map((c) => getCanonicalCode(c));
             }
             const counts = {};
             this.tests.forEach((t) => {
                 if (t.is_special) return;
                 const items = this.testItems.filter((item) => item.test_id === t.id);
                 items.forEach((item) => {
-                    const code = item.code.toUpperCase();
+                    const code = getCanonicalCode(item.code);
                     counts[code] = (counts[code] || 0) + 1;
                 });
             });
@@ -2538,8 +2460,7 @@ export default function registerDashboard(Alpine) {
                 .sort((a, b) => counts[b] - counts[a])
                 .filter((code) => counts[code] >= 5);
             if (sortedCodes.length === 0) {
-                const fallback = Object.keys(counts);
-                return fallback;
+                return Object.keys(counts);
             }
             return sortedCodes;
         },
@@ -2554,10 +2475,10 @@ export default function registerDashboard(Alpine) {
         },
         get labTrendTargets() {
             const codes = new Set();
-            this.testItems.forEach((item) => codes.add(item.code.toUpperCase()));
+            this.testItems.forEach((item) => codes.add(getCanonicalCode(item.code)));
             const result = [];
             codes.forEach((code) => {
-                const sample = this.testItems.find((item) => item.code.toUpperCase() === code);
+                const sample = this.testItems.find((item) => getCanonicalCode(item.code) === code);
                 if (sample) {
                     result.push({
                         id: 'chart_' + code.toLowerCase().replace(/[^a-z0-9]/g, (c) => '_' + c.charCodeAt(0).toString(16)),
@@ -2594,8 +2515,7 @@ export default function registerDashboard(Alpine) {
                 this.tests.forEach((s) => {
                     let match = this.testItems.find((item) => {
                         if (item.test_id !== s.id) return false;
-                        let itemCode = item.code.toUpperCase();
-                        return itemCode === tgt.code || (tgt.code === 'NEU' && itemCode === 'NEU#') || (tgt.code === 'LYM' && itemCode === 'LYM#') || (tgt.code === 'NA' && itemCode === 'SODYUM') || (tgt.code === 'K' && itemCode === 'POTASYUM') || (tgt.code === 'CA' && (itemCode === 'KALSİYUM' || itemCode === 'KALSIYUM'));
+                        return getCanonicalCode(item.code) === tgt.code;
                     });
                     if (match) {
                         const effective = this.getEffectiveReference(match);
@@ -2715,15 +2635,13 @@ export default function registerDashboard(Alpine) {
             });
         },
 
-        /* 6. YARDIMCI FONKSİYONLAR (LAB, BP, AĞIRLIK, VB.) */
-
         getEffectiveReference(item) {
             if (!item) return {min: null, max: null};
             const cacheKey = item.id + '_' + (item.reference_min || '') + (item.reference_max || '');
             if (this._effectiveCache && this._effectiveCache[cacheKey]) {
                 return this._effectiveCache[cacheKey];
             }
-            const code = item.code.toUpperCase();
+            const code = getCanonicalCode(item.code);
             const ctx = this.clinicalContext || {};
             let min = item.reference_min !== null && item.reference_min !== '' ? parseFloat(item.reference_min) : null;
             let max = item.reference_max !== null && item.reference_max !== '' ? parseFloat(item.reference_max) : null;
@@ -3189,8 +3107,6 @@ export default function registerDashboard(Alpine) {
             return result;
         },
 
-        /* 7. VERİ İNDİRME */
-
         async downloadRawMedicalData(mode = 'all') {
             try {
                 if (!this.user || !this.user.name) {
@@ -3337,8 +3253,6 @@ export default function registerDashboard(Alpine) {
         },
     }));
 }
-
-/* EXPOSE UTILITY FUNCTIONS FOR TESTING (Node environment) */
 
 export {debounce};
 export function getBPStatusText(sys, dia) {
