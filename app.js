@@ -90,16 +90,16 @@ export function getCanonicalCode(code) {
     if (!code) return '';
     const upper = code.toUpperCase();
     const map = {
-        'EGFR': 'GFR_CKD_EPI',
-        'GFR': 'GFR_CKD_EPI',
+        EGFR: 'GFR_CKD_EPI',
+        GFR: 'GFR_CKD_EPI',
         'NEUT#': 'NEU#',
         'NEUT%': 'NEU%',
         'LYMPH#': 'LYM#',
         'LYMPH%': 'LYM%',
-        'SODYUM': 'NA',
-        'POTASYUM': 'K',
-        'KALSIYUM': 'CA',
-        'KALSİYUM': 'CA'
+        SODYUM: 'NA',
+        POTASYUM: 'K',
+        KALSIYUM: 'CA',
+        KALSİYUM: 'CA',
     };
     return map[upper] || upper;
 }
