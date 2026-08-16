@@ -2381,7 +2381,7 @@ export default function registerDashboard(Alpine) {
                 let temp = new Date(start);
                 temp.setDate(temp.getDate() + i);
                 let iso = temp.toISOString().split('T')[0];
-                daysKeys.push(new Date(iso + 'T00:00:00'));
+                daysKeys.push(new Date(iso + 'T12:00:00'));
             }
             let datasets = [];
             medsToShow.forEach((medName) => {
