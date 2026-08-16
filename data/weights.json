@@ -150,5 +150,6 @@
   {"at":"2026-08-10 06:13","model":"Weight","user_id":1,"weight":78.8},
   {"at":"2026-08-12 06:42","model":"Weight","user_id":1,"weight":79.3},
   {"at":"2026-08-13 06:49","model":"Weight","user_id":1,"weight":79.2},
-  {"at":"2026-08-14 06:30","model":"Weight","user_id":1,"weight":78.5}
+  {"at":"2026-08-14 06:30","model":"Weight","user_id":1,"weight":78.5},
+  {"at":"2026-08-16 06:08","model":"Weight","user_id":1,"weight":79.3}
 ]
