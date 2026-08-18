@@ -81,17 +81,17 @@ Bu proje, bir hastanın (örnek olarak Alaattin Sönmez) ameliyat sonrası klini
 - **Ekran çok küçük uyarısı** (`max-[384px]:flex`) – 384px altında kullanıcıya telefonu yan çevirmesini söyler.
 - **CORS Hatası Uyarısı** – `corsError` true olduğunda gösterilir.
 - **Sidebar**:
-    - Logo, tarih filtreleri (preset select, önceki/sonraki dönem butonları, başlangıç/bitiş date input)
-    - Navigasyon menüsü (bölüm linkleri ve toggle switch’ler)
-    - Animasyon kontrolleri (kapsam, hız, oynat/duraklat/durdur)
-    - Veri indirme butonları
-    - Versiyon bilgisi
-    - Daraltılmış halde ikonlar (animasyon, indirme)
+  - Logo, tarih filtreleri (preset select, önceki/sonraki dönem butonları, başlangıç/bitiş date input)
+  - Navigasyon menüsü (bölüm linkleri ve toggle switch’ler)
+  - Animasyon kontrolleri (kapsam, hız, oynat/duraklat/durdur)
+  - Veri indirme butonları
+  - Versiyon bilgisi
+  - Daraltılmış halde ikonlar (animasyon, indirme)
 - **Ana İçerik**:
-    - Mobil menü açma butonu (fixed)
-    - 9 bölüm (`#summary`, `#charts`, `#prescriptions`, `#flowsheet`, `#calendar`, `#lab-trends`, `#lab-findings`, `#reports`, `#clinical-report`)
-    - Her bölüm `x-show="sections.<key>"` ile kontrol edilir.
-    - Her bölümde grafikler, tablolar, listeler, kartlar bulunur.
+  - Mobil menü açma butonu (fixed)
+  - 9 bölüm (`#summary`, `#charts`, `#prescriptions`, `#flowsheet`, `#calendar`, `#lab-trends`, `#lab-findings`, `#reports`, `#clinical-report`)
+  - Her bölüm `x-show="sections.<key>"` ile kontrol edilir.
+  - Her bölümde grafikler, tablolar, listeler, kartlar bulunur.
 - **Yukarı çık butonu** – `window.scrollY > 300` olduğunda görünür, 3 saniye sonra kaybolur.
 - **Tüm UI** Alpine reactive verilere bağlıdır.
 
@@ -338,9 +338,9 @@ Bu dosyalar şu anda boş JSON dizisi (`[]`) içermektedir. Projede **yapısal �
 - **Navigasyon**: Her bölüm için link (scroll yapar) ve toggle switch (gizle/göster). Ayrıca "Tümünü Göster/Gizle" butonu.
 - **Yenile Butonu**: Verileri yeniden yükler (service worker cache temizleme ile).
 - **Animasyon Kontrolleri**:
-    - Kapsam (Tümü / Dönem)
-    - Hız kaydırıcı (x1/2, x1, x2, x4, x8)
-    - Oynat/Duraklat/Durdur butonları
+  - Kapsam (Tümü / Dönem)
+  - Hız kaydırıcı (x1/2, x1, x2, x4, x8)
+  - Oynat/Duraklat/Durdur butonları
 - **Veri İndirme**: "Tümünü İndir" ve "Dönemi İndir" butonları.
 - **Versiyon**: v1.1
 - Daraltılmış modda sadece ikonlar gösterilir.
@@ -430,11 +430,11 @@ Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicatio
 **Algoritma Özeti:**
 
 1. `clinical_context.json` içindeki `clinical_timeline` taranarak `"Yatış"` ve `"Taburcu"` olayları dinamik olarak tespit edilir. Her bir yatış aralığı (`{start, end}`) kaydedilir.
-    - `medicationChanges` geçmişinden o gün geçerli doz ve sıklık (`timespan`) belirlenir.
-    - Günlük ilaçlarda (`timespan <= 24`): Beklenen günlük doz ile `medicationLogs` kayıtları karşılaştırılır.
-    - Yatışın son günü (taburcu günü) özel olarak işlenir: evde alınması gereken doz ile hastane dozu ayrıştırılır.
+   - `medicationChanges` geçmişinden o gün geçerli doz ve sıklık (`timespan`) belirlenir.
+   - Günlük ilaçlarda (`timespan <= 24`): Beklenen günlük doz ile `medicationLogs` kayıtları karşılaştırılır.
+   - Yatışın son günü (taburcu günü) özel olarak işlenir: evde alınması gereken doz ile hastane dozu ayrıştırılır.
 
-    $$\text{Uyum}_N(\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum}(\text{hedefGün} - k \text{ gün})$$
+   $$\text{Uyum}_N(\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum}(\text{hedefGün} - k \text{ gün})$$
 
 **Not:** Bu algoritma, 30-31 Mart 2026 ve 23-28 Temmuz 2026 yatış dönemlerini doğru şekilde kapsar. `medication_changes.json` içindeki `Paused` ve `Resumed` kayıtları bu dönemlerle uyumlu hale getirilmiş ve tüm kayıtlara `reason` alanı eklenmiştir.
 
@@ -473,12 +473,12 @@ Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicatio
 
 - `test` ve `assert` kullanılarak unit testler yazılmıştır.
 - Test edilen fonksiyonlar:
-    - `getBPStatusText` – tansiyon kategorisi
-    - `getBPBadgeClass` – badge CSS sınıfı
-    - `getLabItemStatus` – laboratuvar parametre durumu (Normal/Düşük/Yüksek)
-    - `formatTurkishDate` – tarih formatlama
-    - `formatFullDate` – uzun tarih formatı
-    - `debounce` – debounce davranışı (`this` context, argümanlar, gecikme)
+  - `getBPStatusText` – tansiyon kategorisi
+  - `getBPBadgeClass` – badge CSS sınıfı
+  - `getLabItemStatus` – laboratuvar parametre durumu (Normal/Düşük/Yüksek)
+  - `formatTurkishDate` – tarih formatlama
+  - `formatFullDate` – uzun tarih formatı
+  - `debounce` – debounce davranışı (`this` context, argümanlar, gecikme)
 
 Testler `npm test` ile çalıştırılabilir (package.json’da `test` betiği tanımlıdır).
 
@@ -502,7 +502,7 @@ Testler `npm test` ile çalıştırılabilir (package.json’da `test` betiği t
 2. **Haftalık İlaç (Warfmadin) Doz Hesaplama**  
    `timespan = 168` olan ilaçlar (örn. Warfmadin) için 7 günlük kayan pencere içinde alınan toplam mg miktarı, reçete edilen haftalık toplam mg ile karşılaştırılır. Bu, haftalık dozajın doğru şekilde değerlendirilmesini sağlar.
 
-    $$\text{Uyum}_N(\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum}(\text{hedefGün} - k \text{ gün})$$
+   $$\text{Uyum}_N(\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum}(\text{hedefGün} - k \text{ gün})$$
 
 3. **Zero Hard-Coding**  
    `app.js` ve `panel.html` içerisindeki tüm hasta/tarih bağımlılıkları kaldırılmış, tamamen `data/*.json` kaynaklı dinamik mimariye geçilmiştir. Herhangi bir hasta verisi yüklendiğinde dashboard otomatik olarak doğru sonuçları üretmektedir.

@@ -21,23 +21,23 @@ const outputPath = path.join(__dirname, 'sw.js');
 /* YYYY-MM-DD_HH-MM-SS */
 /* @returns {string} The formatted timestamp. */
 function getTimestamp() {
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 }
 
 try {
-    /* Read the template file. */
-    let template = fs.readFileSync(templatePath, 'utf8');
+  /* Read the template file. */
+  let template = fs.readFileSync(templatePath, 'utf8');
 
-    /* Generate the version string and replace the placeholder. */
-    const version = `medilog_${getTimestamp()}`;
-    const output = template.replace(/\{\{CACHE_VERSION\}\}/g, version);
+  /* Generate the version string and replace the placeholder. */
+  const version = `medilog_${getTimestamp()}`;
+  const output = template.replace(/\{\{CACHE_VERSION\}\}/g, version);
 
-    /* Write the output file. */
-    fs.writeFileSync(outputPath, output, 'utf8');
-    console.log(`✅ Generated sw.js with CACHE_NAME = '${version}'`);
+  /* Write the output file. */
+  fs.writeFileSync(outputPath, output, 'utf8');
+  console.log(`✅ Generated sw.js with CACHE_NAME = '${version}'`);
 } catch (err) {
-    console.error('❌ Error generating sw.js:', err.message);
-    process.exit(1);
+  console.error('❌ Error generating sw.js:', err.message);
+  process.exit(1);
 }
