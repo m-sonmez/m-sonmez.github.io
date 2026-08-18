@@ -1837,5 +1837,14 @@
   {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"sn","name":"aPTT","code":"APTT","result":"48.4000","reference_min":"23.9000","reference_max":"33.2000","description":"Koagülasyon"},
   {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"-","name":"INR","code":"INR","result":"2.5900","reference_min":"0.8000","reference_max":"1.2000","description":"Koagülasyon"},
   {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"sn","name":"Protrombin Zamanı (PT)","code":"PT","result":"23.6000","reference_min":"9.6000","reference_max":"12.0000","description":"Koagülasyon"},
-  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"%","name":"Protrombin Aktivitesi (%)","code":"PT%","result":"31.8000","reference_min":"74.4000","reference_max":"130.0000","description":"Koagülasyon"}
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"%","name":"Protrombin Aktivitesi (%)","code":"PT%","result":"31.8000","reference_min":"74.4000","reference_max":"130.0000","description":"Koagülasyon"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"U/L","name":"Kreatin Kinaz-MB (Aktivite)","code":"CKMB","result":"13.0000","reference_min":"0.0000","reference_max":"25.0000","description":"Biyokimya"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"mg/L","name":"C-Reaktif Protein (CRP)","code":"CRP","result":"9.3000","reference_min":"0.0000","reference_max":"5.0000","description":"Biyokimya"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"mg/dL","name":"Direkt Bilirubin","code":"DBIL","result":"0.2000","reference_min":"0.0000","reference_max":"0.3000","description":"Biyokimya"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"mg/dL","name":"Glukoz","code":"GLU","result":"94.0000","reference_min":"82.0000","reference_max":"115.0000","description":"Biyokimya"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"mg/dL","name":"Üre Azotu (BUN)","code":"BUN","result":"14.0000","reference_min":"7.0000","reference_max":"20.0000","description":"Biyokimya"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"mmol/L","name":"Klor","code":"CL","result":"98.0000","reference_min":"95.0000","reference_max":"110.0000","description":"Biyokimya"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"mg/dL","name":"Kreatinin","code":"CREA","result":"0.9700","reference_min":"0.7000","reference_max":"1.2000","description":"Biyokimya"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"mL/dk/1.73 m²","name":"t GFH (CKD-EPI formülü ile)","code":"GFR_CKD_EPI","result":"82.8200","reference_min":null,"reference_max":null,"description":"Biyokimya"},
+  {"at":"2026-08-18 10:31","model":"TestItem","test_id":87,"unit":"mg/dL","name":"Total Bilirubin","code":"TBIL","result":"0.6700","reference_min":"0.0000","reference_max":"1.0000","description":"Biyokimya"}
 ]
