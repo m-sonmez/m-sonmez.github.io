@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gelişmiş Günlük Net Faiz & Getiri Hesaplayıcı</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-feature-settings: "tnum";
+        }
+        input:focus {
+            outline: none;
+        }
+        .preset-chip {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .preset-chip:hover {
+            transform: translateY(-1px);
+        }
+        .preset-chip:active {
+            transform: scale(0.95);
+        }
+        /* Gizli oklar - number input */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-slate-100/80 text-slate-800 min-h-screen flex items-center justify-center p-3 sm:p-6 antialiased selection:bg-indigo-500 selection:text-white">
+
+<main class="w-full max-w-4xl my-auto py-4">
+
+    <!-- ÜST PANEL: Başlık, Stopaj Bilgisi & Formül -->
+    <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                %17,5 Stopaj Kesintili Net Getiri
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+                Faiz & Getiri Hesaplayıcı
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Hassas gün yuvarlamalı, çok yönlü finansal hesaplama aracı.</p>
+        </div>
+
+        <!-- Formül Rozeti -->
+        <div class="bg-white border border-slate-200 px-3.5 py-2 rounded-2xl text-xs font-mono-num text-slate-700 shadow-sm flex items-center gap-1.5 self-end sm:self-auto">
+            <span class="text-indigo-600 font-bold">b =</span>
+            <span>(x · y · 0,825) / 365</span>
+        </div>
+    </header>
+
+    <!-- HESAPLAMA YÖNÜ SEGMENT TOGGLE -->
+    <div class="bg-slate-200/70 p-1.5 rounded-2xl border border-slate-300/80 mb-5 grid grid-cols-1 sm:grid-cols-3 gap-1.5 shadow-inner text-xs font-semibold">
+        <button type="button" data-mode="xy_to_b" class="calc-mode-btn py-2 px-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm font-bold">
+            <span>Anapara + Faiz</span>
+            <span class="opacity-60">➔</span>
+            <span class="font-bold underline decoration-emerald-300 underline-offset-2">Hedef Getiri</span>
+        </button>
+        <button type="button" data-mode="xb_to_y" class="calc-mode-btn py-2 px-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium">
+            <span>Anapara + Hedef</span>
+            <span class="opacity-60">➔</span>
+            <span class="font-bold underline decoration-indigo-500 underline-offset-2">Faiz Oranı</span>
+        </button>
+        <button type="button" data-mode="by_to_x" class="calc-mode-btn py-2 px-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium">
+            <span>Hedef + Faiz</span>
+            <span class="opacity-60">➔</span>
+            <span class="font-bold underline decoration-amber-500 underline-offset-2">Gereken Anapara</span>
+        </button>
+    </div>
+
+    <!-- ANA KART -->
+    <div class="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-7 shadow-xl shadow-slate-200/60 space-y-6">
+
+        <!-- GİRİŞ ALANLARI GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+            <!-- [x] ANAPARA GİRİŞİ -->
+            <div id="cardX" class="md:col-span-6 bg-slate-50 border border-slate-200 rounded-2xl p-4 transition-all focus-within:bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="inputX" class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center font-mono-num text-xs font-bold">x</span>
+                        <span>Anapara Tutarı</span>
+                        <span id="badgeX" class="hidden text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded border border-amber-200 font-semibold">Hesaplanan</span>
+                    </label>
+                    <button class="copy-btn text-slate-400 hover:text-slate-700 transition-colors text-xs flex items-center gap-1" data-target="inputX" title="Kopyala">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span class="copy-label">Kopyala</span>
+                    </button>
+                </div>
+                <div class="relative flex items-center">
+                    <span class="text-slate-400 font-mono-num text-xl mr-2 font-semibold">₺</span>
+                    <input type="text" id="inputX" class="w-full bg-transparent font-mono-num text-xl sm:text-2xl font-bold text-slate-900 placeholder-slate-300 focus:outline-none" placeholder="0,00" />
+                </div>
+                <!-- Dinamik Geçmiş Çipleri (x) -->
+                <div class="mt-3 pt-2.5 border-t border-slate-200">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Hızlı Seçim / Geçmiş</span>
+                        <button id="clearHistoryX" class="text-[10px] text-slate-400 hover:text-rose-600 transition-colors font-medium">Geçmişi Temizle</button>
+                    </div>
+                    <div id="historyContainerX" class="flex flex-wrap gap-1.5">
+                        <!-- JS ile render edilir -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- [y] FAİZ ORANI GİRİŞİ -->
+            <div id="cardY" class="md:col-span-6 bg-slate-50 border border-slate-200 rounded-2xl p-4 transition-all focus-within:bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="inputY" class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center font-mono-num text-xs font-bold">y</span>
+                        <span>Yıllık Brüt Faiz</span>
+                        <span id="badgeY" class="hidden text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded border border-indigo-200 font-semibold">Hesaplanan</span>
+                    </label>
+                    <span id="ratePercentDisplay" class="text-xs font-mono-num text-indigo-700 font-bold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">%0,00</span>
+                </div>
+                <div class="relative flex items-center">
+                    <input type="text" id="inputY" class="w-full bg-transparent font-mono-num text-xl sm:text-2xl font-bold text-slate-900 placeholder-slate-300 focus:outline-none" placeholder="ör. 0.3725 veya 37.25" />
+                    <span class="text-xs text-slate-400 font-mono-num whitespace-nowrap ml-2">(0.3725 veya %37.25)</span>
+                </div>
+                <!-- Dinamik Geçmiş Çipleri (y) -->
+                <div class="mt-3 pt-2.5 border-t border-slate-200">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Hızlı Seçim / Geçmiş</span>
+                        <button id="clearHistoryY" class="text-[10px] text-slate-400 hover:text-rose-600 transition-colors font-medium">Geçmişi Temizle</button>
+                    </div>
+                    <div id="historyContainerY" class="flex flex-wrap gap-1.5">
+                        <!-- JS ile render edilir -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- [GÜN SAYISI (N)] VADE SEÇİCİ -->
+            <div class="md:col-span-12 bg-slate-50 border border-slate-200 rounded-2xl p-3.5 sm:p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">📅</span>
+                    <div>
+                        <span class="text-xs font-bold text-slate-700 block">Vade / Gün Sayısı (N)</span>
+                        <span class="text-[11px] text-slate-500">Günlük getiri ara basamakta yuvarlanmaz, tam çarpanla hesaplanır.</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center flex-wrap gap-2 w-full md:w-auto">
+                    <div class="relative flex items-center bg-white border border-slate-300 rounded-xl px-3 py-1.5 shadow-sm">
+                        <input type="number" id="inputDays" min="1" max="3650" value="1" class="w-16 bg-transparent font-mono-num font-bold text-slate-900 text-base focus:outline-none text-center" />
+                        <span class="text-xs font-semibold text-slate-400 ml-1">Gün</span>
+                    </div>
+
+                    <!-- Hızlı Gün Butonları -->
+                    <div class="flex flex-wrap gap-1">
+                        <button type="button" class="day-chip text-xs font-mono-num bg-white border border-slate-200 hover:border-indigo-400 px-2.5 py-1.5 rounded-lg text-slate-700 shadow-xs" data-days="1">1 Gün</button>
+                        <button type="button" class="day-chip text-xs font-mono-num bg-white border border-slate-200 hover:border-indigo-400 px-2.5 py-1.5 rounded-lg text-slate-700 shadow-xs" data-days="7">7g</button>
+                        <button type="button" class="day-chip text-xs font-mono-num bg-white border border-slate-200 hover:border-indigo-400 px-2.5 py-1.5 rounded-lg text-slate-700 shadow-xs" data-days="30">30g</button>
+                        <button type="button" class="day-chip text-xs font-mono-num bg-white border border-slate-200 hover:border-indigo-400 px-2.5 py-1.5 rounded-lg text-slate-700 shadow-xs" data-days="32">32g</button>
+                        <button type="button" class="day-chip text-xs font-mono-num bg-white border border-slate-200 hover:border-indigo-400 px-2.5 py-1.5 rounded-lg text-slate-700 shadow-xs" data-days="90">90g</button>
+                        <button type="button" class="day-chip text-xs font-mono-num bg-white border border-slate-200 hover:border-indigo-400 px-2.5 py-1.5 rounded-lg text-slate-700 shadow-xs" data-days="365">365g</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [b] HEDEF / GÜNLÜK NET GETİRİ -->
+            <div id="cardB" class="md:col-span-12 bg-gradient-to-br from-emerald-50/70 via-white to-indigo-50/40 border-2 border-emerald-500/40 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="inputB" class="text-xs font-extrabold text-emerald-800 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-mono-num text-sm font-bold">b</span>
+                        <span>Günlük Net Getiri</span>
+                        <span id="badgeB" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200 font-semibold">Hesaplanan</span>
+                    </label>
+                    <button class="copy-btn text-emerald-700 hover:bg-emerald-100/70 border border-emerald-300 rounded-lg px-2.5 py-1 transition-all text-xs flex items-center gap-1 font-semibold" data-target="inputB">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span class="copy-label">Kopyala</span>
+                    </button>
+                </div>
+
+                <div class="flex items-baseline gap-2">
+                    <span class="text-emerald-700 font-mono-num text-2xl sm:text-3xl font-bold">₺</span>
+                    <input type="text" id="inputB" class="w-full bg-transparent font-mono-num text-2xl sm:text-4xl font-extrabold text-emerald-800 placeholder-emerald-300 focus:outline-none tracking-tight" placeholder="0,00" />
+                </div>
+
+                <div class="mt-2 text-xs text-slate-500 flex flex-wrap items-center justify-between gap-2">
+                    <span id="modeDescriptionText">✨ <strong>Mod 1:</strong> Anapara ve faiz oranına göre günlük net kazanç hesaplanıyor.</span>
+                    <span class="font-mono-num text-indigo-700 font-semibold" id="periodHighlight">Seçili Vade: 1 Gün</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- DETAYLI SONUÇ METRİK KARTLARI -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+
+            <!-- Günlük Brüt (a) -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500 block mb-1">Günlük Brüt (a)</span>
+                <div class="font-mono-num text-sm sm:text-base font-bold text-slate-900" id="cardDailyGross">₺0,00</div>
+                <span class="text-[10px] text-slate-400 font-mono-num">(x · y) / 365</span>
+            </div>
+
+            <!-- Toplam Stopaj -->
+            <div class="bg-rose-50/60 border border-rose-200 rounded-2xl p-3.5">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-rose-700 block mb-1" id="labelTaxPeriod">Stopaj (%17,5)</span>
+                <div class="font-mono-num text-sm sm:text-base font-bold text-rose-700" id="cardDailyTax">-₺0,00</div>
+                <span class="text-[10px] text-rose-400 font-mono-num">Brüt · 0,175</span>
+            </div>
+
+            <!-- Seçili Vade Net Kazanç -->
+            <div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3.5">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-indigo-700 block mb-1" id="labelPeriodNet">1 Günlük Net</span>
+                <div class="font-mono-num text-sm sm:text-base font-extrabold text-indigo-900" id="cardPeriodNet">₺0,00</div>
+                <span class="text-[10px] text-indigo-400 font-mono-num">Hassas Yuvarlama</span>
+            </div>
+
+            <!-- Dönem Sonu Toplam Bakiye -->
+            <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5">
+                <span class="text-[10px] uppercase font-bold tracking-wider text-emerald-800 block mb-1">Toplam Bakiye</span>
+                <div class="font-mono-num text-sm sm:text-base font-extrabold text-emerald-900" id="cardTotalEnd">₺0,00</div>
+                <span class="text-[10px] text-emerald-500 font-mono-num">Anapara + Net</span>
+            </div>
+
+        </div>
+
+        <!-- ADIM ADIM MATEMATİKSEL ŞEFFAFLIK DÖKÜMÜ -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-mono-num text-slate-600 space-y-2">
+            <div class="text-slate-800 font-semibold text-[11px] flex items-center justify-between border-b border-slate-200 pb-2">
+                    <span class="flex items-center gap-1.5">
+                        <span class="text-indigo-600">📐</span> Matematiksel Ayrıştırma & Formül Denetimi
+                    </span>
+                <span class="text-[10px] text-slate-500 font-medium">Stopaj Kesintisi: %17,5 (Çarpan: 0,825)</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
+                <div>
+                    <span class="text-slate-400 block text-[10px]">1. Yıllık Brüt Faiz (z):</span>
+                    <span id="mathStep1" class="text-slate-900 font-semibold">-</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px]">2. Günlük Brüt (a):</span>
+                    <span id="mathStep2" class="text-slate-900 font-semibold">-</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px]">3. Nihai Net Getiri (<span id="mathStepDaysLabel">1</span> Gün):</span>
+                    <span id="mathStep3" class="text-emerald-700 font-semibold">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALT ÇUBUK: Sıfırla & Bilgi -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 text-xs">
+            <button id="resetAllBtn" class="text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 border border-slate-200 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 font-bold">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                Tüm Alanları Sıfırla
+            </button>
+
+            <div class="text-slate-500 text-[11px] flex items-center gap-2">
+                <span>Stopaj: <strong>%17,5</strong></span>
+                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                <span>Finans Yılı: <strong>365 Gün</strong></span>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<!-- TOAST BİLDİRİMİ -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-2xl pointer-events-none opacity-0 translate-y-3 transition-all duration-200 z-50 flex items-center gap-2">
+    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+    <span id="toastText">Kopyalandı!</span>
+</div>
+
+<!-- JAVASCRIPT HESAPLAMA VE ÇİFT YÖNLÜ MOTOR -->
+<script>
+    (function() {
+        'use strict';
+
+        // --- Sabitler ---
+        const STOPAJ = 0.175;
+        const NET_FACTOR = 0.825; // 1 - 0.175
+        const DAYS_IN_YEAR = 365;
+
+        // --- Durum Değişkenleri ---
+        let currentMode = 'xy_to_b'; // 'xy_to_b' | 'xb_to_y' | 'by_to_x'
+        let selectedDays = 1;
+
+        // --- DOM Referansları ---
+        const modeBtns = document.querySelectorAll('.calc-mode-btn');
+        const modeDesc = document.getElementById('modeDescriptionText');
+
+        const inputX = document.getElementById('inputX');
+        const inputY = document.getElementById('inputY');
+        const inputB = document.getElementById('inputB');
+        const inputDays = document.getElementById('inputDays');
+        const dayChips = document.querySelectorAll('.day-chip');
+
+        const badgeX = document.getElementById('badgeX');
+        const badgeY = document.getElementById('badgeY');
+        const badgeB = document.getElementById('badgeB');
+
+        const ratePercentDisplay = document.getElementById('ratePercentDisplay');
+        const periodHighlight = document.getElementById('periodHighlight');
+
+        const historyContainerX = document.getElementById('historyContainerX');
+        const historyContainerY = document.getElementById('historyContainerY');
+        const clearHistoryXBtn = document.getElementById('clearHistoryX');
+        const clearHistoryYBtn = document.getElementById('clearHistoryY');
+
+        const cardDailyGross = document.getElementById('cardDailyGross');
+        const cardDailyTax = document.getElementById('cardDailyTax');
+        const cardPeriodNet = document.getElementById('cardPeriodNet');
+        const cardTotalEnd = document.getElementById('cardTotalEnd');
+        const labelTaxPeriod = document.getElementById('labelTaxPeriod');
+        const labelPeriodNet = document.getElementById('labelPeriodNet');
+
+        const mathStep1 = document.getElementById('mathStep1');
+        const mathStep2 = document.getElementById('mathStep2');
+        const mathStep3 = document.getElementById('mathStep3');
+        const mathStepDaysLabel = document.getElementById('mathStepDaysLabel');
+
+        const resetAllBtn = document.getElementById('resetAllBtn');
+        const toast = document.getElementById('toast');
+        const toastText = document.getElementById('toastText');
+        let toastTimer = null;
+
+        // ==========================================
+        // 1. PARSER & FORMATTER (TR / Evrensel)
+        // ==========================================
+        function parseNumber(val) {
+            if (!val) return 0;
+            let s = String(val).trim().replace(/\s/g, '').replace(/₺/g, '').replace(/%/g, '');
+            if (s === '') return 0;
+            if (s.includes(',')) {
+                s = s.replace(/\./g, '').replace(',', '.');
+            }
+            const num = parseFloat(s);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function fmt(val, decimals = 2) {
+            if (isNaN(val) || !isFinite(val) || val === 0) return '0,00';
+            return val.toLocaleString('tr-TR', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        // ==========================================
+        // 2. GEÇMİŞ & CACHE YÖNETİMİ (LocalStorage)
+        // ==========================================
+        const DEFAULT_PRESETS_X = [100000, 250000, 500000, 900000, 1000000];
+        const DEFAULT_PRESETS_Y = [0.35, 0.3725, 0.40, 0.45, 0.50];
+
+        function getHistory(type) {
+            const raw = localStorage.getItem(`calc_history_${type}`);
+            if (!raw) return type === 'x' ? DEFAULT_PRESETS_X : DEFAULT_PRESETS_Y;
+            try {
+                return JSON.parse(raw);
+            } catch {
+                return type === 'x' ? DEFAULT_PRESETS_X : DEFAULT_PRESETS_Y;
+            }
+        }
+
+        function saveHistoryItem(type, val) {
+            if (!val || val <= 0) return;
+            let list = getHistory(type);
+            list = [val, ...list.filter(item => Math.abs(item - val) > 0.00001)].slice(0, 6);
+            localStorage.setItem(`calc_history_${type}`, JSON.stringify(list));
+            renderHistory();
+        }
+
+        function formatChipLabel(type, val) {
+            if (type === 'x') {
+                if (val >= 1000000) return (val / 1000000).toFixed(1).replace('.0', '') + 'M ₺';
+                if (val >= 1000) return (val / 1000).toFixed(0) + 'K ₺';
+                return val + ' ₺';
+            } else {
+                return '%' + (val * 100).toFixed(2).replace('.00', '').replace(',', '.');
+            }
+        }
+
+        function renderHistory() {
+            const listX = getHistory('x');
+            const listY = getHistory('y');
+
+            historyContainerX.innerHTML = '';
+            listX.forEach(val => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'preset-chip text-[11px] font-mono-num bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 px-2 py-0.5 rounded-lg shadow-xs';
+                btn.textContent = formatChipLabel('x', val);
+                btn.addEventListener('click', () => {
+                    if (currentMode === 'by_to_x') return;
+                    inputX.value = val;
+                    recalculate('x');
+                });
+                historyContainerX.appendChild(btn);
+            });
+
+            historyContainerY.innerHTML = '';
+            listY.forEach(val => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'preset-chip text-[11px] font-mono-num bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 px-2 py-0.5 rounded-lg shadow-xs';
+                btn.textContent = formatChipLabel('y', val);
+                btn.addEventListener('click', () => {
+                    if (currentMode === 'xb_to_y') return;
+                    inputY.value = val;
+                    recalculate('y');
+                });
+                historyContainerY.appendChild(btn);
+            });
+        }
+
+        clearHistoryXBtn.addEventListener('click', () => {
+            localStorage.setItem('calc_history_x', JSON.stringify(DEFAULT_PRESETS_X));
+            renderHistory();
+            showToast('Anapara geçmişi sıfırlandı');
+        });
+
+        clearHistoryYBtn.addEventListener('click', () => {
+            localStorage.setItem('calc_history_y', JSON.stringify(DEFAULT_PRESETS_Y));
+            renderHistory();
+            showToast('Faiz geçmişi sıfırlandı');
+        });
+
+        // ==========================================
+        // 3. HESAPLAMA YÖNÜ & MOD YÖNETİMİ
+        // ==========================================
+        function setCalculationMode(mode) {
+            currentMode = mode;
+
+            modeBtns.forEach(btn => {
+                if (btn.dataset.mode === mode) {
+                    btn.className = 'calc-mode-btn py-2 px-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 bg-indigo-600 text-white shadow-sm font-bold';
+                } else {
+                    btn.className = 'calc-mode-btn py-2 px-3 rounded-xl transition-all text-center flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium';
+                }
+            });
+
+            inputX.readOnly = (mode === 'by_to_x');
+            inputY.readOnly = (mode === 'xb_to_y');
+            inputB.readOnly = (mode === 'xy_to_b');
+
+            badgeX.classList.toggle('hidden', mode !== 'by_to_x');
+            badgeY.classList.toggle('hidden', mode !== 'xb_to_y');
+            badgeB.classList.toggle('hidden', mode !== 'xy_to_b');
+
+            if (mode === 'xy_to_b') {
+                modeDesc.innerHTML = '✨ <strong>Mod 1:</strong> Anapara (<strong>x</strong>) ve Faiz (<strong>y</strong>) girildiğinde Günlük Net Getiri (<strong>b</strong>) otomatik bulunur.';
+            } else if (mode === 'xb_to_y') {
+                modeDesc.innerHTML = '🎯 <strong>Mod 2:</strong> Anapara (<strong>x</strong>) ve Hedeflenen Net (<strong>b</strong>) girildiğinde gereken Faiz Oranı (<strong>y</strong>) bulunur.';
+            } else {
+                modeDesc.innerHTML = '💼 <strong>Mod 3:</strong> Hedef Kazanç (<strong>b</strong>) ve Faiz Oranı (<strong>y</strong>) girildiğinde gereken Anapara (<strong>x</strong>) bulunur.';
+            }
+
+            recalculate();
+        }
+
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', () => setCalculationMode(btn.dataset.mode));
+        });
+
+        // ==========================================
+        // 4. ANA HESAPLAMA MOTORU (Doğru Yuvarlama)
+        // ==========================================
+        function recalculate(activeInput = null) {
+            let x = parseNumber(inputX.value);
+            let y = parseNumber(inputY.value);
+            let b = parseNumber(inputB.value);
+            const N = Math.max(1, parseInt(inputDays.value) || 1);
+            selectedDays = N;
+
+            if (activeInput === 'y' && y > 1) {
+                y = y / 100;
+            } else if (activeInput !== 'y' && y > 1) {
+                y = y / 100;
+            }
+
+            // --- Mod Çözümleri ---
+            if (currentMode === 'xy_to_b') {
+                if (x > 0 && y > 0) {
+                    b = (x * y * NET_FACTOR) / DAYS_IN_YEAR;
+                    if (activeInput !== 'b') {
+                        inputB.value = b > 0 ? b.toFixed(2) : '';
+                    }
+                } else if (activeInput !== 'b') {
+                    inputB.value = '';
+                    b = 0;
+                }
+            }
+            else if (currentMode === 'xb_to_y') {
+                if (x > 0 && b > 0) {
+                    y = (b * DAYS_IN_YEAR) / (x * NET_FACTOR);
+                    if (activeInput !== 'y') {
+                        inputY.value = y > 0 ? (y * 100).toFixed(2) : '';
+                    }
+                } else if (activeInput !== 'y') {
+                    inputY.value = '';
+                    y = 0;
+                }
+            }
+            else if (currentMode === 'by_to_x') {
+                if (b > 0 && y > 0) {
+                    x = (b * DAYS_IN_YEAR) / (y * NET_FACTOR);
+                    if (activeInput !== 'x') {
+                        inputX.value = x > 0 ? x.toFixed(2) : '';
+                    }
+                } else if (activeInput !== 'x') {
+                    inputX.value = '';
+                    x = 0;
+                }
+            }
+
+            ratePercentDisplay.textContent = `%${fmt(y * 100, 2)}`;
+            periodHighlight.textContent = `Seçili Vade: ${N} Gün`;
+            mathStepDaysLabel.textContent = N;
+
+            // --- Hassas Nihai Yuvarlama (Kritik Finansal Kural) ---
+            const unroundedDailyGross = (x * y) / DAYS_IN_YEAR;
+            const unroundedTotalGrossN = (x * y * N) / DAYS_IN_YEAR;
+            const unroundedTotalNetN = (x * y * NET_FACTOR * N) / DAYS_IN_YEAR;
+            const unroundedTotalTaxN = unroundedTotalGrossN - unroundedTotalNetN;
+            const unroundedTotalBalance = x + unroundedTotalNetN;
+
+            labelTaxPeriod.textContent = N === 1 ? 'Stopaj (%17,5)' : `${N} Günlük Stopaj`;
+            labelPeriodNet.textContent = N === 1 ? 'Günlük Net' : `${N} Günlük Net`;
+
+            cardDailyGross.textContent = `₺${fmt(unroundedDailyGross, 2)}`;
+            cardDailyTax.textContent = `-₺${fmt(unroundedTotalTaxN, 2)}`;
+            cardPeriodNet.textContent = `₺${fmt(unroundedTotalNetN, 2)}`;
+            cardTotalEnd.textContent = `₺${fmt(unroundedTotalBalance, 2)}`;
+
+            if (x > 0 && y > 0) {
+                const z = x * y;
+                mathStep1.textContent = `${fmt(x, 0)} ₺ × ${(y * 100).toFixed(2)}% = ${fmt(z, 2)} ₺`;
+                mathStep2.textContent = `${fmt(z, 2)} / 365 = ${fmt(unroundedDailyGross, 4)} ₺`;
+                mathStep3.textContent = `(${fmt(unroundedDailyGross, 4)} × 0,825) × ${N}g = ${fmt(unroundedTotalNetN, 2)} ₺`;
+            } else {
+                mathStep1.textContent = '-';
+                mathStep2.textContent = '-';
+                mathStep3.textContent = '-';
+            }
+        }
+
+        // ==========================================
+        // 5. GİRDİ OLAYLARI & CACHE TETİKLEME
+        // ==========================================
+        inputX.addEventListener('input', () => recalculate('x'));
+        inputY.addEventListener('input', () => recalculate('y'));
+        inputB.addEventListener('input', () => recalculate('b'));
+
+        inputX.addEventListener('blur', () => {
+            const val = parseNumber(inputX.value);
+            if (val > 0) saveHistoryItem('x', val);
+        });
+
+        inputY.addEventListener('blur', () => {
+            let val = parseNumber(inputY.value);
+            if (val > 1) val = val / 100;
+            if (val > 0) saveHistoryItem('y', val);
+        });
+
+        inputDays.addEventListener('input', () => recalculate());
+
+        dayChips.forEach(chip => {
+            chip.addEventListener('click', function() {
+                const days = parseInt(this.dataset.days);
+                inputDays.value = days;
+                recalculate();
+            });
+        });
+
+        // ==========================================
+        // 6. KOPYALAMA & SIFIRLAMA
+        // ==========================================
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const targetId = this.dataset.target;
+                const input = document.getElementById(targetId);
+                if (!input || !input.value) return;
+
+                const labelSpan = this.querySelector('.copy-label');
+                const orig = labelSpan ? labelSpan.textContent : 'Kopyala';
+
+                try {
+                    await navigator.clipboard.writeText(input.value);
+                    showToast(`Kopyalandı: ${input.value}`);
+                    if (labelSpan) labelSpan.textContent = 'Kopyalandı!';
+                    setTimeout(() => {
+                        if (labelSpan) labelSpan.textContent = orig;
+                    }, 1800);
+                } catch {
+                    input.select();
+                    document.execCommand('copy');
+                    showToast(`Kopyalandı: ${input.value}`);
+                }
+            });
+        });
+
+        function showToast(msg) {
+            toastText.textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-3');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-3');
+            }, 2200);
+        }
+
+        resetAllBtn.addEventListener('click', () => {
+            inputX.value = '';
+            inputY.value = '';
+            inputB.value = '';
+            inputDays.value = '1';
+            recalculate();
+            showToast('Tüm alanlar sıfırlandı');
+        });
+
+        // ==========================================
+        // 7. İLK AÇILIŞ (Init)
+        // ==========================================
+        renderHistory();
+        setCalculationMode('xy_to_b');
+        recalculate();
+
+    })();
+</script>
+</body>
+</html>
