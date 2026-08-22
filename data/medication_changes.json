@@ -57,5 +57,6 @@
   {"at":"2026-08-04 07:00","model":"MedChange","user_id":1,"medication_id":19,"id":56,"amount":5,"timespan":24,"type":"Started","reason":"Doktor tarafından başlandı (ACE inhibitörü, kan basıncı regülasyonu)"},
   {"at":"2026-08-04 09:45","model":"MedChange","user_id":1,"medication_id":3,"id":57,"amount":0,"timespan":12,"type":"Ended","reason":"Tedavi süresi tamamlandı (7 günlük kür)"},
   {"at":"2026-08-04 09:45","model":"MedChange","user_id":1,"medication_id":15,"id":58,"amount":0,"timespan":12,"type":"Ended","reason":"Tedavi süresi tamamlandı (7 günlük kür)"},
-  {"at":"2026-08-11 12:00","model":"MedChange","user_id":1,"medication_id":14,"id":59,"amount":25,"timespan":168,"type":"Changed","reason":"Doktor tarafından doz ayarlaması (INR takibine göre)"}
+  {"at":"2026-08-11 12:00","model":"MedChange","user_id":1,"medication_id":14,"id":59,"amount":25,"timespan":168,"type":"Changed","reason":"Doktor tarafından doz ayarlaması (INR takibine göre)"},
+  {"at":"2026-08-18 12:00","model":"MedChange","user_id":1,"medication_id":14,"id":60,"amount":20,"timespan":168,"type":"Changed","reason":"Doktor tarafından doz ayarlaması (INR takibine göre)"}
 ]
