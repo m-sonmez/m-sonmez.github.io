@@ -12,34 +12,27 @@
       body {
         font-family: 'Plus Jakarta Sans', sans-serif;
       }
-
       .font-mono-num {
         font-family: 'JetBrains Mono', monospace;
         font-feature-settings: 'tnum';
       }
-
       input:focus {
         outline: none;
       }
-
       .preset-chip {
         transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
       }
-
       .preset-chip:hover {
         transform: translateY(-1px);
       }
-
       .preset-chip:active {
         transform: scale(0.95);
       }
-
       input[type='number']::-webkit-inner-spin-button,
       input[type='number']::-webkit-outer-spin-button {
         -webkit-appearance: none;
         margin: 0;
       }
-
       input[type='number'] {
         -moz-appearance: textfield;
       }
@@ -91,7 +84,7 @@
                 <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                 </svg>
-                <span class="copy-label">Kopyala</span>
+                <span class="copy-label"></span>
               </button>
             </div>
             <div class="relative flex items-center">
@@ -137,9 +130,13 @@
                 </div>
               </div>
               <div class="flex w-full flex-wrap items-center gap-2 md:w-auto">
-                <div class="relative flex items-center rounded-xl border border-slate-300 bg-white px-3 py-1.5 shadow-sm">
-                  <input class="font-mono-num w-16 bg-transparent text-center text-base font-bold text-slate-900 focus:outline-none" id="inputDays" max="3650" min="1" type="number" value="1" />
-                  <span class="ml-1 text-xs font-semibold text-slate-400">Gün</span>
+                <div class="flex items-center rounded-xl border border-slate-300 bg-white p-1 shadow-sm">
+                  <button class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95" id="btnDaysDec" title="1 Gün Azalt" type="button">−</button>
+                  <div class="flex items-center px-2">
+                    <input class="font-mono-num w-12 bg-transparent text-center text-sm font-bold text-slate-900 focus:outline-none" id="inputDays" max="3650" min="1" type="number" value="1" />
+                    <span class="text-xs font-semibold text-slate-400">Gün</span>
+                  </div>
+                  <button class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95" id="btnDaysInc" title="1 Gün Artır" type="button">+</button>
                 </div>
                 <div class="flex flex-wrap gap-1">
                   <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-days="1" type="button">1 Gün</button>
@@ -179,7 +176,7 @@
                 <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                 </svg>
-                <span class="copy-label">Kopyala</span>
+                <span class="copy-label"></span>
               </button>
             </div>
             <div class="flex items-baseline gap-2">
@@ -207,14 +204,34 @@
             <div class="font-mono-num text-sm font-bold text-rose-700 sm:text-base" id="cardDailyTax">-₺0,00</div>
             <span class="font-mono-num text-[10px] text-rose-400">Brüt · 0,175</span>
           </div>
-          <div class="rounded-2xl border border-indigo-200 bg-indigo-50/70 p-3.5">
-            <span class="mb-1 block text-[10px] font-bold tracking-wider text-indigo-700 uppercase" id="labelPeriodNet">1 Günlük Toplam Net</span>
-            <div class="font-mono-num text-sm font-extrabold text-indigo-900 sm:text-base" id="cardPeriodNet">₺0,00</div>
+          <div class="flex flex-col justify-between rounded-2xl border border-indigo-200 bg-indigo-50/70 p-3.5">
+            <div>
+              <div class="mb-1 flex items-center justify-between">
+                <span class="block text-[10px] font-bold tracking-wider text-indigo-700 uppercase" id="labelPeriodNet">1 Günlük Toplam Net</span>
+                <button class="copy-btn flex items-center gap-0.5 text-[10px] font-semibold text-indigo-700 hover:text-indigo-950" data-target="cardPeriodNet" title="Net Getiriyi Kopyala" type="button">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  </svg>
+                  <span class="copy-label"></span>
+                </button>
+              </div>
+              <div class="font-mono-num text-sm font-extrabold text-indigo-900 sm:text-base" id="cardPeriodNet">₺0,00</div>
+            </div>
             <span class="font-mono-num text-[10px] text-indigo-500" id="subtextPeriodNet">Net Getiri</span>
           </div>
-          <div class="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5">
-            <span class="mb-1 block text-[10px] font-bold tracking-wider text-emerald-800 uppercase">Dönem Sonu Bakiye</span>
-            <div class="font-mono-num text-sm font-extrabold text-emerald-900 sm:text-base" id="cardTotalEnd">₺0,00</div>
+          <div class="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5">
+            <div>
+              <div class="mb-1 flex items-center justify-between">
+                <span class="block text-[10px] font-bold tracking-wider text-emerald-800 uppercase">Dönem Sonu Bakiye</span>
+                <button class="copy-btn flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 hover:text-emerald-950" data-target="cardTotalEnd" title="Dönem Sonu Bakiyeyi Kopyala" type="button">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                  </svg>
+                  <span class="copy-label"></span>
+                </button>
+              </div>
+              <div class="font-mono-num text-sm font-extrabold text-emerald-900 sm:text-base" id="cardTotalEnd">₺0,00</div>
+            </div>
             <span class="font-mono-num text-[10px] text-emerald-600">Anapara + Toplam Net</span>
           </div>
         </div>
@@ -286,6 +303,8 @@
         const inputY = document.getElementById('inputY');
         const inputB = document.getElementById('inputB');
         const inputDays = document.getElementById('inputDays');
+        const btnDaysDec = document.getElementById('btnDaysDec');
+        const btnDaysInc = document.getElementById('btnDaysInc');
         const dayChips = document.querySelectorAll('.day-chip');
         const compoundToggle = document.getElementById('compoundToggle');
         const compoundBadge = document.getElementById('compoundBadge');
@@ -546,6 +565,20 @@
           if (val > 0) saveHistoryItem('y', val);
         });
         inputDays.addEventListener('input', () => recalculate());
+        btnDaysDec.addEventListener('click', () => {
+          const current = parseInt(inputDays.value) || 1;
+          if (current > 1) {
+            inputDays.value = current - 1;
+            recalculate();
+          }
+        });
+        btnDaysInc.addEventListener('click', () => {
+          const current = parseInt(inputDays.value) || 1;
+          if (current < 3650) {
+            inputDays.value = current + 1;
+            recalculate();
+          }
+        });
         compoundToggle.addEventListener('change', () => recalculate());
         dayChips.forEach((chip) => {
           chip.addEventListener('click', function () {
@@ -558,21 +591,23 @@
           btn.addEventListener('click', async function (e) {
             e.preventDefault();
             const targetId = this.dataset.target;
-            const input = document.getElementById(targetId);
-            if (!input || !input.value) return;
+            const el = document.getElementById(targetId);
+            if (!el) return;
+            const val = el.value !== undefined ? el.value : el.textContent.replace('₺', '').trim();
+            if (!val || val === '0,00' || val === '-0,00' || val === '-') return;
             const labelSpan = this.querySelector('.copy-label');
-            const orig = labelSpan ? labelSpan.textContent : 'Kopyala';
+            const orig = labelSpan ? labelSpan.textContent : '';
             try {
-              await navigator.clipboard.writeText(input.value);
-              showToast(`Kopyalandı: ${input.value}`);
+              await navigator.clipboard.writeText(val);
+              showToast(`Kopyalandı: ${val}`);
               if (labelSpan) labelSpan.textContent = 'Kopyalandı!';
               setTimeout(() => {
                 if (labelSpan) labelSpan.textContent = orig;
               }, 1800);
             } catch {
-              input.select();
+              if (el.select) el.select();
               document.execCommand('copy');
-              showToast(`Kopyalandı: ${input.value}`);
+              showToast(`Kopyalandı: ${val}`);
             }
           });
         });
