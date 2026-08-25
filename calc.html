@@ -1,0 +1,1347 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Çok Yönlü Finans, Faiz, Vergi & Masraf Hesaplayıcı (Joker Engine)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-feature-settings: 'tnum';
+    }
+    input:focus, select:focus {
+      outline: none;
+    }
+    .preset-chip, .quick-btn, .template-card {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .preset-chip:hover, .quick-btn:hover, .template-card:hover {
+      transform: translateY(-1px);
+    }
+    .preset-chip:active, .quick-btn:active, .template-card:active {
+      transform: scale(0.96);
+    }
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number']::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type='number'] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="flex min-h-screen items-center justify-center bg-slate-100/90 p-2 sm:p-4 md:p-6 text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+<main class="my-auto w-full max-w-6xl py-3 sm:py-6">
+
+  <header class="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+    <div>
+      <div class="mb-1.5 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold tracking-wider text-indigo-700 uppercase">
+        <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"></span>
+        <span id="txtHeaderBadge">Evrensel Joker Finans Motoru</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900" id="txtHeaderTitle">Gelişmiş Finans, Faiz & Gider Hesaplayıcı</h1>
+      <p class="mt-0.5 text-xs text-slate-500 sm:text-sm" id="txtHeaderSubtitle">Tüm değerleri, oranları, kesintileri ve masrafları tamamen düzenlenebilir evrensel hesaplayıcı.</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2 self-end sm:self-auto">
+      <div class="flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <button class="lang-btn rounded-lg px-2.5 py-1 text-xs font-bold transition-all bg-indigo-600 text-white" data-lang="tr" id="btnLangTR" type="button">TR</button>
+        <button class="lang-btn rounded-lg px-2.5 py-1 text-xs font-bold transition-all text-slate-600 hover:text-slate-900" data-lang="en" id="btnLangEN" type="button">EN</button>
+      </div>
+      <button class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition-all hover:bg-rose-50 hover:text-rose-600" id="resetAllBtn" type="button">
+        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+        </svg>
+        <span id="txtResetAll">Sıfırla</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mb-5 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-sm">
+    <div class="mb-2.5 flex items-center justify-between">
+          <span class="text-[11px] font-bold tracking-wider text-slate-500 uppercase flex items-center gap-1.5">
+            <span>⚡</span>
+            <span id="txtQuickPresets">Hazır Finansal Şablonlar & Senaryolar</span>
+          </span>
+      <span class="text-[10px] text-slate-400 font-medium" id="txtPresetHint">1 Tıkla Tüm Faiz, Vade ve Vergileri Doldurur (Sonrasında Değiştirilebilir)</span>
+    </div>
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <button class="template-card flex flex-col items-start rounded-xl border border-emerald-200 bg-emerald-50/60 p-2.5 text-left transition-all hover:bg-emerald-100/70" data-preset="daily_deposit" type="button">
+        <span class="text-xs font-bold text-emerald-800 truncate w-full" id="txtPresetDepositDaily">Günlük Mevduat / Fon</span>
+        <span class="text-[10px] text-emerald-600">Yıllık % • %17,5 Stopaj</span>
+      </button>
+      <button class="template-card flex flex-col items-start rounded-xl border border-indigo-200 bg-indigo-50/60 p-2.5 text-left transition-all hover:bg-indigo-100/70" data-preset="term_deposit" type="button">
+        <span class="text-xs font-bold text-indigo-800 truncate w-full" id="txtPresetDepositTerm">32 Gün Vadeli Mevduat</span>
+        <span class="text-[10px] text-indigo-600">32G • %17,5 Stopaj</span>
+      </button>
+      <button class="template-card flex flex-col items-start rounded-xl border border-rose-200 bg-rose-50/60 p-2.5 text-left transition-all hover:bg-rose-100/70" data-preset="kmh_overdraft" type="button">
+        <span class="text-xs font-bold text-rose-800 truncate w-full" id="txtPresetKMH">KMH / Esnek Hesap</span>
+        <span class="text-[10px] text-rose-600">Aylık % • KKDF+BSMV</span>
+      </button>
+      <button class="template-card flex flex-col items-start rounded-xl border border-amber-200 bg-amber-50/60 p-2.5 text-left transition-all hover:bg-amber-100/70" data-preset="consumer_loan" type="button">
+        <span class="text-xs font-bold text-amber-800 truncate w-full" id="txtPresetLoan">Tüketici Kredisi</span>
+        <span class="text-[10px] text-amber-600">Aylık % • %0.5 Tahsis</span>
+      </button>
+      <button class="template-card flex flex-col items-start rounded-xl border border-purple-200 bg-purple-50/60 p-2.5 text-left transition-all hover:bg-purple-100/70" data-preset="cash_advance" type="button">
+        <span class="text-xs font-bold text-purple-800 truncate w-full" id="txtPresetCashAdv">Nakit Avans / Gecikme</span>
+        <span class="text-[10px] text-purple-600">Aylık %5.00 + Vergiler</span>
+      </button>
+      <button class="template-card flex flex-col items-start rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-left transition-all hover:bg-slate-100" data-preset="custom_blank" type="button">
+        <span class="text-xs font-bold text-slate-800 truncate w-full" id="txtPresetCustom">Özel / Sıfırdan</span>
+        <span class="text-[10px] text-slate-500">Tamamen Serbest</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-5 grid grid-cols-1 gap-1.5 rounded-2xl border border-slate-300/80 bg-slate-200/70 p-1.5 text-xs font-semibold shadow-inner sm:grid-cols-2">
+    <button class="calc-type-btn flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-center font-bold text-white shadow-sm transition-all" data-calctype="yield" id="btnTypeYield" type="button">
+      <span class="text-base">📈</span>
+      <span id="txtModeYield">Mevduat / Yatırım / Getiri Modu (Gelir & Kazanç)</span>
+    </button>
+    <button class="calc-type-btn flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center font-medium text-slate-600 transition-all hover:bg-white/60 hover:text-slate-900" data-calctype="debt" id="btnTypeDebt" type="button">
+      <span class="text-base">📉</span>
+      <span id="txtModeDebt">Kredi / KMH / Borç & Maliyet Modu (Gider & Masraf)</span>
+    </button>
+  </div>
+
+  <div class="space-y-6 rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 lg:p-7 shadow-xl shadow-slate-200/60">
+
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+
+      <div class="space-y-4 lg:col-span-6">
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20" id="cardX">
+          <div class="mb-2 flex items-center justify-between">
+            <label class="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-600 uppercase" for="inputX">
+              <span class="font-mono-num flex h-5 w-5 items-center justify-center rounded-md bg-indigo-100 text-xs font-bold text-indigo-700">x</span>
+              <span id="lblPrincipal">Anapara / Kredi Tutarı</span>
+            </label>
+            <button class="copy-btn flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-slate-700" data-target="inputX" title="Kopyala" type="button">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+              <span class="copy-label"></span>
+            </button>
+          </div>
+          <div class="relative flex items-center">
+            <span class="font-mono-num mr-2 text-xl font-semibold text-slate-400">₺</span>
+            <input class="font-mono-num w-full bg-transparent text-xl font-bold text-slate-900 placeholder-slate-300 focus:outline-none sm:text-2xl" id="inputX" placeholder="0,00" type="text" />
+          </div>
+          <div class="mt-3 border-t border-slate-200 pt-2.5">
+            <div class="mb-1.5 flex items-center justify-between">
+              <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase" id="txtHistoryXTitle">Hızlı Anaparalar / Geçmiş</span>
+              <button class="text-[10px] font-medium text-slate-400 transition-colors hover:text-rose-600" id="clearHistoryX" type="button">Temizle</button>
+            </div>
+            <div class="flex flex-wrap gap-1.5" id="historyContainerX"></div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/20" id="cardY">
+          <div class="mb-2 flex items-center justify-between gap-2 flex-wrap">
+            <label class="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-600 uppercase" for="inputY">
+              <span class="font-mono-num flex h-5 w-5 items-center justify-center rounded-md bg-indigo-100 text-xs font-bold text-indigo-700">y</span>
+              <span id="lblInterestRate">Faiz Oranı</span>
+            </label>
+
+            <div class="flex items-center gap-1.5">
+              <select class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-700 shadow-sm" id="selectRatePeriod">
+                <option value="yearly">Yıllık (%)</option>
+                <option value="monthly">Aylık (%)</option>
+                <option value="daily">Günlük (%)</option>
+              </select>
+              <span class="font-mono-num rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700" id="rateNormalizedDisplay">Yıllık: %0,00</span>
+            </div>
+          </div>
+
+          <div class="relative flex items-center">
+            <input class="font-mono-num w-full bg-transparent text-xl font-bold text-slate-900 placeholder-slate-300 focus:outline-none sm:text-2xl" id="inputY" placeholder="ör. 45 veya 5.00" type="text" />
+            <span class="font-mono-num ml-2 text-xs font-semibold text-slate-400" id="txtRatePeriodHelper">% Oran</span>
+          </div>
+
+          <div class="mt-3 border-t border-slate-200 pt-2.5">
+            <div class="mb-1.5 flex items-center justify-between">
+              <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase" id="txtHistoryYTitle">Hızlı Oranlar</span>
+              <button class="text-[10px] font-medium text-slate-400 transition-colors hover:text-rose-600" id="clearHistoryY" type="button">Temizle</button>
+            </div>
+            <div class="flex flex-wrap gap-1.5" id="historyContainerY"></div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5 space-y-3">
+          <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+            <div class="flex items-center gap-3">
+              <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-base font-bold text-indigo-700 shadow-sm">📅</span>
+              <div>
+                <span class="block text-xs font-bold text-slate-800" id="lblTermDays">Vade Süresi & Gün Sayısı</span>
+                <span class="text-[11px] text-slate-500" id="txtTermHelper">Gün, ay veya yıl olarak girilebilir; tam gün çevrimi ile hassas hesaplanır.</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="flex items-center rounded-xl border border-slate-300 bg-white p-1 shadow-sm">
+                <button class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95" id="btnDaysDec" title="Azalt" type="button">−</button>
+                <div class="flex items-center px-2">
+                  <input class="font-mono-num w-12 bg-transparent text-center text-sm font-bold text-slate-900 focus:outline-none" id="inputTermValue" max="3650" min="1" type="number" value="1" />
+                </div>
+                <button class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95" id="btnDaysInc" title="Artır" type="button">+</button>
+              </div>
+              <select class="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm" id="selectTermUnit">
+                <option value="days">Gün</option>
+                <option value="months">Ay</option>
+                <option value="years">Yıl</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-1 pt-1">
+            <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-unit="days" data-val="1" type="button">1 Gün</button>
+            <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-unit="days" data-val="7" type="button">7 Gün</button>
+            <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-unit="days" data-val="14" type="button">14 Gün</button>
+            <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-unit="days" data-val="30" type="button">30 Gün</button>
+            <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-unit="days" data-val="32" type="button">32 Gün</button>
+            <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-unit="months" data-val="3" type="button">3 Ay (90g)</button>
+            <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-unit="months" data-val="6" type="button">6 Ay (180g)</button>
+            <button class="day-chip font-mono-num rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm hover:border-indigo-400" data-unit="years" data-val="1" type="button">1 Yıl (365g)</button>
+          </div>
+
+          <div class="flex flex-col justify-between gap-3 rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm sm:flex-row sm:items-center">
+            <label class="inline-flex cursor-pointer items-center select-none">
+              <input class="peer sr-only" id="compoundToggle" type="checkbox" />
+              <div class="relative h-6 w-11 shrink-0 rounded-full bg-slate-200 transition-colors peer-checked:bg-indigo-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-transform after:content-[''] peer-checked:after:translate-x-5 peer-checked:after:border-white"></div>
+              <span class="ml-3 flex flex-wrap items-center gap-1.5 text-xs font-bold text-slate-800">
+                    <span id="lblCompoundTitle">Günlük Eklemeli (Bileşik) Getiri/Borç</span>
+                    <span class="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500" id="compoundBadge">Sabit Anapara</span>
+                  </span>
+            </label>
+            <p class="text-[11px] text-slate-500" id="txtCompoundDesc">Nemalanan/artan bakiyeli hesaplarda faiz anaparaya eklenerek katlanır.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="space-y-4 lg:col-span-6">
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+          <div class="mb-3 flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5" id="txtTaxExpenseEngineTitle">
+                <span>⚖️</span>
+                <span>Dinamik Vergi & Masraf Yöneticisi</span>
+              </h3>
+              <p class="text-[10px] text-slate-500" id="txtTaxExpenseEngineDesc">Tüm oranlar, tutarlar ve hesaplama tabanları doğrudan satır içinden düzenlenebilir.</p>
+            </div>
+            <button class="rounded-lg bg-indigo-50 border border-indigo-200 px-2.5 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all shadow-xs" id="btnToggleAddTaxModal" type="button">+ Yeni Kalem</button>
+          </div>
+
+          <div class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1" id="taxExpenseListContainer"></div>
+
+          <div class="hidden mt-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-3 shadow-inner" id="addTaxFormPanel">
+            <div class="mb-2 text-xs font-bold text-indigo-950 flex items-center justify-between">
+              <span id="txtAddNewItemHeading">Yeni Vergi / Masraf Kalemi Tanımla</span>
+              <span class="text-[10px] text-indigo-600 font-semibold">Tüm parametreler serbesttir</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div class="sm:col-span-2">
+                <input class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 focus:border-indigo-500" id="newTaxName" placeholder="Kalem Adı (örn. Sigorta, Tahsis, BSMV, Aidat)" type="text" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5" id="lblNewTaxCategory">Kategori</label>
+                <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 font-semibold" id="newTaxCategory">
+                  <option value="tax">Yasal Vergi (Stopaj, BSMV, KKDF vb.)</option>
+                  <option value="expense">Banka Masrafı / Komisyon / Aidat</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5" id="lblNewTaxType">Hesaplama Türü / Tabanı</label>
+                <select class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700 font-semibold" id="newTaxType">
+                  <option value="interest_pct">% Faiz Üzerinden</option>
+                  <option value="principal_pct">% Anapara Üzerinden (Tek Sefer)</option>
+                  <option value="principal_pct_monthly">% Anapara Üzerinden (Aylık)</option>
+                  <option value="principal_pct_yearly">% Anapara Üzerinden (Yıllık)</option>
+                  <option value="fixed_total">Sabit Tutar (₺ Tek Sefer)</option>
+                  <option value="fixed_daily">Sabit Tutar (₺/Günlük)</option>
+                  <option value="fixed_monthly">Sabit Tutar (₺/Aylık)</option>
+                  <option value="fixed_yearly">Sabit Tutar (₺/Yıllık)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2 flex items-center gap-2 pt-1">
+                <div class="relative w-full">
+                  <input class="font-mono-num w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800" id="newTaxValue" placeholder="Oran veya Tutar (örn. 15, 17.5, 250)" type="number" step="any" />
+                </div>
+                <button class="rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 whitespace-nowrap" id="btnSaveNewTaxItem" type="button">Kaydet & Ekle</button>
+                <button class="rounded-lg bg-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-300" id="btnCancelNewTaxItem" type="button">İptal</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3.5 pt-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-600">
+            <span id="txtActiveTaxesSummary">Aktif Faiz Vergileri Toplamı:</span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono-num text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200" id="badgeTotalTaxImpact">%0,00</span>
+              <span class="font-mono-num text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200" id="badgeTotalExpenseImpact">Masraf: ₺0,00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative overflow-hidden rounded-2xl border-2 border-indigo-500/40 bg-gradient-to-br from-indigo-50/80 via-white to-emerald-50/50 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-extrabold tracking-wider text-indigo-900 uppercase" id="lblHeroCardTitle">1 Günlük Temel Net Sonuç</span>
+            <button class="copy-btn flex items-center gap-1 rounded-lg border border-indigo-300 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 transition-all hover:bg-indigo-100/70" data-target="dailyNetValueOutput" type="button">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+              <span class="copy-label">Kopyala</span>
+            </button>
+          </div>
+          <div class="flex items-baseline gap-1">
+            <span class="font-mono-num text-2xl font-bold text-indigo-800">₺</span>
+            <span class="font-mono-num text-3xl sm:text-4xl font-extrabold text-indigo-900 tracking-tight" id="dailyNetValueOutput">0,00</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1" id="txtHeroCardDesc">1 gün için tüm vergiler ve varsa günlük masraflar düşüldükten/eklendikten sonraki net tutardır.</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-4">
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
+        <span class="mb-1 block text-[10px] font-bold tracking-wider text-slate-500 uppercase" id="lblCardGrossInterest">Toplam Brüt Faiz</span>
+        <div class="font-mono-num text-sm sm:text-base font-bold text-slate-900" id="cardDailyGross">₺0,00</div>
+        <span class="font-mono-num text-[10px] text-slate-400" id="subtextGross">Ham Faiz Tutarı</span>
+      </div>
+
+      <div class="rounded-2xl border border-rose-200 bg-rose-50/60 p-3.5">
+        <span class="mb-1 block text-[10px] font-bold tracking-wider text-rose-700 uppercase" id="lblCardTotalTaxes">Toplam Vergiler</span>
+        <div class="font-mono-num text-sm sm:text-base font-bold text-rose-700" id="cardTotalTaxes">-₺0,00</div>
+        <span class="font-mono-num text-[10px] text-rose-400" id="subtextTaxes">Stopaj / KKDF / BSMV</span>
+      </div>
+
+      <div class="rounded-2xl border border-amber-200 bg-amber-50/60 p-3.5">
+        <span class="mb-1 block text-[10px] font-bold tracking-wider text-amber-800 uppercase" id="lblCardTotalFees">Toplam Masraflar</span>
+        <div class="font-mono-num text-sm sm:text-base font-bold text-amber-700" id="cardTotalFees">-₺0,00</div>
+        <span class="font-mono-num text-[10px] text-amber-500" id="subtextFees">Komisyon / Aidat / Masraf</span>
+      </div>
+
+      <div class="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3.5">
+        <div>
+          <div class="mb-1 flex items-center justify-between">
+            <span class="block text-[10px] font-bold tracking-wider text-emerald-800 uppercase" id="lblCardNetResult">Dönem Sonu Net</span>
+            <button class="copy-btn flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 hover:text-emerald-950" data-target="cardPeriodNet" title="Kopyala" type="button">
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+              <span class="copy-label"></span>
+            </button>
+          </div>
+          <div class="font-mono-num text-sm sm:text-base font-extrabold text-emerald-900" id="cardPeriodNet">₺0,00</div>
+        </div>
+        <span class="font-mono-num text-[10px] text-emerald-600" id="subtextNetResult">Net Kazanç / Net Gider</span>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
+      <div class="mb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-2.5 gap-2">
+        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5" id="txtBreakdownTitle">
+          <span>📋</span>
+          <span>Ayrıntılı Finansal Döküm & Muhasebe Tablosu</span>
+        </h3>
+        <div class="flex items-center gap-2 self-end sm:self-auto">
+          <span class="font-mono-num text-xs font-bold text-slate-700" id="txtFinalBalanceLabel">Dönem Sonu Toplam Bakiye:</span>
+          <span class="font-mono-num text-sm sm:text-base font-extrabold text-indigo-700" id="cardTotalEnd">₺0,00</span>
+          <button class="copy-btn rounded-md border border-slate-200 p-1 text-slate-500 hover:text-indigo-600" data-target="cardTotalEnd" title="Kopyala" type="button">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+          <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase">
+            <th class="py-2" id="thItemName">Kalem / Açıklama</th>
+            <th class="py-2" id="thItemType">Hesaplama Tabanı</th>
+            <th class="py-2 text-right" id="thItemRateAmount">Birim / Oran</th>
+            <th class="py-2 text-right" id="thItemTotalAmount">Toplam Tutar (TL)</th>
+          </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-mono-num" id="breakdownTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="font-mono-num space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-2 text-[11px] font-semibold text-slate-800">
+            <span class="flex items-center gap-1.5">
+              <span class="text-indigo-600">📐</span>
+              <span id="txtMathEngineTitle">Matematiksel Ayrıştırma & Formül Denetimi</span>
+            </span>
+        <span class="text-[10px] font-medium text-slate-500" id="calcTypeBadge">Mevduat Getiri Modu</span>
+      </div>
+      <div class="grid grid-cols-1 gap-2 pt-1 text-[11px] sm:grid-cols-3">
+        <div>
+          <span class="block text-[10px] text-slate-400" id="txtMathStep1Label">1. Yıllık Eşdeğer Brüt Faiz:</span>
+          <span class="font-semibold text-slate-900" id="mathStep1">-</span>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-400" id="txtMathStep2Label">2. Brüt Faiz Tutarı (N Gün):</span>
+          <span class="font-semibold text-slate-900" id="mathStep2">-</span>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-400" id="txtMathStep3Label">3. Net Sonuç / Bakiye:</span>
+          <span class="font-semibold text-emerald-700" id="mathStep3">-</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-2 text-xs">
+      <div class="flex items-center gap-2 text-slate-500 text-[11px]">
+        <span>⚡ <strong id="txtFooterFormulaNote">Yıl: 365 Gün Bazlı</strong></span>
+        <span class="h-1 w-1 rounded-full bg-slate-300"></span>
+        <span id="txtFooterPrecisionNote">Hassas Yuvarlama Kuralı Aktif</span>
+      </div>
+      <div class="text-[11px] text-slate-400 font-mono-num">
+        http://localhost/calc.html
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<div class="pointer-events-none fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 translate-y-3 items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white opacity-0 shadow-2xl transition-all duration-200" id="toast">
+  <svg class="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+  </svg>
+  <span id="toastText">Kopyalandı!</span>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    const DAYS_IN_YEAR = 365;
+
+    const I18N = {
+      tr: {
+        headerBadge: 'Evrensel Joker Finans Motoru',
+        headerTitle: 'Gelişmiş Finans, Faiz & Gider Hesaplayıcı',
+        headerSubtitle: 'Tüm değerleri, oranları, kesintileri ve masrafları tamamen düzenlenebilir evrensel hesaplayıcı.',
+        resetAll: 'Sıfırla',
+        quickPresets: 'Hazır Finansal Şablonlar & Senaryolar',
+        presetHint: '1 Tıkla Tüm Faiz, Vade ve Vergileri Doldurur (Sonrasında Değiştirilebilir)',
+        presetDepositDaily: 'Günlük Mevduat / Fon',
+        presetDepositTerm: '32 Gün Vadeli Mevduat',
+        presetKMH: 'KMH / Esnek Hesap',
+        presetLoan: 'Tüketici Kredisi',
+        presetCashAdv: 'Nakit Avans / Gecikme',
+        presetCustom: 'Özel / Sıfırdan',
+        modeYield: 'Mevduat / Yatırım / Getiri Modu (Gelir & Kazanç)',
+        modeDebt: 'Kredi / KMH / Borç & Maliyet Modu (Gider & Masraf)',
+        principal: 'Anapara / Kredi Tutarı',
+        interestRate: 'Faiz Oranı',
+        historyXTitle: 'Hızlı Anaparalar / Geçmiş',
+        historyYTitle: 'Hızlı Oranlar',
+        termDays: 'Vade Süresi & Gün Sayısı',
+        termHelper: 'Gün, ay veya yıl olarak girilebilir; tam gün çevrimi ile hassas hesaplanır.',
+        compoundTitle: 'Günlük Eklemeli (Bileşik) Getiri/Borç',
+        compoundDesc: 'Nemalanan/artan bakiyeli hesaplarda faiz anaparaya eklenerek katlanır.',
+        taxExpenseEngineTitle: 'Dinamik Vergi & Masraf Yöneticisi',
+        taxExpenseEngineDesc: 'Tüm oranlar, tutarlar ve hesaplama tabanları doğrudan satır içinden düzenlenebilir.',
+        addNewItemHeading: 'Yeni Vergi / Masraf Kalemi Tanımla',
+        lblNewTaxCategory: 'Kategori',
+        lblNewTaxType: 'Hesaplama Türü / Tabanı',
+        activeTaxesSummary: 'Aktif Faiz Vergileri Toplamı:',
+        heroCardTitle: '1 Günlük Temel Net Sonuç',
+        heroCardDesc: '1 gün için tüm vergiler ve varsa günlük masraflar düşüldükten/eklendikten sonraki net tutardır.',
+        cardGrossInterest: 'Toplam Brüt Faiz',
+        cardTotalTaxes: 'Toplam Vergiler',
+        cardTotalFees: 'Toplam Masraflar',
+        cardNetResult: 'Dönem Sonu Net',
+        breakdownTitle: 'Ayrıntılı Finansal Döküm & Muhasebe Tablosu',
+        finalBalanceLabel: 'Dönem Sonu Toplam Bakiye:',
+        thItemName: 'Kalem / Açıklama',
+        thItemType: 'Hesaplama Tabanı',
+        thItemRateAmount: 'Birim / Oran',
+        thItemTotalAmount: 'Toplam Tutar (TL)',
+        mathEngineTitle: 'Matematiksel Ayrıştırma & Formül Denetimi',
+        mathStep1Label: '1. Yıllık Eşdeğer Brüt Faiz:',
+        mathStep2Label: '2. Brüt Faiz Tutarı (N Gün):',
+        mathStep3Label: '3. Net Sonuç / Bakiye:',
+        footerFormulaNote: 'Yıl: 365 Gün Bazlı',
+        footerPrecisionNote: 'Hassas Yuvarlama Kuralı Aktif',
+        copied: 'Kopyalandı',
+        resetDone: 'Tüm alanlar sıfırlandı',
+        presetLoaded: 'Şablon başarıyla uygulandı',
+        rateBasisYearly: 'Yıllık (%)',
+        rateBasisMonthly: 'Aylık (%)',
+        rateBasisDaily: 'Günlük (%)',
+        unitDays: 'Gün',
+        unitMonths: 'Ay',
+        unitYears: 'Yıl',
+        typeInterestPct: '% Faiz Üzerinden',
+        typePrincipalPct: '% Anapara (Tek Sefer)',
+        typePrincipalPctMonthly: '% Anapara (Aylık)',
+        typePrincipalPctYearly: '% Anapara (Yıllık)',
+        typeFixedTotal: 'Sabit Tutar (₺)',
+        typeFixedDaily: 'Sabit Tutar (₺/Gün)',
+        typeFixedMonthly: 'Sabit Tutar (₺/Ay)',
+        typeFixedYearly: 'Sabit Tutar (₺/Yıl)'
+      },
+      en: {
+        headerBadge: 'Universal Joker Financial Engine',
+        headerTitle: 'Advanced Finance, Interest & Expense Calculator',
+        headerSubtitle: 'Universal calculator with 100% editable rates, custom taxes, bases and dynamic fees.',
+        resetAll: 'Reset All',
+        quickPresets: 'Financial Presets & Scenarios',
+        presetHint: 'Fills all rates, terms and taxes in 1 click (fully editable thereafter)',
+        presetDepositDaily: 'Daily Deposit / Fund',
+        presetDepositTerm: '32-Day Term Deposit',
+        presetKMH: 'Overdraft / Credit Line',
+        presetLoan: 'Consumer Loan',
+        presetCashAdv: 'Cash Advance / Late Fee',
+        presetCustom: 'Custom / Scratch',
+        modeYield: 'Deposit / Investment / Yield Mode (Income & Return)',
+        modeDebt: 'Credit / Loan / Debt & Cost Mode (Expense & Cost)',
+        principal: 'Principal / Loan Amount',
+        interestRate: 'Interest Rate',
+        historyXTitle: 'Quick Amounts / History',
+        historyYTitle: 'Quick Rates',
+        termDays: 'Term Period & Days Count',
+        termHelper: 'Can be entered as days, months or years; precisely calculated with full day conversion.',
+        compoundTitle: 'Daily Compounding Return/Debt',
+        compoundDesc: 'In compounding accounts, interest accumulates to principal over time.',
+        taxExpenseEngineTitle: 'Dynamic Tax & Expense Manager',
+        taxExpenseEngineDesc: 'All rates, amounts, and calculation bases are fully editable directly inside each row.',
+        addNewItemHeading: 'Define New Tax / Expense Item',
+        lblNewTaxCategory: 'Category',
+        lblNewTaxType: 'Calculation Basis',
+        activeTaxesSummary: 'Total Active Interest Taxes:',
+        heroCardTitle: '1-Day Base Net Outcome',
+        heroCardDesc: 'Net outcome for 1 single day after applying all active taxes and recurring daily fees.',
+        cardGrossInterest: 'Total Gross Interest',
+        cardTotalTaxes: 'Total Taxes',
+        cardTotalFees: 'Total Expenses',
+        cardNetResult: 'Period Net Result',
+        breakdownTitle: 'Detailed Financial & Accounting Breakdown',
+        finalBalanceLabel: 'End-Period Total Balance:',
+        thItemName: 'Item / Description',
+        thItemType: 'Calculation Base',
+        thItemRateAmount: 'Unit / Rate',
+        thItemTotalAmount: 'Total Amount (TL)',
+        mathEngineTitle: 'Mathematical Breakdown & Audit',
+        mathStep1Label: '1. Annualized Gross Rate:',
+        mathStep2Label: '2. Gross Interest Amount (N Days):',
+        mathStep3Label: '3. Net Result / Balance:',
+        footerFormulaNote: 'Year Basis: 365 Days',
+        footerPrecisionNote: 'Precision Rounding Active',
+        copied: 'Copied',
+        resetDone: 'All fields cleared',
+        presetLoaded: 'Preset applied successfully',
+        rateBasisYearly: 'Annual (%)',
+        rateBasisMonthly: 'Monthly (%)',
+        rateBasisDaily: 'Daily (%)',
+        unitDays: 'Days',
+        unitMonths: 'Months',
+        unitYears: 'Years',
+        typeInterestPct: '% of Interest',
+        typePrincipalPct: '% of Principal (One-off)',
+        typePrincipalPctMonthly: '% of Principal (Monthly)',
+        typePrincipalPctYearly: '% of Principal (Annual)',
+        typeFixedTotal: 'Fixed Amount (₺)',
+        typeFixedDaily: 'Fixed Amount (₺/Day)',
+        typeFixedMonthly: 'Fixed Amount (₺/Month)',
+        typeFixedYearly: 'Fixed Amount (₺/Year)'
+      }
+    };
+
+    let currentLang = localStorage.getItem('calc_lang') || 'tr';
+    let currentCalcType = 'yield';
+    let isCompound = false;
+
+    let taxExpenseItems = [
+      { id: 't_stopaj', name: 'Stopaj (Gelir Vergisi Kesintisi)', category: 'tax', type: 'interest_pct', value: 17.5, enabled: true },
+      { id: 't_kkdf', name: 'KKDF (Kaynak Kullanım Fonu)', category: 'tax', type: 'interest_pct', value: 15.0, enabled: false },
+      { id: 't_bsmv', name: 'BSMV (Banka ve Sigorta Vergisi)', category: 'tax', type: 'interest_pct', value: 15.0, enabled: false },
+      { id: 'e_tahsis', name: 'Kredi Tahsis / Dosya Masrafı', category: 'expense', type: 'principal_pct', value: 0.5, enabled: false },
+      { id: 'e_sigorta', name: 'Hayat / Kredi Sigortası', category: 'expense', type: 'fixed_total', value: 0.0, enabled: false },
+      { id: 'e_isletim', name: 'Hesap / Kart Kullanım Ücreti', category: 'expense', type: 'fixed_monthly', value: 0.0, enabled: false }
+    ];
+
+    const btnLangTR = document.getElementById('btnLangTR');
+    const btnLangEN = document.getElementById('btnLangEN');
+    const btnTypeYield = document.getElementById('btnTypeYield');
+    const btnTypeDebt = document.getElementById('btnTypeDebt');
+
+    const inputX = document.getElementById('inputX');
+    const inputY = document.getElementById('inputY');
+    const selectRatePeriod = document.getElementById('selectRatePeriod');
+    const rateNormalizedDisplay = document.getElementById('rateNormalizedDisplay');
+    const txtRatePeriodHelper = document.getElementById('txtRatePeriodHelper');
+
+    const inputTermValue = document.getElementById('inputTermValue');
+    const selectTermUnit = document.getElementById('selectTermUnit');
+    const btnDaysDec = document.getElementById('btnDaysDec');
+    const btnDaysInc = document.getElementById('btnDaysInc');
+    const dayChips = document.querySelectorAll('.day-chip');
+    const compoundToggle = document.getElementById('compoundToggle');
+    const compoundBadge = document.getElementById('compoundBadge');
+
+    const historyContainerX = document.getElementById('historyContainerX');
+    const historyContainerY = document.getElementById('historyContainerY');
+    const clearHistoryXBtn = document.getElementById('clearHistoryX');
+    const clearHistoryYBtn = document.getElementById('clearHistoryY');
+
+    const taxExpenseListContainer = document.getElementById('taxExpenseListContainer');
+    const btnToggleAddTaxModal = document.getElementById('btnToggleAddTaxModal');
+    const addTaxFormPanel = document.getElementById('addTaxFormPanel');
+    const newTaxName = document.getElementById('newTaxName');
+    const newTaxCategory = document.getElementById('newTaxCategory');
+    const newTaxType = document.getElementById('newTaxType');
+    const newTaxValue = document.getElementById('newTaxValue');
+    const btnSaveNewTaxItem = document.getElementById('btnSaveNewTaxItem');
+    const btnCancelNewTaxItem = document.getElementById('btnCancelNewTaxItem');
+    const badgeTotalTaxImpact = document.getElementById('badgeTotalTaxImpact');
+    const badgeTotalExpenseImpact = document.getElementById('badgeTotalExpenseImpact');
+
+    const dailyNetValueOutput = document.getElementById('dailyNetValueOutput');
+    const cardDailyGross = document.getElementById('cardDailyGross');
+    const cardTotalTaxes = document.getElementById('cardTotalTaxes');
+    const cardTotalFees = document.getElementById('cardTotalFees');
+    const cardPeriodNet = document.getElementById('cardPeriodNet');
+    const cardTotalEnd = document.getElementById('cardTotalEnd');
+    const breakdownTableBody = document.getElementById('breakdownTableBody');
+
+    const mathStep1 = document.getElementById('mathStep1');
+    const mathStep2 = document.getElementById('mathStep2');
+    const mathStep3 = document.getElementById('mathStep3');
+    const calcTypeBadge = document.getElementById('calcTypeBadge');
+
+    const resetAllBtn = document.getElementById('resetAllBtn');
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toastText');
+    let toastTimer = null;
+
+    function parseNumber(val) {
+      if (!val) return 0;
+      let s = String(val).trim().replace(/\s/g, '').replace(/₺/g, '').replace(/%/g, '');
+      if (s === '') return 0;
+      if (s.includes(',')) {
+        s = s.replace(/\./g, '').replace(',', '.');
+      }
+      const num = parseFloat(s);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function fmt(val, decimals = 2) {
+      if (isNaN(val) || !isFinite(val) || val === 0) return '0,00';
+      return val.toLocaleString('tr-TR', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
+    }
+
+    function getNormalizedDays() {
+      const val = Math.max(1, parseInt(inputTermValue.value) || 1);
+      const unit = selectTermUnit.value;
+      if (unit === 'months') return val * 30;
+      if (unit === 'years') return val * DAYS_IN_YEAR;
+      return val;
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('calc_lang', lang);
+      const t = I18N[lang];
+
+      if (lang === 'tr') {
+        btnLangTR.className = 'lang-btn rounded-lg px-2.5 py-1 text-xs font-bold transition-all bg-indigo-600 text-white';
+        btnLangEN.className = 'lang-btn rounded-lg px-2.5 py-1 text-xs font-bold transition-all text-slate-600 hover:text-slate-900';
+      } else {
+        btnLangEN.className = 'lang-btn rounded-lg px-2.5 py-1 text-xs font-bold transition-all bg-indigo-600 text-white';
+        btnLangTR.className = 'lang-btn rounded-lg px-2.5 py-1 text-xs font-bold transition-all text-slate-600 hover:text-slate-900';
+      }
+
+      document.getElementById('txtHeaderBadge').textContent = t.headerBadge;
+      document.getElementById('txtHeaderTitle').textContent = t.headerTitle;
+      document.getElementById('txtHeaderSubtitle').textContent = t.headerSubtitle;
+      document.getElementById('txtResetAll').textContent = t.resetAll;
+      document.getElementById('txtQuickPresets').textContent = t.quickPresets;
+      document.getElementById('txtPresetHint').textContent = t.presetHint;
+      document.getElementById('txtPresetDepositDaily').textContent = t.presetDepositDaily;
+      document.getElementById('txtPresetDepositTerm').textContent = t.presetDepositTerm;
+      document.getElementById('txtPresetKMH').textContent = t.presetKMH;
+      document.getElementById('txtPresetLoan').textContent = t.presetLoan;
+      document.getElementById('txtPresetCashAdv').textContent = t.presetCashAdv;
+      document.getElementById('txtPresetCustom').textContent = t.presetCustom;
+      document.getElementById('txtModeYield').textContent = t.modeYield;
+      document.getElementById('txtModeDebt').textContent = t.modeDebt;
+      document.getElementById('lblPrincipal').textContent = t.principal;
+      document.getElementById('lblInterestRate').textContent = t.interestRate;
+      document.getElementById('txtHistoryXTitle').textContent = t.historyXTitle;
+      document.getElementById('txtHistoryYTitle').textContent = t.historyYTitle;
+      document.getElementById('lblTermDays').textContent = t.termDays;
+      document.getElementById('txtTermHelper').textContent = t.termHelper;
+      document.getElementById('lblCompoundTitle').textContent = t.compoundTitle;
+      document.getElementById('txtCompoundDesc').textContent = t.compoundDesc;
+      document.getElementById('txtTaxExpenseEngineTitle').querySelector('span:last-child').textContent = t.taxExpenseEngineTitle;
+      document.getElementById('txtTaxExpenseEngineDesc').textContent = t.taxExpenseEngineDesc;
+      document.getElementById('txtAddNewItemHeading').textContent = t.addNewItemHeading;
+      document.getElementById('lblNewTaxCategory').textContent = t.lblNewTaxCategory;
+      document.getElementById('lblNewTaxType').textContent = t.lblNewTaxType;
+      document.getElementById('txtActiveTaxesSummary').textContent = t.activeTaxesSummary;
+      document.getElementById('lblHeroCardTitle').textContent = currentCalcType === 'yield' ? t.heroCardTitle : (lang === 'tr' ? '1 Günlük Net Borç Maliyeti' : '1-Day Net Debt Cost');
+      document.getElementById('txtHeroCardDesc').textContent = t.heroCardDesc;
+      document.getElementById('lblCardGrossInterest').textContent = t.cardGrossInterest;
+      document.getElementById('lblCardTotalTaxes').textContent = t.cardTotalTaxes;
+      document.getElementById('lblCardTotalFees').textContent = t.cardTotalFees;
+      document.getElementById('lblCardNetResult').textContent = t.cardNetResult;
+      document.getElementById('txtBreakdownTitle').querySelector('span:last-child').textContent = t.breakdownTitle;
+      document.getElementById('txtFinalBalanceLabel').textContent = t.finalBalanceLabel;
+      document.getElementById('thItemName').textContent = t.thItemName;
+      document.getElementById('thItemType').textContent = t.thItemType;
+      document.getElementById('thItemRateAmount').textContent = t.thItemRateAmount;
+      document.getElementById('thItemTotalAmount').textContent = t.thItemTotalAmount;
+      document.getElementById('txtMathEngineTitle').textContent = t.mathEngineTitle;
+      document.getElementById('txtMathStep1Label').textContent = t.mathStep1Label;
+      document.getElementById('txtMathStep2Label').textContent = t.mathStep2Label;
+      document.getElementById('txtMathStep3Label').textContent = t.mathStep3Label;
+      document.getElementById('txtFooterFormulaNote').textContent = t.footerFormulaNote;
+      document.getElementById('txtFooterPrecisionNote').textContent = t.footerPrecisionNote;
+
+      selectRatePeriod.options[0].text = t.rateBasisYearly;
+      selectRatePeriod.options[1].text = t.rateBasisMonthly;
+      selectRatePeriod.options[2].text = t.rateBasisDaily;
+
+      selectTermUnit.options[0].text = t.unitDays;
+      selectTermUnit.options[1].text = t.unitMonths;
+      selectTermUnit.options[2].text = t.unitYears;
+
+      renderTaxExpenseList();
+      recalculate();
+    }
+
+    btnLangTR.addEventListener('click', () => setLanguage('tr'));
+    btnLangEN.addEventListener('click', () => setLanguage('en'));
+
+    const DEFAULT_PRESETS_X = [10000, 50000, 100000, 250000, 500000, 900000, 1000000];
+    const DEFAULT_PRESETS_Y = [4.42, 5.0, 35.0, 37.25, 40.0, 45.0, 50.0];
+
+    function getHistory(type) {
+      const raw = localStorage.getItem(`calc_history_${type}`);
+      if (!raw) return type === 'x' ? DEFAULT_PRESETS_X : DEFAULT_PRESETS_Y;
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return type === 'x' ? DEFAULT_PRESETS_X : DEFAULT_PRESETS_Y;
+      }
+    }
+
+    function saveHistoryItem(type, val) {
+      if (!val || val <= 0) return;
+      let list = getHistory(type);
+      list = [val, ...list.filter((item) => Math.abs(item - val) > 0.00001)].slice(0, 7);
+      localStorage.setItem(`calc_history_${type}`, JSON.stringify(list));
+      renderHistory();
+    }
+
+    function formatChipLabel(type, val) {
+      if (type === 'x') {
+        if (val >= 1000000) return (val / 1000000).toFixed(1).replace('.0', '') + 'M ₺';
+        if (val >= 1000) return (val / 1000).toFixed(0) + 'K ₺';
+        return val + ' ₺';
+      } else {
+        return '%' + val.toFixed(2).replace('.00', '').replace(',', '.');
+      }
+    }
+
+    function renderHistory() {
+      const listX = getHistory('x');
+      const listY = getHistory('y');
+      historyContainerX.innerHTML = '';
+      listX.forEach((val) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'preset-chip text-[11px] font-mono-num bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 px-2 py-0.5 rounded-lg shadow-sm';
+        btn.textContent = formatChipLabel('x', val);
+        btn.addEventListener('click', () => {
+          inputX.value = val;
+          recalculate();
+        });
+        historyContainerX.appendChild(btn);
+      });
+      historyContainerY.innerHTML = '';
+      listY.forEach((val) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'preset-chip text-[11px] font-mono-num bg-white border border-slate-200 hover:border-indigo-400 text-slate-700 px-2 py-0.5 rounded-lg shadow-sm';
+        btn.textContent = formatChipLabel('y', val);
+        btn.addEventListener('click', () => {
+          inputY.value = val;
+          recalculate();
+        });
+        historyContainerY.appendChild(btn);
+      });
+    }
+
+    clearHistoryXBtn.addEventListener('click', () => {
+      localStorage.setItem('calc_history_x', JSON.stringify(DEFAULT_PRESETS_X));
+      renderHistory();
+      showToast('Anapara geçmişi sıfırlandı');
+    });
+    clearHistoryYBtn.addEventListener('click', () => {
+      localStorage.setItem('calc_history_y', JSON.stringify(DEFAULT_PRESETS_Y));
+      renderHistory();
+      showToast('Faiz geçmişi sıfırlandı');
+    });
+
+    function getCalculationTypeLabels(typeKey) {
+      const t = I18N[currentLang];
+      switch(typeKey) {
+        case 'interest_pct': return t.typeInterestPct;
+        case 'principal_pct': return t.typePrincipalPct;
+        case 'principal_pct_monthly': return t.typePrincipalPctMonthly;
+        case 'principal_pct_yearly': return t.typePrincipalPctYearly;
+        case 'fixed_total': return t.typeFixedTotal;
+        case 'fixed_daily': return t.typeFixedDaily;
+        case 'fixed_monthly': return t.typeFixedMonthly;
+        case 'fixed_yearly': return t.typeFixedYearly;
+        default: return typeKey;
+      }
+    }
+
+    function renderTaxExpenseList() {
+      taxExpenseListContainer.innerHTML = '';
+      const t = I18N[currentLang];
+
+      taxExpenseItems.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = `p-2.5 rounded-xl border transition-all ${
+                item.enabled
+                        ? (item.category === 'tax' ? 'bg-rose-50/40 border-rose-200 shadow-2xs' : 'bg-amber-50/40 border-amber-200 shadow-2xs')
+                        : 'bg-slate-100/50 border-slate-200 opacity-60'
+        }`;
+
+        const badgeColor = item.category === 'tax' ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-amber-100 text-amber-800 border-amber-200';
+        const categoryLabel = item.category === 'tax' ? (currentLang === 'tr' ? 'Vergi' : 'Tax') : (currentLang === 'tr' ? 'Masraf' : 'Fee');
+
+        row.innerHTML = `
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <input type="checkbox" ${item.enabled ? 'checked' : ''} class="item-checkbox h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" data-id="${item.id}" />
+                  <input type="text" value="${item.name}" class="item-name-input w-full bg-transparent text-xs font-bold text-slate-800 focus:bg-white focus:ring-1 focus:ring-indigo-500 rounded px-1" data-id="${item.id}" />
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${categoryLabel}</span>
+                  <button type="button" class="btn-delete-item text-slate-400 hover:text-rose-600 p-0.5 transition-colors" data-id="${item.id}" title="Kaldır">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-12 gap-2 items-center text-xs">
+                <div class="col-span-7 sm:col-span-8">
+                  <select class="item-type-select w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 shadow-2xs" data-id="${item.id}">
+                    <option value="interest_pct" ${item.type === 'interest_pct' ? 'selected' : ''}>${t.typeInterestPct}</option>
+                    <option value="principal_pct" ${item.type === 'principal_pct' ? 'selected' : ''}>${t.typePrincipalPct}</option>
+                    <option value="principal_pct_monthly" ${item.type === 'principal_pct_monthly' ? 'selected' : ''}>${t.typePrincipalPctMonthly}</option>
+                    <option value="principal_pct_yearly" ${item.type === 'principal_pct_yearly' ? 'selected' : ''}>${t.typePrincipalPctYearly}</option>
+                    <option value="fixed_total" ${item.type === 'fixed_total' ? 'selected' : ''}>${t.typeFixedTotal}</option>
+                    <option value="fixed_daily" ${item.type === 'fixed_daily' ? 'selected' : ''}>${t.typeFixedDaily}</option>
+                    <option value="fixed_monthly" ${item.type === 'fixed_monthly' ? 'selected' : ''}>${t.typeFixedMonthly}</option>
+                    <option value="fixed_yearly" ${item.type === 'fixed_yearly' ? 'selected' : ''}>${t.typeFixedYearly}</option>
+                  </select>
+                </div>
+                <div class="col-span-5 sm:col-span-4 relative flex items-center">
+                  <input type="number" step="any" value="${item.value}" class="item-value-input font-mono-num w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-900 text-right pr-6 focus:border-indigo-500 shadow-2xs" data-id="${item.id}" />
+                  <span class="absolute right-2 text-[11px] font-bold text-slate-400 pointer-events-none">${item.type.includes('pct') ? '%' : '₺'}</span>
+                </div>
+              </div>
+            `;
+
+        taxExpenseListContainer.appendChild(row);
+      });
+
+      document.querySelectorAll('.item-checkbox').forEach((cb) => {
+        cb.addEventListener('change', function () {
+          const id = this.dataset.id;
+          const target = taxExpenseItems.find((it) => it.id === id);
+          if (target) {
+            target.enabled = this.checked;
+            renderTaxExpenseList();
+            recalculate();
+          }
+        });
+      });
+
+      document.querySelectorAll('.item-name-input').forEach((inp) => {
+        inp.addEventListener('input', function () {
+          const id = this.dataset.id;
+          const target = taxExpenseItems.find((it) => it.id === id);
+          if (target) {
+            target.name = this.value;
+            recalculate();
+          }
+        });
+      });
+
+      document.querySelectorAll('.item-type-select').forEach((sel) => {
+        sel.addEventListener('change', function () {
+          const id = this.dataset.id;
+          const target = taxExpenseItems.find((it) => it.id === id);
+          if (target) {
+            target.type = this.value;
+            renderTaxExpenseList();
+            recalculate();
+          }
+        });
+      });
+
+      document.querySelectorAll('.item-value-input').forEach((inp) => {
+        inp.addEventListener('input', function () {
+          const id = this.dataset.id;
+          const target = taxExpenseItems.find((it) => it.id === id);
+          if (target) {
+            target.value = parseFloat(this.value) || 0;
+            recalculate();
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-delete-item').forEach((btn) => {
+        btn.addEventListener('click', function () {
+          const id = this.dataset.id;
+          taxExpenseItems = taxExpenseItems.filter((it) => it.id !== id);
+          renderTaxExpenseList();
+          recalculate();
+        });
+      });
+    }
+
+    btnToggleAddTaxModal.addEventListener('click', () => {
+      addTaxFormPanel.classList.toggle('hidden');
+    });
+
+    btnCancelNewTaxItem.addEventListener('click', () => {
+      addTaxFormPanel.classList.add('hidden');
+      newTaxName.value = '';
+      newTaxValue.value = '';
+    });
+
+    btnSaveNewTaxItem.addEventListener('click', () => {
+      const name = newTaxName.value.trim();
+      const category = newTaxCategory.value;
+      const type = newTaxType.value;
+      const val = parseFloat(newTaxValue.value);
+
+      if (!name || isNaN(val)) {
+        showToast('Lütfen geçerli bir isim ve değer girin');
+        return;
+      }
+
+      taxExpenseItems.push({
+        id: 'custom_' + Date.now(),
+        name: name,
+        category: category,
+        type: type,
+        value: val,
+        enabled: true
+      });
+
+      newTaxName.value = '';
+      newTaxValue.value = '';
+      addTaxFormPanel.classList.add('hidden');
+      renderTaxExpenseList();
+      recalculate();
+      showToast('Yeni kalem eklendi');
+    });
+
+    function setCalculationType(type) {
+      currentCalcType = type;
+      if (type === 'yield') {
+        btnTypeYield.className = 'calc-type-btn flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-center font-bold text-white shadow-sm transition-all';
+        btnTypeDebt.className = 'calc-type-btn flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center font-medium text-slate-600 transition-all hover:bg-white/60 hover:text-slate-900';
+        calcTypeBadge.textContent = currentLang === 'tr' ? 'Mevduat / Yatırım Getiri Modu' : 'Deposit / Yield Mode';
+        calcTypeBadge.className = 'text-[10px] font-semibold text-emerald-600';
+      } else {
+        btnTypeDebt.className = 'calc-type-btn flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-center font-bold text-white shadow-sm transition-all';
+        btnTypeYield.className = 'calc-type-btn flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center font-medium text-slate-600 transition-all hover:bg-white/60 hover:text-slate-900';
+        calcTypeBadge.textContent = currentLang === 'tr' ? 'Kredi / KMH / Borçlanma Modu' : 'Credit / Loan Cost Mode';
+        calcTypeBadge.className = 'text-[10px] font-semibold text-rose-600';
+      }
+      setLanguage(currentLang);
+    }
+
+    btnTypeYield.addEventListener('click', () => setCalculationType('yield'));
+    btnTypeDebt.addEventListener('click', () => setCalculationType('debt'));
+
+    function applyPreset(presetKey) {
+      if (presetKey === 'daily_deposit') {
+        setCalculationType('yield');
+        selectRatePeriod.value = 'yearly';
+        inputTermValue.value = '1';
+        selectTermUnit.value = 'days';
+        compoundToggle.checked = false;
+        if (!inputX.value) inputX.value = '100000';
+        inputY.value = '45.00';
+        taxExpenseItems = [
+          { id: 't_stopaj', name: 'Stopaj (Gelir Vergisi Kesintisi)', category: 'tax', type: 'interest_pct', value: 17.5, enabled: true },
+          { id: 't_kkdf', name: 'KKDF (Kaynak Kullanım Fonu)', category: 'tax', type: 'interest_pct', value: 15.0, enabled: false },
+          { id: 't_bsmv', name: 'BSMV (Banka ve Sigorta Vergisi)', category: 'tax', type: 'interest_pct', value: 15.0, enabled: false },
+          { id: 'e_isletim', name: 'Hesap İşletim Ücreti', category: 'expense', type: 'fixed_monthly', value: 0.0, enabled: false }
+        ];
+      } else if (presetKey === 'term_deposit') {
+        setCalculationType('yield');
+        selectRatePeriod.value = 'yearly';
+        inputTermValue.value = '32';
+        selectTermUnit.value = 'days';
+        compoundToggle.checked = false;
+        if (!inputX.value) inputX.value = '250000';
+        inputY.value = '48.00';
+        taxExpenseItems = [
+          { id: 't_stopaj', name: 'Stopaj (Gelir Vergisi Kesintisi)', category: 'tax', type: 'interest_pct', value: 17.5, enabled: true },
+          { id: 't_kkdf', name: 'KKDF (Kaynak Kullanım Fonu)', category: 'tax', type: 'interest_pct', value: 15.0, enabled: false },
+          { id: 't_bsmv', name: 'BSMV (Banka ve Sigorta Vergisi)', category: 'tax', type: 'interest_pct', value: 15.0, enabled: false }
+        ];
+      } else if (presetKey === 'kmh_overdraft') {
+        setCalculationType('debt');
+        selectRatePeriod.value = 'monthly';
+        inputTermValue.value = '30';
+        selectTermUnit.value = 'days';
+        compoundToggle.checked = false;
+        if (!inputX.value) inputX.value = '50000';
+        inputY.value = '5.00';
+        taxExpenseItems = [
+          { id: 't_kkdf', name: 'KKDF (%15 Faiz Üzerinden)', category: 'tax', type: 'interest_pct', value: 15.0, enabled: true },
+          { id: 't_bsmv', name: 'BSMV (%15 Faiz Üzerinden)', category: 'tax', type: 'interest_pct', value: 15.0, enabled: true },
+          { id: 't_stopaj', name: 'Stopaj', category: 'tax', type: 'interest_pct', value: 17.5, enabled: false }
+        ];
+      } else if (presetKey === 'consumer_loan') {
+        setCalculationType('debt');
+        selectRatePeriod.value = 'monthly';
+        inputTermValue.value = '12';
+        selectTermUnit.value = 'months';
+        compoundToggle.checked = false;
+        if (!inputX.value) inputX.value = '100000';
+        inputY.value = '4.42';
+        taxExpenseItems = [
+          { id: 't_kkdf', name: 'KKDF', category: 'tax', type: 'interest_pct', value: 15.0, enabled: true },
+          { id: 't_bsmv', name: 'BSMV', category: 'tax', type: 'interest_pct', value: 15.0, enabled: true },
+          { id: 'e_tahsis', name: 'Kredi Tahsis / Dosya Masrafı', category: 'expense', type: 'principal_pct', value: 0.5, enabled: true },
+          { id: 'e_sigorta', name: 'Hayat Sigortası (Yıllık)', category: 'expense', type: 'fixed_yearly', value: 350.0, enabled: true }
+        ];
+      } else if (presetKey === 'cash_advance') {
+        setCalculationType('debt');
+        selectRatePeriod.value = 'monthly';
+        inputTermValue.value = '30';
+        selectTermUnit.value = 'days';
+        compoundToggle.checked = false;
+        if (!inputX.value) inputX.value = '25000';
+        inputY.value = '5.00';
+        taxExpenseItems = [
+          { id: 't_kkdf', name: 'KKDF', category: 'tax', type: 'interest_pct', value: 15.0, enabled: true },
+          { id: 't_bsmv', name: 'BSMV', category: 'tax', type: 'interest_pct', value: 15.0, enabled: true },
+          { id: 'e_nakitcekim', name: 'Nakit Çekim Komisyonu', category: 'expense', type: 'principal_pct', value: 1.15, enabled: true },
+          { id: 'e_cekimsabit', name: 'Sabit Çekim Ücreti', category: 'expense', type: 'fixed_total', value: 10.0, enabled: true }
+        ];
+      } else if (presetKey === 'custom_blank') {
+        inputX.value = '';
+        inputY.value = '';
+        inputTermValue.value = '1';
+        selectTermUnit.value = 'days';
+        compoundToggle.checked = false;
+      }
+
+      renderTaxExpenseList();
+      recalculate();
+      showToast(I18N[currentLang].presetLoaded);
+    }
+
+    document.querySelectorAll('.template-card').forEach((btn) => {
+      btn.addEventListener('click', function () {
+        applyPreset(this.dataset.preset);
+      });
+    });
+
+    function recalculate() {
+      const x = parseNumber(inputX.value);
+      let rawY = parseNumber(inputY.value);
+      const N = getNormalizedDays();
+      const ratePeriod = selectRatePeriod.value;
+      isCompound = compoundToggle.checked;
+
+      let annualGrossRate = 0;
+      if (ratePeriod === 'yearly') {
+        annualGrossRate = rawY / 100;
+        txtRatePeriodHelper.textContent = currentLang === 'tr' ? '% Yıllık Oran' : '% Annual Rate';
+        rateNormalizedDisplay.textContent = `Yıllık: %${fmt(rawY, 2)}`;
+      } else if (ratePeriod === 'monthly') {
+        annualGrossRate = (rawY * 12) / 100;
+        txtRatePeriodHelper.textContent = currentLang === 'tr' ? '% Aylık Oran' : '% Monthly Rate';
+        rateNormalizedDisplay.textContent = `Aylık: %${fmt(rawY, 2)} (Yıllık: %${fmt(rawY * 12, 2)})`;
+      } else if (ratePeriod === 'daily') {
+        annualGrossRate = (rawY * DAYS_IN_YEAR) / 100;
+        txtRatePeriodHelper.textContent = currentLang === 'tr' ? '% Günlük Oran' : '% Daily Rate';
+        rateNormalizedDisplay.textContent = `Günlük: %${fmt(rawY, 4)} (Yıllık: %${fmt(annualGrossRate * 100, 2)})`;
+      }
+
+      let totalInterestTaxPct = 0;
+      taxExpenseItems.forEach((item) => {
+        if (item.enabled && item.type === 'interest_pct' && item.category === 'tax') {
+          totalInterestTaxPct += item.value;
+        }
+      });
+      badgeTotalTaxImpact.textContent = `%${fmt(totalInterestTaxPct, 2)}`;
+
+      if (isCompound) {
+        compoundBadge.textContent = currentLang === 'tr' ? '⚡ Eklemeli (Bileşik)' : '⚡ Compounding';
+        compoundBadge.className = 'rounded-md border border-indigo-200 bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700';
+      } else {
+        compoundBadge.textContent = currentLang === 'tr' ? 'Sabit Anapara' : 'Simple Principal';
+        compoundBadge.className = 'rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500';
+      }
+
+      const dailyGrossRate = annualGrossRate / DAYS_IN_YEAR;
+      const netInterestFactor = Math.max(0, 1 - totalInterestTaxPct / 100);
+      const dailyNetRate = dailyGrossRate * netInterestFactor;
+
+      let unroundedGrossInterestN = 0;
+      let unroundedPeriodNetInterest = 0;
+      let unroundedBase1DayNet = (x * dailyGrossRate * netInterestFactor);
+
+      if (x > 0 && annualGrossRate > 0) {
+        if (isCompound) {
+          if (currentCalcType === 'yield') {
+            const compoundBalance = x * Math.pow(1 + dailyNetRate, N);
+            unroundedPeriodNetInterest = compoundBalance - x;
+            unroundedGrossInterestN = netInterestFactor > 0 ? (unroundedPeriodNetInterest / netInterestFactor) : (x * dailyGrossRate * N);
+          } else {
+            const debtFactorDaily = dailyGrossRate * (1 + totalInterestTaxPct / 100);
+            const compoundDebt = x * Math.pow(1 + debtFactorDaily, N);
+            unroundedGrossInterestN = x * (Math.pow(1 + dailyGrossRate, N) - 1);
+            unroundedPeriodNetInterest = compoundDebt - x;
+          }
+        } else {
+          unroundedGrossInterestN = x * dailyGrossRate * N;
+          unroundedPeriodNetInterest = unroundedGrossInterestN * netInterestFactor;
+        }
+      }
+
+      let calculatedTaxesTotal = 0;
+      let calculatedFeesTotal = 0;
+      const breakdownRows = [];
+
+      breakdownRows.push({
+        name: currentLang === 'tr' ? 'Başlangıç Anaparası / Kredi' : 'Principal / Loan Base',
+        type: currentLang === 'tr' ? 'Taban Tutar' : 'Base Amount',
+        rateUnit: '₺' + fmt(x, 2),
+        amount: x,
+        sign: ''
+      });
+
+      breakdownRows.push({
+        name: currentLang === 'tr' ? `Brüt Faiz Tutarı (${N} Günlük)` : `Gross Interest (${N} Days)`,
+        type: `%${fmt(annualGrossRate * 100, 2)} ${currentLang === 'tr' ? 'Yıllık Eşdeğer' : 'Annualized'}`,
+        rateUnit: `%${fmt(rawY, 2)} (${ratePeriod})`,
+        amount: unroundedGrossInterestN,
+        sign: currentCalcType === 'yield' ? '+' : '-'
+      });
+
+      taxExpenseItems.forEach((item) => {
+        if (!item.enabled) return;
+        let itemAmount = 0;
+        let itemRateText = '';
+
+        if (item.type === 'interest_pct') {
+          itemAmount = unroundedGrossInterestN * (item.value / 100);
+          itemRateText = `%${fmt(item.value, 2)} ${currentLang === 'tr' ? 'Faizden' : 'of Interest'}`;
+        } else if (item.type === 'principal_pct') {
+          itemAmount = x * (item.value / 100);
+          itemRateText = `%${fmt(item.value, 2)} ${currentLang === 'tr' ? 'Anaparadan' : 'of Principal'}`;
+        } else if (item.type === 'principal_pct_monthly') {
+          itemAmount = x * (item.value / 100) * (N / 30);
+          itemRateText = `%${fmt(item.value, 2)} / ${currentLang === 'tr' ? 'Ay' : 'Month'}`;
+        } else if (item.type === 'principal_pct_yearly') {
+          itemAmount = x * (item.value / 100) * (N / DAYS_IN_YEAR);
+          itemRateText = `%${fmt(item.value, 2)} / ${currentLang === 'tr' ? 'Yıl' : 'Year'}`;
+        } else if (item.type === 'fixed_total') {
+          itemAmount = item.value;
+          itemRateText = `₺${fmt(item.value, 2)} ${currentLang === 'tr' ? 'Sabit' : 'Fixed'}`;
+        } else if (item.type === 'fixed_daily') {
+          itemAmount = item.value * N;
+          itemRateText = `₺${fmt(item.value, 2)} / ${currentLang === 'tr' ? 'Gün' : 'Day'}`;
+        } else if (item.type === 'fixed_monthly') {
+          itemAmount = item.value * (N / 30);
+          itemRateText = `₺${fmt(item.value, 2)} / ${currentLang === 'tr' ? 'Ay' : 'Month'}`;
+        } else if (item.type === 'fixed_yearly') {
+          itemAmount = item.value * (N / DAYS_IN_YEAR);
+          itemRateText = `₺${fmt(item.value, 2)} / ${currentLang === 'tr' ? 'Yıl' : 'Year'}`;
+        }
+
+        if (item.category === 'tax') {
+          calculatedTaxesTotal += itemAmount;
+        } else {
+          calculatedFeesTotal += itemAmount;
+        }
+
+        breakdownRows.push({
+          name: item.name,
+          type: getCalculationTypeLabels(item.type),
+          rateUnit: itemRateText,
+          amount: itemAmount,
+          sign: '-'
+        });
+      });
+
+      badgeTotalExpenseImpact.textContent = `Masraf: ₺${fmt(calculatedFeesTotal, 2)}`;
+
+      let finalPeriodNetReturn = 0;
+      let finalTotalBalance = 0;
+
+      if (currentCalcType === 'yield') {
+        finalPeriodNetReturn = unroundedGrossInterestN - calculatedTaxesTotal - calculatedFeesTotal;
+        finalTotalBalance = x + finalPeriodNetReturn;
+      } else {
+        finalPeriodNetReturn = unroundedGrossInterestN + calculatedTaxesTotal + calculatedFeesTotal;
+        finalTotalBalance = x + finalPeriodNetReturn;
+      }
+
+      dailyNetValueOutput.textContent = fmt(unroundedBase1DayNet, 2);
+      cardDailyGross.textContent = `₺${fmt(unroundedGrossInterestN, 2)}`;
+      cardTotalTaxes.textContent = `-₺${fmt(calculatedTaxesTotal, 2)}`;
+      cardTotalFees.textContent = `-₺${fmt(calculatedFeesTotal, 2)}`;
+      cardPeriodNet.textContent = `${currentCalcType === 'yield' ? '+' : '-'}₺${fmt(finalPeriodNetReturn, 2)}`;
+      cardTotalEnd.textContent = `₺${fmt(finalTotalBalance, 2)}`;
+
+      breakdownTableBody.innerHTML = '';
+      breakdownRows.forEach((row) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition-colors';
+        const colorClass = row.sign === '+' ? 'text-emerald-700 font-bold' : (row.sign === '-' ? 'text-rose-600 font-semibold' : 'text-slate-900 font-bold');
+        tr.innerHTML = `
+              <td class="py-2.5 font-medium text-slate-800">${row.name}</td>
+              <td class="py-2.5 text-slate-500">${row.type}</td>
+              <td class="py-2.5 text-right text-slate-600">${row.rateUnit}</td>
+              <td class="py-2.5 text-right ${colorClass}">${row.sign ? row.sign : ''}₺${fmt(row.amount, 2)}</td>
+            `;
+        breakdownTableBody.appendChild(tr);
+      });
+
+      if (x > 0 && annualGrossRate > 0) {
+        mathStep1.textContent = `%${fmt(rawY, 2)} (${ratePeriod}) = %${fmt(annualGrossRate * 100, 4)} Yıllık`;
+        mathStep2.textContent = `(${fmt(x, 0)} ₺ × %${fmt(annualGrossRate * 100, 2)} × ${N}g) / 365 = ${fmt(unroundedGrossInterestN, 2)} ₺`;
+        if (currentCalcType === 'yield') {
+          mathStep3.textContent = `${fmt(unroundedGrossInterestN, 2)} ₺ - ${fmt(calculatedTaxesTotal + calculatedFeesTotal, 2)} ₺ = ${fmt(finalPeriodNetReturn, 2)} ₺ Net`;
+        } else {
+          mathStep3.textContent = `${fmt(unroundedGrossInterestN, 2)} ₺ + ${fmt(calculatedTaxesTotal + calculatedFeesTotal, 2)} ₺ = ${fmt(finalPeriodNetReturn, 2)} ₺ Borç`;
+        }
+      } else {
+        mathStep1.textContent = '-';
+        mathStep2.textContent = '-';
+        mathStep3.textContent = '-';
+      }
+    }
+
+    inputX.addEventListener('input', recalculate);
+    inputY.addEventListener('input', recalculate);
+    selectRatePeriod.addEventListener('change', recalculate);
+    inputTermValue.addEventListener('input', recalculate);
+    selectTermUnit.addEventListener('change', recalculate);
+    compoundToggle.addEventListener('change', recalculate);
+
+    inputX.addEventListener('blur', () => {
+      const val = parseNumber(inputX.value);
+      if (val > 0) saveHistoryItem('x', val);
+    });
+
+    inputY.addEventListener('blur', () => {
+      const val = parseNumber(inputY.value);
+      if (val > 0) saveHistoryItem('y', val);
+    });
+
+    btnDaysDec.addEventListener('click', () => {
+      const current = parseInt(inputTermValue.value) || 1;
+      if (current > 1) {
+        inputTermValue.value = current - 1;
+        recalculate();
+      }
+    });
+
+    btnDaysInc.addEventListener('click', () => {
+      const current = parseInt(inputTermValue.value) || 1;
+      if (current < 3650) {
+        inputTermValue.value = current + 1;
+        recalculate();
+      }
+    });
+
+    dayChips.forEach((chip) => {
+      chip.addEventListener('click', function () {
+        inputTermValue.value = parseInt(this.dataset.val);
+        selectTermUnit.value = this.dataset.unit;
+        recalculate();
+      });
+    });
+
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', async function (e) {
+        e.preventDefault();
+        const targetId = this.dataset.target;
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        const val = el.value !== undefined ? el.value : el.textContent.replace('₺', '').replace('+', '').replace('-', '').trim();
+        if (!val || val === '0,00' || val === '-0,00' || val === '-') return;
+        const labelSpan = this.querySelector('.copy-label');
+        const orig = labelSpan ? labelSpan.textContent : '';
+        try {
+          await navigator.clipboard.writeText(val);
+          showToast(`${I18N[currentLang].copied}: ${val}`);
+          if (labelSpan) labelSpan.textContent = I18N[currentLang].copied + '!';
+          setTimeout(() => {
+            if (labelSpan) labelSpan.textContent = orig;
+          }, 1800);
+        } catch {
+          if (el.select) el.select();
+          document.execCommand('copy');
+          showToast(`${I18N[currentLang].copied}: ${val}`);
+        }
+      });
+    });
+
+    function showToast(msg) {
+      toastText.textContent = msg;
+      toast.classList.remove('opacity-0', 'translate-y-3');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-3');
+      }, 2200);
+    }
+
+    resetAllBtn.addEventListener('click', () => {
+      inputX.value = '';
+      inputY.value = '';
+      inputTermValue.value = '1';
+      selectTermUnit.value = 'days';
+      compoundToggle.checked = false;
+      recalculate();
+      showToast(I18N[currentLang].resetDone);
+    });
+
+    renderHistory();
+    setLanguage(currentLang);
+    applyPreset('daily_deposit');
+  })();
+</script>
+</body>
+</html>
