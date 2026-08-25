@@ -1,0 +1,1087 @@
+<!doctype html>
+<html class="h-full" lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AÖF EdTech Sınav Simülatörü | İnternet Programcılığı II - İYS - E-Ticaret</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#eef2ff',
+                100: '#e0e7ff',
+                500: '#6366f1',
+                600: '#4f46e5',
+                700: '#4338ca',
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <!-- canvas-confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- Alpine.js v3 -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+
+      .strike-option {
+        text-decoration: line-through;
+        opacity: 0.45;
+      }
+
+      .custom-mark {
+        background-color: #fef08a;
+        color: #1e293b;
+        padding: 0 4px;
+        border-radius: 3px;
+      }
+
+      .dark .custom-mark {
+        background-color: #854d0e;
+        color: #fef9c3;
+      }
+
+      @keyframes flamePulse {
+        0%,
+        100% {
+          transform: scale(1);
+          filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.6));
+        }
+        50% {
+          transform: scale(1.15);
+          filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.9));
+        }
+      }
+
+      .flame-anim {
+        animation: flamePulse 1.2s infinite ease-in-out;
+      }
+    </style>
+  </head>
+  <body :class="$store.quiz.darkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'" class="selection:bg-brand-500 flex min-h-full flex-col font-sans antialiased transition-colors duration-200 selection:text-white" x-cloak x-data>
+    <!-- ==================== ÜST BAŞLIK & NAVİGASYON ==================== -->
+    <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+        <!-- Logo & Başlık -->
+        <div class="flex items-center space-x-3">
+          <div class="from-brand-600 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr to-indigo-400 text-xl font-bold text-white shadow-md">AÖF</div>
+          <div>
+            <h1 class="text-base leading-tight font-extrabold tracking-tight md:text-lg">EdTech Sınav Simülatörü</h1>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Bahar & Bütünleme Hazırlık Portalı</p>
+          </div>
+        </div>
+
+        <!-- Ders Seçim Butonları -->
+        <nav class="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+          <button :class="$store.quiz.activeCourse === 'ip2' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'" @click="$store.quiz.switchCourse('ip2')" class="rounded-lg px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition md:text-sm">İnternet Prog. II</button>
+          <button :class="$store.quiz.activeCourse === 'cms' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'" @click="$store.quiz.switchCourse('cms')" class="rounded-lg px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition md:text-sm">İçerik Yönetim Sis.</button>
+          <button :class="$store.quiz.activeCourse === 'etc' ? 'bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'" @click="$store.quiz.switchCourse('etc')" class="rounded-lg px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition md:text-sm">E-Ticaret</button>
+        </nav>
+
+        <!-- Oyunlaştırma & Üst Araçlar -->
+        <div class="flex items-center gap-3">
+          <!-- XP & Seviye -->
+          <div class="flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-1.5 dark:border-slate-700 dark:bg-slate-800/80">
+            <div class="text-right">
+              <span class="block text-[10px] leading-none font-extrabold tracking-wider text-indigo-500 uppercase" x-text="$store.quiz.currentLevelName"></span>
+              <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300" x-text="`${$store.quiz.xp} XP`"></span>
+            </div>
+            <!-- Seri Sayacı -->
+            <div class="flex items-center gap-0.5 border-l border-indigo-200 pl-2 text-xs font-extrabold text-orange-500 dark:border-slate-700" x-show="$store.quiz.streak > 1">
+              <span class="flame-anim">🔥</span>
+              <span x-text="$store.quiz.streak"></span>
+            </div>
+          </div>
+
+          <!-- Rozetler Butonu -->
+          <button @click="$store.quiz.showBadgesModal = true" class="rounded-lg p-2 text-amber-500 transition hover:bg-amber-50 dark:hover:bg-slate-800" title="Kazanılan Rozetler">🏆</button>
+
+          <!-- Ses Aç/Kapa -->
+          <button :title="$store.quiz.soundEnabled ? 'Sesi Kapat' : 'Sesi Aç'" @click="$store.quiz.toggleSound()" class="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            <span x-text="$store.quiz.soundEnabled ? '🔊' : '🔇'"></span>
+          </button>
+
+          <!-- Koyu Mod -->
+          <button @click="$store.quiz.toggleDarkMode()" class="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" title="Karanlık Modu Değiştir">
+            <span x-text="$store.quiz.darkMode ? '☀️' : '🌙'"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== ANA ÇALIŞMA ALANI ==================== -->
+    <main class="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 p-4 md:p-6">
+      <!-- VERİ EKSİK / DOSYA YÜKLEME BANNER (Dual-mode fallback) -->
+      <div class="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-6 text-center shadow-sm dark:border-amber-700/60 dark:bg-amber-950/40" x-show="!$store.quiz.isCurrentDatasetLoaded">
+        <div class="mx-auto max-w-xl space-y-3">
+          <div class="text-4xl">📂</div>
+          <h3 class="text-base font-bold text-amber-900 md:text-lg dark:text-amber-200">Soru Veri Dosyası Bekleniyor</h3>
+          <p class="text-xs leading-relaxed text-amber-800 md:text-sm dark:text-amber-300">
+            Seçili ders (
+            <strong x-text="$store.quiz.activeCourseName"></strong>
+            ) için JSON dosyası otomatik okunamadı veya yerel dosya sistemindesiniz. Devam etmek için JSON dosyasını buraya sürükleyip bırakabilir veya seçebilirsiniz.
+          </p>
+          <div class="flex flex-wrap justify-center gap-3 pt-2">
+            <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-semibold text-white shadow transition hover:bg-amber-700 md:text-sm">
+              <span>JSON Dosyası Seç</span>
+              <input @change="$store.quiz.handleFileUpload($event)" accept=".json" class="hidden" multiple type="file" />
+            </label>
+            <button @click="$store.quiz.loadAllViaFetch()" class="px-4 py-2 text-xs font-semibold text-amber-900 hover:underline md:text-sm dark:text-amber-200">Yeniden Dene (fetch)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KONTROL ÇUBUĞU / FİLTRELER & AYARLAR (Veri Yüklendiğinde Göster) -->
+      <section class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900" x-show="$store.quiz.isCurrentDatasetLoaded">
+        <!-- Filtreleme Butonları -->
+        <div class="flex flex-wrap items-center gap-1.5 text-xs">
+          <span class="mr-1 text-[11px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">Filtre:</span>
+          <button :class="$store.quiz.activeFilter === 'all' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'" @click="$store.quiz.setFilter('all')" class="rounded-lg px-3 py-1.5 transition">
+            Tümü (
+            <span x-text="$store.quiz.currentDataset.length"></span>
+            )
+          </button>
+          <button :class="$store.quiz.activeFilter === 'unanswered' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'" @click="$store.quiz.setFilter('unanswered')" class="rounded-lg px-3 py-1.5 transition">
+            Boşlar (
+            <span x-text="$store.quiz.stats.unanswered"></span>
+            )
+          </button>
+          <button :class="$store.quiz.activeFilter === 'wrong' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'" @click="$store.quiz.setFilter('wrong')" class="rounded-lg px-3 py-1.5 transition">
+            Yanlışlar (
+            <span x-text="$store.quiz.stats.wrong"></span>
+            )
+          </button>
+          <button :class="$store.quiz.activeFilter === 'starred' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'" @click="$store.quiz.setFilter('starred')" class="rounded-lg px-3 py-1.5 transition">
+            ⭐ Yıldızlılar (
+            <span x-text="$store.quiz.stats.starred"></span>
+            )
+          </button>
+          <button :class="$store.quiz.activeFilter === 'cancelled' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'" @click="$store.quiz.setFilter('cancelled')" class="rounded-lg px-3 py-1.5 transition">
+            İptaller (
+            <span x-text="$store.quiz.stats.cancelled"></span>
+            )
+          </button>
+        </div>
+
+        <!-- Modlar & Aksiyonlar -->
+        <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+          <!-- Geri Bildirim Modu -->
+          <div class="inline-flex rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
+            <button :class="$store.quiz.feedbackMode === 'instant' ? 'bg-white dark:bg-slate-700 shadow text-brand-600 dark:text-white' : 'text-slate-500'" @click="$store.quiz.setFeedbackMode('instant')" class="rounded-md px-2.5 py-1 transition">Anında Cevap</button>
+            <button :class="$store.quiz.feedbackMode === 'deferred' ? 'bg-white dark:bg-slate-700 shadow text-brand-600 dark:text-white' : 'text-slate-500'" @click="$store.quiz.setFeedbackMode('deferred')" class="rounded-md px-2.5 py-1 transition">Sınav Modu</button>
+          </div>
+
+          <!-- Sıralama Modu -->
+          <button @click="$store.quiz.toggleOrder()" class="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 transition hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">
+            <span x-text="$store.quiz.order === 'original' ? '📑 Orijinal Sıra' : '🔀 Karışık Sıra'"></span>
+          </button>
+
+          <!-- Soru Haritası Drawer Butonu -->
+          <button @click="$store.quiz.showPalette = !$store.quiz.showPalette" class="text-brand-600 flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-1.5 font-bold transition hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-400">
+            <span>🎯 Soru Haritası</span>
+          </button>
+
+          <!-- Sıfırla -->
+          <button @click="$store.quiz.showResetModal = true" class="rounded-lg px-2.5 py-1.5 text-rose-600 transition hover:bg-rose-50 dark:hover:bg-rose-950/40" title="Dersi Sıfırla">🗑️ Sıfırla</button>
+        </div>
+      </section>
+
+      <!-- SORU & CEVAP GÖSTERİM KARTI -->
+      <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-4" x-show="$store.quiz.isCurrentDatasetLoaded && $store.quiz.filteredQuestions.length > 0">
+        <!-- Ana Soru Paneli (3 Kolon) -->
+        <div class="space-y-4 lg:col-span-3">
+          <div class="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8 dark:border-slate-800 dark:bg-slate-900">
+            <!-- Soru Üst Başlık Bilgisi -->
+            <div class="mb-4 flex items-center justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 rounded-md px-2.5 py-1 text-xs font-extrabold" x-text="$store.quiz.currentQuestion?.id"></span>
+                <span class="text-xs font-medium text-slate-500 dark:text-slate-400" x-text="$store.quiz.currentQuestion?.exam_group"></span>
+                <span class="text-xs font-semibold text-slate-400 dark:text-slate-500" x-text="`• Soru ${$store.quiz.currentQuestionIndex + 1} / ${$store.quiz.filteredQuestions.length}`"></span>
+              </div>
+
+              <div class="flex items-center gap-1">
+                <!-- Metin Vurgulayıcı Aç/Kapa -->
+                <button :class="$store.quiz.isCurrentHighlighted ? 'bg-yellow-200 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-100' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'" @click="$store.quiz.highlightCurrentQuestion()" class="rounded-xl p-2 text-sm transition" title="Soru Kökünü Vurgula">🖍️</button>
+
+                <!-- Yıldız / Favori Butonu -->
+                <button :class="$store.quiz.isStarred($store.quiz.currentQuestion?.id) ? 'text-amber-500 hover:scale-110' : 'text-slate-300 dark:text-slate-600 hover:text-amber-400'" @click="$store.quiz.toggleStar($store.quiz.currentQuestion?.id)" class="rounded-xl p-2 text-lg leading-none transition" title="Yıldıza Ekle / Kaldır">
+                  <span x-text="$store.quiz.isStarred($store.quiz.currentQuestion?.id) ? '★' : '☆'"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- İptal Soru Uyarısı -->
+            <div class="mb-4 flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-xs font-bold text-purple-800 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300" x-show="$store.quiz.currentQuestion?.is_cancelled">
+              <span>ℹ️</span>
+              <span>Bu soru resmi sınavda iptal edilmiştir. Herkes için doğru kabul edilir.</span>
+            </div>
+
+            <!-- Soru Kökü Metni -->
+            <div class="mb-6">
+              <h2 :class="$store.quiz.isCurrentHighlighted ? 'bg-yellow-100/70 dark:bg-yellow-950/40 p-3 rounded-xl border border-yellow-200 dark:border-yellow-900/60' : ''" class="text-base leading-relaxed font-semibold text-slate-900 select-text md:text-lg dark:text-slate-100" x-text="$store.quiz.currentQuestion?.question || '[Eksik soru metni]'"></h2>
+            </div>
+
+            <!-- Seçenekler Listesi (A, B, C, D, E) -->
+            <div class="space-y-3">
+              <template :key="optKey" x-for="optKey in ['A','B','C','D','E']">
+                <div :class="$store.quiz.getOptionClass(optKey)" class="group relative flex items-center justify-between rounded-2xl border transition-all duration-150" x-show="$store.quiz.currentQuestion?.options && $store.quiz.currentQuestion.options[optKey] !== undefined">
+                  <!-- Seçenek Tıklama Butonu -->
+                  <button @click="$store.quiz.selectAnswer(optKey)" @contextmenu.prevent="$store.quiz.toggleElimination(optKey)" class="flex w-full flex-1 items-start gap-3 p-3.5 text-left md:p-4">
+                    <span :class="$store.quiz.getOptionBadgeClass(optKey)" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition" x-text="optKey"></span>
+                    <span :class="$store.quiz.isEliminated(optKey) ? 'strike-option' : ''" class="pt-0.5 text-xs leading-normal font-medium md:text-sm" x-text="$store.quiz.currentQuestion?.options[optKey] || '[Boş seçenek]'"></span>
+                  </button>
+
+                  <!-- Şık Eleyici Çarpı Butonu (Sağ tık veya ikon) -->
+                  <button @click.stop="$store.quiz.toggleElimination(optKey)" class="p-3 text-sm text-slate-400 opacity-40 transition group-hover:opacity-100 hover:text-rose-500" title="Şıkkı Ele / Çiz">
+                    <span x-text="$store.quiz.isEliminated(optKey) ? '↩️' : '×'"></span>
+                  </button>
+                </div>
+              </template>
+            </div>
+
+            <!-- Cevap Açıklama Kutusu (Anında Modda veya Sınav Tamamlandığında) -->
+            <div class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-900 md:p-5 md:text-sm dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200" x-show="$store.quiz.shouldShowExplanation">
+              <div class="mb-1.5 flex items-center gap-2 font-bold">
+                <span>💡 Doğru Cevap:</span>
+                <span class="rounded bg-emerald-200 px-2 py-0.5 font-extrabold dark:bg-emerald-800" x-text="$store.quiz.currentQuestion?.correct_answer"></span>
+              </div>
+              <p class="leading-relaxed" x-text="$store.quiz.currentQuestion?.explanation ? $store.quiz.currentQuestion.explanation : 'Bu soru için ek açıklama metni bulunmamaktadır.'"></p>
+            </div>
+
+            <!-- Alt Gezinme Butonları -->
+            <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5 dark:border-slate-800">
+              <div class="flex items-center gap-2">
+                <button :disabled="$store.quiz.currentQuestionIndex === 0" @click="$store.quiz.prevQuestion()" class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 md:text-sm dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700">← Önceki</button>
+                <button @click="$store.quiz.undoLastAnswer()" class="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300" title="Son cevabı temizle / geri al">↺ Geri Al</button>
+              </div>
+
+              <!-- Sınav Modu için Tamamla Butonu -->
+              <button @click="$store.quiz.submitExam()" class="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition hover:from-emerald-700 hover:to-teal-700 md:text-sm" x-show="$store.quiz.feedbackMode === 'deferred' && !$store.quiz.isExamSubmitted">Sınavı Tamamla ve Puanla</button>
+
+              <button :disabled="$store.quiz.currentQuestionIndex >= $store.quiz.filteredQuestions.length - 1" @click="$store.quiz.nextQuestion()" class="bg-brand-600 hover:bg-brand-700 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow transition disabled:cursor-not-allowed disabled:opacity-40 md:text-sm">Sonraki →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Yan Bilgi & İstatistik Kartı (1 Kolon) -->
+        <aside class="space-y-4 lg:col-span-1">
+          <!-- Hızlı Özet Kartı -->
+          <div class="space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <h4 class="text-sm text-[11px] font-bold tracking-wider text-slate-700 uppercase dark:text-slate-200">Ders Performansı</h4>
+
+            <div class="grid grid-cols-2 gap-2 text-center">
+              <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+                <span class="block text-xl font-black text-emerald-600 dark:text-emerald-400" x-text="$store.quiz.stats.correct"></span>
+                <span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">Doğru</span>
+              </div>
+              <div class="rounded-2xl border border-rose-100 bg-rose-50 p-3 dark:border-rose-900 dark:bg-rose-950/40">
+                <span class="block text-xl font-black text-rose-600 dark:text-rose-400" x-text="$store.quiz.stats.wrong"></span>
+                <span class="text-[11px] font-semibold text-rose-700 dark:text-rose-300">Yanlış</span>
+              </div>
+            </div>
+
+            <!-- İlerleme Çubuğu -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <span>İlerleme:</span>
+                <span x-text="`%${$store.quiz.stats.progressPercent}`"></span>
+              </div>
+              <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div :style="`width: ${$store.quiz.stats.progressPercent}%`" class="from-brand-500 h-full bg-gradient-to-r to-indigo-600 transition-all duration-300"></div>
+              </div>
+            </div>
+
+            <!-- Kısayol Tuşları Bilgilendirmesi -->
+            <div class="space-y-1 border-t border-slate-100 pt-2 text-[11px] text-slate-400 dark:border-slate-800 dark:text-slate-500">
+              <p><strong>Klavye Kısayolları:</strong></p>
+              <p>
+                •
+                <kbd class="rounded border bg-slate-100 px-1 py-0.5 dark:bg-slate-800">A</kbd>
+                -
+                <kbd class="rounded border bg-slate-100 px-1 py-0.5 dark:bg-slate-800">E</kbd>
+                : Şık Seçimi
+              </p>
+              <p>
+                •
+                <kbd class="rounded border bg-slate-100 px-1 py-0.5 dark:bg-slate-800">←</kbd>
+                /
+                <kbd class="rounded border bg-slate-100 px-1 py-0.5 dark:bg-slate-800">→</kbd>
+                : Önceki / Sonraki
+              </p>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- FİLTRE SONUCU BOŞ İSE BİLGİ KARTI -->
+      <div class="space-y-3 rounded-3xl border border-slate-200 bg-white p-10 text-center dark:border-slate-800 dark:bg-slate-900" x-show="$store.quiz.isCurrentDatasetLoaded && $store.quiz.filteredQuestions.length === 0">
+        <div class="text-4xl">🔍</div>
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">Bu Filtrede Soru Bulunamadı</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Mevcut filtre kriterlerine uyan herhangi bir soru kaydı bulunmuyor.</p>
+        <button @click="$store.quiz.setFilter('all')" class="bg-brand-600 hover:bg-brand-700 mt-2 rounded-xl px-4 py-2 text-xs font-semibold text-white">Tüm Soruları Göster</button>
+      </div>
+    </main>
+
+    <!-- ==================== SORU HARİTASI DRAWER / MODAL ==================== -->
+    <div aria-labelledby="slide-over-title" aria-modal="true" class="fixed inset-0 z-50 overflow-hidden" role="dialog" x-show="$store.quiz.showPalette">
+      <div @click="$store.quiz.showPalette = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+      <div class="fixed inset-y-0 right-0 flex max-w-full pl-10">
+        <div class="flex w-screen max-w-md flex-col justify-between bg-white p-6 shadow-2xl dark:bg-slate-900">
+          <div class="flex-1 space-y-4 overflow-y-auto pr-1">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+              <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Soru Haritası</h3>
+              <button @click="$store.quiz.showPalette = false" class="text-xl font-bold text-slate-400 hover:text-slate-600">×</button>
+            </div>
+
+            <!-- Renk Lejantı -->
+            <div class="grid grid-cols-2 gap-2 border-b border-slate-100 pb-2 text-[11px] font-semibold text-slate-600 dark:border-slate-800 dark:text-slate-400">
+              <div class="flex items-center gap-1.5">
+                <span class="h-3 w-3 rounded-full bg-emerald-500"></span>
+                Doğru
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="h-3 w-3 rounded-full bg-rose-500"></span>
+                Yanlış
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="bg-brand-500 h-3 w-3 rounded-full"></span>
+                İşaretli (Sınav)
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="h-3 w-3 rounded-full bg-slate-200 dark:bg-slate-700"></span>
+                Boş
+              </div>
+            </div>
+
+            <!-- Butonlar Grid -->
+            <div class="grid grid-cols-5 gap-2 pt-2">
+              <template :key="q.id" x-for="(q, idx) in $store.quiz.filteredQuestions">
+                <button :class="$store.quiz.getPaletteButtonClass(q, idx)" @click="$store.quiz.jumpToQuestion(idx); $store.quiz.showPalette = false" class="relative flex h-10 items-center justify-center rounded-xl text-xs font-bold transition">
+                  <span x-text="idx + 1"></span>
+                  <span class="absolute -top-1 -right-1 text-[10px] leading-none" x-show="$store.quiz.isStarred(q.id)">⭐</span>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100 pt-4 dark:border-slate-800">
+            <button @click="$store.quiz.showPalette = false" class="w-full rounded-xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">Kapat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ROZETLER MODAL ==================== -->
+    <div @click.self="$store.quiz.showBadgesModal = false" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm" x-show="$store.quiz.showBadgesModal">
+      <div class="w-full max-w-lg space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+          <h3 class="flex items-center gap-2 text-base font-extrabold text-slate-900 dark:text-white">
+            <span>🏆</span>
+            Başarı Rozetleri
+          </h3>
+          <button @click="$store.quiz.showBadgesModal = false" class="text-xl font-bold text-slate-400 hover:text-slate-600">×</button>
+        </div>
+
+        <div class="space-y-3">
+          <template :key="badge.key" x-for="badge in $store.quiz.allBadgeDefinitions">
+            <div :class="$store.quiz.badges.includes(badge.key) ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/80' : 'opacity-40 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'" class="flex items-center gap-3.5 rounded-2xl border p-3.5 transition">
+              <div class="shrink-0 text-3xl" x-text="badge.icon"></div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="text-xs font-bold text-slate-900 md:text-sm dark:text-white" x-text="badge.title"></h4>
+                  <span class="rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-900 dark:bg-amber-900 dark:text-amber-200" x-show="$store.quiz.badges.includes(badge.key)">Kazanıldı</span>
+                </div>
+                <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400" x-text="badge.desc"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <button @click="$store.quiz.showBadgesModal = false" class="bg-brand-600 hover:bg-brand-700 w-full rounded-xl py-2.5 text-xs font-bold text-white transition">Kapat</button>
+      </div>
+    </div>
+
+    <!-- ==================== SIFIRLAMA ONAY MODALI ==================== -->
+    <div @click.self="$store.quiz.showResetModal = false" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm" x-show="$store.quiz.showResetModal">
+      <div class="w-full max-w-sm space-y-4 rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+        <div class="text-4xl">⚠️</div>
+        <h3 class="text-base font-extrabold text-slate-900 dark:text-white">İlerlemeyi Sıfırla?</h3>
+        <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">Bu derse ait tüm cevaplarınız, yıldızlı sorularınız ve yerel istatistikleriniz sıfırlanacaktır. Bu işlem geri alınamaz.</p>
+        <div class="flex items-center gap-3 pt-2">
+          <button @click="$store.quiz.showResetModal = false" class="flex-1 rounded-xl bg-slate-100 py-2 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">Vazgeç</button>
+          <button @click="$store.quiz.resetCourseProgress(); $store.quiz.showResetModal = false" class="flex-1 rounded-xl bg-rose-600 py-2 text-xs font-bold text-white shadow hover:bg-rose-700">Evet, Sıfırla</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SINAV SONUÇ MODALI (Sınav Modu Bitince) ==================== -->
+    <div @click.self="$store.quiz.showExamResultModal = false" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm" x-show="$store.quiz.showExamResultModal">
+      <div class="w-full max-w-md space-y-5 rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-2xl md:p-8 dark:border-slate-800 dark:bg-slate-900">
+        <div class="text-5xl">🎉</div>
+        <h3 class="text-lg font-black text-slate-900 dark:text-white">Sınav Tamamlandı!</h3>
+
+        <div class="grid grid-cols-3 gap-2 rounded-2xl bg-slate-50 py-3 dark:bg-slate-800/50">
+          <div>
+            <span class="block text-xs font-bold text-slate-400">Doğru</span>
+            <span class="text-xl font-black text-emerald-600" x-text="$store.quiz.stats.correct"></span>
+          </div>
+          <div>
+            <span class="block text-xs font-bold text-slate-400">Yanlış</span>
+            <span class="text-xl font-black text-rose-600" x-text="$store.quiz.stats.wrong"></span>
+          </div>
+          <div>
+            <span class="block text-xs font-bold text-slate-400">Başarı</span>
+            <span class="text-brand-600 text-xl font-black" x-text="`%${$store.quiz.stats.successRate}`"></span>
+          </div>
+        </div>
+
+        <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">Soruları tek tek inceleyebilir, yanlışlarınızı ve açıklamaları görmek için soru haritasını kullanabilirsiniz.</p>
+
+        <button @click="$store.quiz.showExamResultModal = false" class="bg-brand-600 hover:bg-brand-700 w-full rounded-xl py-2.5 text-xs font-bold text-white shadow transition">Cevapları İncele</button>
+      </div>
+    </div>
+
+    <!-- ==================== TOAST BİLDİRİMİ ==================== -->
+    <div
+      :class="$store.quiz.toast.type === 'error' ? 'bg-rose-500 text-white border-rose-600' : ($store.quiz.toast.type === 'success' ? 'bg-emerald-600 text-white border-emerald-700' : 'bg-slate-900 text-white border-slate-800')"
+      class="fixed right-5 bottom-5 z-50 flex items-center gap-2.5 rounded-2xl border px-4 py-3 text-xs font-bold shadow-xl backdrop-blur-md"
+      x-show="$store.quiz.toast.show"
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-end="opacity-100 translate-y-0"
+      x-transition:enter-start="opacity-0 translate-y-4"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-end="opacity-0 translate-y-4"
+      x-transition:leave-start="opacity-100 translate-y-0">
+      <span x-text="$store.quiz.toast.icon"></span>
+      <span x-text="$store.quiz.toast.message"></span>
+    </div>
+
+    <!-- ==================== WEB AUDIO ENGINE & ALPINE STORE ==================== -->
+    <script>
+      // --- SAF WEB AUDIO ENGINE (Harici Ses Dosyası Gerektirmez) ---
+      class SoundEngine {
+        constructor() {
+          this.ctx = null;
+        }
+
+        init() {
+          if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        }
+
+        playTone(freq, type, duration, delay = 0) {
+          if (!this.ctx) return;
+          setTimeout(() => {
+            try {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = type;
+              osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+              gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start();
+              osc.stop(this.ctx.currentTime + duration);
+            } catch (e) {}
+          }, delay * 1000);
+        }
+
+        playCorrect() {
+          this.init();
+          // C5 - E5 - G5 major triad
+          this.playTone(523.25, 'triangle', 0.25, 0);
+          this.playTone(659.25, 'triangle', 0.25, 0.08);
+          this.playTone(783.99, 'triangle', 0.35, 0.16);
+        }
+
+        playWrong() {
+          this.init();
+          // Low discordant buzz
+          this.playTone(185.0, 'sawtooth', 0.25, 0);
+          this.playTone(174.61, 'sawtooth', 0.3, 0.05);
+        }
+
+        playMilestone() {
+          this.init();
+          // Fanfare
+          this.playTone(523.25, 'sine', 0.15, 0);
+          this.playTone(659.25, 'sine', 0.15, 0.1);
+          this.playTone(783.99, 'sine', 0.15, 0.2);
+          this.playTone(1046.5, 'triangle', 0.45, 0.3);
+        }
+      }
+
+      const sound = new SoundEngine();
+
+      // --- ALPINE.JS STORE VE TÜM UYGULAMA MANTIĞI ---
+      document.addEventListener('alpine:init', () => {
+        Alpine.store('quiz', {
+          activeCourse: 'ip2', // 'ip2', 'cms', 'etc'
+          datasets: {ip2: [], cms: [], etc: []},
+          originalDatasets: {ip2: [], cms: [], etc: []},
+
+          currentQuestionIndex: 0,
+          activeFilter: 'all', // 'all', 'unanswered', 'wrong', 'starred', 'cancelled'
+          feedbackMode: 'instant', // 'instant', 'deferred'
+          order: 'original', // 'original', 'shuffle'
+          soundEnabled: true,
+          darkMode: false,
+          showPalette: false,
+          showBadgesModal: false,
+          showResetModal: false,
+          showExamResultModal: false,
+          isExamSubmitted: false,
+
+          // State per course stored in localStorage
+          answers: {}, // { questionId: 'A' }
+          eliminated: {}, // { questionId: ['A', 'C'] }
+          favorites: {}, // { questionId: true }
+          highlighted: {}, // { questionId: true }
+
+          // Gamification
+          xp: 0,
+          streak: 0,
+          maxStreak: 0,
+          badges: [],
+
+          // Toast
+          toast: {show: false, message: '', type: 'info', icon: 'ℹ️', timeout: null},
+
+          // Rozet Tanımları
+          allBadgeDefinitions: [
+            {key: 'first_step', title: 'İlk Adım', desc: 'İlk sorunuzu başarıyla yanıtladınız.', icon: '🌱'},
+            {key: 'streak_5', title: 'Hatasız Seri', desc: 'Art arda 5 soruyu doğru bildiniz.', icon: '🔥'},
+            {key: 'night_owl', title: 'Gece Kuşu', desc: "Saat 22:00'den sonra azimle çalıştınız.", icon: '🦉'},
+            {key: 'century', title: 'Ders Canavarı', desc: 'Toplam 100 soru cevapladınız.', icon: '⚡'},
+            {
+              key: 'perfectionist',
+              title: 'Mükemmeliyetçi',
+              desc: 'Bir sınav oturumunu %100 başarıyla bitirdiniz.',
+              icon: '👑',
+            },
+          ],
+
+          init() {
+            // Dark mode tercihi
+            const savedDark = localStorage.getItem('quiz_dark_mode');
+            if (savedDark !== null) {
+              this.darkMode = savedDark === 'true';
+            } else {
+              this.darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+            if (this.darkMode) document.documentElement.classList.add('dark');
+
+            // Ses tercihi
+            const savedSound = localStorage.getItem('quiz_sound_enabled');
+            if (savedSound !== null) this.soundEnabled = savedSound === 'true';
+
+            // Ders bazlı state yükle
+            this.loadCourseState();
+
+            // İlk olarak fetch ile verileri yüklemeyi dene (Dual-mode)
+            this.loadAllViaFetch();
+
+            // Klavye kısayolları dinleyicisi
+            window.addEventListener('keydown', (e) => {
+              if (['input', 'textarea'].includes(document.activeElement.tagName.toLowerCase())) return;
+              const key = e.key.toUpperCase();
+              if (['A', 'B', 'C', 'D', 'E'].includes(key)) {
+                this.selectAnswer(key);
+              } else if (e.key === 'ArrowLeft') {
+                this.prevQuestion();
+              } else if (e.key === 'ArrowRight') {
+                this.nextQuestion();
+              }
+            });
+          },
+
+          // --- İSİMLENDİRME & GETTERS ---
+          get activeCourseName() {
+            const map = {ip2: 'İnternet Programcılığı II', cms: 'İçerik Yönetim Sistemi', etc: 'E-Ticaret'};
+            return map[this.activeCourse] || '';
+          },
+          get currentDataset() {
+            return this.datasets[this.activeCourse] || [];
+          },
+          get isCurrentDatasetLoaded() {
+            return this.currentDataset.length > 0;
+          },
+          get filteredQuestions() {
+            let list = this.currentDataset;
+            if (this.activeFilter === 'unanswered') {
+              list = list.filter((q) => !this.answers[q.id]);
+            } else if (this.activeFilter === 'wrong') {
+              list = list.filter((q) => this.answers[q.id] && !this.isCorrect(q));
+            } else if (this.activeFilter === 'starred') {
+              list = list.filter((q) => this.favorites[q.id]);
+            } else if (this.activeFilter === 'cancelled') {
+              list = list.filter((q) => q.is_cancelled);
+            }
+            return list;
+          },
+          get currentQuestion() {
+            const list = this.filteredQuestions;
+            if (this.currentQuestionIndex >= list.length) this.currentQuestionIndex = 0;
+            return list[this.currentQuestionIndex] || null;
+          },
+          get isCurrentHighlighted() {
+            return this.currentQuestion ? !!this.highlighted[this.currentQuestion.id] : false;
+          },
+          get shouldShowExplanation() {
+            if (!this.currentQuestion) return false;
+            if (this.feedbackMode === 'instant') {
+              return !!this.answers[this.currentQuestion.id] || this.currentQuestion.is_cancelled;
+            } else {
+              return this.isExamSubmitted;
+            }
+          },
+          get currentLevelName() {
+            if (this.xp >= 2000) return 'Efsane';
+            if (this.xp >= 1000) return 'Üstat';
+            if (this.xp >= 500) return 'Uzman';
+            if (this.xp >= 250) return 'Usta';
+            if (this.xp >= 100) return 'Kalfa';
+            return 'Çırak';
+          },
+          get stats() {
+            const total = this.currentDataset.length;
+            let correct = 0;
+            let wrong = 0;
+            let answered = 0;
+            let cancelled = 0;
+            let starred = 0;
+
+            this.currentDataset.forEach((q) => {
+              if (this.favorites[q.id]) starred++;
+              if (q.is_cancelled) cancelled++;
+              const userAns = this.answers[q.id];
+              if (userAns) {
+                answered++;
+                if (this.isCorrect(q)) correct++;
+                else wrong++;
+              }
+            });
+
+            const unanswered = total - answered;
+            const progressPercent = total > 0 ? Math.round((answered / total) * 100) : 0;
+            const successRate = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
+            return {total, correct, wrong, answered, unanswered, cancelled, starred, progressPercent, successRate};
+          },
+
+          // --- VERİ YÜKLEME (DUAL-MODE) ---
+          loadAllViaFetch() {
+            const fileMap = {
+              ip2: 'internet_programciligi_2.json',
+              cms: 'icerik_yonetim_sistemi.json',
+              etc: 'e_ticaret.json',
+            };
+
+            Object.entries(fileMap).forEach(([key, filename]) => {
+              fetch(filename)
+                .then((res) => {
+                  if (!res.ok) throw new Error('Dosya bulunamadı');
+                  return res.json();
+                })
+                .then((data) => {
+                  if (Array.isArray(data)) {
+                    this.datasets[key] = data;
+                    this.originalDatasets[key] = [...data];
+                    this.showToast(`${filename} başarıyla yüklendi (${data.length} soru).`, 'success', '✅');
+                  }
+                })
+                .catch(() => {
+                  // fetch hatasında sessiz kal, banner üzerinden FileReader devreye girer
+                });
+            });
+          },
+
+          handleFileUpload(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            Array.from(files).forEach((file) => {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                try {
+                  const data = JSON.parse(event.target.result);
+                  if (!Array.isArray(data)) throw new Error('Geçersiz veri biçimi');
+
+                  // Dosya adından veya ilk soru ID'sinden dersi tespit et
+                  const fname = file.name.toLowerCase();
+                  let targetCourse = this.activeCourse;
+                  if (fname.includes('internet') || (data[0] && data[0].id.startsWith('IP2'))) targetCourse = 'ip2';
+                  else if (fname.includes('icerik') || fname.includes('cms') || (data[0] && data[0].id.startsWith('CMS'))) targetCourse = 'cms';
+                  else if (fname.includes('ticaret') || fname.includes('etc') || (data[0] && data[0].id.startsWith('ETC'))) targetCourse = 'etc';
+
+                  this.datasets[targetCourse] = data;
+                  this.originalDatasets[targetCourse] = [...data];
+                  this.showToast(`${file.name} yüklendi (${data.length} soru)`, 'success', '📁');
+                } catch (err) {
+                  this.showToast('JSON dosyası okunamadı veya biçimi hatalı!', 'error', '❌');
+                }
+              };
+              reader.readAsText(file, 'UTF-8');
+            });
+          },
+
+          // --- DERS DEĞİŞTİRME & STATE YÖNETİMİ ---
+          switchCourse(courseKey) {
+            this.activeCourse = courseKey;
+            this.currentQuestionIndex = 0;
+            this.isExamSubmitted = false;
+            this.loadCourseState();
+          },
+
+          loadCourseState() {
+            const raw = localStorage.getItem(`quiz_state_${this.activeCourse}`);
+            if (raw) {
+              try {
+                const state = JSON.parse(raw);
+                this.answers = state.answers || {};
+                this.eliminated = state.eliminated || {};
+                this.favorites = state.favorites || {};
+                this.highlighted = state.highlighted || {};
+                this.xp = state.xp || 0;
+                this.streak = state.streak || 0;
+                this.maxStreak = state.maxStreak || 0;
+                this.badges = state.badges || [];
+                this.feedbackMode = state.feedbackMode || 'instant';
+                this.order = state.order || 'original';
+                return;
+              } catch (e) {}
+            }
+            // Varsayılan
+            this.answers = {};
+            this.eliminated = {};
+            this.favorites = {};
+            this.highlighted = {};
+            this.xp = 0;
+            this.streak = 0;
+            this.badges = [];
+          },
+
+          saveCourseState() {
+            const state = {
+              answers: this.answers,
+              eliminated: this.eliminated,
+              favorites: this.favorites,
+              highlighted: this.highlighted,
+              xp: this.xp,
+              streak: this.streak,
+              maxStreak: this.maxStreak,
+              badges: this.badges,
+              feedbackMode: this.feedbackMode,
+              order: this.order,
+            };
+            localStorage.setItem(`quiz_state_${this.activeCourse}`, JSON.stringify(state));
+          },
+
+          resetCourseProgress() {
+            this.answers = {};
+            this.eliminated = {};
+            this.favorites = {};
+            this.highlighted = {};
+            this.streak = 0;
+            this.currentQuestionIndex = 0;
+            this.isExamSubmitted = false;
+            this.saveCourseState();
+            this.showToast('Ders ilerlemeniz sıfırlandı.', 'info', '🔄');
+          },
+
+          // --- SORU ÇÖZME & ETKİLEŞİM ---
+          selectAnswer(optKey) {
+            if (!this.currentQuestion) return;
+            const q = this.currentQuestion;
+
+            // Eğer sınav teslim edildiyse veya anında modda zaten işaretlendiyse tekrar değiştirebilsin mi? Evet, güncellenebilir.
+            const prevAnswer = this.answers[q.id];
+            this.answers[q.id] = optKey;
+
+            // Oyunlaştırma & Ses Mantığı
+            if (this.feedbackMode === 'instant') {
+              const correct = this.isCorrect(q);
+              if (correct) {
+                if (this.soundEnabled) sound.playCorrect();
+                // Daha önce doğru işaretlenmemişse XP ver
+                if (prevAnswer !== q.correct_answer) {
+                  this.xp += 10;
+                  this.streak++;
+                  if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+
+                  // 5 Seri Kutlaması
+                  if (this.streak >= 5 && this.streak % 5 === 0) {
+                    if (this.soundEnabled) sound.playMilestone();
+                    this.fireConfetti();
+                    this.awardBadge('streak_5');
+                    this.showToast(`${this.streak} Soru Üst Üste Doğru! Harika Gidiyorsun! 🔥`, 'success', '🔥');
+                  }
+                }
+              } else {
+                if (this.soundEnabled) sound.playWrong();
+                this.streak = 0;
+              }
+            }
+
+            // Rozet Kontrolleri
+            this.checkBadges();
+            this.saveCourseState();
+          },
+
+          undoLastAnswer() {
+            if (!this.currentQuestion) return;
+            delete this.answers[this.currentQuestion.id];
+            this.saveCourseState();
+            this.showToast('Cevap geri alındı.', 'info', '↺');
+          },
+
+          toggleElimination(optKey) {
+            if (!this.currentQuestion) return;
+            const qId = this.currentQuestion.id;
+            if (!this.eliminated[qId]) this.eliminated[qId] = [];
+
+            const idx = this.eliminated[qId].indexOf(optKey);
+            if (idx > -1) {
+              this.eliminated[qId].splice(idx, 1);
+            } else {
+              this.eliminated[qId].push(optKey);
+            }
+            this.saveCourseState();
+          },
+
+          isEliminated(optKey) {
+            if (!this.currentQuestion) return false;
+            return (this.eliminated[this.currentQuestion.id] || []).includes(optKey);
+          },
+
+          toggleStar(qId) {
+            if (!qId) return;
+            this.favorites[qId] = !this.favorites[qId];
+            this.saveCourseState();
+          },
+
+          isStarred(qId) {
+            return !!this.favorites[qId];
+          },
+
+          highlightCurrentQuestion() {
+            if (!this.currentQuestion) return;
+            const qId = this.currentQuestion.id;
+            this.highlighted[qId] = !this.highlighted[qId];
+            this.saveCourseState();
+          },
+
+          isCorrect(q) {
+            if (!q) return false;
+            if (q.is_cancelled) return true; // İptal sorular herkes için doğru kabul edilir
+            return this.answers[q.id] === q.correct_answer;
+          },
+
+          // --- STİL HELPER'LARI ---
+          getOptionClass(optKey) {
+            if (!this.currentQuestion) return '';
+            const q = this.currentQuestion;
+            const userAns = this.answers[q.id];
+
+            // İptal Soru Durumu
+            if (q.is_cancelled) {
+              if (userAns === optKey) return 'border-purple-500 bg-purple-50 dark:bg-purple-950/40';
+              return 'border-slate-200 dark:border-slate-800 hover:border-slate-300';
+            }
+
+            // Anında Cevap Modu veya Sınav Tamamlandıysa
+            if (this.feedbackMode === 'instant' ? !!userAns : this.isExamSubmitted) {
+              if (optKey === q.correct_answer) {
+                return 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 font-bold';
+              }
+              if (userAns === optKey && optKey !== q.correct_answer) {
+                return 'border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-bold';
+              }
+              return 'border-slate-200 dark:border-slate-800 opacity-60';
+            }
+
+            // Sınav Modu (Henüz gönderilmemiş)
+            if (userAns === optKey) {
+              return 'border-brand-600 bg-brand-50/60 dark:bg-brand-950/40 text-brand-900 dark:text-brand-100 font-bold ring-2 ring-brand-500/20';
+            }
+
+            return 'border-slate-200 dark:border-slate-800 hover:border-brand-300 dark:hover:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/50';
+          },
+
+          getOptionBadgeClass(optKey) {
+            if (!this.currentQuestion) return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+            const q = this.currentQuestion;
+            const userAns = this.answers[q.id];
+
+            if (this.feedbackMode === 'instant' ? !!userAns : this.isExamSubmitted) {
+              if (optKey === q.correct_answer) return 'bg-emerald-600 text-white';
+              if (userAns === optKey) return 'bg-rose-600 text-white';
+            }
+            if (userAns === optKey) return 'bg-brand-600 text-white';
+            return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-slate-200';
+          },
+
+          getPaletteButtonClass(q, idx) {
+            const isCurrent = this.currentQuestionIndex === idx;
+            const userAns = this.answers[q.id];
+            const base = isCurrent ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-slate-900 ' : '';
+
+            if (q.is_cancelled) return base + 'bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-300';
+
+            if (this.feedbackMode === 'instant' ? !!userAns : this.isExamSubmitted) {
+              if (this.isCorrect(q)) return base + 'bg-emerald-500 text-white shadow-sm';
+              return base + 'bg-rose-500 text-white shadow-sm';
+            }
+
+            if (userAns) return base + 'bg-brand-600 text-white shadow-sm';
+            return base + 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200';
+          },
+
+          // --- GEZİNME & FİLTRELER ---
+          nextQuestion() {
+            if (this.currentQuestionIndex < this.filteredQuestions.length - 1) {
+              this.currentQuestionIndex++;
+            }
+          },
+          prevQuestion() {
+            if (this.currentQuestionIndex > 0) {
+              this.currentQuestionIndex--;
+            }
+          },
+          jumpToQuestion(idx) {
+            if (idx >= 0 && idx < this.filteredQuestions.length) {
+              this.currentQuestionIndex = idx;
+            }
+          },
+          setFilter(filterName) {
+            this.activeFilter = filterName;
+            this.currentQuestionIndex = 0;
+          },
+          setFeedbackMode(mode) {
+            this.feedbackMode = mode;
+            this.saveCourseState();
+          },
+          toggleOrder() {
+            if (this.order === 'original') {
+              this.order = 'shuffle';
+              // Fisher-Yates shuffle
+              const arr = [...this.datasets[this.activeCourse]];
+              for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+              }
+              this.datasets[this.activeCourse] = arr;
+              this.showToast('Sorular rastgele karıştırıldı.', 'info', '🔀');
+            } else {
+              this.order = 'original';
+              this.datasets[this.activeCourse] = [...this.originalDatasets[this.activeCourse]];
+              this.showToast('Orijinal soru sırasına dönüldü.', 'info', '📑');
+            }
+            this.currentQuestionIndex = 0;
+            this.saveCourseState();
+          },
+
+          // --- SINAV MODU TESLİMİ ---
+          submitExam() {
+            this.isExamSubmitted = true;
+            this.showExamResultModal = true;
+            this.fireConfetti();
+            if (this.soundEnabled) sound.playMilestone();
+
+            // Sınav sonu XP hesapla
+            let sessionCorrect = 0;
+            this.currentDataset.forEach((q) => {
+              if (this.isCorrect(q)) sessionCorrect++;
+            });
+            this.xp += sessionCorrect * 10;
+
+            // %100 Başarı rozeti kontrolü
+            if (sessionCorrect === this.currentDataset.length && this.currentDataset.length > 0) {
+              this.awardBadge('perfectionist');
+            }
+
+            this.saveCourseState();
+          },
+
+          // --- ROZET KONTROLÜ ---
+          checkBadges() {
+            // İlk adım rozeti
+            if (Object.keys(this.answers).length >= 1) {
+              this.awardBadge('first_step');
+            }
+            // 100 Soru rozeti
+            if (Object.keys(this.answers).length >= 100) {
+              this.awardBadge('century');
+            }
+            // Gece Kuşu rozeti (22:00 - 05:00 arası)
+            const hour = new Date().getHours();
+            if (hour >= 22 || hour < 5) {
+              this.awardBadge('night_owl');
+            }
+          },
+
+          awardBadge(badgeKey) {
+            if (!this.badges.includes(badgeKey)) {
+              this.badges.push(badgeKey);
+              const def = this.allBadgeDefinitions.find((b) => b.key === badgeKey);
+              if (def) {
+                this.showToast(`Yeni Rozet Kazanıldı: ${def.title}! ${def.icon}`, 'success', '🏆');
+              }
+              this.saveCourseState();
+            }
+          },
+
+          // --- AYARLAR & YARDIMCILAR ---
+          toggleDarkMode() {
+            this.darkMode = !this.darkMode;
+            if (this.darkMode) {
+              document.documentElement.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+            }
+            localStorage.setItem('quiz_dark_mode', this.darkMode);
+          },
+
+          toggleSound() {
+            this.soundEnabled = !this.soundEnabled;
+            localStorage.setItem('quiz_sound_enabled', this.soundEnabled);
+            this.showToast(this.soundEnabled ? 'Sesler açıldı.' : 'Sesler kapatıldı.', 'info', this.soundEnabled ? '🔊' : '🔇');
+          },
+
+          showToast(message, type = 'info', icon = 'ℹ️') {
+            if (this.toast.timeout) clearTimeout(this.toast.timeout);
+            this.toast = {show: true, message, type, icon, timeout: null};
+            this.toast.timeout = setTimeout(() => {
+              this.toast.show = false;
+            }, 3200);
+          },
+
+          fireConfetti() {
+            if (typeof confetti === 'function') {
+              confetti({
+                particleCount: 80,
+                spread: 60,
+                origin: {y: 0.7},
+              });
+            }
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
