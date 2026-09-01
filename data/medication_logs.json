@@ -1090,6 +1090,18 @@
   {"at":"2026-08-30 07:44","model":"MedLog","user_id":1,"med":"Coversyl","dose":2.5},
   {"at":"2026-08-30 08:10","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
   {"at":"2026-08-30 08:30","model":"MedLog","user_id":1,"med":"EcopirinPro","dose":81},
-  {"at":"2026-08-30 19:00","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
-  {"at":"2026-08-30 21:00","model":"MedLog","user_id":1,"med":"Warfmadin","dose":2.5}
+  {"at":"2026-08-30 19:55","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
+  {"at":"2026-08-30 21:00","model":"MedLog","user_id":1,"med":"Warfmadin","dose":2.5},
+  {"at":"2026-08-31 07:37","model":"MedLog","user_id":1,"med":"Panto","dose":40},
+  {"at":"2026-08-31 07:42","model":"MedLog","user_id":1,"med":"Coversyl","dose":2.5},
+  {"at":"2026-08-31 08:09","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
+  {"at":"2026-08-31 08:25","model":"MedLog","user_id":1,"med":"EcopirinPro","dose":81},
+  {"at":"2026-08-31 18:13","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
+  {"at":"2026-08-31 21:00","model":"MedLog","user_id":1,"med":"Warfmadin","dose":5},
+  {"at":"2026-09-01 06:20","model":"MedLog","user_id":1,"med":"Panto","dose":40},
+  {"at":"2026-09-01 06:32","model":"MedLog","user_id":1,"med":"Coversyl","dose":5},
+  {"at":"2026-09-01 07:04","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
+  {"at":"2026-09-01 08:22","model":"MedLog","user_id":1,"med":"EcopirinPro","dose":81},
+  {"at":"2026-09-01 19:49","model":"MedLog","user_id":1,"med":"Dilatrend","dose":6.25},
+  {"at":"2026-09-01 21:00","model":"MedLog","user_id":1,"med":"Warfmadin","dose":2.5}
 ]
