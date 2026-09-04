@@ -58,5 +58,7 @@
   {"at":"2026-08-04 09:45","model":"MedChange","user_id":1,"medication_id":3,"id":57,"amount":0,"timespan":12,"type":"Ended","reason":"Tedavi süresi tamamlandı (7 günlük kür)"},
   {"at":"2026-08-04 09:45","model":"MedChange","user_id":1,"medication_id":15,"id":58,"amount":0,"timespan":12,"type":"Ended","reason":"Tedavi süresi tamamlandı (7 günlük kür)"},
   {"at":"2026-08-11 12:00","model":"MedChange","user_id":1,"medication_id":14,"id":59,"amount":25,"timespan":168,"type":"Changed","reason":"Doktor tarafından doz ayarlaması (INR takibine göre)"},
-  {"at":"2026-08-18 12:00","model":"MedChange","user_id":1,"medication_id":14,"id":60,"amount":20,"timespan":168,"type":"Changed","reason":"Doktor tarafından doz ayarlaması (INR takibine göre)"}
+  {"at":"2026-08-18 12:00","model":"MedChange","user_id":1,"medication_id":14,"id":60,"amount":20,"timespan":168,"type":"Changed","reason":"Doktor tarafından doz ayarlaması (INR takibine göre)"},
+  {"at":"2026-09-04 08:25","model":"MedChange","user_id":1,"medication_id":20,"id":61,"amount":1000,"timespan":12,"type":"Started","reason":"Enfeksiyon şüphesi (CRP yüksekliği)"},
+  {"at":"2026-09-10 08:30","model":"MedChange","user_id":1,"medication_id":20,"id":61,"amount":1000,"timespan":12,"type":"Ended","reason":"Enfeksiyon şüphesi (CRP yüksekliği)"}
 ]
