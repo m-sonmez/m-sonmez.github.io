@@ -1588,7 +1588,7 @@ export default function registerDashboard(Alpine) {
       const formatDateNatural = (dateStr) => {
         if (!dateStr) return '';
         let d = new Date(dateStr.substring(0, 10));
-        const m = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylü', 'Ekim', 'Kasım', 'Aralık'];
+        const m = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
         return `${d.getDate()} ${m[d.getMonth()]}`;
       };
       const getRecordsInRange = (arr, start, end) => {
@@ -1888,7 +1888,7 @@ export default function registerDashboard(Alpine) {
       }
       labHtml += `</div></div>`;
       insight += labHtml;
-      let medHtml = `<div><h4 class="text-xs sm:text-sm font-bold tracking-tight text-indigo-700 mb-2 flex items-center gap-2"><span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-teal-50-shadow-sm shadow-teal-200"></span> 4. İlaç Yönetimi ve Tedavi Güncellemeleri</h4><div class="pl-3 sm:pl-4 border-l-2 border-slate-100 space-y-3">`;
+      let medHtml = `<div><h4 class="text-xs sm:text-sm font-bold tracking-tight text-indigo-700 mb-2 flex items-center gap-2"><span class="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-teal-500 shadow-sm shadow-teal-200"></span> 4. İlaç Yönetimi ve Tedavi Güncellemeleri</h4><div class="pl-3 sm:pl-4 border-l-2 border-slate-100 space-y-3">`;
       const oldStart = this.startDate;
       const oldEnd = this.endDate;
       this.startDate = startDate;
@@ -2637,11 +2637,11 @@ export default function registerDashboard(Alpine) {
 
     getEffectiveReference(item) {
       if (!item) return {min: null, max: null};
-      const cacheKey = item.id + '_' + (item.reference_min || '') + (item.reference_max || '');
+      const code = getCanonicalCode(item.code);
+      const cacheKey = (item.test_id || '') + '_' + code + '_' + (item.reference_min ?? '') + '_' + (item.reference_max ?? '');
       if (this._effectiveCache && this._effectiveCache[cacheKey]) {
         return this._effectiveCache[cacheKey];
       }
-      const code = getCanonicalCode(item.code);
       const ctx = this.clinicalContext || {};
       let min = item.reference_min !== null && item.reference_min !== '' ? parseFloat(item.reference_min) : null;
       let max = item.reference_max !== null && item.reference_max !== '' ? parseFloat(item.reference_max) : null;
