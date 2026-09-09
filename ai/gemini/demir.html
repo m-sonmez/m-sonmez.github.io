@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demir İlacı Kullanım Rehberi</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine.js (Etkileşim için) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        /* Modern mobil font hissi için */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+<!-- Ana Konteyner (Mobil Uyumlu) -->
+<main class="max-w-md mx-auto min-h-screen bg-white shadow-xl sm:my-8 sm:rounded-3xl sm:border border-slate-100 overflow-hidden relative pb-24">
+
+    <!-- Üst Başlık (Hero Section) -->
+    <header class="bg-gradient-to-br from-indigo-600 to-blue-700 px-6 py-8 text-white relative">
+        <!-- Dekoratif Arka Plan Çemberleri -->
+        <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10 blur-2xl"></div>
+
+        <div class="flex items-center gap-3 mb-4">
+                <span class="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                </span>
+            <span class="text-xs font-semibold tracking-wider uppercase text-indigo-100">Tedavi Rehberi</span>
+        </div>
+        <h1 class="text-2xl font-bold mb-2 leading-tight">Ferro Sanol Duodenal<br>Kullanım Gerçekleri</h1>
+        <p class="text-indigo-100 text-sm opacity-90">Doktorunuzun talimatları neden %100 doğru?</p>
+    </header>
+
+    <!-- İçerik Alanı -->
+    <div class="px-5 py-6">
+
+        <!-- Onay Kutusu -->
+        <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mb-6 flex gap-4 items-start shadow-sm">
+            <div class="bg-emerald-100 p-1.5 rounded-full flex-shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-emerald-800 font-semibold text-sm mb-1">Doktorunuzu Yanlış Anlamadınız!</h3>
+                <p class="text-emerald-700 text-xs leading-relaxed">
+                    Aklınızdaki diğer ihtimallerin (tok karnına, çiğneyerek vb.) hepsi tehlikelidir. Doktorunuzun verdiği kural, ilacın kalbinize yük olan kansızlığı çözmesi için tek ve en doğru yoldur.
+                </p>
+            </div>
+        </div>
+
+        <h2 class="text-base font-bold text-slate-800 mb-4 px-1">Neden Böyle Kullanmalıyım?</h2>
+
+        <!-- Etkileşimli Akordeon (Alpine.js) -->
+        <div x-data="{ active: 1 }" class="space-y-3">
+
+            <!-- Madde 1 -->
+            <div class="border border-slate-200 rounded-2xl overflow-hidden transition-all duration-200 bg-white" :class="active === 1 ? 'ring-2 ring-indigo-500/20 shadow-md' : 'hover:bg-slate-50'">
+                <button @click="active = active === 1 ? null : 1" class="w-full flex justify-between items-center p-4 text-left">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-sm">1</div>
+                        <span class="font-semibold text-slate-800 text-sm">Neden asla çiğnenmez veya kırılmaz?</span>
+                    </div>
+                    <svg class="w-5 h-5 text-slate-400 transition-transform duration-300" :class="active === 1 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div x-show="active === 1" x-collapse x-cloak>
+                    <div class="p-4 pt-0 text-sm text-slate-600 leading-relaxed border-t border-slate-100 mt-2">
+                        <p class="mb-2">İlacın adındaki <strong>Duodenal</strong> kelimesi, onun midede değil, mideden sonraki oniki parmak bağırsağında (duodenum) açılmak üzere <strong>özel bir zırhla</strong> kaplandığı anlamına gelir.</p>
+                        <p>Eğer kırar veya çiğnerseniz bu zırh parçalanır. Saf demir midede serbest kalarak çok şiddetli <strong>mide kanamalarına, ülserlere ve kramplara</strong> yol açar. Ayrıca dişlerinizi kalıcı olarak siyaha boyar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Madde 2 -->
+            <div class="border border-slate-200 rounded-2xl overflow-hidden transition-all duration-200 bg-white" :class="active === 2 ? 'ring-2 ring-indigo-500/20 shadow-md' : 'hover:bg-slate-50'">
+                <button @click="active = active === 2 ? null : 2" class="w-full flex justify-between items-center p-4 text-left">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-sm">2</div>
+                        <span class="font-semibold text-slate-800 text-sm">Neden aç karnına alınmalı?</span>
+                    </div>
+                    <svg class="w-5 h-5 text-slate-400 transition-transform duration-300" :class="active === 2 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div x-show="active === 2" x-collapse x-cloak>
+                    <div class="p-4 pt-0 text-sm text-slate-600 leading-relaxed border-t border-slate-100 mt-2">
+                        <p>Demir molekülü "sosyal" bir mineraldir. Midede yiyecek bulursa (özellikle peynir, süt, yoğurt veya çay) anında onlara yapışır ve kilitlenir.</p>
+                        <p class="mt-2">Kilitlenen demiri vücut ememez ve ilaç hiçbir işe yaramadan dışkıyla atılır. Demirin kana karışması için midede <strong>yalnız olması</strong> gerekir.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Madde 3 -->
+            <div class="border border-slate-200 rounded-2xl overflow-hidden transition-all duration-200 bg-white" :class="active === 3 ? 'ring-2 ring-indigo-500/20 shadow-md' : 'hover:bg-slate-50'">
+                <button @click="active = active === 3 ? null : 3" class="w-full flex justify-between items-center p-4 text-left">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-bold text-sm">3</div>
+                        <span class="font-semibold text-slate-800 text-sm">Neden Panto'dan 1 saat ÖNCE?</span>
+                    </div>
+                    <svg class="w-5 h-5 text-slate-400 transition-transform duration-300" :class="active === 3 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div x-show="active === 3" x-collapse x-cloak>
+                    <div class="p-4 pt-0 text-sm text-slate-600 leading-relaxed border-t border-slate-100 mt-2 bg-sky-50/50 rounded-b-xl">
+                        <p class="mb-2"><strong>İşte en kritik kural budur!</strong> Demirin emilebilmesi için mide asidine ihtiyacı vardır.</p>
+                        <p class="mb-2"><strong>Panto</strong>, mide asidini tamamen durduran güçlü bir ilaçtır. Eğer Panto'yu önce içerseniz, midede asit kalmaz ve demir emilemez.</p>
+                        <p><strong>Doğru Strateji:</strong> Sabah uyandığınızda mide asidiniz en yüksek seviyededir. Demir hapını yollarsınız. İlaç asitle birlikte emilim için bağırsağa geçer. 1 saat sonra ise midenizi korumak için Panto'yu yollarsınız. Böylece ilaçlar çarpışmaz!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Sticky Alt Bilgi / Günlük Rutin (Mobil Uyumlu Sabit Bar) -->
+    <div class="absolute bottom-0 left-0 w-full bg-slate-900 text-white p-4 sm:rounded-b-3xl">
+        <div class="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-3 text-center">Günlük Kusursuz Rutininiz</div>
+
+        <div class="flex items-center justify-between text-xs sm:text-sm font-medium px-2">
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-xl">🛏️</span>
+                <span>Uyanın</span>
+            </div>
+
+            <div class="h-px bg-slate-700 flex-1 mx-2"></div>
+
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-xl">💊</span>
+                <span class="text-rose-400">Demir İçin</span>
+            </div>
+
+            <div class="h-px bg-slate-700 flex-1 mx-2 relative">
+                <span class="absolute -top-4 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 bg-slate-900 px-1">1 Saat</span>
+            </div>
+
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-xl">🛡️</span>
+                <span class="text-sky-400">Panto İçin</span>
+            </div>
+
+            <div class="h-px bg-slate-700 flex-1 mx-2 relative">
+                <span class="absolute -top-4 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 bg-slate-900 px-1">Yarım Saat</span>
+            </div>
+
+            <div class="flex flex-col items-center gap-1">
+                <span class="text-xl">🍳</span>
+                <span>Kahvaltı</span>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+</body>
+</html>

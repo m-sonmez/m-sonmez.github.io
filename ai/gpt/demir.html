@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Ferro Sanol Duodenal — İlaç Etkileşimi & Kullanım Fact-Check</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+        .font-display { font-family: Outfit, Inter, ui-sans-serif, system-ui, sans-serif; }
+        .glass-card { background: rgba(255,255,255,.82); border: 1px solid rgba(226,232,240,.9); box-shadow: 0 12px 32px rgba(15,23,42,.055); backdrop-filter: blur(14px); }
+        .glass-card-hover { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+        .glass-card-hover:hover { transform: translateY(-2px); box-shadow: 0 18px 38px rgba(15,23,42,.08); border-color: rgba(199,210,254,.95); }
+        .prose-lite p { margin-top: .65rem; line-height: 1.75; }
+        .prose-lite p:first-child { margin-top: 0; }
+        .anchor-offset { scroll-margin-top: 86px; }
+        [x-cloak] { display:none !important; }
+        @media print {
+            .print-hide { display:none !important; }
+            body { background:#fff !important; }
+            .glass-card { box-shadow:none !important; background:#fff !important; }
+            .anchor-offset { scroll-margin-top:0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-700 antialiased selection:bg-indigo-500 selection:text-white" x-data="reportApp()">
+
+<div class="fixed top-0 left-0 right-0 z-[100] h-1 bg-slate-200 print-hide">
+    <div class="h-full bg-indigo-600 transition-all duration-150" :style="`width:${progress}%`"></div>
+</div>
+
+<!-- Mobile header -->
+<header class="sticky top-1 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl lg:hidden print-hide">
+    <div class="flex items-center justify-between px-4 py-3">
+        <div>
+            <div class="text-[10px] font-black uppercase tracking-[.18em] text-indigo-600">Klinik Fact-Check</div>
+            <div class="font-display text-sm font-extrabold text-slate-900">Ferro Sanol Duodenal</div>
+        </div>
+        <button @click="mobileNav=!mobileNav" class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm" aria-label="Bölümler">
+            <svg x-show="!mobileNav" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <svg x-show="mobileNav" x-cloak class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div x-show="mobileNav" x-transition class="border-t border-slate-100 px-3 pb-3 pt-2">
+        <div class="grid grid-cols-2 gap-2">
+            <template x-for="item in nav" :key="item.id">
+                <a @click="mobileNav=false" :href="'#'+item.id" class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-[11px] font-bold text-slate-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">
+                    <span x-text="item.label"></span>
+                </a>
+            </template>
+        </div>
+    </div>
+</header>
+
+<div class="lg:flex lg:min-h-screen">
+    <!-- Sidebar -->
+    <aside class="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex print-hide">
+        <div class="flex h-16 shrink-0 items-center border-b border-slate-100 px-5">
+            <span class="text-lg font-black tracking-tight text-indigo-600">Klinik</span>
+            <span class="ml-1 text-lg font-medium tracking-tight text-slate-500">Fact-Check</span>
+        </div>
+        <div class="overflow-y-auto p-3">
+            <div class="mb-3 rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-3">
+                <div class="text-[10px] font-black uppercase tracking-widest text-indigo-600">Belge</div>
+                <div class="mt-1 text-sm font-extrabold text-slate-900">Ferro Sanol Duodenal</div>
+                <div class="mt-1 text-[11px] leading-relaxed text-slate-500">İlaç etkileşimleri, zamanlama ve kullanım tekniği</div>
+            </div>
+            <nav class="space-y-1.5">
+                <template x-for="item in nav" :key="item.id">
+                    <a :href="'#'+item.id" :class="activeSection===item.id ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'text-slate-600 hover:bg-slate-50 border-transparent'" class="block rounded-xl border px-3 py-2 text-xs font-bold transition">
+                        <span x-text="item.label"></span>
+                    </a>
+                </template>
+            </nav>
+        </div>
+        <div class="mt-auto border-t border-slate-100 p-3">
+            <button @click="window.print()" class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-700">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 9V4h12v5M6 18H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-2M6 14h12v6H6z"/></svg>
+                Yazdır / PDF
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="min-w-0 flex-1 lg:ml-64">
+        <div class="mx-auto max-w-5xl px-4 pb-20 pt-7 sm:px-6 lg:px-10 lg:pt-10">
+
+            <!-- Hero -->
+            <section class="glass-card rounded-3xl overflow-hidden" id="top">
+                <div class="p-5 sm:p-7 lg:p-9">
+                    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div class="max-w-3xl">
+                            <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[.16em] text-indigo-700">
+                                <span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                                09 Eylül 2026 · Fact-Check
+                            </div>
+                            <h1 class="font-display text-3xl font-black tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">Ferro Sanol Duodenal</h1>
+                            <p class="mt-3 text-base font-semibold leading-relaxed text-slate-600 sm:text-lg">Mevcut ilaçlarla etkileşim, kullanım saati ve “Panto’dan 1 saat önce” önerisinin bilimsel doğruluk kontrolü</p>
+                        </div>
+                        <div class="shrink-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Hasta bağlamı</div>
+                            <div class="mt-1 text-sm font-extrabold text-slate-900">Mekanik aort kapağı + warfarin</div>
+                            <div class="mt-1 text-xs text-slate-500">Demir eksikliği ile uyumlu anemi</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-7 grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-emerald-700">Genel sonuç</div>
+                            <div class="mt-1 text-sm font-extrabold text-slate-900">Doktor önerisinin özü doğru</div>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-600">Aç karnına, yeterli suyla, çiğnemeden ve Panto’dan ayrı almak mantıklı.</p>
+                        </div>
+                        <div class="rounded-2xl border border-amber-100 bg-amber-50/80 p-4">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-amber-700">Kanıt düzeyi</div>
+                            <div class="mt-1 text-sm font-extrabold text-slate-900">“Tam 1 saat” özel kural değil</div>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-600">Ürün bilgisinde Ferro Sanol → Panto arasında birebir 1 saat şartı bulamadım.</p>
+                        </div>
+                        <div class="rounded-2xl border border-rose-100 bg-rose-50/80 p-4">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-rose-700">Önemli risk</div>
+                            <div class="mt-1 text-sm font-extrabold text-slate-900">PPI demir emilimini azaltabilir</div>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-600">Pantoprazolün asit baskısı nedeniyle oral demir tedavisi daha az verimli olabilir.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clinical context -->
+            <section class="anchor-offset mt-6" id="context">
+                <div class="mb-3 flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600">01</span>
+                    <div><div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Klinik bağlam</div><h2 class="font-display text-xl font-extrabold text-slate-900">Neden bu ilaç önemli?</h2></div>
+                </div>
+                <div class="glass-card rounded-2xl p-5 sm:p-6 prose-lite">
+                    <p>Hasta 19 Şubat 2026’da akut Tip A aort diseksiyonu ve ciddi aort kapak yetmezliği nedeniyle acil Bentall ameliyatı geçirdi. Daha sonra mekanik aort kapağı nedeniyle yaşam boyu warfarin tedavisi başlandı. Klinik kayıtlarında sternal yara enfeksiyonu, tekrarlayan gastrointestinal yakınmalar ve belirgin INR dalgalanmaları da bulunuyor.</p>
+                    <p>Son laboratuvarlarda <strong>HGB 9,7 g/dL, MCV 76,4 fL, ferritin 19 ve demir 15</strong> ile mikrositik/hipokromik, demir eksikliği lehine bir tablo görülüyor. CRP 11,3 mg/L ile halen yüksek, ancak önceki 23,8 mg/L değerinden daha düşük.</p>
+                    <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-600">
+                        <strong class="text-slate-900">Veri notu:</strong> 9 Eylül ilaç kayıtlarında Panto 40 mg, Coversyl, Dilatrend 6,25 mg, EcopirinPro 81 mg, Klamoks 1000 mg ve Warfarin kullanımları görülüyor.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Product mechanics -->
+            <section class="anchor-offset mt-8" id="product">
+                <div class="mb-3 flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-violet-600">02</span>
+                    <div><div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Ürün yapısı</div><h2 class="font-display text-xl font-extrabold text-slate-900">567,7 mg ne demek?</h2></div>
+                </div>
+                <div class="grid gap-4 lg:grid-cols-[1.2fr_.8fr]">
+                    <div class="glass-card rounded-2xl p-5 sm:p-6 prose-lite">
+                        <p><strong>FERRO SANOL DUODENAL 567,7 mg</strong>, 567,7 mg elementer demir anlamına gelmez. Bir kapsülde yaklaşık <strong>100 mg elementer Fe²⁺</strong> bulunur; geri kalan rakam demir(II)-glisin-sülfat kompleksinin toplam kütlesini ifade eder.</p>
+                        <p>Ürün, mide asidine dayanıklı pelletler içeren kapsül şeklindedir. Kapsül açıldığında pelletler bozulmamalı ve <strong>çiğnenmemelidir</strong>. Bu yapı, ilacın duodenuma ulaşmasını hedefler.</p>
+                    </div>
+                    <div class="glass-card rounded-2xl border-l-4 border-l-violet-500 p-5">
+                        <div class="text-[10px] font-black uppercase tracking-widest text-violet-600">Pratik sonuç</div>
+                        <div class="mt-2 space-y-3 text-sm font-semibold text-slate-700">
+                            <div class="flex gap-3"><span class="text-emerald-500">✓</span><span>Kapsülü çiğneme.</span></div>
+                            <div class="flex gap-3"><span class="text-emerald-500">✓</span><span>Rastgele “yarım doz” oluşturma.</span></div>
+                            <div class="flex gap-3"><span class="text-emerald-500">✓</span><span>Yeterli suyla yut.</span></div>
+                            <div class="flex gap-3"><span class="text-amber-500">!</span><span>Yutma güçlüğünde kapsülün açılabilmesi, “pelletleri çiğne” anlamına gelmez.</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fact checks -->
+            <section class="anchor-offset mt-8" id="factcheck">
+                <div class="mb-3 flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">03</span>
+                    <div><div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Kanıt kontrolü</div><h2 class="font-display text-xl font-extrabold text-slate-900">Doktor önerisi: madde madde</h2></div>
+                </div>
+                <div class="space-y-3">
+                    <template x-for="item in factChecks" :key="item.title">
+                        <div class="glass-card rounded-2xl overflow-hidden">
+                            <button @click="item.open=!item.open" class="flex w-full items-start justify-between gap-4 p-4 text-left sm:p-5">
+                                <div class="flex min-w-0 gap-3">
+                                    <span :class="item.badgeClass" class="mt-0.5 shrink-0 rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-wider" x-text="item.badge"></span>
+                                    <div class="min-w-0"><div class="text-sm font-extrabold text-slate-900" x-text="item.title"></div><div class="mt-1 text-xs leading-relaxed text-slate-500" x-text="item.summary"></div></div>
+                                </div>
+                                <svg :class="item.open?'rotate-180':''" class="mt-1 h-5 w-5 shrink-0 text-slate-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="item.open" x-cloak class="border-t border-slate-100 px-4 pb-5 pt-4 text-xs leading-relaxed text-slate-600 sm:px-5" x-html="item.detail"></div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Interaction table -->
+            <section class="anchor-offset mt-8" id="interactions">
+                <div class="mb-3 flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">04</span>
+                    <div><div class="text-[10px] font-black uppercase tracking-widest text-slate-400">İlaç etkileşimleri</div><h2 class="font-display text-xl font-extrabold text-slate-900">Mevcut tedaviyle birlikte nasıl düşünülmeli?</h2></div>
+                </div>
+                <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-[720px] w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            <tr><th class="px-4 py-3">İlaç</th><th class="px-4 py-3">Ferro Sanol ile durum</th><th class="px-4 py-3">Pratik dikkat</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-600">
+                            <template x-for="row in interactions" :key="row.med">
+                                <tr class="align-top hover:bg-slate-50/70"><td class="px-4 py-3 font-extrabold text-slate-900" x-text="row.med"></td><td class="px-4 py-3" x-html="row.effect"></td><td class="px-4 py-3" x-html="row.note"></td></tr>
+                            </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Schedule -->
+            <section class="anchor-offset mt-8" id="schedule">
+                <div class="mb-3 flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">05</span>
+                    <div><div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Önerilen günlük akış</div><h2 class="font-display text-xl font-extrabold text-slate-900">Uygulanabilir saat planı</h2></div>
+                </div>
+                <div class="glass-card rounded-2xl p-5 sm:p-6">
+                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="rounded-2xl border border-indigo-100 bg-indigo-50/80 p-4"><div class="text-[10px] font-black uppercase tracking-wider text-indigo-600">06:30 örnek</div><div class="mt-1 font-display text-lg font-black text-slate-900">Ferro Sanol</div><div class="mt-1 text-xs leading-relaxed text-slate-600">Aç karnına, yeterli suyla, çiğnemeden.</div></div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div class="text-[10px] font-black uppercase tracking-wider text-slate-500">~1 saat sonra</div><div class="mt-1 font-display text-lg font-black text-slate-900">Panto 40 mg</div><div class="mt-1 text-xs leading-relaxed text-slate-600">Mevcut hekim planına göre.</div></div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[10px] font-black uppercase tracking-wider text-slate-500">Sonra</div><div class="mt-1 font-display text-lg font-black text-slate-900">Kahvaltı</div><div class="mt-1 text-xs leading-relaxed text-slate-600">Demirle aynı anda çay/kahve/süt olmaması tercih edilir.</div></div>
+                        <div class="rounded-2xl border border-amber-100 bg-amber-50/80 p-4"><div class="text-[10px] font-black uppercase tracking-wider text-amber-700">Önemli</div><div class="mt-1 font-display text-lg font-black text-slate-900">1 saat = pratik kural</div><div class="mt-1 text-xs leading-relaxed text-slate-600">PPI etkisini tamamen sıfırladığı kanıtlanmış bir süre değildir.</div></div>
+                    </div>
+                    <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-600">
+                        <strong class="text-slate-900">Neden sabah?</strong> Esas neden “sabah saati” değil, <strong>açlık</strong> koşuludur. Ürün bilgisi Ferro Sanol’un sabah boş mideyle, kahvaltıdan yaklaşık bir saat önce veya öğünden yaklaşık iki saat önce/sonra alınmasını önerir. Çay, kahve, süt/kalsiyum ve bazı mineral/fitat içeren ürünler demir emilimini azaltabilir.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Special precautions -->
+            <section class="anchor-offset mt-8" id="precautions">
+                <div class="mb-3 flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600">06</span>
+                    <div><div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Bu hastaya özgü</div><h2 class="font-display text-xl font-extrabold text-slate-900">Özellikle neyi izlemeli?</h2></div>
+                </div>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="glass-card rounded-2xl border-l-4 border-l-rose-500 p-5"><div class="text-xs font-black uppercase tracking-widest text-rose-600">Anemi</div><p class="mt-2 text-sm leading-relaxed text-slate-600">64 yaşındaki erkek hastada demir eksikliği anemisi yalnızca takviye verilerek açıklanmamalı. Gastrointestinal kan kaybı, emilim bozukluğu ve diğer nedenler doktor tarafından değerlendirilmelidir.</p></div>
+                    <div class="glass-card rounded-2xl border-l-4 border-l-amber-500 p-5"><div class="text-xs font-black uppercase tracking-widest text-amber-600">Warfarin</div><p class="mt-2 text-sm leading-relaxed text-slate-600">Ferro Sanol ile warfarin arasında belirgin doğrudan etkileşim gösterilmemiş olsa da bu hastanın INR geçmişi nedeniyle yeni ilaç başlandığında INR takibi ihmal edilmemelidir.</p></div>
+                    <div class="glass-card rounded-2xl border-l-4 border-l-blue-500 p-5"><div class="text-xs font-black uppercase tracking-widest text-blue-600">Klamoks / antibiyotik</div><p class="mt-2 text-sm leading-relaxed text-slate-600">Klamoks ile demir arasında önemli bir doğrudan emilim sorunu beklenmez. Buna karşılık amoksisilin/klavulanat + warfarin kombinasyonu INR üzerinde değişiklik yapabildiğinden antibiyotik dönemi ayrıca izlenmelidir.</p></div>
+                    <div class="glass-card rounded-2xl border-l-4 border-l-violet-500 p-5"><div class="text-xs font-black uppercase tracking-widest text-violet-600">Cipro gibi antibiyotikler</div><p class="mt-2 text-sm leading-relaxed text-slate-600">Ciprofloxacin ile demir arasında belirgin kompleksleşme/emme engellenmesi vardır. Gelecekte Cipro veya benzeri florokinolon verilirse saat aralığı özellikle kontrol edilmelidir.</p></div>
+                </div>
+            </section>
+
+            <!-- Clinical bottom line -->
+            <section class="anchor-offset mt-8" id="bottomline">
+                <div class="glass-card rounded-3xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/70 p-5 sm:p-7">
+                    <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div class="max-w-3xl">
+                            <div class="text-[10px] font-black uppercase tracking-[.18em] text-indigo-600">Son değerlendirme</div>
+                            <h2 class="mt-1 font-display text-2xl font-black tracking-tight text-slate-950">Doktorun temel yaklaşımı makul; “1 saat” kısmının kanıtı daha zayıf.</h2>
+                            <p class="mt-3 text-sm leading-relaxed text-slate-600">Aç karnına almak, yeterli su kullanmak, kapsül/pelletleri çiğnememek ve Ferro Sanol’u Panto ile eşzamanlı almamak bilimsel olarak savunulabilir. Ancak “Panto’dan tam 1 saat önce” ifadesi ürün bilgisinde özel, kanıtlanmış bir zaman aralığı olarak yer almıyor.</p>
+                        </div>
+                        <div class="shrink-0 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-emerald-700">Önerilen pratik</div>
+                            <div class="mt-2 text-lg font-black text-slate-950">Ferro Sanol → ~1 saat → Panto</div>
+                            <div class="mt-1 text-xs text-slate-600">Doktorun mevcut planı değiştirilmeden uygulanabilir bir zamanlama.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sources -->
+            <section class="anchor-offset mt-8" id="sources">
+                <div class="mb-3 flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600">07</span>
+                    <div><div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Kaynaklar</div><h2 class="font-display text-xl font-extrabold text-slate-900">Kontrol edilen ana kaynaklar</h2></div>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <template x-for="source in sources" :key="source.title">
+                        <a :href="source.url" target="_blank" rel="noopener noreferrer" class="glass-card glass-card-hover rounded-2xl p-4">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-indigo-600" x-text="source.type"></div>
+                            <div class="mt-1 text-sm font-extrabold text-slate-900" x-text="source.title"></div>
+                            <div class="mt-1 text-xs leading-relaxed text-slate-500" x-text="source.note"></div>
+                            <div class="mt-2 text-[10px] font-bold text-indigo-600">Kaynağı aç →</div>
+                        </a>
+                    </template>
+                </div>
+            </section>
+
+            <footer class="mt-10 border-t border-slate-200 pt-5 text-[10px] leading-relaxed text-slate-400">
+                Bu sayfa bilgilendirme ve fact-check amacıyla hazırlanmıştır. Reçete, doz veya ilaç saatinde değişiklik yapmadan önce tedaviyi yürüten hekim/eczacı ile doğrulama yapılmalıdır. Özellikle warfarin, aspirin ve antibiyotik kullanımı olan bu hastada INR ve kanama belirtileri klinik olarak önemlidir.
+            </footer>
+        </div>
+    </main>
+</div>
+
+<!-- Back to top -->
+<button @click="window.scrollTo({top:0,behavior:'smooth'})" x-show="scrollY>500" x-transition x-cloak class="print-hide fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700" aria-label="Yukarı çık">
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+</button>
+
+<script>
+    function reportApp() {
+        return {
+            scrollY: 0,
+            progress: 0,
+            mobileNav: false,
+            activeSection: 'top',
+            nav: [
+                {id:'context',label:'Klinik bağlam'},
+                {id:'product',label:'Ürün yapısı'},
+                {id:'factcheck',label:'Fact-check'},
+                {id:'interactions',label:'İlaç etkileşimleri'},
+                {id:'schedule',label:'Saat planı'},
+                {id:'precautions',label:'Özel dikkat'},
+                {id:'bottomline',label:'Son değerlendirme'},
+                {id:'sources',label:'Kaynaklar'},
+            ],
+            factChecks: [
+                {open:true,badge:'DOĞRU',badgeClass:'bg-emerald-100 text-emerald-700',title:'“Sabah aç karnına al.”',summary:'Ürün bilgisiyle uyumlu.',detail:'Ferro Sanol Duodenal için sabah boş mideyle, kahvaltıdan yaklaşık 1 saat önce veya öğünlerden yaklaşık 2 saat önce/sonra kullanım önerilir. Buradaki esas nokta “sabah saati” değil <strong>açlık koşuludur</strong>.'},
+                {open:true,badge:'DOĞRU',badgeClass:'bg-emerald-100 text-emerald-700',title:'“Bol / yeterli su ile iç.”',summary:'Yutma ve gastrointestinal tolerans açısından makul.',detail:'Ürün bilgisi kapsülün yeterli miktarda suyla alınmasını belirtir. Buradaki amaç litrelerce su içmek değil, kapsülün güvenli ve rahat biçimde yutulmasıdır.'},
+                {open:false,badge:'DOĞRU',badgeClass:'bg-emerald-100 text-emerald-700',title:'“Kapsülü/pelletleri çiğneme.”',summary:'Ürünün farmasötik yapısının gereği.',detail:'Ürün enterik kaplı pellet sistemi kullanır. Pelletlerin çiğnenmesi veya yapısının bozulması istenmez. Yutma güçlüğünde kapsülün dikkatle açılıp pelletlerin çiğnenmeden tüketilebilmesi ise ayrı bir durumdur.'},
+                {open:false,badge:'KISMEN',badgeClass:'bg-amber-100 text-amber-700',title:'“Panto’dan tam 1 saat önce al.”',summary:'Mantıklı bir pratik zamanlama; özel olarak kanıtlanmış 1 saat kuralı değil.',detail:'Ferro Sanol ürün bilgisinde PPI’lerin oral demir emilimini azaltabileceği belirtilir; ancak Ferro Sanol ile pantoprazol arasında “tam 1 saat” şeklinde özel bir kural bulunmaz. PPI etkisi yalnızca alındığı saate sıkışmadığından bir saatlik aralık asit baskısını tamamen ortadan kaldırmaz.'},
+                {open:false,badge:'DOĞRU DEĞİL',badgeClass:'bg-rose-100 text-rose-700',title:'“Panto ile aynı anda almakta sorun yok.”',summary:'Demir emilimi açısından ideal değil.',detail:'Pantoprazol bir proton pompa inhibitörüdür ve mide asidini azaltır. Ferro Sanol ürün bilgisinde PPI’lerin oral demir emilimini azaltabileceği açıkça belirtilmektedir. Bu nedenle aynı anda almak yerine ayrı zamanlamak daha savunulabilirdir.'},
+                {open:false,badge:'DOĞRU',badgeClass:'bg-emerald-100 text-emerald-700',title:'“Çay/kahve/süt ile birlikte alma.”',summary:'Demir emilimi açısından önemli.',detail:'Ürün bilgisi çay, kahve, süt, kola ve bazı mineral/gıda bileşenlerinin demir emilimini azaltabileceğini belirtir. Bu nedenle Ferro Sanol’u sade suyla almak daha uygun bir pratiktir.'},
+            ],
+            interactions: [
+                {med:'Panto (pantoprazol)',effect:'<strong class="text-amber-700">Önemli:</strong> PPI kullanımı oral demir emilimini azaltabilir.',note:'Ferro Sanol ile aynı anda almamak mantıklı. “Tam 1 saat” ise ürün bilgisinde özel bir zorunluluk değil.'},
+                {med:'Warfmadin (warfarin)',effect:'Doğrudan Ferro Sanol–warfarin etkileşimi belirgin değildir.',note:'Bu hastanın geçmiş INR 8,46 olduğu için yeni ilaç başlangıcında INR takibi yine önemlidir (dosyadaki geçmiş kayıtta INR 8,46 nedeniyle tedavi değişikliği kaydedilmiş).'},
+                {med:'EcopirinPro 81 mg',effect:'Belirgin doğrudan demir emilim etkileşimi beklenmez.',note:'Ancak aspirin + demir gastrointestinal irritasyonu artırabilir; kanama belirtileri önemlidir.'},
+                {med:'Dilatrend (carvedilol)',effect:'Belirgin doğrudan etkileşim saptanmamıştır.',note:'Ferro Sanol ile özel saat ayırma gereksinimi belirgin değildir.'},
+                {med:'Coversyl (perindopril)',effect:'Belirgin doğrudan etkileşim saptanmamıştır.',note:'Özel zaman ayırma gereksinimi yoktur.'},
+                {med:'Klamoks (amoksisilin/klavulanat)',effect:'Ferro Sanol ile önemli doğrudan emilim sorunu beklenmez.',note:'Asıl dikkat warfarin ile INR değişikliği ihtimalidir; antibiyotik döneminde INR izlenmesi uygun olur.'},
+                {med:'Cipro (ciprofloxacin)',effect:'<strong class="text-rose-700">Önemli etkileşim:</strong> Demir ciprofloxacin emilimini azaltabilir.',note:'Gelecekte tekrar kullanılırsa saat aralığı mutlaka hekim/eczacı tarafından düzenlenmeli.'},
+            ],
+            sources: [
+                {type:'Ürün bilgisi',title:'FERRO SANOL DUODENAL KÜB',note:'Aç/tok kullanım, pellet yapısı, PPI ve diğer etkileşimler.',url:'https://kub.ilacprospektusu.com/ilac/27740-ferro-sanol-duodenal-100-mg-kapsul-kub'},
+                {type:'Resmi ilaç bilgisi',title:'Pantoprazole / DailyMed',note:'Asit baskısı ve ilaç etkileşimi uyarıları.',url:'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=a7dc4321-331d-49af-976c-cfd69d0055d9'},
+                {type:'AGA',title:'Gastrointestinal evaluation of iron deficiency anemia',note:'Erkeklerde demir eksikliği anemisinin nedenini araştırma yaklaşımı.',url:'https://gastro.org/clinical-guidance/gastrointestinal-evaluation-of-iron-deficiency-anemia/'},
+                {type:'AGA',title:'Management of iron deficiency anemia',note:'Oral demir, C vitamini ve IV demire geçiş yaklaşımı.',url:'https://gastro.org/clinical-guidance/management-of-iron-deficiency-anemia/'},
+                {type:'BSG',title:'Guidelines for the management of iron deficiency anaemia',note:'Erkeklerde gastrointestinal nedenlerin araştırılması ve tedavi takibi.',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC8515119/'},
+                {type:'Çalışma',title:'Iron absorption and acid suppression / PPI',note:'PPI ile oral demir emilimi arasındaki ilişkinin araştırılması.',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC12353868/'},
+                {type:'Drug interaction',title:'Ferrous sulfate + ciprofloxacin',note:'Demir–florokinolon kompleksleşmesi ve emilim azalması.',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC1368349/'},
+            ],
+            init(){
+                const onScroll = () => {
+                    this.scrollY = window.scrollY;
+                    const doc = document.documentElement;
+                    const max = doc.scrollHeight - window.innerHeight;
+                    this.progress = max > 0 ? Math.round((window.scrollY / max) * 100) : 0;
+                    const sections = this.nav.map(n => document.getElementById(n.id)).filter(Boolean);
+                    let current = 'top';
+                    for (const s of sections) if (s.getBoundingClientRect().top <= 130) current = s.id;
+                    this.activeSection = current;
+                };
+                window.addEventListener('scroll', onScroll, {passive:true});
+                onScroll();
+            }
+        }
+    }
+</script>
+</body>
+</html>
