@@ -2,13 +2,17 @@
 
 ## 1. Proje Genel Bakış
 
-Bu proje, bir hastanın (örnek olarak Alaattin Sönmez) ameliyat sonrası klinik verilerini izlemek için geliştirilmiş kapsamlı bir **tek sayfa dashboard** uygulamasıdır. Tansiyon, kilo, ilaç kullanımı, laboratuvar sonuçları, raporlar ve klinik olaylar kronolojik olarak takip edilir.
+Bu proje, bir hastanın (örnek olarak Alaattin Sönmez) ameliyat sonrası klinik verilerini izlemek için geliştirilmiş
+kapsamlı bir **tek sayfa dashboard** uygulamasıdır. Tansiyon, kilo, ilaç kullanımı, laboratuvar sonuçları, raporlar ve
+klinik olaylar kronolojik olarak takip edilir.
 
 **Temel Özellikler:**
 
 - Tüm veri dosyaları (`data/` klasörü) statik JSON’dır ve `fetch` ile yüklenir.
-- **Zero hard-coding** prensibi: Hasta adı, ID’si, tarihler veya klinik olaylar kod içinde sabitlenmemiştir; her şey JSON verilerinden dinamik olarak okunur.
-- Gerçek bir API olmadığı için veriler `data/` klasöründen okunur. `corsError` yakalanıp yerleşik (boş) verilerle çalışılabilir.
+- **Zero hard-coding** prensibi: Hasta adı, ID’si, tarihler veya klinik olaylar kod içinde sabitlenmemiştir; her şey
+  JSON verilerinden dinamik olarak okunur.
+- Gerçek bir API olmadığı için veriler `data/` klasöründen okunur. `corsError` yakalanıp yerleşik (boş) verilerle
+  çalışılabilir.
 - **PWA** desteği (Service Worker) ile offline çalışma ve cache yönetimi.
 
 **Teknoloji Yığını:**
@@ -25,7 +29,8 @@ Bu proje, bir hastanın (örnek olarak Alaattin Sönmez) ameliyat sonrası klini
 - Sol tarafta genişletilebilir/daraltılabilir sidebar
 - Sağda ana içerik alanı
 - Tarih filtreleri (preset’ler, özel aralık, önceki/sonraki dönem butonları)
-- 9 ana bölüm (özet, grafikler, zaman akışı, ilaç matrisi, takvim, tahlil trendleri, tetkik & bulgular, raporlar, klinik analiz)
+- 9 ana bölüm (özet, grafikler, zaman akışı, ilaç matrisi, takvim, tahlil trendleri, tetkik & bulgular, raporlar, klinik
+  analiz)
 - Animasyon: tarih aralığını otomatik ilerleterek zaman içindeki değişimi gösterir.
 - Veri indirme: tüm veriyi veya seçili dönemi JSON olarak dışa aktarabilir.
 
@@ -77,7 +82,7 @@ Bu proje, bir hastanın (örnek olarak Alaattin Sönmez) ameliyat sonrası klini
 ### 2.1. HTML: `panel.html`
 
 - **Meta / PWA**: Apple Touch Icons, manifest, theme-color, service worker kaydı (app.js içinde)
-- **x-data="dashboardApp()"** – Alpine bileşenini bağlar.
+- **x-data="dashboardApp ()"** – Alpine bileşenini bağlar.
 - **Ekran çok küçük uyarısı** (`max-[384px]:flex`) – 384px altında kullanıcıya telefonu yan çevirmesini söyler.
 - **CORS Hatası Uyarısı** – `corsError` true olduğunda gösterilir.
 - **Sidebar**:
@@ -89,7 +94,8 @@ Bu proje, bir hastanın (örnek olarak Alaattin Sönmez) ameliyat sonrası klini
   - Daraltılmış halde ikonlar (animasyon, indirme)
 - **Ana İçerik**:
   - Mobil menü açma butonu (fixed)
-  - 9 bölüm (`#summary`, `#charts`, `#prescriptions`, `#flowsheet`, `#calendar`, `#lab-trends`, `#lab-findings`, `#reports`, `#clinical-report`)
+  - 9 bölüm (`#summary`, `#charts`, `#prescriptions`, `#flowsheet`, `#calendar`, `#lab-trends`, `#lab-findings`,
+    `#reports`, `#clinical-report`)
   - Her bölüm `x-show="sections.<key>"` ile kontrol edilir.
   - Her bölümde grafikler, tablolar, listeler, kartlar bulunur.
 - **Yukarı çık butonu** – `window.scrollY > 300` olduğunda görünür, 3 saniye sonra kaybolur.
@@ -102,7 +108,8 @@ Bu proje, bir hastanın (örnek olarak Alaattin Sönmez) ameliyat sonrası klini
 - `[x-cloak] { display: none !important; }` – Alpine cloak.
 - Özel scrollbar stilleri.
 - `.glass-card` ve `.glass-card-hover` – kart görünümü.
-- `.app-card`, `.app-card-hover`, `.app-card-header`, `.app-card-title`, `.btn-toggle-label`, `.switch-slider` gibi utility sınıfları `@apply` ile tanımlanmış.
+- `.app-card`, `.app-card-hover`, `.app-card-header`, `.app-card-title`, `.btn-toggle-label`, `.switch-slider` gibi
+  utility sınıfları `@apply` ile tanımlanmış.
 - Durum badge’leri için (`bg-emerald-50`, `text-amber-700` vb.) özel override’lar.
 - `input[type='date']` hizalama düzeltmeleri.
 - Sidebar geçişleri için `lg:w-64` / `lg:w-14` width transition.
@@ -165,7 +172,8 @@ Bu dosya, Alpine bileşenini (`dashboardApp`) ve global utility fonksiyonların�
 - `isMobile` – `window.innerWidth < 1024`
 - `isAtTop` – scroll pozisyonu
 - `toolbarOpen` – (kullanılmıyor)
-- `loadingMetrics`, `loadingTimeline`, `loadingBpChart`, `loadingLabCharts`, `loadingFlowsheet`, `loadingInsights` – yükleme bayrakları
+- `loadingMetrics`, `loadingTimeline`, `loadingBpChart`, `loadingLabCharts`, `loadingFlowsheet`, `loadingInsights` –
+  yükleme bayrakları
 - `_loaded` – (kullanılmıyor)
 - `sidebarOpen`, `sidebarCollapsed`, `userMenuOpen` – UI state
 - `testPage`, `reportPage`, `itemsPerPage` – sayfalama
@@ -177,7 +185,8 @@ Bu dosya, Alpine bileşenini (`dashboardApp`) ve global utility fonksiyonların�
 - `filteredTests` – tahliller (sınır dışı, gizleme, tarih aralığı)
 - `sortedReports` – raporlar tarihe göre sıralı
 - `calendarMonthName`, `calendarDays`, `getDailyEvents(dateStr)` – takvim işlemleri
-- `latestKilo`, `previousKilo`, `latestBp`, `previousBp`, `previousAvgBp`, `latestInr`, `previousInr`, `latestHgb`, `previousHgb` – metrik kartları için hesaplamalar
+- `latestKilo`, `previousKilo`, `latestBp`, `previousBp`, `previousAvgBp`, `latestInr`, `previousInr`, `latestHgb`,
+  `previousHgb` – metrik kartları için hesaplamalar
 - `getFilteredPressures()`, `getFilteredWeights()` – tarih aralığına göre filtreleme
 - `visibleMeds` – zaman akışı grafiğinde gösterilecek ilaçlar (segmentlerle)
 - `timelineLabels` – zaman akışı X ekseni etiketleri
@@ -187,7 +196,8 @@ Bu dosya, Alpine bileşenini (`dashboardApp`) ve global utility fonksiyonların�
 - `initDashboard()` – asenkron veri yükleme, başlangıç ayarları, watcher’lar.
 - `loadAllData(cacheBust)` – tüm JSON dosyalarını fetch eder.
 - `loadBackupData()` – CORS hatasında boş verilerle çalışır.
-- `determineGlobalDateLimits()` – tüm verilerden ilk ve son tarihi hesaplar, `firstD`, `lastD`, `validDatesPool` doldurur.
+- `determineGlobalDateLimits()` – tüm verilerden ilk ve son tarihi hesaplar, `firstD`, `lastD`, `validDatesPool`
+  doldurur.
 - `applyDatePreset()` – seçili preset’e göre `startDate`/`endDate` günceller.
 - `shiftDatePeriod(direction)` – seçili aralığı öne/geri kaydırır.
 - `updateFilters()` – debounce ile filtreleri günceller ve ilgili bölümleri yeniden yükler.
@@ -201,8 +211,11 @@ Bu dosya, Alpine bileşenini (`dashboardApp`) ve global utility fonksiyonların�
 - `renderMainCharts()`, `renderFocusChart()`, `renderLabTrendCharts()` – Chart.js grafiklerini çizer.
 - `destroyAllCharts()` – tüm chart instance’larını yok eder.
 - `selectLabSession(id)`, `selectReport(protocolNo)` – detay seçimi.
-- `getHospitalName(id)`, `getMedicationName(id)`, `getMedicationUnit(id)`, `getMedicationUnitByName(name)`, `getMedicationUnitOnlyByName(name)` – yardımcılar.
-- `formatTurkishDate`, `formatFullDate`, `getBPStatusText`, `getBPBadgeClass`, `getLabItemStatus`, `getLabItemClass`, `getLabPointerClass`, `getRangeZoneStyle`, `getPointerPositionStyle`, `calculateIndividualWeightDiff`, `getWeightDiffClass` – UI yardımcıları.
+- `getHospitalName(id)`, `getMedicationName(id)`, `getMedicationUnit(id)`, `getMedicationUnitByName(name)`,
+  `getMedicationUnitOnlyByName(name)` – yardımcılar.
+- `formatTurkishDate`, `formatFullDate`, `getBPStatusText`, `getBPBadgeClass`, `getLabItemStatus`, `getLabItemClass`,
+  `getLabPointerClass`, `getRangeZoneStyle`, `getPointerPositionStyle`, `calculateIndividualWeightDiff`,
+  `getWeightDiffClass` – UI yardımcıları.
 - `getDailyEvents(dateStr)` – takvim için günün olaylarını toplar.
 - `generateDynamicInsight(startDate, endDate)` – yapay zeka benzeri klinik yorum metni oluşturur (detaylı analiz).
 - `downloadRawMedicalData(mode)` – tüm veriyi veya seçili dönemi JSON olarak indirir.
@@ -224,14 +237,15 @@ Bu dosya, Alpine bileşenini (`dashboardApp`) ve global utility fonksiyonların�
 
 - Import Alpine, collapse plugin, Chart, date-fns adapter.
 - `window.Alpine = Alpine; window.Chart = Chart;`
-- Alpine.plugin(collapse);
+- Alpine.plugin (collapse);
 - Dinamik import ile `app.js`’den `registerDashboard` fonksiyonunu alıp Alpine’a kaydeder.
 - `Alpine.start();`
 
 ### 2.5. Service Worker: `sw.template.js` ve `bump-sw.js`
 
 - `sw.template.js` bir şablondur; `{{CACHE_VERSION}}` placeholder’ı içerir.
-- `bump-sw.js` çalıştırıldığında timestamp (`medilog_YYYY-MM-DD_HH-MM-SS`) oluşturur ve placeholder’ı değiştirerek `sw.js` dosyasını oluşturur.
+- `bump-sw.js` çalıştırıldığında timestamp (`medilog_YYYY-MM-DD_HH-MM-SS`) oluşturur ve placeholder’ı değiştirerek
+  `sw.js` dosyasını oluşturur.
 - `sw.js` – statik dosyaları, ikonları ve JSON verilerini cache’ler. Data dosyaları için background update yapar.
 - `install` ve `activate` event’leri ile eski cache’leri temizler.
 - `fetch` event’i – önce cache’ten döner, network’e fallback yapar.
@@ -263,7 +277,8 @@ Bağımlılıklar:
 
 ### 2.7. Veri Dosyaları (JSON)
 
-Tüm veriler `user_id=1` (örnek hasta) içindir. **Zero hard-coding** prensibi gereği, kod içinde hiçbir hasta adı veya ID sabitlenmemiştir; veriler dinamik olarak okunur.
+Tüm veriler `user_id=1` (örnek hasta) içindir. **Zero hard-coding** prensibi gereği, kod içinde hiçbir hasta adı veya ID
+sabitlenmemiştir; veriler dinamik olarak okunur.
 
 #### `users.json`
 
@@ -289,15 +304,19 @@ Hastanın klinik özeti, cerrahi detaylar, acil sevk zinciri, zaman çizelgesi. 
 
 **Güncel ilaç envanteri (18 adet):**
 
-- Evde idame: Panto (ID 11), Dilatrend (5), Warfmadin (14), Apikobal (1), EcopirinPro (6), BelocZOK (2), Cordarone (4), Kapril (8)
-- Dönemsel tedaviler: Tavanic (13), Cipro (3), Stafine (12), Levopront (9), Mikostatin (10), GeralginePlus (7), Augmentin (15)
+- Evde idame: Panto (ID 11), Dilatrend (5), Warfmadin (14), Apikobal (1), EcopirinPro (6), BelocZOK (2), Cordarone (4),
+  Kapril (8)
+- Dönemsel tedaviler: Tavanic (13), Cipro (3), Stafine (12), Levopront (9), Mikostatin (10), GeralginePlus (7),
+  Augmentin (15)
 - Yatarak tedavi (hastane sürecinde kullanılan): **Coraspin (16)**, **Oksapar (17)**, **Sulcid (18)**
 
 #### `medication_changes.json`
 
-İlaç değişimleri: `medication_id`, `at`, `type` (Started, Changed, Paused, Resumed, Ended, Taken), `amount`, `timespan` (saat), `reason`.
+İlaç değişimleri: `medication_id`, `at`, `type` (Started, Changed, Paused, Resumed, Ended, Taken), `amount`, `timespan`
+(saat), `reason`.
 
-**Önemli güncelleme:** 30-31 Mart 2026 yatış dönemi için `Paused` ve `Resumed` kayıtları eksiksiz tamamlanmış, tüm kayıtların `reason` (gerekçe) alanları klinik olaylarla tam uyumlu hale getirilmiştir.
+**Önemli güncelleme:** 30-31 Mart 2026 yatış dönemi için `Paused` ve `Resumed` kayıtları eksiksiz tamamlanmış, tüm
+kayıtların `reason` (gerekçe) alanları klinik olaylarla tam uyumlu hale getirilmiştir.
 
 #### `medication_logs.json`
 
@@ -321,11 +340,15 @@ Tahlil parametreleri: `test_id`, `code`, `name`, `result`, `unit`, `reference_mi
 
 #### `reports.json`
 
-Raporlar: `at`, `hospital_id`, `report_type`, `title`, `protocol_no`, `clinical_details`, `radiology_findings`, `conclusions`, `implants`, `doctor_name`, `doctor_title`, `doctor_reg_no`.
+Raporlar: `at`, `hospital_id`, `report_type`, `title`, `protocol_no`, `clinical_details`, `radiology_findings`,
+`conclusions`, `implants`, `doctor_name`, `doctor_title`, `doctor_reg_no`.
 
 #### Boş dosyalar (temperatures, glucose, pulse, saturation, sleep, symptoms, appointments)
 
-Bu dosyalar şu anda boş JSON dizisi (`[]`) içermektedir. Projede **yapısal şablon** olarak yer alırlar; ileride bu veri türleri eklendiğinde aynı formatta doldurulmaya hazırdırlar. `symptoms.json` ve `appointments.json` dosyaları, ilaç takibi ve klinik zaman çizelgesi ile entegre çalışacak şekilde tasarlanmıştır (örneğin randevu hatırlatmaları veya semptom günlüğü).
+Bu dosyalar şu anda boş JSON dizisi (`[]`) içermektedir. Projede **yapısal şablon** olarak yer alırlar; ileride bu veri
+türleri eklendiğinde aynı formatta doldurulmaya hazırdırlar. `symptoms.json` ve `appointments.json` dosyaları, ilaç
+takibi ve klinik zaman çizelgesi ile entegre çalışacak şekilde tasarlanmıştır (örneğin randevu hatırlatmaları veya
+semptom günlüğü).
 
 ---
 
@@ -334,8 +357,10 @@ Bu dosyalar şu anda boş JSON dizisi (`[]`) içermektedir. Projede **yapısal �
 ### 3.1. Sidebar
 
 - **Logo**: "Klinik Takip"
-- **Tarih Filtresi**: Preset dropdown (`all`, `3`, `7`, ... `custom`), önceki/sonraki butonları, başlangıç/bitiş input’ları.
-- **Navigasyon**: Her bölüm için link (scroll yapar) ve toggle switch (gizle/göster). Ayrıca "Tümünü Göster/Gizle" butonu.
+- **Tarih Filtresi**: Preset dropdown (`all`, `3`, `7`, ... `custom`), önceki/sonraki butonları, başlangıç/bitiş
+  input’ları.
+- **Navigasyon**: Her bölüm için link (scroll yapar) ve toggle switch (gizle/göster). Ayrıca "Tümünü Göster/Gizle"
+  butonu.
 - **Yenile Butonu**: Verileri yeniden yükler (service worker cache temizleme ile).
 - **Animasyon Kontrolleri**:
   - Kapsam (Tümü / Dönem)
@@ -371,7 +396,8 @@ Grafikler `renderMainCharts()` ile çizilir.
 
 - **İlaç Filtresi**: Grup butonları (Kan Sulandırıcılar, Tansiyon & Kalp, vb.) ve ilaç isim butonları.
 - **Sadece Güncel** switch – sadece aktif ilaçları göster.
-- **İlaç Zaman Akışı Grafiği**: Her ilaç için yatay çubuk segmentleri (başlangıç-bitış). Fareyle üzerine gelince tooltip.
+- **İlaç Zaman Akışı Grafiği**: Her ilaç için yatay çubuk segmentleri (başlangıç-bitış). Fareyle üzerine gelince
+  tooltip.
 - **Tedavi Kronolojisi**: Olay listesi (başlangıç, bitiş, doz değişimi, vb.) tarih sırasıyla.
 - **Sağ Panel**: Aktif ve pasif ilaç listeleri (doz bilgileriyle).
 
@@ -379,36 +405,44 @@ Veriler `medicationChanges` ve `medicationLogs`’tan türetilir.
 
 ### 3.5. Bölüm 4: İlaç Matrisi (`#flowsheet`)
 
-- **Grid Modu**: Tablo – satırlar ilaç, sütunlar günler (son 14 gün). Hücrelerde o gün alınan toplam doz (tablet sayısı) gösterilir. Hücreye tıklayınca tooltip’te saatler ve dozlar.
+- **Grid Modu**: Tablo – satırlar ilaç, sütunlar günler (son 14 gün). Hücrelerde o gün alınan toplam doz (tablet sayısı)
+  gösterilir. Hücreye tıklayınca tooltip’te saatler ve dozlar.
 - **Grafik Karşılaştır Modu**: Seçili ilaçların günlük dozlarını bar chart olarak gösterir. İlaç seçimi yapılabilir.
 
 `setupFlowsheet()` verileri hazırlar, `renderFocusChart()` grafiği çizer.
 
 ### 3.6. Bölüm 5: İnteraktif Takvim (`#calendar`)
 
-- Aylık takvim görünümü (Pazartesi’den başlar). Her gün hücresinde o güne ait olay sayısını küçük noktalarla gösterir (renkler türe göre).
-- Tıklanan günün detayları sağ panelde listelenir (tansiyon, ilaç, kilo, tahlil, rapor, ilaç değişimi). **Sadece İlaçlar** switch’i ile filtreleme.
+- Aylık takvim görünümü (Pazartesi’den başlar). Her gün hücresinde o güne ait olay sayısını küçük noktalarla gösterir
+  (renkler türe göre).
+- Tıklanan günün detayları sağ panelde listelenir (tansiyon, ilaç, kilo, tahlil, rapor, ilaç değişimi). **Sadece
+  İlaçlar** switch’i ile filtreleme.
 - Önceki/sonraki işlem günü butonları.
 
-Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicationChanges` birleştirilerek `getDailyEvents()` ile elde edilir.
+Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicationChanges` birleştirilerek
+`getDailyEvents()` ile elde edilir.
 
 ### 3.7. Bölüm 6: Tahlil Trendleri (`#lab-trends`)
 
-- Her bir laboratuvar parametresi için ayrı mini grafik (INR, PT, aPTT, HGB, HCT, RBC, PLT, WBC, CRP, Lenfosit, NEU, CREA, BUN, ALT, GLU, Sodyum, Potasyum, Kalsiyum). Grafikte referans aralığı şerit olarak gösterilir, nokta ile mevcut değer işaretlenir.
+- Her bir laboratuvar parametresi için ayrı mini grafik (INR, PT, aPTT, HGB, HCT, RBC, PLT, WBC, CRP, Lenfosit, NEU,
+  CREA, BUN, ALT, GLU, Sodyum, Potasyum, Kalsiyum). Grafikte referans aralığı şerit olarak gösterilir, nokta ile mevcut
+  değer işaretlenir.
 
 `renderLabTrendCharts()` ile çizilir.
 
 ### 3.8. Bölüm 7: Tetkik & Bulgular (`#lab-findings`)
 
 - Sol tarafta tahlil seansları listesi (tarihe göre sıralı). Filtreler: Sadece Sınır Dışı, Gizle: AKG & Crossmatch.
-- Sağ tarafta seçili tahlilin parametreleri tablosu (parametre, değer, birim, referans aralığı, durum). Durum renkli badge ile gösterilir.
+- Sağ tarafta seçili tahlilin parametreleri tablosu (parametre, değer, birim, referans aralığı, durum). Durum renkli
+  badge ile gösterilir.
 
 `filteredTests` ve `selectedTestItems` kullanılır.
 
 ### 3.9. Bölüm 8: Raporlar (`#reports`)
 
 - Sol tarafta rapor listesi (tarihe göre sıralı).
-- Sağ tarafta seçili raporun detayları: başlık, tip, doktor bilgisi, klinik bilgiler, radyoloji bulguları, sonuçlar, implantlar, vb.
+- Sağ tarafta seçili raporun detayları: başlık, tip, doktor bilgisi, klinik bilgiler, radyoloji bulguları, sonuçlar,
+  implantlar, vb.
 
 `reports` verisi kullanılır.
 
@@ -429,14 +463,17 @@ Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicatio
 
 **Algoritma Özeti:**
 
-1. `clinical_context.json` içindeki `clinical_timeline` taranarak `"Yatış"` ve `"Taburcu"` olayları dinamik olarak tespit edilir. Her bir yatış aralığı (`{start, end}`) kaydedilir.
+1. `clinical_context.json` içindeki `clinical_timeline` taranarak `"Yatış"` ve `"Taburcu"` olayları dinamik olarak
+   tespit edilir. Her bir yatış aralığı (`{start, end}`) kaydedilir.
    - `medicationChanges` geçmişinden o gün geçerli doz ve sıklık (`timespan`) belirlenir.
    - Günlük ilaçlarda (`timespan <= 24`): Beklenen günlük doz ile `medicationLogs` kayıtları karşılaştırılır.
    - Yatışın son günü (taburcu günü) özel olarak işlenir: evde alınması gereken doz ile hastane dozu ayrıştırılır.
 
-   $$\text{Uyum}_N(\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum}(\text{hedefGün} - k \text{ gün})$$
+   $$\text{Uyum}_N (\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum} (\text{hedefGün} - k \text{ gün})$$
 
-**Not:** Bu algoritma, 30-31 Mart 2026 ve 23-28 Temmuz 2026 yatış dönemlerini doğru şekilde kapsar. `medication_changes.json` içindeki `Paused` ve `Resumed` kayıtları bu dönemlerle uyumlu hale getirilmiş ve tüm kayıtlara `reason` alanı eklenmiştir.
+**Not:** Bu algoritma, 30-31 Mart 2026 ve 23-28 Temmuz 2026 yatış dönemlerini doğru şekilde kapsar.
+`medication_changes.json` içindeki `Paused` ve `Resumed` kayıtları bu dönemlerle uyumlu hale getirilmiş ve tüm kayıtlara
+`reason` alanı eklenmiştir.
 
 ### 4.3. Anormal Tahliller
 
@@ -446,8 +483,10 @@ Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicatio
 
 ### 4.4. İlaç Zaman Akışı (Segmentler)
 
-- `detailedMeds` her ilaç için `medicationChanges`’ten başlangıç, bitiş, duraklama, devam etme olaylarına göre segmentler oluşturur.
-- `visibleMeds` bu segmentleri seçili filtre ve aktiflik durumuna göre filtreler ve yüzde konumları hesaplar (görsel çubuk grafik).
+- `detailedMeds` her ilaç için `medicationChanges`’ten başlangıç, bitiş, duraklama, devam etme olaylarına göre
+  segmentler oluşturur.
+- `visibleMeds` bu segmentleri seçili filtre ve aktiflik durumuna göre filtreler ve yüzde konumları hesaplar (görsel
+  çubuk grafik).
 
 ### 4.5. Animasyon
 
@@ -464,7 +503,8 @@ Veriler `medicationLogs`, `pressures`, `weights`, `tests`, `reports`, `medicatio
 
 ### 4.7. Service Worker ve Refresh
 
-- `refreshApp()` çalıştırıldığında service worker’a `CLEAR_CACHE` mesajı gönderilir, ardından tüm veriler cache-bust (timestamp query) ile yeniden yüklenir.
+- `refreshApp()` çalıştırıldığında service worker’a `CLEAR_CACHE` mesajı gönderilir, ardından tüm veriler cache-bust
+  (timestamp query) ile yeniden yüklenir.
 - Cache temizleme başarısız olursa doğrudan fetch yapılır.
 
 ---
@@ -492,7 +532,8 @@ Testler `npm test` ile çalıştırılabilir (package.json’da `test` betiği t
 - `medicationChanges`’de `timespan` saat cinsindendir (24, 12, 8, 168 = haftalık, 72 = 3 günde bir).
 - `medication_logs`’daki `dose` ilacın `base_dose` birimindedir. Tablet sayısı `dose / base_dose` ile hesaplanır.
 - Renk eşleştirmeleri `medColors` ve `medConfig` nesnelerinde tanımlıdır.
-- `clinical_context.json` doğrudan `users.json` içinde de olabilir, uygulama her iki durumu da destekler (önce `clinical_context.json` yükler, yoksa `user.clinical_context` kullanır).
+- `clinical_context.json` doğrudan `users.json` içinde de olabilir, uygulama her iki durumu da destekler (önce
+  `clinical_context.json` yükler, yoksa `user.clinical_context` kullanır).
 - `temperatures.json`, `glucose.json` vb. boş dosyalar ileride kullanılmak üzere yapısal şablonlardır.
 
 ### 6.2. Güncelleme Notları (v1.2 – Temmuz 2026)
@@ -500,21 +541,30 @@ Testler `npm test` ile çalıştırılabilir (package.json’da `test` betiği t
 1. **Dynamic Hospital Exclusion Algorithm**
 
 2. **Haftalık İlaç (Warfmadin) Doz Hesaplama**  
-   `timespan = 168` olan ilaçlar (örn. Warfmadin) için 7 günlük kayan pencere içinde alınan toplam mg miktarı, reçete edilen haftalık toplam mg ile karşılaştırılır. Bu, haftalık dozajın doğru şekilde değerlendirilmesini sağlar.
+   `timespan = 168` olan ilaçlar (örn. Warfmadin) için 7 günlük kayan pencere içinde alınan toplam mg miktarı, reçete
+   edilen haftalık toplam mg ile karşılaştırılır. Bu, haftalık dozajın doğru şekilde değerlendirilmesini sağlar.
 
-   $$\text{Uyum}_N(\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum}(\text{hedefGün} - k \text{ gün})$$
+   $$\text{Uyum}_N (\text{hedefGün}) = \frac{1}{N} \sum_{k=0}^{N-1} \text{GünlükUyum} (\text{hedefGün} - k \text{ gün})$$
 
 3. **Zero Hard-Coding**  
-   `app.js` ve `panel.html` içerisindeki tüm hasta/tarih bağımlılıkları kaldırılmış, tamamen `data/*.json` kaynaklı dinamik mimariye geçilmiştir. Herhangi bir hasta verisi yüklendiğinde dashboard otomatik olarak doğru sonuçları üretmektedir.
+   `app.js` ve `panel.html` içerisindeki tüm hasta/tarih bağımlılıkları kaldırılmış, tamamen `data/*.json` kaynaklı
+   dinamik mimariye geçilmiştir. Herhangi bir hasta verisi yüklendiğinde dashboard otomatik olarak doğru sonuçları
+   üretmektedir.
 
 4. **Yatarak Tedavi İlaçları**  
-   `medications.json` envanterine hastane sürecinde uygulanan Coraspin (ID: 16), Oksapar (ID: 17) ve Sulcid (ID: 18) enjeksiyon/yatarak tedavi ilaçları eklenmiştir. Bu ilaçlar, hastane yatış dönemlerinde `Paused`/`Resumed` mekanizması ile yönetilmektedir.
+   `medications.json` envanterine hastane sürecinde uygulanan Coraspin (ID: 16), Oksapar (ID: 17) ve Sulcid (ID: 18)
+   enjeksiyon/yatarak tedavi ilaçları eklenmiştir. Bu ilaçlar, hastane yatış dönemlerinde `Paused`/`Resumed` mekanizması
+   ile yönetilmektedir.
 
 5. **Test Runner**  
-   `package.json` içine `npm test` betiği eklenmiştir (`node --test tests/*.test.js`). Böylece unit testler tek komutla çalıştırılabilir.
+   `package.json` içine `npm test` betiği eklenmiştir (`node --test tests/*.test.js`). Böylece unit testler tek komutla
+   çalıştırılabilir.
 
 6. **Boş Dosyaların Amaçları**  
-   `temperatures.json`, `glucose.json`, `pulse.json`, `saturation.json`, `sleep.json`, `symptoms.json`, `appointments.json` dosyaları, ileride eklenecek veri türleri için yapısal JSON şablonları olarak projede tutulmaktadır. `symptoms.json` ve `appointments.json` özellikle ilaç takibi ve klinik zaman çizelgesi ile entegre çalışacak şekilde tasarlanmıştır.
+   `temperatures.json`, `glucose.json`, `pulse.json`, `saturation.json`, `sleep.json`, `symptoms.json`,
+   `appointments.json` dosyaları, ileride eklenecek veri türleri için yapısal JSON şablonları olarak projede
+   tutulmaktadır. `symptoms.json` ve `appointments.json` özellikle ilaç takibi ve klinik zaman çizelgesi ile entegre
+   çalışacak şekilde tasarlanmıştır.
 
 ---
 
@@ -530,4 +580,9 @@ Testler `npm test` ile çalıştırılabilir (package.json’da `test` betiği t
 
 ## 8. Özet
 
-Bu proje, karmaşık bir klinik veri setini görselleştiren, filtreleyen ve analiz eden zengin bir dashboard’dur. Alpine.js reaktivitesi, Chart.js grafikleri, Tailwind CSS ile hızlı bir şekilde geliştirilmiş ve PWA yetenekleri kazanmıştır. Tüm veri akışı, tarih filtreleme, metrik hesaplamalar, animasyon ve dışa aktarma özellikleri kapsamlı bir şekilde ele alınmıştır. **Zero hard-coding** ve **dinamik hospital exclusion** prensipleri ile gerçek dünya klinik verilerine uygun, esnek ve sürdürülebilir bir yapı hedeflenmiştir. Bu doküman, projeyi sıfırdan yeniden oluşturmak için gereken tüm bilgileri içermektedir.
+Bu proje, karmaşık bir klinik veri setini görselleştiren, filtreleyen ve analiz eden zengin bir dashboard’dur. Alpine.js
+reaktivitesi, Chart.js grafikleri, Tailwind CSS ile hızlı bir şekilde geliştirilmiş ve PWA yetenekleri kazanmıştır. Tüm
+veri akışı, tarih filtreleme, metrik hesaplamalar, animasyon ve dışa aktarma özellikleri kapsamlı bir şekilde ele
+alınmıştır. **Zero hard-coding** ve **dinamik hospital exclusion** prensipleri ile gerçek dünya klinik verilerine uygun,
+esnek ve sürdürülebilir bir yapı hedeflenmiştir. Bu doküman, projeyi sıfırdan yeniden oluşturmak için gereken tüm
+bilgileri içermektedir.

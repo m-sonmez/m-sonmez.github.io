@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta content="width=device-width,initial-scale=1" name="viewport" />
+    <title>Kapsamlı Klinik Durum ve Gidişat Raporu | Alaattin Sönmez (09.09.2026)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <link href="../../dist/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png" />
+    <style>
+      .glass-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow:
+          0 1px 3px 0 rgba(15, 23, 42, 0.04),
+          0 8px 24px -4px rgba(15, 23, 42, 0.04);
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      @media print {
+        .print-hidden {
+          display: none !important;
+        }
+
+        body {
+          background: #fff !important;
+          color: #0f172a !important;
+        }
+
+        .glass-card {
+          border: 1px solid #cbd5e1 !important;
+          box-shadow: none !important;
+          background: #fff !important;
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-50 font-sans text-slate-700 antialiased selection:bg-indigo-500 selection:text-white">
+    <header class="print-hidden sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 backdrop-blur-md">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <a aria-label="Yapay Zeka Rapor Merkezine Dön" class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-500" href="../index.html">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+            </svg>
+            <span>AI Hub</span>
+          </a>
+          <a class="hidden items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600 sm:flex" href="../../panel.html"><span>Ana Panel</span></a>
+          <span class="hidden text-slate-300 sm:inline">|</span>
+          <div class="hidden items-center gap-2 md:flex">
+            <span class="font-display text-base font-black text-blue-600">DeepSeek</span>
+            <span class="font-display text-base font-medium text-slate-500">V4</span>
+            <span class="ml-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-extrabold tracking-wide text-blue-800 uppercase">Epidemiyolojik ve Cerrahi Analiz</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button aria-label="Raporu Yazdır veya PDF olarak kaydet" class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95" onclick="window.print()">
+            <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+            </svg>
+            <span>Raporu Yazdır / PDF</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <section class="glass-card mb-8 overflow-hidden rounded-3xl border border-slate-200/90 shadow-sm">
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 py-6 text-white sm:px-8">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-md bg-blue-500/20 px-2.5 py-0.5 text-[10px] font-extrabold tracking-widest text-blue-300 uppercase">Kardiyovasküler Cerrahi Konsültasyonu</span>
+                <span class="rounded-md bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-extrabold tracking-widest text-emerald-300 uppercase">Aktif Takipte</span>
+              </div>
+              <h1 class="font-display mt-2 text-2xl font-black tracking-tight sm:text-3xl">KAPSAMLI KLİNİK DURUM VE GİDİŞAT RAPORU</h1>
+              <p class="mt-1 text-xs text-slate-300">Bentall Cerrahisi Sağkalım Serileri, Sternal Yara Enfeksiyonu ve Kronik Diseksiyon Dinamiği</p>
+            </div>
+            <div class="flex shrink-0 flex-col items-start rounded-2xl border border-white/10 bg-white/5 p-3 text-right backdrop-blur-md md:items-end">
+              <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Rapor Değerlendirme Tarihi</span>
+              <span class="font-mono text-sm font-bold text-white">09 Eylül 2026</span>
+              <span class="mt-0.5 text-[10px] text-slate-300">Ameliyat Sonrası: 202. Gün</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 border-b border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-3 sm:px-8 lg:grid-cols-6">
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Hasta Adı Soyadı</span>
+            <div class="font-display text-sm font-bold text-slate-900">Alaattin SÖNMEZ</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Yaş / Cinsiyet</span>
+            <div class="text-sm font-semibold text-slate-700">64 (01.01.1962) / Erkek</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">T.C. Kimlik No</span>
+            <div class="font-mono text-sm font-semibold text-slate-700">00000000000</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Boy / Kilo / VKİ</span>
+            <div class="text-sm font-semibold text-slate-700">
+              174 cm / 78.8 kg
+              <span class="text-xs text-slate-500">(26.0)</span>
+            </div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Kan Grubu</span>
+            <div class="text-sm font-extrabold text-rose-600">0 Rh (+) Pozitif</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Güvence / Kurum</span>
+            <div class="text-sm font-semibold text-slate-700">SSK / Hatay</div>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 p-4 sm:px-8">
+          <span class="text-xs font-bold text-slate-600">Primer Tanılar:</span>
+          <span class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-800">Akut Tip A Aort Diseksiyonu (DeBakey Tip I)</span>
+          <span class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-800">Asendan Aort Anevrizması (5.3 cm)</span>
+          <span class="rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-800">Bentall Operasyonu (Greft + Mekanik Kapak)</span>
+          <span class="rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-800">Sternal Dehissans &amp; Yara Enfeksiyonu (Revize)</span>
+          <span class="rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-800">Rezidüel Kronik Tip B Diseksiyon Flebi</span>
+          <span class="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">Mikrositer Demir Eksikliği Anemisi</span>
+        </div>
+      </section>
+      <section class="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div class="glass-card flex flex-col justify-between rounded-2xl border-b-4 border-b-blue-500 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Kan Basıncı</span>
+            <span class="rounded-md bg-blue-50 p-1 text-blue-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-slate-900">120/80</span>
+              <span class="text-[10px] font-bold text-slate-500">mmHg</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-700">Hedefte (&le;120)</span>
+              <span class="text-slate-500">7G Ort: 111/76</span>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card flex flex-col justify-between rounded-2xl border-b-4 border-b-teal-500 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Vücut Ağırlığı</span>
+            <span class="rounded-md bg-teal-50 p-1 text-teal-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-slate-900">78.8</span>
+              <span class="text-[10px] font-bold text-slate-500">kg</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-700">Ödem Yok</span>
+              <span class="text-slate-500">Stabil (&plusmn;0.1)</span>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card flex flex-col justify-between rounded-2xl border-b-4 border-b-amber-500 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Antikoagülasyon (INR)</span>
+            <span class="rounded-md bg-amber-50 p-1 text-amber-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-slate-900">2.72</span>
+              <span class="text-[10px] font-bold text-slate-500">Ratio</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-700">Hedefte (2.0-3.0)</span>
+              <span class="text-slate-500">Önceki: 2.76</span>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-500 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Hemoglobin (HGB)</span>
+            <span class="rounded-md bg-rose-50 p-1 text-rose-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-rose-600">9.7</span>
+              <span class="text-[10px] font-bold text-slate-500">g/dL</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-rose-700">Anemi (Düşük)</span>
+              <span class="text-slate-500">Depo: 19 µg/L</span>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card col-span-2 flex flex-col justify-between rounded-2xl border-b-4 border-b-indigo-500 p-4 shadow-sm sm:col-span-1">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Enflamasyon (CRP)</span>
+            <span class="rounded-md bg-indigo-50 p-1 text-indigo-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-indigo-600">11.3</span>
+              <span class="text-[10px] font-bold text-slate-500">mg/L</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-700">Gerilemede (&darr;12.5)</span>
+              <span class="text-slate-500">WBC: 7.97</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="space-y-8">
+        <section class="glass-card rounded-2xl p-6 shadow-sm">
+          <div class="mb-5 flex items-center gap-2.5 border-b border-slate-100 pb-4">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700"><span class="text-xs font-black">1</span></span>
+            <h2 class="font-display text-lg font-bold text-slate-900">Hasta Özeti ve Klinik Başlangıç</h2>
+          </div>
+          <div class="prose prose-slate max-w-none text-xs leading-relaxed sm:text-sm">
+            <p>
+              64 yaşındaki erkek hasta, 19 Şubat 2026 tarihinde ani başlayan yırtıcı karakterde şiddetli göğüs ve sırt ağrısı ile Defne Devlet Hastanesi Acil Servisi'ne başvurmuştur. Hızla ilerleyen tanı zincirinde (Defne Devlet Hastanesi &rarr; MKÜ Hastanesi &rarr; Kırıkhan Devlet Hastanesi &rarr; Özel İskenderun Gelişim Hastanesi) kontrastlı torakoabdominal BT anjiyografi ile
+              <strong class="text-rose-700">5.3 cm asendan aort anevrizması ve iliak bifurkasyona dek uzanan Tip A aort diseksiyonu</strong>
+              kesin tanısı konmuştur.
+            </p>
+            <p class="mt-3">
+              Akut Tip A Aort Diseksiyonu (ATAAD), acil cerrahi müdahale gerektiren, medikal takipte ilk 48 saatte saat başına %1-2 mortalite artışı gösteren bir kardiyovasküler acildir. Geniş cerrahi serilerde Bentall prosedürü sonrası 10 yıllık sağkalım %67-83.7 arasında bildirilmektedir. Hastanın 20 Şubat 2026'da derin hipotermik sirkülatuar arrest altında Bentall prosedürü (32 mm Dacron asendan aort grefti + 25 mm Carbomedics çift yapraklı mekanik aort kapak replasmanı +
+              koroner buton reimplantasyonu) ile başarılı şekilde opere edilmesi hayat kurtarıcı olmuştur.
+            </p>
+          </div>
+        </section>
+        <section class="glass-card rounded-2xl p-6 shadow-sm">
+          <div class="mb-5 flex items-center gap-2.5 border-b border-slate-100 pb-4">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700"><span class="text-xs font-black">2</span></span>
+            <h2 class="font-display text-lg font-bold text-slate-900">Postoperatif Erken Dönem ve Yoğun Bakım Süreci</h2>
+          </div>
+          <div class="prose prose-slate max-w-none text-xs leading-relaxed sm:text-sm">
+            <p>Postoperatif erken dönemde hasta yoğun bakımda izlenmiştir. Laboratuvar parametrelerinde:</p>
+            <ul class="list-disc space-y-1 pl-5">
+              <li>
+                <strong>Postoperatif 1. gün (21 Şubat):</strong>
+                Hemoglobin 9.2 g/dL, Hematokrit %28.8, Lökosit 27.1 &times; 10⁹/L (belirgin cerrahi stres lökositozu), CRP 154 mg/L.
+              </li>
+              <li>
+                <strong>Postoperatif 2–3. günler:</strong>
+                Anemi derinleşmiş (HGB 8.0–8.2 g/dL), trombositopeni (PLT 88–95 &times; 10⁹/L) gelişmiş ve CRP 61–136 mg/L arasında seyretmiştir.
+              </li>
+              <li>
+                <strong>Postoperatif 5. gün (25 Şubat):</strong>
+                INR 1.49'a yükselmiş, Warfarin doz titrasyonu başlamıştır.
+              </li>
+              <li>
+                <strong>Postoperatif 7. gün (27 Şubat):</strong>
+                INR 1.92, aPTT 43 saniye.
+              </li>
+            </ul>
+            <p class="mt-3">Hasta 2 Mart 2026'da taburcu edilmiş; taburculuk tedavisinde Warfmadin (haftalık 30 mg), Dilatrend (6.25 mg 2x1), EcopirinPro (81 mg 1x1), Panto (40 mg 1x1), Apikobal (250 mg 1x1) ve 7 günlük Tavanic profilaksisi verilmiştir. Ancak mekanik kapakta hedef INR 2.0-3.0 iken Mart ortasında INR 8.46 düzeyine çıkmış ve yakın takip gerekmiştir.</p>
+          </div>
+        </section>
+        <section class="glass-card rounded-2xl p-6 shadow-sm">
+          <div class="mb-5 flex items-center gap-2.5 border-b border-slate-100 pb-4">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-800"><span class="text-xs font-black">3</span></span>
+            <h2 class="font-display text-lg font-bold text-slate-900">Postoperatif Komplikasyonlar ve Yönetimi</h2>
+          </div>
+          <div class="space-y-6">
+            <div>
+              <h3 class="mb-2 text-xs font-bold tracking-wide text-slate-800 uppercase">3.1 Antikoagülasyon Yönetimi — Tarihsel INR Dalgalanmaları</h3>
+              <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-left text-xs">
+                  <thead class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase">
+                    <tr>
+                      <th class="p-2.5">Tarih</th>
+                      <th class="p-2.5">Haftalık Doz</th>
+                      <th class="p-2.5">Ölçülen INR</th>
+                      <th class="p-2.5">Klinik Durum / Karar</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    <tr>
+                      <td class="p-2.5">02 Mart</td>
+                      <td class="p-2.5">30 mg</td>
+                      <td class="p-2.5 font-bold">3.36</td>
+                      <td class="p-2.5">Taburculuk başlangıcı</td>
+                    </tr>
+                    <tr class="bg-rose-50/40">
+                      <td class="p-2.5">16 Mart</td>
+                      <td class="p-2.5">-</td>
+                      <td class="p-2.5 font-black text-rose-700">8.46</td>
+                      <td class="p-2.5 font-semibold text-rose-800">Kritik kanama riski &rarr; Aspirin geçici kesildi, doz düşürüldü</td>
+                    </tr>
+                    <tr>
+                      <td class="p-2.5">18 Mart</td>
+                      <td class="p-2.5">11.25 mg</td>
+                      <td class="p-2.5 font-bold text-amber-700">6.04</td>
+                      <td class="p-2.5">Agresif doz azaltımı</td>
+                    </tr>
+                    <tr>
+                      <td class="p-2.5">20 Nisan</td>
+                      <td class="p-2.5">11.25 mg</td>
+                      <td class="p-2.5 font-bold text-emerald-700">2.03</td>
+                      <td class="p-2.5">Hedefe giriş</td>
+                    </tr>
+                    <tr class="bg-amber-50/40">
+                      <td class="p-2.5">27 Temmuz</td>
+                      <td class="p-2.5">Durduruldu</td>
+                      <td class="p-2.5 font-black text-amber-700">1.17</td>
+                      <td class="p-2.5">Revizyon cerrahisi yatışı &rarr; Oksapar köprülemesi</td>
+                    </tr>
+                    <tr>
+                      <td class="p-2.5">02 Eylül</td>
+                      <td class="p-2.5">20 mg</td>
+                      <td class="p-2.5 font-black text-emerald-700">2.72</td>
+                      <td class="p-2.5 font-semibold text-emerald-800">İdeal terapötik aralıkta stabilite</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <h3 class="mb-2 text-xs font-bold tracking-wide text-slate-800 uppercase">3.2 Sternal Yara Enfeksiyonu ve Dehissens (Majör Komplikasyon)</h3>
+              <div class="prose prose-slate max-w-none text-xs leading-relaxed sm:text-sm">
+                <p>Hastanın seyrindeki en kritik morbidite faktörü median sternotomi yara enfeksiyonudur. Literatürde derin sternal yara enfeksiyonu (DSWI) insidansı %1-5, ilişkili mortalite ise %10-30 arasındadır:</p>
+                <ul class="list-disc space-y-1 pl-5">
+                  <li>
+                    <strong>26 Mart:</strong>
+                    Yara kültürü alındı ("Üreme Olmadı", fakat profilaktik antibiyotik altındaydı).
+                  </li>
+                  <li>
+                    <strong>30 Mart:</strong>
+                    CRP 101.4 mg/L, Sedimantasyon 61 mm/saat.
+                  </li>
+                  <li>
+                    <strong>Mayıs - Temmuz:</strong>
+                    Pürülan akıntı, lokal ısı artışı; Augmentin, Cipro, Stafine tedavileri uygulandı. 17 Temmuz Toraks BT'de sternumda defekt ve perikardiyal efüzyon bildirildi.
+                  </li>
+                  <li>
+                    <strong>23–28 Temmuz:</strong>
+                    Sternal dikiş ayrılması (dehissens) ve doku defekti nedeniyle tekrar yatırıldı. Cerrahi debridman, çoklu sütürasyon, kan transfüzyonu ve IV Sulcid uygulandı. Taburculukta ikili antibiyoterepiye (Augmentin + Cipro) geçildi.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3 class="mb-2 text-xs font-bold tracking-wide text-slate-800 uppercase">3.3 Hipertansif Kriz Atakları (Nisan 2026)</h3>
+              <div class="prose prose-slate max-w-none text-xs leading-relaxed sm:text-sm"><p>Aort diseksiyonlu hastalarda kan basıncı kontrolü aort duvarını yırtılmaktan koruyan en hayati unsurdur. 16-18 Nisan tarihlerinde hastada sistolik tansiyonun 168/103 mmHg seviyesine fırladığı hipertansif krizler yaşanmış, dilaltı Kapril (kaptopril) müdahaleleri yapılmıştır. Bu dönem sonrasında tedavi Coversyl ve Dilatrend kombinasyonu ile reorganize edilmiştir.</p></div>
+            </div>
+          </div>
+        </section>
+        <section class="glass-card rounded-2xl p-6 shadow-sm">
+          <div class="mb-5 flex items-center gap-2.5 border-b border-slate-100 pb-4">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800"><span class="text-xs font-black">4</span></span>
+            <h2 class="font-display text-lg font-bold text-slate-900">Güncel Klinik Durum ve Laboratuvar Analizi (08–09 Eylül 2026)</h2>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left text-xs">
+              <thead class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase">
+                <tr>
+                  <th class="p-2.5">Parametre</th>
+                  <th class="p-2.5">Sonuç</th>
+                  <th class="p-2.5">Referans</th>
+                  <th class="p-2.5">Klinik Değerlendirme</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                <tr>
+                  <td class="p-2.5 font-bold">INR (02.09)</td>
+                  <td class="p-2.5 font-black text-emerald-700">2.72</td>
+                  <td class="p-2.5">2.0 - 3.0 (Hedef)</td>
+                  <td class="p-2.5 font-semibold text-emerald-700">Terapötik pencerede stabil</td>
+                </tr>
+                <tr class="bg-rose-50/30">
+                  <td class="p-2.5 font-bold">Hemoglobin (HGB)</td>
+                  <td class="p-2.5 font-black text-rose-700">9.7 g/dL</td>
+                  <td class="p-2.5">13.5 - 17.5</td>
+                  <td class="p-2.5 font-semibold text-rose-700">Belirgin mikrositik anemi</td>
+                </tr>
+                <tr class="bg-rose-50/30">
+                  <td class="p-2.5 font-bold">Ferritin / Demir</td>
+                  <td class="p-2.5 font-black text-rose-700">19 µg/L / 15 µg/dL</td>
+                  <td class="p-2.5">30-400 / 59-158</td>
+                  <td class="p-2.5 font-semibold text-rose-700">Kritik demir eksikliği, depolar boş</td>
+                </tr>
+                <tr class="bg-rose-50/30">
+                  <td class="p-2.5 font-bold">MCV / MCH</td>
+                  <td class="p-2.5 font-mono text-rose-700">76.4 fL / 24.9 pg</td>
+                  <td class="p-2.5">80-100 / 27-34</td>
+                  <td class="p-2.5 font-semibold text-rose-700">Mikrositer hipokrom eritrosit morfolojisi</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold">Lökosit (WBC)</td>
+                  <td class="p-2.5 font-bold text-emerald-700">7.97 &times; 10⁹/L</td>
+                  <td class="p-2.5">4.5 - 11.0</td>
+                  <td class="p-2.5 font-semibold text-emerald-700">Tamamen normal aralıkta</td>
+                </tr>
+                <tr class="bg-amber-50/30">
+                  <td class="p-2.5 font-bold">CRP (08.09)</td>
+                  <td class="p-2.5 font-black text-amber-700">11.3 mg/L</td>
+                  <td class="p-2.5">0 - 5.0</td>
+                  <td class="p-2.5 font-semibold text-amber-700">Düşüş trendinde (Önceki: 23.8), subakut iyileşme</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold">Serum Kreatinin / BUN</td>
+                  <td class="p-2.5 font-mono text-slate-800">1.02 mg/dL / 11 mg/dL</td>
+                  <td class="p-2.5">0.6-1.3 / 7-28</td>
+                  <td class="p-2.5 font-semibold text-emerald-700">Böbrek süzme fonksiyonları korunmuş</td>
+                </tr>
+                <tr class="bg-amber-50/30">
+                  <td class="p-2.5 font-bold">LDL / Total Kolesterol</td>
+                  <td class="p-2.5 font-mono text-amber-800">141 mg/dL / 210 mg/dL</td>
+                  <td class="p-2.5">&lt; 55 (ESC) / 140-200</td>
+                  <td class="p-2.5 font-semibold text-amber-700">Dislipidemi &bull; Statin endikasyonu</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold">İdrar Analizi</td>
+                  <td class="p-2.5">Steril, Berrak</td>
+                  <td class="p-2.5">Lökosit/Nitrit (-)</td>
+                  <td class="p-2.5 font-semibold text-emerald-700">Üriner enfeksiyon odağı yok</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section class="glass-card rounded-2xl p-6 shadow-sm">
+          <div class="mb-5 flex items-center gap-2.5 border-b border-slate-100 pb-4">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700"><span class="text-xs font-black">5</span></span>
+            <h2 class="font-display text-lg font-bold text-slate-900">Klinik Değerlendirme, Risk Analizi ve Öneriler</h2>
+          </div>
+          <div class="space-y-4">
+            <div class="rounded-xl border border-rose-200 bg-rose-50/30 p-4">
+              <h3 class="text-xs font-bold text-rose-900 sm:text-sm">🩸 1. Demir Eksikliği Anemisi Tedavisi</h3>
+              <p class="mt-1 text-xs leading-relaxed text-slate-600">HGB 9.7 g/dL ve Ferritin 19 µg/L tablosu derin doku hipoksisine ve kompanzatuar kardiak debi artışına yol açarak aort duvarına fazladan yük bindirir. Ağır ameliyat kan kaybı, Temmuz doku defekti ve uzun süren enfeksiyon anemiyi tetiklemiştir. İvedilikle oral veya parenteral (IV Ferinject) demir tedavisi başlanmalı, gaitada gizli kan testi ile okült GİS kanama dışlanmalıdır.</p>
+            </div>
+            <div class="rounded-xl border border-amber-200 bg-amber-50/30 p-4">
+              <h3 class="text-xs font-bold text-amber-900 sm:text-sm">🔥 2. Enfeksiyon Kontrolü ve Endokardit Ekartasyonu</h3>
+              <p class="mt-1 text-xs leading-relaxed text-slate-600">CRP'nin 23.8'den 11.3 mg/L'ye gerilemesi ve lökositin 7.97 olması 4 Eylül'de başlanan Klamoks tedavisinin olumlu yanıt verdiğini göstermektedir. Ancak protez kapak taşıyan hastada enfeksiyonun tamamen eradike edildiği (CRP &lt; 5) doğrulanmalı; ateş, titreme veya üfürüm halinde derhal kan kültürleri ve ekokardiyografi (TEE) ile protez kapak endokarditi (PKE) taranmalıdır.</p>
+            </div>
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4">
+              <h3 class="text-xs font-bold text-emerald-900 sm:text-sm">❤️ 3. Kan Basıncı ve Aort Flebi Koruması</h3>
+              <p class="mt-1 text-xs leading-relaxed text-slate-600">Son 7 günlük tansiyon ortalaması 111/76 mmHg olup 2024 ESC hedefiyle (&le; 120 mmHg) mükemmel uyumludur. Dilatrend + Coversyl tedavisi aort duvar gerilimini minimize etmektedir. Bu tedavi aynı titizlikle sürdürülmelidir.</p>
+            </div>
+            <div class="rounded-xl border border-indigo-200 bg-indigo-50/30 p-4">
+              <h3 class="text-xs font-bold text-indigo-900 sm:text-sm">🧪 4. Klamoks Sonrası INR Takibi ve Statin Başlanması</h3>
+              <p class="mt-1 text-xs leading-relaxed text-slate-600">Klamoks kürü bittikten 48 saat sonra antibiyotik etkileşimine bağlı sıçramayı ekarte etmek için kontrol INR alınmalıdır. LDL 141 mg/dL seviyesi için düşük doz statin (Atorvastatin 20 mg) kardiyoloji hekimiyle konsülte edilmelidir.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+      <footer class="mt-12 border-t border-slate-200 pt-6 text-center text-xs text-slate-500">
+        <div class="flex flex-wrap items-center justify-center gap-2 font-semibold text-slate-600">
+          <span>Hasta: Alaattin SÖNMEZ</span>
+          <span>&bull;</span>
+          <span>Dosya No: #1</span>
+          <span>&bull;</span>
+          <span>Rapor Kodu: CLN-20260909-DEEPSEEK</span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500 italic">Bu rapor, hastanın nesnel klinik verileri ve kardiyovasküler cerrahi literatürü ışığında derlenmiştir. Kesin tanı ve tedavi kararları takip eden hekim heyetine aittir.</p>
+      </footer>
+    </main>
+  </body>
+</html>

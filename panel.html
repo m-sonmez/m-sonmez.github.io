@@ -523,8 +523,8 @@
                     </div>
                     <div class="mt-1 flex flex-col gap-0.5">
                       <!--<div class="flex items-center" x-show="getFilteredPressures().length > 0">
-                                        <span :class="metrics.bpStatusClass" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold tracking-widest uppercase shadow-sm" x-text="metrics.bpStatusText"></span>
-                                    </div>-->
+                                                      <span :class="metrics.bpStatusClass" class="rounded px-1.5 py-0.5 text-[9px] font-extrabold tracking-widest uppercase shadow-sm" x-text="metrics.bpStatusText"></span>
+                                                  </div>-->
                       <span class="text-[10px] font-semibold text-slate-500" x-show="getFilteredPressures().length > 0 && previousAvgBp !== '-'">
                         <span class="font-bold text-slate-600" x-text="previousAvgBp"></span>
                       </span>
@@ -776,7 +776,7 @@
               <div class="mb-4 text-xs font-bold tracking-wider text-slate-400 uppercase">İlaç Filtresi</div>
               <div class="mb-0 flex flex-col items-stretch justify-between gap-2 border-b border-slate-100 pb-4 md:flex-row md:items-center">
                 <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                  <template x-for="(groupMeds, groupName) in medGroups" :key="groupName">
+                  <template :key="groupName" x-for="(groupMeds, groupName) in medGroups">
                     <div :class="isGroupActive(groupName) ? 'bg-indigo-100 border-indigo-200 ring-2 ring-indigo-500/20' : 'bg-slate-50 border-slate-200 hover:bg-indigo-50'" @click="toggleGroup(groupName)" class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 transition-all duration-200 sm:rounded-lg">
                       <span class="h-2 w-2 shrink-0 rounded-full bg-indigo-500 shadow-sm"></span>
                       <span class="truncate text-[10px] font-bold text-slate-700 sm:text-[11px]" x-text="groupName"></span>
@@ -1322,7 +1322,7 @@
                   </div>
                 </template>
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" x-show="filteredLabTrendTargets.length > 0">
-                  <template x-for="tgt in filteredLabTrendTargets" :key="tgt.id">
+                  <template :key="tgt.id" x-for="tgt in filteredLabTrendTargets">
                     <div class="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
                       <div class="mb-1 truncate text-center text-[10px] font-black tracking-tight text-slate-700" x-text="tgt.label"></div>
                       <div class="relative h-[240px] w-full">
@@ -1546,8 +1546,8 @@
                           <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-inner">
                             <div class="font-bold text-slate-800" x-text="impl.brand + ' - ' + impl.model"></div>
                             <div class="mt-1 text-[10px] text-slate-400" x-text="impl.type"></div>
-                            <div class="mt-1.5 text-[10px] font-semibold text-slate-500" x-text="'Specs: ' + impl.specs"></div>
-                            <div class="mt-0.5 text-[10px] text-slate-500" x-text="'Serial/ID: ' + impl.serial"></div>
+                            <div class="mt-1.5 text-[10px] font-semibold text-slate-500" x-text="'Özellikler: ' + impl.specs"></div>
+                            <div class="mt-0.5 text-[10px] text-slate-500" x-text="'Seri No: ' + impl.serial"></div>
                           </div>
                         </template>
                       </div>

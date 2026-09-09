@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta content="width=device-width,initial-scale=1" name="viewport" />
+    <title>Yapay Zekâ Klinik Konsültasyon ve Rapor Merkezi | Alaattin Sönmez</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <link href="../dist/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png" />
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+
+      .glass-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow:
+          0 1px 3px 0 rgba(15, 23, 42, 0.04),
+          0 8px 24px -4px rgba(15, 23, 42, 0.04);
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body @keydown.window.escape="previewModal.open=false" class="min-h-screen bg-slate-50 font-sans text-slate-700 antialiased selection:bg-indigo-500 selection:text-white" x-data="aiHub()">
+    <header class="sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 backdrop-blur-md">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-3">
+          <a aria-label="Ana Klinik Takip Paneline Dön" class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none" href="../panel.html">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+            </svg>
+            <span>Ana Panele Dön</span>
+          </a>
+          <span class="hidden text-slate-300 sm:inline">|</span>
+          <div class="hidden items-center gap-2 sm:flex">
+            <span class="font-display text-lg font-black tracking-tight text-indigo-600">Klinik</span>
+            <span class="font-display text-lg font-medium tracking-tight text-slate-500">Takip</span>
+            <span class="ml-1 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-0.5 text-[10px] font-extrabold tracking-wide text-indigo-700 uppercase">AI Konsültasyon Merkezi</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="relative hidden w-48 md:block lg:w-64">
+            <input aria-label="Rapor ara" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 pl-8 text-xs font-medium text-slate-700 placeholder-slate-400 transition outline-none focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500" placeholder="Model, bulgu veya konu ara..." type="text" x-model="searchQuery" />
+            <svg class="absolute top-2 left-2.5 h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+            </svg>
+          </div>
+          <div class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span class="font-mono text-slate-600" x-text="selectedDate"></span>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <section class="glass-card mb-8 overflow-hidden rounded-3xl border border-slate-200/90 shadow-sm">
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 py-6 text-white sm:px-8">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-md bg-indigo-500/20 px-2.5 py-0.5 text-[10px] font-extrabold tracking-widest text-indigo-300 uppercase">Çoklu Model Yapay Zekâ Klinik Sentezi</span>
+                <span class="rounded-md bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-extrabold tracking-widest text-emerald-300 uppercase">Postoperatif 202. Gün</span>
+              </div>
+              <h1 class="font-display mt-2 text-2xl font-black tracking-tight sm:text-3xl">YAPAY ZEKÂ KONSÜLTASYON VE MODEL GÖRÜŞLERİ</h1>
+              <p class="mt-1 text-xs text-slate-300">Alaattin Sönmez (64E) &bull; Stanford Tip A Aort Diseksiyonu &amp; Bentall Prosedürü (20 Şubat 2026)</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <a class="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-300" href="../panel.html">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                </svg>
+                <span>Ham Veri Paneli</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 border-b border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-5 sm:px-8">
+          <div class="rounded-xl border border-slate-200/80 bg-white p-3">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">7 Günlük Tansiyon</span>
+            <div class="font-display mt-0.5 text-base font-black text-slate-900">
+              111/76
+              <span class="text-xs font-medium text-slate-500">mmHg</span>
+            </div>
+            <div class="text-[10px] font-bold text-emerald-700">Hedefte (&le;120)</div>
+          </div>
+          <div class="rounded-xl border border-slate-200/80 bg-white p-3">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Antikoagülasyon (INR)</span>
+            <div class="font-display mt-0.5 text-base font-black text-slate-900">
+              2.72
+              <span class="text-xs font-medium text-slate-500">Ratio</span>
+            </div>
+            <div class="text-[10px] font-bold text-emerald-700">Hedef Aralıkta (2-3)</div>
+          </div>
+          <div class="rounded-xl border border-slate-200/80 bg-white p-3">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Hemoglobin (HGB)</span>
+            <div class="font-display mt-0.5 text-base font-black text-rose-700">
+              9.7
+              <span class="text-xs font-medium text-slate-500">g/dL</span>
+            </div>
+            <div class="text-[10px] font-bold text-rose-700">Mikrositik Anemi</div>
+          </div>
+          <div class="rounded-xl border border-slate-200/80 bg-white p-3">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Enflamasyon (CRP)</span>
+            <div class="font-display mt-0.5 text-base font-black text-amber-700">
+              11.3
+              <span class="text-xs font-medium text-slate-500">mg/L</span>
+            </div>
+            <div class="text-[10px] font-bold text-amber-700">Düşüşte (Önceki: 23.8)</div>
+          </div>
+          <div class="col-span-2 rounded-xl border border-slate-200/80 bg-white p-3 sm:col-span-1">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Aktif Tedavi</span>
+            <div class="font-display mt-0.5 truncate text-xs font-black text-slate-900">Warfarin &bull; Dilatrend &bull; Coversyl</div>
+            <div class="text-[10px] font-bold text-indigo-700">Klamoks (04.09'dan beri)</div>
+          </div>
+        </div>
+      </section>
+      <section class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+            <template :key="dateItem" x-for="dateItem in availableDates">
+              <button :class="selectedDate===dateItem?'bg-indigo-600 text-white font-bold shadow-xs':'text-slate-600 hover:bg-slate-100 font-medium'" @click="selectedDate=dateItem" class="rounded-xl px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-indigo-500" x-text="formatDateHuman(dateItem)"></button>
+            </template>
+          </div>
+          <div class="flex items-center rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+            <button :class="activeView==='cards'?'bg-slate-900 text-white font-bold shadow-xs':'text-slate-600 hover:text-slate-900 font-medium'" @click="activeView='cards'" class="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-slate-900">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+              <span>Rapor Kartları</span>
+            </button>
+            <button :class="activeView==='consensus'?'bg-slate-900 text-white font-bold shadow-xs':'text-slate-600 hover:text-slate-900 font-medium'" @click="activeView='consensus'" class="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-slate-900">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+              <span>Konsensüs Matrisi</span>
+            </button>
+            <button :class="activeView==='split'?'bg-slate-900 text-white font-bold shadow-xs':'text-slate-600 hover:text-slate-900 font-medium'" @click="activeView='split'" class="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-slate-900">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+              <span>Yan Yana Canlı Kıyasla</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5" x-show="activeView==='cards'">
+          <span class="mr-1 text-[11px] font-bold text-slate-500 uppercase">Filtrele:</span>
+          <button :class="selectedModelFilter==='all'?'bg-indigo-600 text-white font-bold':'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'" @click="selectedModelFilter='all'" class="rounded-lg border px-2.5 py-1 text-xs transition focus-visible:ring-2 focus-visible:ring-indigo-500">Tümü</button>
+          <button :class="selectedModelFilter==='gpt'?'bg-indigo-600 text-white font-bold':'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'" @click="selectedModelFilter='gpt'" class="rounded-lg border px-2.5 py-1 text-xs transition focus-visible:ring-2 focus-visible:ring-indigo-500">GPT</button>
+          <button :class="selectedModelFilter==='gemini'?'bg-indigo-600 text-white font-bold':'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'" @click="selectedModelFilter='gemini'" class="rounded-lg border px-2.5 py-1 text-xs transition focus-visible:ring-2 focus-visible:ring-indigo-500">Gemini</button>
+          <button :class="selectedModelFilter==='deepseek'?'bg-indigo-600 text-white font-bold':'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'" @click="selectedModelFilter='deepseek'" class="rounded-lg border px-2.5 py-1 text-xs transition focus-visible:ring-2 focus-visible:ring-indigo-500">DeepSeek</button>
+          <button :class="selectedModelFilter==='claude'?'bg-indigo-600 text-white font-bold':'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'" @click="selectedModelFilter='claude'" class="rounded-lg border px-2.5 py-1 text-xs transition focus-visible:ring-2 focus-visible:ring-indigo-500">Claude</button>
+        </div>
+      </section>
+      <section class="space-y-6" x-show="activeView==='cards'">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+          <template :key="report.id" x-for="report in filteredReports">
+            <div :class="report.status==='ready'?'border-slate-200/90 hover:border-indigo-300 hover:shadow-md':'border-dashed border-slate-300 opacity-80'" class="glass-card flex flex-col justify-between rounded-3xl p-5 transition-all">
+              <div>
+                <div class="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div class="flex items-center gap-2">
+                    <div :class="report.badgeBg" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl shadow-sm">
+                      <span :class="report.badgeText" class="font-display text-xs font-black" x-text="report.avatar"></span>
+                    </div>
+                    <div>
+                      <h3 class="font-display text-sm font-black text-slate-900" x-text="report.modelName"></h3>
+                      <p class="text-[10px] font-bold text-slate-500" x-text="report.engine"></p>
+                    </div>
+                  </div>
+                  <span :class="report.status==='ready'?'bg-emerald-50 text-emerald-800 border-emerald-200':'bg-amber-50 text-amber-800 border-amber-200'" class="rounded-md border px-2 py-0.5 text-[9px] font-black tracking-wider uppercase" x-text="report.statusText"></span>
+                </div>
+                <div class="mt-3.5 space-y-2">
+                  <h4 class="text-xs leading-snug font-bold text-slate-800" x-text="report.title"></h4>
+                  <p class="text-[11px] leading-relaxed text-slate-600" x-text="report.summary"></p>
+                </div>
+                <div class="mt-3.5 flex flex-wrap gap-1.5">
+                  <template :key="tag" x-for="tag in report.tags"><span class="rounded-md border border-slate-200 bg-slate-100/80 px-2 py-0.5 text-[9px] font-bold text-slate-700" x-text="tag"></span></template>
+                </div>
+                <div :class="report.highlightBoxBg" class="mt-4 rounded-xl border p-3 text-[11px] leading-relaxed font-medium">
+                  <span class="block font-bold" x-text="report.highlightTitle"></span>
+                  <span class="text-slate-700" x-text="report.highlightText"></span>
+                </div>
+              </div>
+              <div class="mt-4 border-t border-slate-100 pt-3.5">
+                <div class="mb-2.5 flex items-center justify-between">
+                  <span class="text-[10px] font-extrabold tracking-wider text-slate-400 uppercase">Erişilebilir Formatlar</span>
+                  <span class="text-[10px] font-semibold text-slate-400" x-text="((report.htmlUrl ? 1 : 0) + (report.pdfUrl ? 1 : 0) + (report.docxUrl ? 1 : 0)) + ' Format'"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <template x-if="report.htmlUrl">
+                    <a :href="report.htmlUrl" class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-[0.98]" target="_blank">
+                      <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                      </svg>
+                      <span class="truncate" x-text="report.status === 'ready' ? 'Web Raporunu Aç' : 'Taslak Önizleme'"></span>
+                    </a>
+                  </template>
+                  <template x-if="report.htmlUrl">
+                    <button @click="openPreview(report.htmlUrl, report.modelName + ' Raporu')" aria-label="Raporu Hızlı Önizle" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600 shadow-2xs transition hover:border-indigo-300 hover:bg-slate-100 hover:text-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-[0.98]" title="Hızlı Önizleme" type="button">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                      </svg>
+                    </button>
+                  </template>
+                </div>
+                <template x-if="report.pdfUrl || report.docxUrl">
+                  <div class="mt-2 flex items-center gap-2">
+                    <template x-if="report.pdfUrl">
+                      <a :href="report.pdfUrl" class="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/80 px-2 py-1.5 text-xs font-bold text-rose-700 shadow-2xs transition hover:border-rose-300 hover:bg-rose-100 focus-visible:ring-2 focus-visible:ring-rose-500 active:scale-[0.98]" download title="PDF İndir">
+                        <svg class="h-3.5 w-3.5 shrink-0 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                        </svg>
+                        <span class="truncate">PDF İndir</span>
+                      </a>
+                    </template>
+                    <template x-if="report.docxUrl">
+                      <a :href="report.docxUrl" class="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-2 py-1.5 text-xs font-bold text-blue-700 shadow-2xs transition hover:border-blue-300 hover:bg-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-[0.98]" download title="Word (DOCX) İndir">
+                        <svg class="h-3.5 w-3.5 shrink-0 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+                        </svg>
+                        <span class="truncate">DOCX İndir</span>
+                      </a>
+                    </template>
+                  </div>
+                </template>
+                <template x-if="!report.pdfUrl && !report.docxUrl">
+                  <div class="mt-2 flex items-center justify-center rounded-xl border border-slate-100 bg-slate-50/80 px-2 py-1.5 text-center">
+                    <span class="text-[11px] font-medium text-slate-400" x-text="report.status === 'ready' ? 'Yazdırılabilir Web Formatı' : 'Dosya Formatları Hazırlanıyor'"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+      <section class="space-y-6" x-show="activeView==='consensus'">
+        <div class="glass-card rounded-3xl p-6 shadow-sm">
+          <div class="mb-5 flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="font-display text-lg font-black text-slate-900">Yapay Zekâ Klinik Görüş Birliği (Konsensüs) Tablosu</h2>
+              <p class="text-xs text-slate-500">09 Eylül 2026 verileri üzerinden tamamlanmış modellerin vardığı ortak sonuçlar ve kritik uyarılar.</p>
+            </div>
+            <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">Yüksek Tıbbi Konsensüs (%92)</span>
+          </div>
+          <div aria-label="Konsensüs Matrisi Tablosu" class="custom-scrollbar overflow-x-auto" role="region" tabindex="0">
+            <table class="w-full min-w-[700px] border-collapse text-left text-xs">
+              <thead>
+                <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase">
+                  <th class="p-3">Klinik Parametre / Konu</th>
+                  <th class="p-3 text-center">GPT Analizi</th>
+                  <th class="p-3 text-center">Gemini Analizi</th>
+                  <th class="p-3 text-center">DeepSeek Analizi</th>
+                  <th class="p-3">Konsensüs ve Ortak Tavsiye</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/50">
+                  <td class="p-3 font-bold text-slate-900">
+                    <div>Kan Basıncı &amp; Hemodinami</div>
+                    <div class="text-[10px] font-normal text-slate-500">Son 7 gün ort: 111/76 mmHg</div>
+                  </td>
+                  <td class="p-3 text-center font-semibold text-emerald-700">Hedefte (&le;120)</td>
+                  <td class="p-3 text-center font-semibold text-emerald-700">Stabil / Başarılı</td>
+                  <td class="p-3 text-center font-semibold text-emerald-700">Olumlu Trend</td>
+                  <td class="p-3 text-xs leading-relaxed text-emerald-900">
+                    <strong>Tam Fikir Birliği:</strong>
+                    Dilatrend + Coversyl kombinasyonu ile tansiyon aort duvarını koruyacak ideal banda çekilmiştir. Ani sıçramalar engellenmelidir.
+                  </td>
+                </tr>
+                <tr class="hover:bg-slate-50/50">
+                  <td class="p-3 font-bold text-slate-900">
+                    <div>Antikoagülasyon (INR)</div>
+                    <div class="text-[10px] font-normal text-slate-500">Son INR: 2.72 (Hedef: 2.0 - 3.0)</div>
+                  </td>
+                  <td class="p-3 text-center font-semibold text-emerald-700">2.72 Terapötik</td>
+                  <td class="p-3 text-center font-semibold text-emerald-700">Kapak Korumada</td>
+                  <td class="p-3 text-center font-semibold text-emerald-700">Hedefe Uyumlu</td>
+                  <td class="p-3 text-xs leading-relaxed text-slate-700">
+                    <strong>Ortak Uyarı:</strong>
+                    Mevcut değer idealdir ancak geçmiş dalgalanmalar (1.17 - 8.46) ve yeni başlanan
+                    <em>Klamoks</em>
+                    etkileşimi nedeniyle 11-12 Eylül'de kontrol INR şarttır.
+                  </td>
+                </tr>
+                <tr class="bg-rose-50/30 hover:bg-rose-50/50">
+                  <td class="p-3 font-bold text-rose-900">
+                    <div>Mikrositik Anemi &amp; Demir</div>
+                    <div class="text-[10px] font-normal text-rose-700">HGB: 9.7 g/dL &bull; Ferritin: 19</div>
+                  </td>
+                  <td class="p-3 text-center font-bold text-rose-700">Öncelikli Sorun</td>
+                  <td class="p-3 text-center font-bold text-rose-700">Müdahale Gerekir</td>
+                  <td class="p-3 text-center font-bold text-rose-700">Ağır Demir Eks.</td>
+                  <td class="p-3 text-xs leading-relaxed text-rose-900">
+                    <strong>Acil Ortak Eylem:</strong>
+                    Tüm modeller IV veya oral demir replasmanının hemen başlanması ve gizli GİS kanama/ülser kaynağının dışlanması konusunda hemfikirdir.
+                  </td>
+                </tr>
+                <tr class="hover:bg-slate-50/50">
+                  <td class="p-3 font-bold text-slate-900">
+                    <div>Sternal Yara &amp; CRP</div>
+                    <div class="text-[10px] font-normal text-slate-500">CRP: 11.3 mg/L &bull; WBC: 7.97</div>
+                  </td>
+                  <td class="p-3 text-center font-semibold text-amber-700">Kısmen İyileşen</td>
+                  <td class="p-3 text-center font-semibold text-amber-700">Gerilemede</td>
+                  <td class="p-3 text-center font-semibold text-amber-700">Subakut İnflamasyon</td>
+                  <td class="p-3 text-xs leading-relaxed text-slate-700">
+                    <strong>Ortak Tavsiye:</strong>
+                    Lökosit normal, CRP düşüştedir. Ancak mekanik kapak endokarditi (PKE) ekarte edilmeli, Klamoks kürü sonrası CRP &lt; 5 seviyesi teyit edilmelidir.
+                  </td>
+                </tr>
+                <tr class="hover:bg-slate-50/50">
+                  <td class="p-3 font-bold text-slate-900">
+                    <div>Lipid Yönetimi &amp; Statin</div>
+                    <div class="text-[10px] font-normal text-slate-500">LDL: 141 mg/dL &bull; Kol: 210</div>
+                  </td>
+                  <td class="p-3 text-center font-semibold text-amber-700">Risk Faktörü</td>
+                  <td class="p-3 text-center font-semibold text-amber-700">Statin Endike</td>
+                  <td class="p-3 text-center font-semibold text-amber-700">Statin Değerlendir</td>
+                  <td class="p-3 text-xs leading-relaxed text-slate-700">
+                    <strong>Konsensüs:</strong>
+                    ESC kılavuzlarına göre diseksiyon öykülü hastada hedef LDL &lt; 55 mg/dL olup düşük-orta doz statin (Atorvastatin/Rosuvastatin) konsülte edilmelidir.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section class="space-y-4" x-show="activeView==='split'">
+        <div class="glass-card flex flex-col gap-4 rounded-3xl p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-600">Sol Panel:</span>
+              <select class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500" x-model="splitLeft">
+                <option value="gpt">OpenAI GPT-5.1</option>
+                <option value="gemini">Google Gemini 3.8 Flash</option>
+                <option value="deepseek">DeepSeek V4</option>
+                <option value="claude">Anthropic Claude 5 Sonnet (Taslak)</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-600">Sağ Panel:</span>
+              <select class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500" x-model="splitRight">
+                <option value="gemini">Google Gemini 3.8 Flash</option>
+                <option value="deepseek">DeepSeek V4</option>
+                <option value="gpt">OpenAI GPT-5.1</option>
+                <option value="claude">Anthropic Claude 5 Sonnet (Taslak)</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex items-center gap-2"><span class="text-[11px] font-medium text-slate-500">Pencereler bağımsız kaydırılabilir.</span></div>
+        </div>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="glass-card flex h-[700px] flex-col overflow-hidden rounded-3xl shadow-sm lg:h-[820px]">
+            <div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2 text-xs font-bold text-slate-700">
+              <span x-text="getModelName(splitLeft)"></span>
+              <a :href="getModelUrl(splitLeft)" class="text-indigo-600 hover:underline focus-visible:ring-1 focus-visible:ring-indigo-500" rel="noopener noreferrer" target="_blank">Yeni Sekmede Aç &nearr;</a>
+            </div>
+            <iframe :src="getModelUrl(splitLeft)" class="h-full w-full border-none bg-white" title="Sol Model Görünümü"></iframe>
+          </div>
+          <div class="glass-card flex h-[700px] flex-col overflow-hidden rounded-3xl shadow-sm lg:h-[820px]">
+            <div class="flex items-center justify-between border-b border-slate-200 bg-slate-100/70 px-4 py-2 text-xs font-bold text-slate-700">
+              <span x-text="getModelName(splitRight)"></span>
+              <a :href="getModelUrl(splitRight)" class="text-indigo-600 hover:underline focus-visible:ring-1 focus-visible:ring-indigo-500" rel="noopener noreferrer" target="_blank">Yeni Sekmede Aç &nearr;</a>
+            </div>
+            <iframe :src="getModelUrl(splitRight)" class="h-full w-full border-none bg-white" title="Sağ Model Görünümü"></iframe>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div :aria-label="previewModal.title" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" x-cloak x-show="previewModal.open">
+      <div @click.away="previewModal.open=false" class="flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-3.5">
+          <div class="flex items-center gap-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-indigo-600"></span>
+            <h3 class="font-display text-sm font-bold text-slate-800" x-text="previewModal.title"></h3>
+          </div>
+          <div class="flex items-center gap-2">
+            <a :href="previewModal.url" class="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-indigo-500" rel="noopener noreferrer" target="_blank">Tam Ekran Aç &nearr;</a>
+            <button @click="previewModal.open=false" aria-label="Önizlemeyi Kapat" class="rounded-lg p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-800 focus-visible:ring-2 focus-visible:ring-indigo-500">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 bg-slate-100">
+          <iframe :src="previewModal.url" class="h-full w-full border-none" title="Önizleme Penceresi"></iframe>
+        </div>
+      </div>
+    </div>
+    <footer class="mt-12 border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500">
+      <div class="mx-auto max-w-7xl px-4">
+        <p class="font-semibold text-slate-700">Alaattin Sönmez &bull; Çoklu Yapay Zekâ Klinik Karar Destek &amp; Konsültasyon Sistemi</p>
+        <p class="mt-2 text-[11px] leading-relaxed text-slate-500">Bu sayfadaki analizler ve raporlar OpenAI GPT, Google Gemini, DeepSeek ve Anthropic Claude yapay zekâ motorları tarafından ham klinik veriler ve uluslararası kardiyoloji kılavuzları (ESC/AHA/EACTS) sentezlenerek üretilmiştir. Kesin tıbbi teşhis, tedavi ve ilaç değişiklikleri yalnızca yetkili hekim heyetince yapılabilir.</p>
+      </div>
+    </footer>
+    <script>
+      function aiHub() {
+        return {
+          selectedDate: '2026-09-09',
+          availableDates: ['2026-09-09'],
+          activeView: 'cards',
+          selectedModelFilter: 'all',
+          searchQuery: '',
+          splitLeft: 'gpt',
+          splitRight: 'gemini',
+          previewModal: {open: false, url: '', title: ''},
+          reports: [
+            {
+              id: 'gpt-2026-09-09',
+              date: '2026-09-09',
+              modelKey: 'gpt',
+              modelName: 'OpenAI GPT-5.1',
+              engine: 'Boylamsal Veri Denetimi ve Doğrulama',
+              avatar: 'GPT',
+              badgeBg: 'bg-emerald-100',
+              badgeText: 'text-emerald-800',
+              status: 'ready',
+              statusText: 'Yayında & Dosyalar Hazır',
+              title: 'Hasta Durumu ve Gidişat Raporu',
+              summary: '19 Şubat – 9 Eylül 2026 tüm zamanlar ham veri denetimi, 487 tansiyon, 175 kilo ve 2.028 lab sonucunun analitik dökümü.',
+              tags: ['Boylamsal Ham Veri', 'TTR Analizi', 'Klamoks Etkileşimi', 'BSG Kılavuzu'],
+              highlightTitle: 'Temel Çıkarım:',
+              highlightText: '111/76 mmHg ile tansiyon mükemmel hedeftedir. HGB 9.7 g/dL ve demir eksikliği 1. öncelikli klinik sorundur.',
+              highlightBoxBg: 'bg-emerald-50/70 border-emerald-200 text-emerald-950',
+              htmlUrl: 'gpt/2026-09-09.html',
+              pdfUrl: 'gpt/hasta_durum_ve_gidisat_raporu_2026-09-09.pdf',
+              docxUrl: 'gpt/hasta_durum_ve_gidisat_raporu_2026-09-09.docx',
+            },
+            {
+              id: 'gemini-2026-09-09',
+              date: '2026-09-09',
+              modelKey: 'gemini',
+              modelName: 'Google Gemini 3.8 Flash',
+              engine: 'ESC/AHA Kılavuzları ve Klinik Eylem Planı',
+              avatar: 'GEM',
+              badgeBg: 'bg-indigo-100',
+              badgeText: 'text-indigo-800',
+              status: 'ready',
+              statusText: 'Yayında',
+              title: 'Ayrıntılı Klinik Durum ve Tıbbi Değerlendirme',
+              summary: 'Aort kesme stresi (dP/dt), rezidüel Tip B flebi ve 5 maddelik önceliklendirilmiş klinik eylem planı odaklı konsültasyon.',
+              tags: ['2024 ESC Aort Kılavuzu', 'Kapak Yönetimi', 'PKE Riski', 'Statin Endikasyonu'],
+              highlightTitle: 'Temel Çıkarım:',
+              highlightText: 'Klamoks bitimi sonrasında INR sıçramasına karşı 48 saat içinde test ve LDL 141 için statin konsültasyonu önerildi.',
+              highlightBoxBg: 'bg-indigo-50/70 border-indigo-200 text-indigo-950',
+              htmlUrl: 'gemini/2026-09-09.html',
+              pdfUrl: null,
+              docxUrl: null,
+            },
+            {
+              id: 'deepseek-2026-09-09',
+              date: '2026-09-09',
+              modelKey: 'deepseek',
+              modelName: 'DeepSeek V4',
+              engine: 'Epidemiyolojik ve Derin Akıl Yürütme Analizi',
+              avatar: 'DS',
+              badgeBg: 'bg-blue-100',
+              badgeText: 'text-blue-800',
+              status: 'ready',
+              statusText: 'Yayında',
+              title: 'Kapsamlı Klinik Durum ve Gidişat Raporu',
+              summary: 'Bentall sağkalım serileri, sternal yara enfeksiyonu ve median sternotomi komplikasyon riskleri üzerine derin analiz.',
+              tags: ['Sternal Dehissans', 'Derin Yara Enfeksiyonu', 'Hipertansif Krizler', 'İnflamasyon'],
+              highlightTitle: 'Temel Çıkarım:',
+              highlightText: 'CRP 11.3 mg/L ile subakut inflamasyon sürmektedir; persistan enfeksiyon ve nüks riski yakından taranmalıdır.',
+              highlightBoxBg: 'bg-blue-50/70 border-blue-200 text-blue-950',
+              htmlUrl: 'deepseek/2026-09-09.html',
+              pdfUrl: null,
+              docxUrl: null,
+            },
+            {
+              id: 'claude-2026-09-09',
+              date: '2026-09-09',
+              modelKey: 'claude',
+              modelName: 'Anthropic Claude 5 Sonnet',
+              engine: 'Güvenlik, Farmakoloji ve Etkileşim Odağı',
+              avatar: 'CL',
+              badgeBg: 'bg-amber-100',
+              badgeText: 'text-amber-800',
+              status: 'draft',
+              statusText: 'Oluşturuluyor',
+              title: 'Farmakolojik Etkileşim ve Klinik Rapor',
+              summary: 'İlaç-ilaç etkileşimleri (Warfarin-Amoksisilin), kanama risk skorlaması ve organ fonksiyon tolerans profili.',
+              tags: ['Farmakovijilans', 'İlaç Etkileşimi', 'Böbrek/Karaciğer', 'Güvenlik'],
+              highlightTitle: 'Durum Bilgisi:',
+              highlightText: 'Rapor oluşturulma aşamasındadır. En kısa sürede interaktif ve indirilebilir olarak eklenecektir.',
+              highlightBoxBg: 'bg-amber-50/70 border-amber-200 text-amber-950',
+              htmlUrl: 'claude/2026-09-09.html',
+              pdfUrl: null,
+              docxUrl: null,
+            },
+          ],
+          get filteredReports() {
+            return this.reports.filter((r) => {
+              const matchesDate = r.date === this.selectedDate;
+              const matchesModel = this.selectedModelFilter === 'all' || r.modelKey === this.selectedModelFilter;
+              const matchesQuery = !this.searchQuery || r.modelName.toLowerCase().includes(this.searchQuery.toLowerCase()) || r.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || r.tags.some((t) => t.toLowerCase().includes(this.searchQuery.toLowerCase()));
+              return matchesDate && matchesModel && matchesQuery;
+            });
+          },
+          getModelUrl(modelKey) {
+            const match = this.reports.find((r) => r.modelKey === modelKey && r.date === this.selectedDate);
+            return match && match.htmlUrl ? match.htmlUrl : 'about:blank';
+          },
+          getModelName(modelKey) {
+            const match = this.reports.find((r) => r.modelKey === modelKey);
+            return match ? match.modelName : modelKey.toUpperCase();
+          },
+          formatDateHuman(iso) {
+            if (!iso) return '';
+            const [y, m, d] = iso.split('-');
+            const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            return `${parseInt(d)} ${months[parseInt(m) - 1]} ${y}`;
+          },
+          openPreview(url, title) {
+            this.previewModal.url = url;
+            this.previewModal.title = title;
+            this.previewModal.open = true;
+          },
+        };
+      }
+    </script>
+  </body>
+</html>

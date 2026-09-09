@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta content="width=device-width,initial-scale=1" name="viewport" />
+    <title>Farmakolojik Güvenlik Raporu (Hazırlanıyor) | Alaattin Sönmez (09.09.2026)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <link href="../../dist/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png" />
+    <style>
+      .glass-card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow:
+          0 1px 3px 0 rgba(15, 23, 42, 0.04),
+          0 8px 24px -4px rgba(15, 23, 42, 0.04);
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      @media print {
+        .print-hidden {
+          display: none !important;
+        }
+
+        body {
+          background: #fff !important;
+          color: #0f172a !important;
+        }
+
+        .glass-card {
+          border: 1px solid #cbd5e1 !important;
+          box-shadow: none !important;
+          background: #fff !important;
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-slate-50 font-sans text-slate-700 antialiased selection:bg-amber-500 selection:text-white">
+    <!-- Üst Bar (Navigasyon) -->
+    <header class="print-hidden sticky top-0 z-40 border-b border-slate-200/90 bg-white/90 backdrop-blur-md">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <a aria-label="Yapay Zeka Rapor Merkezine Dön" class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-500" href="../index.html">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+            </svg>
+            <span>AI Hub</span>
+          </a>
+          <a class="hidden items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600 sm:flex" href="../../panel.html">
+            <span>Ana Panel</span>
+          </a>
+          <span class="hidden text-slate-300 sm:inline">|</span>
+          <div class="hidden items-center gap-2 md:flex">
+            <span class="font-display text-base font-black text-amber-600">Anthropic Claude</span>
+            <span class="font-display text-base font-medium text-slate-500">5 Sonnet</span>
+            <span class="ml-1 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-extrabold tracking-wide text-amber-800 uppercase">
+              <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500"></span>
+              <span>Konsültasyon Bekleniyor</span>
+            </span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95" href="../index.html">
+            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+            </svg>
+            <span>Modeller Arası Karşılaştırma</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <!-- 1. Hasta Hero Bilgi Kartı -->
+      <section class="glass-card mb-8 overflow-hidden rounded-3xl border border-slate-200/90 shadow-sm">
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-6 py-6 text-white sm:px-8">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-md bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-extrabold tracking-widest text-amber-300 uppercase">Farmakoloji, İlaç Güvenliği ve Etkileşimler</span>
+                <span class="animate-pulse rounded-md bg-amber-500/30 px-2.5 py-0.5 text-[10px] font-extrabold tracking-widest text-amber-200 uppercase">Analiz Sırasında</span>
+              </div>
+              <h1 class="font-display mt-2 text-2xl font-black tracking-tight sm:text-3xl">FARMAKOLOJİK GÜVENLİK, İLAÇ ETKİLEŞİMİ VE KLİNİK İZLEM RAPORU</h1>
+              <p class="mt-1 text-xs text-slate-300">Bentall Cerrahisi Sonrası Çoklu Antitrombotik Rejim, Antibiyotik-Warfarin Etkileşimi ve Organ Klirensi Analizi</p>
+            </div>
+            <div class="flex shrink-0 flex-col items-start rounded-2xl border border-white/10 bg-white/5 p-3 text-right backdrop-blur-md md:items-end">
+              <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Rapor Değerlendirme Tarihi</span>
+              <span class="font-mono text-sm font-bold text-white">09 Eylül 2026</span>
+              <span class="mt-0.5 text-[10px] text-slate-300">Ameliyat Sonrası: 202. Gün</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 border-b border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-3 sm:px-8 lg:grid-cols-6">
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Hasta Adı Soyadı</span>
+            <div class="font-display text-sm font-bold text-slate-900">Alaattin SÖNMEZ</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Yaş / Cinsiyet</span>
+            <div class="text-sm font-semibold text-slate-700">64 (01.01.1962) / Erkek</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">T.C. Kimlik No</span>
+            <div class="font-mono text-sm font-semibold text-slate-700">00000000000</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Boy / Kilo / VKİ</span>
+            <div class="text-sm font-semibold text-slate-700">
+              174 cm / 78.8 kg
+              <span class="text-xs text-slate-500">(26.0)</span>
+            </div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Kan Grubu</span>
+            <div class="text-sm font-extrabold text-rose-600">0 Rh (+) Pozitif</div>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Güvence / Kurum</span>
+            <div class="text-sm font-semibold text-slate-700">SSK / Hatay</div>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 p-4 sm:px-8">
+          <span class="text-xs font-bold text-slate-600">Primer Tanılar:</span>
+          <span class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-800">Akut Tip A Aort Diseksiyonu (DeBakey Tip I)</span>
+          <span class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-800">Asendan Aort Anevrizması (5.3 cm)</span>
+          <span class="rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-800">Bentall Operasyonu (Greft + Mekanik Kapak)</span>
+          <span class="rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-800">Sternal Dehissans Revizyonu (23.07.2026)</span>
+          <span class="rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-800">Rezidüel Kronik Tip B Diseksiyon Flebi</span>
+          <span class="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800">Mikrositer Demir Eksikliği Anemisi</span>
+        </div>
+      </section>
+
+      <!-- 2. KPI Metrik Özet Kartları -->
+      <section class="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div class="glass-card flex flex-col justify-between rounded-2xl border-b-4 border-b-blue-500 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Kan Basıncı</span>
+            <span class="rounded-md bg-blue-50 p-1 text-blue-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-slate-900">120/80</span>
+              <span class="text-[10px] font-bold text-slate-500">mmHg</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-700">Hedefte (&le;120)</span>
+              <span class="text-slate-500">7G Ort: 111/76</span>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card flex flex-col justify-between rounded-2xl border-b-4 border-b-teal-500 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Vücut Ağırlığı</span>
+            <span class="rounded-md bg-teal-50 p-1 text-teal-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-slate-900">78.8</span>
+              <span class="text-[10px] font-bold text-slate-500">kg</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-700">Ödem Yok</span>
+              <span class="text-slate-500">Stabil (&plusmn;0.1)</span>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card flex flex-col justify-between rounded-2xl border-b-4 border-b-amber-500 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Antikoagülasyon (INR)</span>
+            <span class="rounded-md bg-amber-50 p-1 text-amber-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-slate-900">2.72</span>
+              <span class="text-[10px] font-bold text-slate-500">Ratio</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-700">Hedefte (2.0-3.0)</span>
+              <span class="text-slate-500">Önceki: 2.76</span>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card flex flex-col justify-between rounded-2xl border-b-4 border-b-rose-500 p-4 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Hemoglobin (HGB)</span>
+            <span class="rounded-md bg-rose-50 p-1 text-rose-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-rose-600">9.7</span>
+              <span class="text-[10px] font-bold text-slate-500">g/dL</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-rose-700">Anemi (Düşük)</span>
+              <span class="text-slate-500">Depo: 19 µg/L</span>
+            </div>
+          </div>
+        </div>
+        <div class="glass-card col-span-2 flex flex-col justify-between rounded-2xl border-b-4 border-b-indigo-500 p-4 shadow-sm sm:col-span-1">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Enflamasyon (CRP)</span>
+            <span class="rounded-md bg-indigo-50 p-1 text-indigo-600">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+            </span>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1">
+              <span class="font-display text-2xl font-black text-indigo-600">11.3</span>
+              <span class="text-[10px] font-bold text-slate-500">mg/L</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-700">Gerilemede (&darr;12.5)</span>
+              <span class="text-slate-500">WBC: 7.97</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Ana Placeholder / Hazırlanıyor Durumu -->
+      <section class="glass-card relative overflow-hidden rounded-3xl border-2 border-dashed border-amber-300/80 bg-gradient-to-b from-amber-50/40 via-white to-slate-50/60 p-8 shadow-sm">
+        <div class="mx-auto max-w-2xl text-center">
+          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 shadow-inner">
+            <svg class="h-8 w-8 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+              <path class="opacity-75" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" fill="currentColor"></path>
+            </svg>
+          </div>
+          <div class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold tracking-wider text-amber-800 uppercase">
+            <span>Anthropic Claude 5 Sonnet</span>
+            <span>&bull;</span>
+            <span>Farmakovijilans Motoru</span>
+          </div>
+          <h2 class="font-display mt-3 text-2xl font-black text-slate-900 sm:text-3xl">Klinik Rapor Hazırlanıyor</h2>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            Anthropic Claude yapay zekâ modeli, hastanın 20 Şubat 2026'dan bu yana olan tüm tedavi değişikliklerini,
+            <strong>Warfarin &times; Klamoks (amoksisilin/klavulanat)</strong>
+            etkileşimini, mikrositik anemiye yönelik demir replasman kinetiğini ve organ klirens toleransını analiz etmektedir.
+          </p>
+        </div>
+
+        <!-- İşlem Adımları / Analiz Akışı -->
+        <div class="mx-auto mt-8 max-w-xl space-y-3 rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-xs">
+          <h3 class="text-xs font-extrabold tracking-wide text-slate-500 uppercase">Analiz Kontrol Listesi</h3>
+          <div class="space-y-2.5 text-xs">
+            <div class="flex items-center justify-between rounded-xl border border-emerald-200/80 bg-emerald-50/70 px-3.5 py-2">
+              <span class="flex items-center gap-2 font-semibold text-emerald-900">
+                <svg class="h-4 w-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path clip-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill-rule="evenodd" /></svg>
+                19 Şubat – 09 Eylül Tüm İlaç ve Dozaj Geçmişi
+              </span>
+              <span class="font-mono text-[10px] font-bold text-emerald-700 uppercase">Tamamlandı</span>
+            </div>
+            <div class="flex items-center justify-between rounded-xl border border-emerald-200/80 bg-emerald-50/70 px-3.5 py-2">
+              <span class="flex items-center gap-2 font-semibold text-emerald-900">
+                <svg class="h-4 w-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path clip-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" fill-rule="evenodd" /></svg>
+                Karaciğer (AST/ALT: 14) &amp; Böbrek (Kreatinin: 1.02) Klirens Doğrulaması
+              </span>
+              <span class="font-mono text-[10px] font-bold text-emerald-700 uppercase">Tamamlandı</span>
+            </div>
+            <div class="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2">
+              <span class="flex items-center gap-2 font-semibold text-amber-950">
+                <svg class="h-4 w-4 animate-spin text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                  <path class="opacity-75" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" fill="currentColor"></path>
+                </svg>
+                Klamoks &times; Warfarin Mikrobiyota K Vitamini Etkileşim Modellemesi
+              </span>
+              <span class="font-mono text-[10px] font-bold text-amber-700 uppercase">İşleniyor</span>
+            </div>
+            <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-slate-400">
+              <span class="flex items-center gap-2 font-medium">
+                <span class="flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 text-[10px]">&bull;</span>
+                Demir Replasmanı (Oral veya IV Ferinject) &amp; Statin Endikasyonu Sentezi
+              </span>
+              <span class="font-mono text-[10px] font-bold uppercase">Beklemede</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Diğer Modellerin Raporlarına Geçiş Butonları -->
+        <div class="mx-auto mt-8 max-w-2xl border-t border-slate-200/80 pt-6">
+          <p class="mb-3 text-center text-xs font-bold tracking-wider text-slate-500 uppercase">Bu Sırada Tamamlanmış Diğer Model Raporlarını İnceleyebilirsiniz</p>
+          <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            <a class="flex flex-col items-start rounded-2xl border border-emerald-200 bg-white p-3.5 shadow-xs transition hover:border-emerald-400 hover:bg-emerald-50/50" href="../gpt/2026-09-09.html">
+              <div class="flex items-center gap-1.5">
+                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-[10px] font-black text-emerald-800">GPT</span>
+                <span class="text-xs font-black text-slate-800">OpenAI GPT-5.1</span>
+              </div>
+              <p class="mt-1.5 text-[11px] leading-snug text-slate-500">Boylamsal veri denetimi, TTR analizi (%54.6) ve ACC/AHA kılavuzları.</p>
+              <span class="mt-2 text-[10px] font-bold text-emerald-700">Raporu Oku &rarr;</span>
+            </a>
+            <a class="flex flex-col items-start rounded-2xl border border-indigo-200 bg-white p-3.5 shadow-xs transition hover:border-indigo-400 hover:bg-indigo-50/50" href="../gemini/2026-09-09.html">
+              <div class="flex items-center gap-1.5">
+                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-100 text-[10px] font-black text-indigo-800">GEM</span>
+                <span class="text-xs font-black text-slate-800">Google Gemini</span>
+              </div>
+              <p class="mt-1.5 text-[11px] leading-snug text-slate-500">Aort kesme stresi ($dP/dt$), kapak yönetimi ve 5 maddelik eylem planı.</p>
+              <span class="mt-2 text-[10px] font-bold text-indigo-700">Raporu Oku &rarr;</span>
+            </a>
+            <a class="flex flex-col items-start rounded-2xl border border-blue-200 bg-white p-3.5 shadow-xs transition hover:border-blue-400 hover:bg-blue-50/50" href="../deepseek/2026-09-09.html">
+              <div class="flex items-center gap-1.5">
+                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 text-[10px] font-black text-blue-800">DS</span>
+                <span class="text-xs font-black text-slate-800">DeepSeek V4</span>
+              </div>
+              <p class="mt-1.5 text-[11px] leading-snug text-slate-500">Bentall sağkalım serileri, sternal yara enfeksiyonu ve cerrahi analiz.</p>
+              <span class="mt-2 text-[10px] font-bold text-blue-700">Raporu Oku &rarr;</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Alt Bilgi / Footer -->
+      <footer class="mt-12 border-t border-slate-200 pt-6 text-center text-xs text-slate-500">
+        <div class="flex flex-wrap items-center justify-center gap-2 font-semibold text-slate-600">
+          <span>Hasta: Alaattin SÖNMEZ</span>
+          <span>&bull;</span>
+          <span>Dosya No: #1</span>
+          <span>&bull;</span>
+          <span>Rapor Durumu: Taslak / Hazırlanıyor</span>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500 italic">Bu sayfa, Claude 5 Sonnet modeli tarafından hazırlanacak resmi farmakolojik konsültasyonun geçici durum yer tutucusudur. Nihai rapor hazır olduğunda otomatik olarak tam metin formatına güncellenecektir.</p>
+      </footer>
+    </main>
+  </body>
+</html>
