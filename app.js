@@ -1260,24 +1260,7 @@ export default function registerDashboard(Alpine) {
         })
         .filter((m) => m.segments.length > 0)
         .sort((a, b) => {
-          const order = [
-            'Panto',
-            'EcopirinPro',
-            'Warfmadin',
-            'Dilatrend',
-            'BelocZOK',
-            'Cordarone',
-            'Augmentin',
-            'Cipro',
-            'Tavanic',
-            'Stafine',
-            'Mikostatin',
-            'Levopront',
-            'GeralginePlus',
-            'Apikobal',
-            'FerroSanolDuodenal',
-            'Kapril'
-          ];
+          const order = ['Panto', 'EcopirinPro', 'Warfmadin', 'Dilatrend', 'BelocZOK', 'Cordarone', 'Augmentin', 'Cipro', 'Tavanic', 'Stafine', 'Mikostatin', 'Levopront', 'GeralginePlus', 'Apikobal', 'FerroSanolDuodenal', 'Kapril'];
           return order.indexOf(a.name) - order.indexOf(b.name);
         });
     },

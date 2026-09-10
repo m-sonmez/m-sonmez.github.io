@@ -6,17 +6,41 @@
 
 const CACHE_NAME = '{{CACHE_VERSION}}';
 
-/* Static assets that are part of the app shell. */
-const STATIC_ASSETS = ['/panel.html', '/rapor.html', '/dist/output.css', '/dist/output.js', '/app.js', '/dist/icons/manifest.json', '/dist/icons/browserconfig.xml', '/dist/icons/favicon.ico'];
+/* ========================================================================== */
+/* AŞAMA 1: KRİTİK DOSYALAR (Uygulamanın açılması için zorunlu olanlar)       */
+/* ========================================================================== */
 
-/* All icon files (various sizes and formats). */
+/* 1. App Shell & HTML Sayfaları */
+const APP_SHELL = ['/', '/index.html', '/panel.html', '/ai/index.html', '/dist/output.css', '/dist/output.js', '/app.js'];
+
+/* 1.1. İkincil Sayfalar ve Dizin Rotaları */
+const APP_SECONDARY = ['/panel/', '/rapor.html', '/rapor/', '/calc.html', '/calc/', '/hesap.html', '/hesap/', '/ai/'];
+
+/* 2. Klinik Veri Dosyaları (18 JSON Dosyası) */
+const DATA_FILES = ['/data/appointments.json', '/data/clinical_context.json', '/data/glucose.json', '/data/hospitals.json', '/data/medication_changes.json', '/data/medication_logs.json', '/data/medications.json', '/data/pressures.json', '/data/pulse.json', '/data/reports.json', '/data/saturation.json', '/data/sleep.json', '/data/symptoms.json', '/data/temperatures.json', '/data/test_items.json', '/data/tests.json', '/data/users.json', '/data/weights.json'];
+
+/* 1. AŞAMA BİRLEŞİMİ: Uygulamanın anında açılması için indirilecekler */
+const PRIORITY_URLS = [...APP_SHELL, ...APP_SECONDARY, ...DATA_FILES, '/dist/icons/manifest.json', '/dist/icons/favicon.ico'];
+
+/* ========================================================================== */
+/* AŞAMA 2: ARKA PLAN DOSYALARI (Uygulama açıldıktan sonra çekilecekler)     */
+/* ========================================================================== */
+
+/* 3. Tüm PWA İkon Dosyaları */
 const ICON_FILES = [
+  '/dist/icons/browserconfig.xml',
+  '/dist/icons/favicon-16x16.png',
+  '/dist/icons/favicon-32x32.png',
+  '/dist/icons/favicon-96x96.png',
   '/dist/icons/android-icon-36x36.png',
   '/dist/icons/android-icon-48x48.png',
   '/dist/icons/android-icon-72x72.png',
   '/dist/icons/android-icon-96x96.png',
   '/dist/icons/android-icon-144x144.png',
   '/dist/icons/android-icon-192x192.png',
+  '/dist/icons/android-icon-512x512.png',
+  '/dist/icons/apple-icon.png',
+  '/dist/icons/apple-icon-precomposed.png',
   '/dist/icons/apple-icon-57x57.png',
   '/dist/icons/apple-icon-60x60.png',
   '/dist/icons/apple-icon-72x72.png',
@@ -26,63 +50,105 @@ const ICON_FILES = [
   '/dist/icons/apple-icon-144x144.png',
   '/dist/icons/apple-icon-152x152.png',
   '/dist/icons/apple-icon-180x180.png',
-  '/dist/icons/apple-icon-precomposed.png',
-  '/dist/icons/apple-icon.png',
-  '/dist/icons/favicon-16x16.png',
-  '/dist/icons/favicon-32x32.png',
-  '/dist/icons/favicon-96x96.png',
   '/dist/icons/ms-icon-70x70.png',
   '/dist/icons/ms-icon-144x144.png',
   '/dist/icons/ms-icon-150x150.png',
   '/dist/icons/ms-icon-310x310.png',
 ];
 
-/* Data files (JSON) that are cached for offline access. */
-const DATA_FILES = ['/data/hospitals.json', '/data/medication_changes.json', '/data/medication_logs.json', '/data/medications.json', '/data/pressures.json', '/data/reports.json', '/data/test_items.json', '/data/tests.json', '/data/users.json', '/data/weights.json'];
+/* 4. Tüm AI Raporları (PDF, DOCX, MD) */
+const AI_REPORTS = ['/ai/_data/claude_rapor.docx', '/ai/_data/claude_rapor.md', '/ai/_data/claude_rapor.pdf', '/ai/_data/claude_rapor.v2.docx', '/ai/_data/claude_rapor.v3.docx', '/ai/_data/deepseek_rapor.docx', '/ai/_data/deepseek_rapor.md', '/ai/_data/deepseek_rapor.pdf', '/ai/_data/gemini_rapor.docx', '/ai/_data/gemini_rapor.md', '/ai/_data/gemini_rapor.pdf', '/ai/_data/gpt_rapor.docx', '/ai/_data/gpt_rapor.md', '/ai/_data/gpt_rapor.pdf'];
 
-/* Combine all URLs to be cached. */
-const CACHE_URLS = STATIC_ASSETS.concat(ICON_FILES, DATA_FILES);
+/* 5. Proje Dokümantasyonu ve Geliştirici Dosyaları */
+const PROJECT_DOCS = ['/PROJECT.md', '/README.md', '/package.json', '/input.css', '/input.js', '/bump-sw.js', '/tests/app.test.js'];
 
-/* Install event: cache all static assets and data files. */
+/* 2. AŞAMA BİRLEŞİMİ: Arka planda eşzamanlı indirilecekler */
+const DEFERRED_URLS = [...ICON_FILES, ...AI_REPORTS, ...PROJECT_DOCS];
+
+/* ========================================================================== */
+/* EŞZAMANLI (CONCURRENT) VE DAYANIKLI İNDİRME MOTORU                         */
+/* ========================================================================== */
+
+/**
+ * Belirtilen URL listesini belirlenen eşzamanlılık limitiyle (worker pool) indirir.
+ * Hata toleranslıdır: Tek bir dosyanın 404 vermesi diğerlerini engellemez.
+ */
+async function cacheConcurrently(cacheName, urls, concurrencyLimit = 6) {
+  const cache = await caches.open(cacheName);
+  let currentIndex = 0;
+
+  async function worker() {
+    while (currentIndex < urls.length) {
+      const url = urls[currentIndex++];
+      try {
+        const response = await fetch(url, {cache: 'no-cache'});
+        if (response.ok) {
+          await cache.put(url, response);
+        } else {
+          console.warn(`[SW] Atlandı (${response.status}): ${url}`);
+        }
+      } catch (error) {
+        console.warn(`[SW] İndirme başarısız (${url}):`, error);
+      }
+    }
+  }
+
+  const workers = Array.from({length: Math.min(concurrencyLimit, urls.length)}, () => worker());
+
+  return Promise.all(workers);
+}
+
+/* ========================================================================== */
+/* SERVICE WORKER YAŞAM DÖNGÜSÜ (LIFECYCLE)                                    */
+/* ========================================================================== */
+
+/* 1. INSTALL: Yalnızca öncelikli çekirdek dosyaları indir ve hemen aktifleş */
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Caching app shell and data');
-        return cache.addAll(CACHE_URLS);
-      })
-      .then(() => self.skipWaiting()),
+    cacheConcurrently(CACHE_NAME, PRIORITY_URLS, 6).then(() => {
+      console.log('[SW] 1. Aşama tamamlandı: Çekirdek uygulama hazır.');
+      return self.skipWaiting();
+    }),
   );
 });
 
-/* Activate event: remove old caches and claim clients. */
+/* 2. ACTIVATE: Eski önbelleği temizle, kontrolü al ve arka plan indirmesini başlat */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) => {
-        return Promise.all(cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name)));
-      })
-      .then(() => self.clients.claim()),
+    (async () => {
+      /* Eski önbellekleri temizle */
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name)));
+
+      /* Sayfaların kontrolünü anında devral */
+      await self.clients.claim();
+      console.log('[SW] Aktifleşti. 2. Aşama: Arka plan indirmesi başlıyor...');
+
+      /* 2. Aşamayı (PDF, DOCX, ikonlar, dokümanlar) arka planda eşzamanlı çek */
+      await cacheConcurrently(CACHE_NAME, DEFERRED_URLS, 6);
+      console.log('[SW] 2. Aşama tamamlandı: Tüm rapor ve dokümanlar çevrimdışı hazır.');
+    })(),
   );
 });
 
-/* Fetch event: serve from cache if available, with network fallback and */
-/* background updates for data files. */
+/* ========================================================================== */
+/* FETCH & CACHE STRATEJİSİ                                                   */
+/* ========================================================================== */
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
 
-  /* Only handle GET requests for same-origin resources. */
+  /* Yalnızca aynı kökenden (origin) gelen GET isteklerini yakala */
   if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
     event.respondWith(fetch(request));
     return;
   }
 
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
+    caches.match(request).then(async (cachedResponse) => {
+      /* 1. Önbellekte birebir eşleşme varsa sun */
       if (cachedResponse) {
-        /* For data files, attempt a background network update. */
+        /* /data/ altındaki JSON dosyaları için arka planda güncelle (Stale-While-Revalidate) */
         if (request.url.includes('/data/')) {
           event.waitUntil(
             fetch(request)
@@ -99,7 +165,17 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
 
-      /* Not in cache: fetch from network and cache the response. */
+      /* 2. Dizin / Clean URL eşleme kontrolü (/panel -> /panel.html ya da /panel/) */
+      if (request.mode === 'navigate') {
+        const url = new URL(request.url);
+        const path = url.pathname;
+        const fallback = (await caches.match(path + '.html')) || (await caches.match(path + '/')) || (await caches.match(path + '/index.html'));
+        if (fallback) {
+          return fallback;
+        }
+      }
+
+      /* 3. Önbellekte yoksa ağdan çek ve dinamik olarak önbelleğe ekle */
       return fetch(request)
         .then((networkResponse) => {
           if (!networkResponse.ok) {
@@ -112,15 +188,14 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch((error) => {
-          console.error('Fetch failed:', error);
-          return new Response('Offline – content not available', {status: 503});
+          console.error('[SW] Çevrimdışı erişim hatası:', error);
+          return new Response('Offline – içerik bulunamadı', {status: 503});
         });
     }),
   );
 });
 
-/* Message event: listen for 'CLEAR_CACHE' messages to delete all caches. */
-/* Used by the app to force a refresh after clearing the service worker cache. */
+/* 4. CLEAR_CACHE Mesaj Dinleyicisi */
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
