@@ -1,6 +1,6 @@
 # Hasta Durumu ve Gidişat Raporu
 
-_19 Şubat 2026 – 9 Eylül 2026 Klinik Seyir Analizi: Ham Veri İncelemesi, Boylamsal Trendler ve Güncel Bilimsel Kılavuz Karşılaştırması_
+_19 Şubat 2026 – 10 Eylül 2026 Klinik Seyir Analizi: Ham Veri İncelemesi, Boylamsal Trendler ve Güncel Bilimsel Kılavuz Karşılaştırması_
 
 +-----------------------------------------------------------------------+
 | **Kapsam ve güvenlik notu** |
@@ -15,7 +15,7 @@ _19 Şubat 2026 – 9 Eylül 2026 Klinik Seyir Analizi: Ham Veri İncelemesi, Bo
 | yapılmalıdır. |
 +=======================================================================+
 
-Raporun veri kesim tarihi: 9 Eylül 2026. Dosya "All Historical Data"
+Raporun veri kesim tarihi: 10 Eylül 2026. Dosya "All Historical Data"
 dışa aktarımıdır. Kişisel iletişim/kimlik bilgileri bu raporda bilerek
 tekrar edilmemiştir.
 
@@ -28,14 +28,14 @@ girildiğini; ancak iki önemli kronik/aktif sorunun devam ettiğini
 gösteriyor: (1) cerrahi sonrası rezidüel diseksiyonun uzun dönem
 görüntüleme takibi ve (2) sternal yara komplikasyonlarıyla birlikte
 seyreden inflamasyon + belirgin demir eksikliği anemisi. Mekanik aort
-kapağı açısından son INR 2,72 olup, ek tromboembolik risk faktörü yoksa
+kapağı açısından son INR 2,12 olup (10 Eylül 2026 Test #92), ek tromboembolik risk faktörü yoksa
 güncel ESC/EACTS hedef aralığı olan 2,0-3,0 içindedir \[2\].
 
 +-----------------------------------------------------------------------+
 | **En olumlu gelişme** |
 | |
-| Son 7 gündeki 13 ev ölçümünün ortalaması yaklaşık 111/76 mmHg; |
-| dönemin 23 Temmuz-9 Eylül ham ortalaması 118,7/79,7 mmHg. Bu değerler |
+| Son 7 gündeki 15 ev ölçümünün ortalaması yaklaşık 111/75 mmHg; |
+| dönemin 23 Temmuz-10 Eylül ham ortalaması 118,6/79,5 mmHg. Bu değerler |
 | aort duvar stresinin azaltılması açısından uygun bir kontrol düzeyine |
 | işaret ediyor. 2024 ESC hipertansiyon kılavuzunun tedavi alan |
 | yetişkinler için 120-129 mmHg sistolik hedefini de genel olarak |
@@ -47,21 +47,20 @@ güncel ESC/EACTS hedef aralığı olan 2,0-3,0 içindedir \[2\].
 | |
 | 8 Eylül'de HGB 9,7 g/dL, MCV 76,4 fL, ferritin 19 µg/L ve demir 15 |
 | µg/dL. UIBC 326,8 µg/dL ile hesaplanan transferrin satürasyonu |
-| yaklaşık %4,4'tür. Bu örüntü demir eksikliği ile güçlü biçimde |
-| uyumludur ve erkek hastada neden araştırması gerektirir; yalnızca |
-| "takviye verelim" yaklaşımı yeterli değildir \[4\]. |
+| yaklaşık %4,4'tür. Bu tablo doğrultusunda 10 Eylül'de Ferro Sanol |
+| Duodenal 100 mg reçete edilmiş ve 11 Eylül'de başlanmıştır. Ancak erkek |
+| hastada etiyolojik kaynak araştırması sürdürülmelidir \[4\]. |
 +=======================================================================+
 
 +-----------------------------------------------------------------------+
 | **En önemli güvenlik konusu** |
 | |
 | Warfarin kontrolü geçmişte belirgin dalgalı: INR 16 Mart'ta 8,46'ya |
-| kadar çıkmış, Temmuz sonunda 1,17'ye kadar düşmüş; son değer 2,72. Bu |
-| nedenle tek son INR iyi görünse de anticoagülasyon kalitesi tarihsel |
-| olarak istikrarlı değildir. Ayrıca amoksisilin/klavulanatın oral |
-| antikoagülanlarla birlikte INR'yi yükseltebileceği resmi ilaç |
-| etiketinde belirtilmektedir; Klamoks 4 Eylül'de başlatılmış ve |
-| sonraki INR henüz kaydedilmemiştir \[2,8\]. |
+| kadar çıkmış, Temmuz sonunda 1,17'ye kadar düşmüş; son değer 2,12 (10 Eylül). |
+| 4 Eylül'de başlanan 7 günlük ampirik Klamoks kürü 10 Eylül 20:59'da |
+| başarıyla tamamlanıp kesilmiştir; kür sonu yapılan 10 Eylül kontrolünde |
+| korkulan supraterapötik INR sıçraması görülmemiş, INR 2,12 ile hedefte |
+| kalmıştır \[2,8\]. |
 +=======================================================================+
 
 +-----------------------------------------------------------------------+
@@ -137,13 +136,14 @@ HGB 11,3 → 7,7 g/dL.
 01-25.08.2026 Antikoagülasyon INR 1,21 → 1,55 → 1,70 → 2,59 →
 toparlanması 2,76.
 
-04.09.2026 Yeni antibiyotik Klamoks 1000 mg günde 2 kez
-kaydı.
+04-10.09.2026 Antibiyoterapi kürü Klamoks 1000 mg günde 2 kez; 10
+Eylül 20:59'da tamamlandı.
 
-08-09.09.2026 Mevcut durum HGB 9,7; CRP 11,3; WBC 7,97;
-kreatinin 1,02; INR 2,72;
-tansiyon son hafta 111/76
-ortalama.
+08-10.09.2026 Mevcut durum HGB 9,7; CRP 11,3; WBC 7,97;
+kreatinin 1,02; INR 2,12 (PT 19,8 s,
+aPTT 44,8 s); tansiyon son 7 gün
+111/75 ortalama; son tartım 78,4 kg.
+Ferro Sanol Duodenal başlandı.
 --------------------------------------------------------------------------------
 
 Veri kalitesi notu: Dışa aktarım içindeki otomatik "klinik
@@ -254,17 +254,17 @@ mevcut.
 
 03-11.08.2026 1,21 → 1,55 → 1,70 Hâlâ düşük; toparlanma.
 
-18.08-02.09.2026 2,59 → 2,76 → 2,72 Güncel hedef aralıkta
-ve birbirine yakın.
+18.08-10.09.2026 2,59 → 2,76 → 2,72 → 2,12 Güncel hedef aralıkta
+ve stabil.
 -----------------------------------------------------------------------
 
-Ham dosyada 38 INR sonucu bulunmaktadır. Basit "ölçüm sayısı içinde
-2,0-3,0 arası" hesabında 10/38 (%26,3) sonuç bu aralıktadır; 21/38 ölçüm
-2'nin altında, 7/38 ise 3'ün üzerindedir. Bu oran perioperatif dönemi de
+Ham dosyada 39 INR sonucu bulunmaktadır. Basit "ölçüm sayısı içinde
+2,0-3,0 arası" hesabında 11/39 (%28,2) sonuç bu aralıktadır; 21/39 ölçüm
+2'nin altında, 7/39 ise 3'ün üzerindedir. Bu oran perioperatif dönemi de
 içerdiği için gerçek TTR (time in therapeutic range) değildir. Zaman
-ekseni üzerinde doğrusal interpolasyonla yapılan kaba hesap, 2 Mart-9
-Eylül döneminde terapötik aralıkta yaklaşık %54,6 zaman göstermektedir;
-1 Ağustos-2 Eylül alt döneminde bu yaklaşık %60,1'dir. Bunlar dosyadaki
+ekseni üzerinde doğrusal interpolasyonla yapılan kaba hesap, 2 Mart-10
+Eylül döneminde terapötik aralıkta yaklaşık %55,4 zaman göstermektedir;
+1 Ağustos-10 Eylül alt döneminde bu yaklaşık %62,8'dir. Bunlar dosyadaki
 seyrek INR ölçümleri nedeniyle yaklaşık tahminlerdir ve antikoagülasyon
 kliniğinin kullandığı resmi TTR ölçümünün yerine geçmez \[2\].
 
@@ -290,11 +290,11 @@ kliniğinin kullandığı resmi TTR ölçümünün yerine geçmez \[2\].
 Nisan-Temmuz (22 Temmuz'a kadar): 283 ölçüm; ortalama 118.9/81.2 mmHg;
 en yüksek 168/103; en düşük 85/60 mmHg.
 
-Yara komplikasyonu sonrası (23 Temmuz-9 Eylül): 135 ölçüm; ortalama
-118.7/79.7 mmHg; en yüksek 149/101; en düşük 99/60 mmHg.
+Yara komplikasyonu sonrası (23 Temmuz-10 Eylül): 137 ölçüm; ortalama
+118.6/79.5 mmHg; en yüksek 149/101; en düşük 99/60 mmHg.
 
-Son 7 gün (3-9 Eylül): 13 ölçüm; ortalama 111.4/75.5 mmHg; en yüksek
-120/80; en düşük 103/68 mmHg.
+Son 7 gün (4-10 Eylül): 15 ölçüm; ortalama 111/75 mmHg; en yüksek
+120/80; en düşük 101/68 mmHg.
 
 ---
 
@@ -307,14 +307,14 @@ sistolik** diyastolik**
 
 01.04-22.07 283 118.9 81.2 168/103
 
-23.07-09.09 135 118.7 79.7 149/101
+23.07-10.09 137 118.6 79.5 149/101
 
-03.09-09.09 13 111.4 75.5 120/80
+04.09-10.09 15 111.0 75.0 120/80
 --------------------------------------------------------------------------
 
 16-18 Nisan'daki 146/93, 156/97, 152/102 ve 168/103 mmHg ölçümleri
-tarihsel olarak dikkat çekicidir; ancak 23 Temmuz sonrası 135 ölçümde
-ortalama 118,7/79,7 mmHg'ye inmiş olması belirgin bir iyileşmedir. 2022
+tarihsel olarak dikkat çekicidir; ancak 23 Temmuz sonrası 137 ölçümde
+ortalama 118,6/79,5 mmHg'ye inmiş olması belirgin bir iyileşmedir. 2022
 ACC/AHA aort hastalığı kılavuzu torasik aort hastalığında kan basıncının
 kontrolünü vurgular; akut aort sendromunda başlangıçta daha sıkı SBP/HR
 hedefleri kullanılır, kronik dönemde ise uzun süreli beta-blokaj ve
@@ -323,11 +323,11 @@ uygun antihipertansif tedavi önerilir \[1\].
 +-----------------------------------------------------------------------+
 | **Mevcut hemodinamik tablo** |
 | |
-| Son hafta 103/68 ile 120/80 arasında seyreden ölçümler, yüksek basınç |
+| Son hafta 101/68 ile 120/80 arasında seyreden ölçümler, yüksek basınç |
 | dalgalanmalarının azaldığını gösteriyor. 2024 ESC hipertansiyon |
 | kılavuzu tedavi alan çoğu yetişkinde 120-129 mmHg sistolik hedefi |
 | önerir; semptomatik ortostaz veya tolerans sorunu varsa daha gevşek |
-| hedefler düşünülebilir \[5\]. Dolayısıyla 111/76 tek başına "fazla |
+| hedefler düşünülebilir \[5\]. Dolayısıyla 111/75 tek başına "fazla |
 | düşük" kabul edilmemeli; baş dönmesi, senkop, soğukluk/hipoperfüzyon |
 | gibi semptomlar varsa hekimle yeniden değerlendirilmelidir. |
 +=======================================================================+
@@ -531,9 +531,9 @@ gerekebilir.
 
 ## 9. Kilo, sıvı dengesi ve fonksiyonel gidişat
 
-Toplam 175 kilo kaydı 74,8-85,3 kg aralığında. 23 Temmuz-9 Eylül
-döneminde 40 ölçümün ortalaması 78,75 kg; 9 Eylül son ölçüm 78,8 kg. Son
-7 günde 78,5-79,4 kg arasında dar bir bantta seyir var. Bu, hızlı sıvı
+Toplam 175 kilo kaydı 74,8-85,3 kg aralığında. 23 Temmuz-10 Eylül
+döneminde 41 ölçümün ortalaması 78,74 kg; 10 Eylül son ölçüm 78,4 kg. Son
+7 günde 78,4-79,4 kg arasında dar bir bantta seyir var. Bu, hızlı sıvı
 yüklenmesi açısından belirgin bir sinyal göstermiyor; ancak ödem
 değerlendirmesi yalnızca tartıya dayanmaz.
 
@@ -544,14 +544,14 @@ sayısı**
 
 ---
 
-Tüm kayıtlar 175 \- 74,8-85,3 kg 78,8 kg
+Tüm kayıtlar 175 \- 74,8-85,3 kg 78,4 kg
 
-23.07-09.09 40 78,75 kg 77,9-80,0 kg 78,8 kg
+23.07-10.09 41 78,74 kg 77,9-80,0 kg 78,4 kg
 
-03.09-09.09 7 78,84 kg 78,5-79,4 kg 78,8 kg
+04.09-10.09 8 78,78 kg 78,4-79,4 kg 78,4 kg
 --------------------------------------------------------------------------
 
-174 cm ve 78,8 kg üzerinden BMI yaklaşık 26,0 kg/m²'dir. Bu, raporun ana
+174 cm ve 78,4 kg üzerinden BMI yaklaşık 25,9 kg/m²'dir. Bu, raporun ana
 klinik sorunlarından biri değildir; şu aşamada daha önemli olan anemi,
 enfeksiyon/yara ve aort/antikoagülasyon takipleridir.
 
@@ -579,12 +579,16 @@ endikasyon/kanama riski
 yeniden doğrulanmalı.
 
 Panto 40 mg/gün Gastrointestinal koruma;
-tek başına kanamayı
-dışlamaz.
+Ferro Sanol'den 1 saat
+sonra alınmalıdır.
 
-Klamoks 1000 mg x2/gün; 04.09 Warfarin ile birlikte
-başlangıç PT/INR uzayabilir; yakın
-INR izlemi önemli \[8\].
+Ferro Sanol Duodenal 100 mg (Fe²⁺)/gün; Ağır mikrositik demir eksikliği
+11.09 başlangıç anemisi tedavisi; sabah aç
+karnına (Panto'dan 1 saat önce).
+
+Klamoks (tamamlandı) 1000 mg x2/gün; 04.09- 7 günlük kür 10 Eylül 20:59'da
+10.09 (kesildi) tamamlandı; INR 2,12 ile
+stabil seyretti \[8\].
 
 Cipro (geçmiş) 750 mg x2/gün, Warfarin etkisini
 28.07-04.08 artırabilir; dönemsel INR
@@ -597,15 +601,14 @@ edilmeli.
 --------------------------------------------------------------------------
 
 +-----------------------------------------------------------------------+
-| **Klamoks + warfarin: somut izlem konusu** |
+| **Klamoks kürü tamamlanması ve warfarin izlemi** |
 | |
-| Güncel ilaç kaydında Klamoks (amoksisilin/klavulanat) 4 Eylül'de |
-| başlanmış; son INR 2 Eylül'de 2,72. Güncel DailyMed etiketi, |
-| amoksisilin/klavulanat ile oral antikoagülanların birlikte |
-| kullanımında PT/INR artışı bildirildiğini ve uygun izlemin yapılması |
-| gerektiğini belirtir \[8\]. Bu nedenle, reçeteleyen ekip tarafından |
-| yakın tarihli INR planı oluşturulması önemlidir. Kendi başına |
-| warfarin veya antibiyotik kesilmemelidir. |
+| 4 Eylül'de başlanan 7 günlük ampirik Klamoks (amoksisilin/klavulanat) |
+| kürü 10 Eylül 20:59'da tamamlanarak kesilmiştir. Kür bitiminde 10 |
+| Eylül saat 16:57'de yapılan kontrol testinde INR 2,12 (PT 19,8 s, |
+| aPTT 44,8 s) ölçülmüş; korkulan supraterapötik dalgalanma yaşanmamış, |
+| INR hedef aralıkta kalmıştır \[8\]. 10 Eylül'de reçetelenen Ferro |
+| Sanol Duodenal 100 mg tedavisine ise 11 Eylül sabahı başlanmıştır. |
 +=======================================================================+
 
 2025 ESC/EACTS kılavuzu mekanik kapaklı hastalarda VKA tedavisinin INR
@@ -623,7 +626,7 @@ kardiyoloji tarafından doğrulanmalıdır \[2\].
 
 ---
 
-Hemodinami İYİLEŞEN / STABİL Son hafta 111/76; ciddi
+Hemodinami İYİLEŞEN / STABİL Son hafta 111/75; ciddi
 hipertansif ataklar
 belirgin azalmış.
 
@@ -632,7 +635,7 @@ stabil, ancak distal
 rezidüel diseksiyon
 devam ediyor.
 
-Mekanik kapak STABİL, YAKIN İZLEM Son INR 2,72 uygun;
+Mekanik kapak STABİL, YAKIN İZLEM Son INR 2,12 uygun;
 tarihsel INR
 dalgalanması belirgin.
 
@@ -641,13 +644,14 @@ Enfeksiyon/yara KISMEN İYİLEŞEN CRP 23,8 → 11,3, WBC
 normalleşmiş değil.
 
 Anemi/demir ÖNCELİKLİ SORUN HGB 9,7 + ferritin 19 +
-Fe 15 + MCV 76,4.
+Fe 15 + MCV 76,4. 10 Eylül'de
+Ferro Sanol 100 mg başlandı.
 
 Böbrek İYİ Kreatinin 1,02; son
 değerde düzelme.
 
 Kilo/sıvı STABİL Son 7 gün dar aralıkta,
-78,8 kg.
+78,4 kg.
 
 Lipid İYİLEŞTİRİLMELİ LDL 141, HDL 34, total
 kolesterol 210.
@@ -668,8 +672,8 @@ demir eksikliği anemisinin nedeninin bulunup düzeltilmesidir.
   yapılmadığını teyit etmek; rezidüel diseksiyon ve aort çaplarını seri
   ölçümle karşılaştırmak \[1\].
 
-- 2\) Antikoagülasyon: Son INR 2,72 uygun olsa da Klamoks 4 Eylül
-  başlangıcı nedeniyle yakın INR kontrolü planlamak; kanama ve tromboz
+- 2\) Antikoagülasyon: Son INR 2,12 (10 Eylül) uygun olsa da antibiyotik sonrası geç
+  etkiler ve tarihsel dalgalanmalar nedeniyle yakın INR kontrolü planlamak; kanama ve tromboz
   belirtilerini ayrı ayrı izlemek \[2,8\].
 
 - 3\) Anemi: HGB, retikülosit, ferritin, demir, transferrin satürasyonu
@@ -815,6 +819,8 @@ belirtilerin bekletilmemesi gerektiğini özetlemek içindir.
 25.08.2026 15:29 2.76 Hedef içi
 
 02.09.2026 20:27 2.72 Hedef içi
+
+10.09.2026 16:57 2.12 Hedef içi
 -----------------------------------------------------------------------
 
 ### 14.2 Son laboratuvar paneli
@@ -940,11 +946,11 @@ increased anticoagulant effect and need for frequent PT/INR monitoring.
 https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=888dc7f9-ad9c-4c00-8d50-8ddfd9bd27c0
 
 **\[10\]** Yüklenen hasta veri dosyası:
-Alaattin Sönmez Boylamsal Klinik Veri Tabanı (19 Şubat – 9 Eylül 2026 Tüm Tıbbi Kayıtlar).
+Alaattin Sönmez Boylamsal Klinik Veri Tabanı (19 Şubat – 10 Eylül 2026 Tüm Tıbbi Kayıtlar).
 
 ## 16. Sonuç
 
-9 Eylül 2026 itibarıyla hasta, Şubat 2026'daki akut Tip A aort
+10 Eylül 2026 itibarıyla hasta, Şubat 2026'daki akut Tip A aort
 diseksiyonu ve Bentall ameliyatından sonraki ilk ağır komplikasyon
 dönemini aşmış, özellikle kan basıncı ve böbrek fonksiyonlarında
 belirgin stabilizasyon sağlamış durumdadır. Bununla birlikte klinik risk
@@ -954,11 +960,12 @@ getirilmesi, sternal enfeksiyonun tamamen kontrol edildiğinin
 doğrulanması ve belirgin demir eksikliği anemisinin nedeninin ortaya
 konması önümüzdeki dönemin ana başlıklarıdır.
 
-En yakın zamanda üzerinde durulması gereken kombinasyon, 4 Eylül'de
-başlayan Klamoks + warfarin kullanımı ile zaten kırılgan olan
-hematolojik tablo ve geçmişteki INR dalgalanmalarının birlikte
-değerlendirilmesidir. Son INR 2,72 iyi görünmektedir; fakat antibiyotik
-sonrası INR değişimi ve kanama/anemi eğrisi ayrıca izlenmelidir \[2,8\].
+Yakın dönemde tamamlanan 7 günlük Klamoks kürü (10 Eylül 20:59) sonrası
+yapılan kontrolde INR 2,12 ile hedefte kalmış ve korkulan supraterapötik
+sıçrama görülmemiştir. 10 Eylül'de reçetelenip 11 Eylül sabahı başlanan
+Ferro Sanol Duodenal 100 mg ile demir eksikliği anemisine yönelik replasman
+başlatılmıştır; gastrointestinal tolerans ve antikoagülasyon dengesi
+izlenmelidir \[2,8\].
 
 Bu raporun klinik olarak kullanılabilecek en önemli çıktısı, "şu anda
 kötüleşiyor mu?" sorusuna yanıtın genel olarak hayır, ancak "tamamen

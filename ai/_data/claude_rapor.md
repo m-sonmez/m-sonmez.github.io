@@ -23,7 +23,7 @@ mekanik kapak + 2026 (\~6,6 ay)
 
 ---
 
-## Güncel Durum Özeti (9 Eylül 2026)
+## Güncel Durum Özeti (10 Eylül 2026)
 
 ---
 
@@ -31,12 +31,12 @@ mekanik kapak + 2026 (\~6,6 ay)
 
 ---
 
-Son Tansiyon (Eylül 111.2/75.7 mmHg Hedef: \<120/80 mmHg
-ort.)
+Son Tansiyon (Eylül 111/76 mmHg (Son 7G: Hedef: \<120/80 mmHg
+ort.) 111/75)
 
-Güncel Kilo 78.9 kg Son 49 günde stabil
+Güncel Kilo 78.4 kg 10 Eylül tartımı
 
-Son INR 2.72 Hedef: 2,0--3,0
+Son INR 2.12 (10 Eyl) Hedef: 2,0--3,0
 (mekanik kapak)
 
 Son Hemoglobin 9.7 g/dL Referans:
@@ -46,7 +46,7 @@ Son Hemoglobin 9.7 g/dL Referans:
 Son CRP 11.3 mg/L Referans: 0--5.0000
 (YÜKSEK, zirve 154)
 
-Toplam Tansiyon Ölçümü 487 7 aylık ev takibi
+Toplam Tansiyon Ölçümü 490 7 aylık ev takibi
 
 Şiddetli HT Atağı 5 Sistolik ≥150 /
 Diyastolik ≥100
@@ -61,32 +61,27 @@ komplikasyon
 
 ### Sistem Tarafından Üretilen Klinik Değerlendirme
 
-KLİNİK DEĞERLENDİRME RAPORU (19.02.2026 - 09.09.2026)\
+KLİNİK DEĞERLENDİRME RAPORU (19.02.2026 - 10.09.2026)\
 \
 
 1. TANSİYON TRENDİ:\
-   19.02.2026 - 09.09.2026 tarihleri arasında toplam 488 adet tansiyon
-   ölçümü yapılmıştır. Dönem ortalaması 122/81 mmHg olarak hesaplanmıştır
-   ve bu genel olarak \"\~HT\" kategorisindedir.\
+   19.02.2026 - 10.09.2026 tarihleri arasında toplam 490 adet tansiyon
+   ölçümü yapılmıştır. Dönem ortalaması 121/81 mmHg (Son 7 Gün: 111/75 mmHg) olarak hesaplanmıştır.\
    \
 2. KİLO VE SIVI DURUMU:\
-   Seçilen dönem sonu itibarıyla güncel kilo 78.8 kg\'dır. Dönem başına
-   (78.7 kg) göre 0.1 kg\'lık bir artış gözlemlenmiştir.\
+   Seçilen dönem sonu itibarıyla güncel kilo 78.4 kg\'dır (Stabil, ödem negatif, dönem değişimi: -0.7 kg).\
    \
 3. LABORATUVAR ANALİZLERİ:\
-   09.09.2026 tarihi ve öncesindeki son laboratuvar verilerine göre kritik
-   parametre durumları şu şekildedir: INR: 2.72 (Bir önceki 25.08.2026
-   tarihindeki ölçüme göre: -0.04), HGB: 9.7 (Bir önceki 02.09.2026
-   tarihindeki ölçüme göre: +0.20), WBC: 7.97 (Bir önceki 02.09.2026
-   tarihindeki ölçüme göre: -1.99), CRP: 11.3 (Bir önceki 02.09.2026
-   tarihindeki ölçüme göre: -12.50). Bu dönemde referans aralığı dışında
+   10.09.2026 tarihi kontrol tahlillerine göre kritik parametre durumları şu şekildedir:
+   INR: 2.12 (10 Eyl, Hedefte), PT: 19.8 sn, aPTT: 44.8 sn, PT%: %41.7, HGB: 9.7 (Düşük),
+   WBC: 7.97 (Normal), CRP: 11.3 (Gerilemede). Bu dönemde referans aralığı dışında
    kalan parametreler: CHOL (Yüksek), CRP (Yüksek), FERRITIN (Düşük), HCT
    (Düşük), HDL (Düşük), HGB (Düşük), IRON (Düşük), LDL (Yüksek), MCH
    (Düşük), MCV (Düşük), RBC (Düşük), RDW-CV (Yüksek), RDW-SD (Yüksek).\
    \
 4. İLAÇ TEDAVİSİ:\
-   Seçilen dönemde aktif bir ilaç veya tedavi değişim kaydı
-   bulunmamaktadır.
+   Klamoks 1000 mg kürü 10 Eylül 20:59'da tamamlandı ve kesildi. 10 Eylül'de reçetelenen
+   Ferro Sanol Duodenal 100 mg sabah aç karnına (Panto'dan 1 saat önce) 11 Eylül 06:00'da başlandı.
 
 64 yaşındaki erkek hasta, 19 Şubat 2026 tarihinde ani başlayan yırtıcı
 karakterde göğüs ve sırt ağrısı ile acil servise başvurmuş; aynı gün
@@ -105,15 +100,14 @@ cerrahi yatışı. Nisan ayında evde üç kez şiddetli hipertansif atak (en
 yükseği 168/103 mmHg) yaşanmış, sublingual kaptopril ile kontrol altına
 alınmıştır.
 
-Rapor tarihi itibarıyla hasta ayaktan izlemdedir; INR değeri (2,72)
-mekanik kapak için hedeflenen terapötik aralıkta, tansiyon ortalaması
-hedefe yakındır. Ancak kronik, mikrositer karakterde anemi (Hb 9,7 g/dL,
-düşük ferritin/demir), hafif düzeyde süregelen enflamasyon (CRP 11,3
-mg/L) ve enfeksiyon şüphesiyle 4 Eylül\'de yeniden başlanmış ampirik
-antibiyotik tedavisi dikkat çekmektedir. Lipid profilinde de kötüleşme
-(yüksek LDL/kolesterol, düşük HDL) izlenmektedir. Bu bulguların her biri
-Bölüm 8\'de literatürle karşılaştırılmış, Bölüm 9\'da ise hekimle
-görüşülmesi önerilen somut maddeler halinde özetlenmiştir.
+Rapor tarihi itibarıyla hasta ayaktan izlemdedir; 10 Eylül kontrol INR değeri (2,12)
+mekanik kapak için hedeflenen terapötik aralıkta (2,0–3,0), son 7 günlük tansiyon ortalaması
+(111/75 mmHg) hedeftedir. 4 Eylül'de başlanan Klamoks kürü 10 Eylül'de başarıyla tamamlanmış,
+derinleşen mikrositik anemiye (Hb 9,7 g/dL, ferritin 19 µg/L, demir 15 µg/dL) yönelik
+Ferro Sanol Duodenal 100 mg başlanmıştır. Hafif düzeyde süregelen enflamasyon (CRP 11,3
+mg/L) gerileme trendindedir. Lipid profilinde de kötüleşme (yüksek LDL/kolesterol, düşük HDL)
+izlenmektedir. Bu bulguların her biri Bölüm 8\'de literatürle karşılaştırılmış, Bölüm 9\'da ise
+hekimle görüşülmesi önerilen somut maddeler halinde özetlenmiştir.
 
 ## 2. Klinik Zaman Çizelgesi
 
@@ -364,8 +358,8 @@ antibiyotik
 günde 2×1)
 başlanmış olup 7
 günlük kür 10
-Eylül\'de
-tamamlanacaktır.
+Eylül\'de başarıyla
+tamamlanmıştır (kesildi).
 Mart ayında alınan
 yara kültüründe
 üreme olmadığı
@@ -400,7 +394,7 @@ mmHg)**
 31 Temmuz 2026, 21:18 149/101 mmHg
 --------------------------------------------------------------------
 
-_7 aylık dönemde toplam 487 tansiyon ölçümünden yalnızca 5 tanesi bu
+_7 aylık dönemde toplam 490 tansiyon ölçümünden yalnızca 5 tanesi bu
 eşiği aşmıştır --- genel olarak iyi kontrollü bir seyir olduğunu
 göstermektedir._
 
@@ -408,7 +402,7 @@ göstermektedir._
 
 ---
 
-9 Eylül 2026 itibarıyla aktif olan 6 düzenli tedavi ve 1 adet
+10 Eylül 2026 itibarıyla aktif olan 6 düzenli tedavi ve 1 adet
 gerektiğinde kullanılan (PRN) ilaç:
 
 ---
@@ -418,7 +412,9 @@ gerektiğinde kullanılan (PRN) ilaç:
 ---
 
 Panto Mide Koruyucu 40mg günde Düzenli Taburculuk sonrası
-1×1 devam edildi
+1×1 devam edildi (Ferro
+Sanol'den 1 saat sonra
+alınmalı)
 
 Dilatrend Beta Blokör 6.25mg Düzenli Taburculuk sonrası
 günde 2×1 yeni doz ile devam
@@ -436,10 +432,14 @@ Warfmadin Antikoagülan 5mg Düzenli Doktor tarafından doz
 haftalık ayarlaması (INR
 takibine göre)
 
-Klamoks Antibiyotik 1000mg Düzenli 4 Eylül\'de başlanan
-günde 2×1 7 günlük ampirik kür;
-10 Eylül\'de
-tamamlanacak.
+Ferro Sanol Demir Preparatı 100mg Düzenli 10 Eylül\'de reçetelenip
+Duodenal (Fe²⁺) günde 1×1 11 Eylül 06:00\'da
+başlandı (sabah aç,
+Panto\'dan 1 saat önce)
+
+Klamoks Antibiyotik 1000mg Tamamlandı 10 Eylül 20:59\'da
+günde 2×1 7 günlük ampirik kür
+tamamlandı (Kesildi)
 
 Kapril Antihipertansif 25mg PRN / Acil durum tansiyon
 Gerektiğinde yüksekliği (168/103
@@ -553,13 +553,16 @@ göre)
 
 Klamoks Antibiyotik 10 Eylül Ended 7 günlük kür sonu
 2026, 20:59
+
+Ferro Sanol Demir Preparatı 11 Eylül Started Demir eksikliği anemisi
+Duodenal 2026, 06:00 tedavisi (100 mg Fe²⁺, 1×1 aç)
 ------------------------------------------------------------------------------------
 
 ## 5. Vital Bulgu Trendleri
 
 ---
 
-Ev takibinde kayıtlı 487 tansiyon ve 175 kilo ölçümünün aylık özetleri.
+Ev takibinde kayıtlı 490 tansiyon ve 175 kilo ölçümünün aylık özetleri.
 
 **Kan Basıncı --- Aylık Özet (mmHg)**
 
@@ -581,7 +584,7 @@ Temmuz 2026 84 124.9/83.2 102/60 149/101
 
 Ağustos 2026 89 118.7/79.9 99/65 139/95
 
-Eylül 2026 18 111.2/75.7 103/68 122/82
+Eylül 2026 21 111/76 101/68 122/82
 ----------------------------------------------------------------------
 
 ---
@@ -625,7 +628,7 @@ Temmuz 2026 26 78.4 kg 77.5 -- 79.4 kg
 
 Ağustos 2026 27 78.7 kg 77.9 -- 80 kg
 
-Eylül 2026 9 78.9 kg 78.5 -- 79.4 kg
+Eylül 2026 10 78.8 kg 78.4 -- 79.4 kg
 ----------------------------------------------------------------------
 
 _Ameliyat sonrası ilk haftalarda gözlenen kilo kaybı (85,3 → \~75 kg
@@ -636,7 +639,7 @@ stabilize olmuştur._
 
 ---
 
-19 Şubat -- 8 Eylül 2026 arası, 90 test panelinde toplam 2.028 ayrı
+19 Şubat -- 10 Eylül 2026 arası, 92 test panelinde toplam 2.032 ayrı
 laboratuvar ölçümünden derlenen, klinik açıdan öncelikli parametrelerin
 özeti.
 
@@ -653,14 +656,14 @@ D-Dimer yalnızca tanı anında bir kez ölçülmüştür._
 
 ---
 
-INR (INR) 2,0--3,0 (tedavi 1.1 (19 2.72 (2 1.1--8.46 38 TEDAVİ
+INR (INR) 2,0--3,0 (tedavi 1.1 (19 2.12 (10 1.1--8.46 39 TEDAVİ
 hedefi) INR Şubat Eylül ARALIĞINDA 2026) 2026)
 
-Protrombin 9.6000--12.0000 sn 13.1 (19 24.6 (2 11.9--64 38 ANTİKOAG.
+Protrombin 9.6000--12.0000 sn 13.1 (19 19.8 (10 11.9--64 39 ANTİKOAG.
 Zamanı (PT) Şubat Eylül İLE TAKİP
 (PT) 2026) 2026)
 
-aPTT (APTT) 23.9000--33.2000 27.9 (19 50.8 (2 27.9--85.5 26 ANTİKOAG.
+aPTT (APTT) 23.9000--33.2000 27.9 (19 44.8 (10 27.9--85.5 27 ANTİKOAG.
 sn Şubat Eylül İLE TAKİP 2026) 2026)
 
 D-Dimer 0.0000--500.0000 5510 (19 9656.4 (19 5510--9656.4 2 YÜKSEK
@@ -1079,7 +1082,7 @@ literatürdeki başarılı vaka seyriyle uyumludur.
 2020 ACC/AHA Kapak Hastalığı Kılavuzu, ek risk faktörü taşımayan
 bileaflet mekanik aort kapağı hastalarında INR hedefini 2,5 (pratikte
 \~2,0--3,0) olarak önermektedir; ek risk faktörü varlığında hedef 3,0\'a
-çıkar. Hastanın son INR değeri (2,72) bu aralıktadır. Ancak 16 Mart\'ta
+çıkar. Hastanın son INR değeri (2,12) bu aralıktadır. Ancak 16 Mart\'ta
 INR\'nin 8,46\'ya kadar yükseldiği, kanama açısından yüksek riskli bir
 supraterapötik dönem yaşanmıştır.
 

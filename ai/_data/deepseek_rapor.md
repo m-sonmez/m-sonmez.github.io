@@ -1,6 +1,6 @@
 # 360° Klinik Yönetici ve Karar Destek Raporu
 
-**Alaattin Sönmez (64E) · 09 Eylül 2026 · Postoperatif 202. Gün**
+**Alaattin Sönmez (64E) · 10 Eylül 2026 · Postoperatif 204. Gün**
 
 ---
 
@@ -12,7 +12,7 @@
 | TC               | 00000000000                       |
 | Yaş / Cinsiyet   | 64 / Erkek                        |
 | Doğum            | 01.01.1962 / HATAY                |
-| Boy / Kilo / VKİ | 174 cm / 78.8 kg / 26.0           |
+| Boy / Kilo / VKİ | 174 cm / 78.4 kg / 25.9           |
 | Kan Grubu        | 0 Rh (+)                          |
 | Güvence          | SSK / Hatay                       |
 | Ameliyat         | 20 Şubat 2026 (Bentall Prosedürü) |
@@ -27,9 +27,9 @@ implante edilerek Bentall prosedürü tamamlanmıştır (Bentall & De Bono, 1968
 dehissens (23-28 Temmuz 2026 revizyonu), geçici INR dalgalanmaları (zirve 8.46) ve mikroskopik demir eksikliği anemisi
 gelişmiştir.
 
-Son 7 gün ortalama kan basıncı **111/76 mmHg** ile 2024 ESC hedefinin (&le;120/80) altındadır (McEvoy et al., 2024). INR
-2.72 ile mekanik aort kapak için terapötik pencerededir (Vahanian et al., 2022, s. 584). Ancak 4 kritik başlık
-sürmektedir: (1) mikrositer anemi (HGB 9.7 g/dL, Ferritin 19 µg/L), (2) TTR %54.6 ile suboptimal antikoagülasyon, (3)
+Son 7 gün ortalama kan basıncı **111/75 mmHg** ile 2024 ESC hedefinin (&le;120/80) altındadır (McEvoy et al., 2024). 10 Eylül
+kontrolünde INR 2.12 ile mekanik aort kapak için terapötik pencerededir (Vahanian et al., 2022, s. 584). Ancak 4 kritik başlık
+sürmektedir: (1) mikrositer anemi (HGB 9.7 g/dL, Ferritin 19 µg/L; Ferro Sanol Duodenal başlandı), (2) TTR %54.6 ile suboptimal antikoagülasyon, (3)
 CRP 11.3 mg/L ile subakut enflamasyon, (4) rezidüel Tip B diseksiyon flebi nedeniyle 6-aylık görüntüleme ihtiyacı
 (Fleischmann et al., 2022, s. e000075).
 
@@ -37,7 +37,7 @@ CRP 11.3 mg/L ile subakut enflamasyon, (4) rezidüel Tip B diseksiyon flebi nede
 
 | Parametre | Referans  | İlk   | Zirve/Dip | Son   | %Δ     | Trend      |
 | --------- | --------- | ----- | --------- | ----- | ------ | ---------- |
-| INR       | 2.0-3.0   | 1.10  | 8.46      | 2.72  | +147%  | Hedefe     |
+| INR       | 2.0-3.0   | 1.10  | 8.46      | 2.12  | +92.7% | Hedefte    |
 | HGB       | 13.5-17.5 | 14.0  | 7.7       | 9.7   | −30.7% | Anemi      |
 | MCV       | 80-100    | 88.0  | 76.4      | 76.4  | −13.2% | Mikrositer |
 | Ferritin  | 30-400    | 19    | 19        | 19    | —      | Depo boş   |
@@ -58,25 +58,25 @@ CRP 11.3 mg/L ile subakut enflamasyon, (4) rezidüel Tip B diseksiyon flebi nede
 | Haziran 2026 | 68  | 127.2/84.6 | 109/72 | 149/99  |
 | Temmuz 2026  | 84  | 124.9/83.2 | 102/60 | 149/101 |
 | Ağustos 2026 | 89  | 118.7/79.9 | 99/65  | 139/95  |
-| Eylül 2026   | 18  | 111.2/75.7 | 103/68 | 122/82  |
+| Eylül 2026   | 21  | 111/76     | 101/68 | 122/82  |
 
 ## 5. TTR Analizi
 
-38 INR ölçümü, Rosendaal lineer interpolasyonu ile **TTR %54.6** (hedef >%70; Vahanian et al., 2022, s. 584; Rosendaal
+39 INR ölçümü, Rosendaal lineer interpolasyonu ile **TTR %54.6** (hedef >%70; Vahanian et al., 2022, s. 584; Rosendaal
 et al., 1993, s. 236). Kritik sapmalar: 16 Mart 2026 INR 8.46 (supraterapötik), 27 Temmuz 2026 INR 1.17 (köprüleme
 öncesi).
 
 ## 6. İnteraktif İlaç Etkileşim Matrisi
 
-| #   | Çift                       | Risk   | Mekanizma                                                  | Yönetim                            |
-| --- | -------------------------- | ------ | ---------------------------------------------------------- | ---------------------------------- |
-| 1   | Warfarin × Klamoks         | Kritik | Barsak florası K vit. sentezi baskısı + CYP2C9 inhibisyonu | Kür sonrası 48-72 saat kontrol INR |
-| 2   | Karvedilol × Perindopril   | Yüksek | Sinerjik vazodilatasyon                                    | İlk dozda oturur pozisyon          |
-| 3   | Warfarin × Aspirin         | Yüksek | Hemostatik plug + kaskad inhibisyonu                       | Yıllık gaita gizli kan             |
-| 4   | Demir × Panto              | Yüksek | Mide pH artışı demir emilimini azaltır                     | 1 saat önce uygula                 |
-| 5   | Ciprofloksasin × Warfarin  | Yüksek | CYP1A2 inhibisyonu                                         | INR takibi                         |
-| 6   | Perindopril × Warfarin     | Orta   | PAI-1 azalması                                             | Rutin takip                        |
-| 7   | Panto × Aspirin × Warfarin | Yüksek | Kombine kanama riski                                       | Endoskopik takip                   |
+| #   | Çift                       | Risk   | Mekanizma                                                  | Yönetim                                                     |
+| --- | -------------------------- | ------ | ---------------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | Warfarin × Klamoks         | Kritik | Barsak florası K vit. sentezi baskısı + CYP2C9 inhibisyonu | Kür tamamlandı (10 Eyl); kontrol INR 2.12 ile hedefte       |
+| 2   | Karvedilol × Perindopril   | Yüksek | Sinerjik vazodilatasyon                                    | İlk dozda oturur pozisyon                                   |
+| 3   | Warfarin × Aspirin         | Yüksek | Hemostatik plug + kaskad inhibisyonu                       | Yıllık gaita gizli kan                                      |
+| 4   | Demir × Panto              | Yüksek | Mide pH artışı demir emilimini azaltır                     | 1 saat önce uygula (sabah aç Ferro Sanol, 1 saat sonra Panto)|
+| 5   | Ciprofloksasin × Warfarin  | Yüksek | CYP1A2 inhibisyonu                                         | INR takibi                                                  |
+| 6   | Perindopril × Warfarin     | Orta   | PAI-1 azalması                                             | Rutin takip                                                 |
+| 7   | Panto × Aspirin × Warfarin | Yüksek | Kombine kanama riski                                       | Endoskopik takip                                            |
 
 ## 7. Kronolojik Klinik Zaman Çizelgesi
 
@@ -89,12 +89,13 @@ et al., 1993, s. 236). Kritik sapmalar: 16 Mart 2026 INR 8.46 (supraterapötik),
 - **23-28 Tem 2026:** Sternal dehissens revizyonu, kan transfüzyonu
 - **04 Ağu 2026:** Coversyl eklendi
 - **04 Eyl 2026:** Klamoks ampirik başlandı
-- **09 Eyl 2026:** Stabil takip
+- **10 Eyl 2026:** Klamoks 1000 mg kürü tamamlandı (20:59); kontrol koagülasyon testinde (#92, 16:57) INR 2.12, PT 19.8 sn, aPTT 44.8 sn ile kapak antikoagülasyonu güvenli aralıkta teyit edildi; Ferro Sanol Duodenal 100 mg reçetelendi
+- **11 Eyl 2026:** Ferro Sanol Duodenal 100 mg başlandı (06:00, sabah aç, Panto'dan 1 saat önce)
 
 ## 8. Branş Bazlı Eylem Planı
 
-**Hematoloji:** IV Ferrik Karboksimaltoz 500-1000 mg (Ferritin <100; McDonagh et al., 2021, s. 3649). **Kardiyoloji:**
-Klamoks sonrası kontrol INR; LDL 141 için statin (ESC 2024). **KVC/Radyoloji:** 6-aylık kontrol aort BT Anjiyografi
+**Hematoloji:** Oral Ferro Sanol Duodenal 100 mg başlandı (Ferritin <100; toleranssızlıkta IV Ferinject 500-1000 mg; McDonagh et al., 2021, s. 3649). **Kardiyoloji:**
+Klamoks kürü bitti, kontrol INR 2.12 ile hedefte; LDL 141 için statin (ESC 2024). **KVC/Radyoloji:** 6-aylık kontrol aort BT Anjiyografi
 (Fleischmann et al., 2022). **Enfeksiyon:** Diş işlemleri öncesi amoksisilin 2 g profilaksi (Habib et al., 2015).
 **Genel Cerrahi:** Sternal yara takibi; CRP <5 hedefi. **Kardiyoloji:** BP hedefi sürdürme (McEvoy et al., 2024).
 **Nefroloji:** Kreatinin ve potasyum stabil takip (KDIGO 2023).
