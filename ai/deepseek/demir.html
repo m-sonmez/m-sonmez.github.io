@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="tr" class="h-full">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width,initial-scale=1.0" name="viewport"/>
+    <title>Demir Paneli ve Metabolizması İncelemesi | DeepSeek V4 — Alaattin Sönmez</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Outfit', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="../../dist/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 12px 32px -8px rgba(15, 23, 42, 0.06);
+        }
+        .dark .glass {
+            background: rgba(30, 41, 59, 0.85);
+            border-color: rgba(51, 65, 85, 0.7);
+        }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="min-h-full bg-slate-50 font-sans text-slate-800 antialiased selection:bg-blue-600 selection:text-white dark:bg-slate-950 dark:text-slate-100" x-data="{ darkMode: false }">
+
+<header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+        <nav aria-label="Sayfa Navigasyonu" class="flex items-center gap-3">
+            <a href="../" class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" /></svg>
+                <span>AI Hub</span>
+            </a>
+            <a href="index.html" class="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <span>DeepSeek 360° Rapor</span>
+            </a>
+            <span class="hidden text-slate-300 dark:text-slate-700 sm:inline">|</span>
+            <div class="hidden items-center gap-2 sm:flex">
+                <span class="font-display text-sm font-bold text-blue-600 dark:text-blue-400">DeepSeek V4</span>
+                <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-extrabold tracking-wider text-blue-800 uppercase dark:bg-blue-950 dark:text-blue-300">Demir Özel Analizi</span>
+            </div>
+        </nav>
+        <div class="flex items-center gap-2">
+            <button aria-label="Tema Modunu Değiştir" @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark', darkMode)" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <span x-text="darkMode ? '☀️ Aydınlık' : '🌙 Karanlık'"></span>
+            </button>
+            <button onclick="window.print()" class="rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">Yazdır / PDF</button>
+        </div>
+    </div>
+</header>
+
+<main class="mx-auto max-w-5xl px-4 py-8 sm:px-6 space-y-6">
+    
+    <section class="glass rounded-3xl p-6 sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <div class="inline-flex items-center gap-2 rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-bold tracking-widest text-blue-600 uppercase dark:bg-blue-500/20 dark:text-blue-300">
+                    <span>Hematoloji &amp; Demir Metabolizması</span>
+                </div>
+                <h1 class="font-display mt-3 text-2xl font-black tracking-tight sm:text-3xl text-slate-900 dark:text-white">Demir Paneli ve Kinetik İncelemesi</h1>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Aort Cerrahisi Sonrası Ağır Mikrositer Anemi, TTR Optimizasyonu ve Terapötik Müdahale Planı</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 text-right dark:border-slate-800 dark:bg-slate-900">
+                <span class="text-[10px] font-bold text-slate-400 uppercase block">Hasta Bilgisi</span>
+                <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">Alaattin SÖNMEZ</span>
+                <span class="text-[11px] text-blue-600 dark:text-blue-400 block mt-0.5">64E · Bentall Postop 202. Gün</span>
+            </div>
+        </div>
+
+        
+        <div class="grid grid-cols-2 gap-3 mt-6 sm:grid-cols-4">
+            <div class="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 dark:border-rose-900/50 dark:bg-rose-950/20">
+                <span class="text-[10px] font-bold text-slate-500 uppercase dark:text-slate-400">Hemoglobin (HGB)</span>
+                <p class="text-2xl font-black text-rose-600 mt-1">9.7 <span class="text-xs font-normal text-slate-500">g/dL</span></p>
+                <span class="text-[11px] font-semibold text-rose-700 dark:text-rose-400">%30.7 Azalma (İlk: 14.0)</span>
+            </div>
+            <div class="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 dark:border-rose-900/50 dark:bg-rose-950/20">
+                <span class="text-[10px] font-bold text-slate-500 uppercase dark:text-slate-400">Serum Ferritin</span>
+                <p class="text-2xl font-black text-rose-600 mt-1">19.0 <span class="text-xs font-normal text-slate-500">µg/L</span></p>
+                <span class="text-[11px] font-semibold text-rose-700 dark:text-rose-400">Depolar Tükendi (&lt;30)</span>
+            </div>
+            <div class="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 dark:border-rose-900/50 dark:bg-rose-950/20">
+                <span class="text-[10px] font-bold text-slate-500 uppercase dark:text-slate-400">Serum Demiri (Fe)</span>
+                <p class="text-2xl font-black text-rose-600 mt-1">15.0 <span class="text-xs font-normal text-slate-500">µg/dL</span></p>
+                <span class="text-[11px] font-semibold text-rose-700 dark:text-rose-400">Kritik Düşük (59-158)</span>
+            </div>
+            <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-900/50 dark:bg-amber-950/20">
+                <span class="text-[10px] font-bold text-slate-500 uppercase dark:text-slate-400">Eritrosit İndeksi (MCV)</span>
+                <p class="text-2xl font-black text-amber-600 mt-1">76.4 <span class="text-xs font-normal text-slate-500">fL</span></p>
+                <span class="text-[11px] font-semibold text-amber-700 dark:text-amber-400">Mikrositoz (İlk: 88.0)</span>
+            </div>
+        </div>
+    </section>
+
+    
+    <section class="glass rounded-3xl p-6 sm:p-8 space-y-4">
+        <h2 class="font-display text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-blue-600"></span>
+            Fizyopatolojik Gerekçelendirme ve Klinik Çıkarım
+        </h2>
+        <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            Hastada mevcut olan <strong>HGB 9.7 g/dL, Ferritin 19 µg/L ve Serum Demiri 15 µg/dL</strong> tablosu, derin mikrositer hipokrom demir eksikliği anemisini doğrulamaktadır. Bu tablo ameliyat sırasındaki hemodilüsyon, 23-28 Temmuz tarihindeki sternal revizyon kan kaybı (Hb dip noktası 7.7 g/dL) ve çift antitrombotik (Warfarin + Aspirin) kullanımına bağlı okült gastrointestinal mikrokanama olasılığıyla ilişkilidir.
+        </p>
+        <div class="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/50 dark:bg-blue-950/20 text-xs text-blue-950 dark:text-blue-200 leading-relaxed">
+            <strong>Kardiyovasküler Risk Uyarısı:</strong> Ağır anemi doku hipoksisi oluşturarak kompansatuar taşikardi ve kardiyak debi artışına neden olur. Bu durum inen aortta yer alan rezidüel Stanford Tip B diseksiyon flebindeki kesme gerilimini (<em>dP/dt</em>) artırarak yalancı lümen genişleme riskini tetiklemektedir. Aneminin düzeltilmesi birincil öncelikli kardiyovasküler koruma adımıdır.
+        </div>
+    </section>
+
+    
+    <section class="glass rounded-3xl p-6 sm:p-8 space-y-4">
+        <h2 class="font-display text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+            Demir Replasmanı ve Farmakoterapi Risk Matrisi
+        </h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div class="rounded-2xl border border-slate-200 p-4 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white mb-2">Demir Sülfat &times; Pantoprazol (Panto 40 mg)</h3>
+                <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                    Pantoprazol mide pH'ını &gt;5 seviyesine çıkararak ferrik demiri çözünmez ferrik hidroksit formuna dönüştürür. Bu durum oral demir emilimini %40-70 oranında bloke eder. Oral demir ilacı (Ferro Sanol) kullanılacaksa, mutlaka <strong>Panto'dan 1 saat önce aç karnına</strong> alınmalıdır.
+                </p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 p-4 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white mb-2">İntravenöz Demir Endikasyonu (Ferinject)</h3>
+                <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                    2021 ESC Kalp Yetersizliği Kılavuzlarına göre, kardiyak cerrahi hastalarında Ferritin &lt;100 µg/L olduğunda veya oral intolerans/emilim engeli bulunduğunda <strong>İntravenöz Ferrik Karboksimaltoz (500–1000 mg)</strong> birinci basamakta önerilmektedir. Mide yan etkisi oluşturmaz ve 48 saatte depoları doldurur.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    
+    <section class="glass rounded-3xl p-6 sm:p-8">
+        <h2 class="font-display text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+            Hematoloji &amp; Dahiliye Konsültasyon Planı
+        </h2>
+        <ol class="space-y-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+            <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">1</span><span><strong>IV Demir İnfüzyonu:</strong> Derin anemi (HGB 9.7 g/dL) ve boş depolar (Ferritin 19 µg/L) için tek seans Ferinject 1000 mg infüzyonu planlanmalı.</span></li>
+            <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">2</span><span><strong>Gaitada Gizli Kan (GGK) Taraması:</strong> Çift antitrombotik (Warfarin + Aspirin) kullanan hastada asemptomatik gastrointestinal kanamayı ekarte etmek için 3 ardışık GGK testi yapılmalı.</span></li>
+            <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">3</span><span><strong>4 Hafta Sonra Kontrol Hemogram:</strong> Tedavi yanıtını izlemek üzere 4. haftada Hemoglobin, Retikülosit ve Ferritin düzeyleri tekrar kontrol edilmeli.</span></li>
+        </ol>
+    </section>
+
+</main>
+
+<footer class="mt-8 border-t border-slate-200 bg-white py-6 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+    <div class="mx-auto max-w-5xl px-4 sm:px-6">
+        <p class="font-semibold text-slate-700 dark:text-slate-300">Kaynakça ve Uluslararası Kılavuz Referansları (APA 7th Edition):</p>
+        <p class="mt-1 text-[11px] leading-relaxed">
+            McDonagh, T. A., et al. (2021). 2021 ESC Guidelines for the diagnosis and treatment of acute and chronic heart failure. <em>Eur Heart J</em>, 42(36), 3599–3726. &bull; Camaschella, C. (2015). Iron-deficiency anemia. <em>N Engl J Med</em>, 372(19), 1832–1843. &bull; Goddard, A. F., et al. (2021). British Society of Gastroenterology guidelines for the management of iron deficiency anaemia. <em>Gut</em>, 70(11), 2030–2051. &bull; Vahanian, A., et al. (2021). 2021 ESC/EACTS Guidelines for the management of valvular heart disease. <em>Eur Heart J</em>, 43(7), 561–632. &bull; Isselbacher, E. M., et al. (2022). 2022 ACC/AHA Guideline for the Diagnosis and Management of Aortic Disease. <em>Circulation</em>, 146(24), e334–e482. &bull; Delgado, V., et al. (2023). 2023 ESC Guidelines for the management of endocarditis. <em>Eur Heart J</em>, 44(39), 3948–4042. &bull; Czerny, M., et al. (2024). EACTS/STS Guidelines for diagnosing and treating syndromes of the aortic organ. <em>Eur J Cardiothorac Surg</em>, 65(2), ezad426.
+        </p>
+        <p class="mt-3 text-[11px] italic">Bu sayfa DeepSeek V4 modeli tarafından klinik karar destek amaçlı hazırlanmıştır. Tıbbi teşhis ve reçete niteliği taşımaz.</p>
+    </div>
+</footer>
+
+</body>
+</html>
