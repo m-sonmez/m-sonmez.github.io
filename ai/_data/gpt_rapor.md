@@ -1,18 +1,18 @@
 # Hasta Durumu ve Gidişat Raporu
 
-*19 Şubat 2026 – 9 Eylül 2026 Klinik Seyir Analizi: Ham Veri İncelemesi, Boylamsal Trendler ve Güncel Bilimsel Kılavuz Karşılaştırması*
+_19 Şubat 2026 – 9 Eylül 2026 Klinik Seyir Analizi: Ham Veri İncelemesi, Boylamsal Trendler ve Güncel Bilimsel Kılavuz Karşılaştırması_
 
 +-----------------------------------------------------------------------+
-| **Kapsam ve güvenlik notu**                                           |
-|                                                                       |
-| Bu rapor, yüklenen klinik veri dökümündeki ölçüm, laboratuvar,        |
-| görüntüleme, epikriz ve ilaç kayıtlarını; 2022 ACC/AHA Aort           |
-| Hastalığı, 2025 ESC/EACTS Kapak Hastalıkları ve 2023 ESC Enfektif     |
-| Endokardit kılavuzları ile karşılaştırmalı olarak yorumlar. Bu belge  |
-| tanı koymaz ve ilaç dozu değiştirme talimatı değildir. Özellikle      |
-| mekanik kapak, warfarin ve aktif/en yakın dönem sternal yara          |
-| enfeksiyonu nedeniyle değişiklikler ilgili branş hekimlerince         |
-| yapılmalıdır.                                                         |
+| **Kapsam ve güvenlik notu** |
+| |
+| Bu rapor, yüklenen klinik veri dökümündeki ölçüm, laboratuvar, |
+| görüntüleme, epikriz ve ilaç kayıtlarını; 2022 ACC/AHA Aort |
+| Hastalığı, 2025 ESC/EACTS Kapak Hastalıkları ve 2023 ESC Enfektif |
+| Endokardit kılavuzları ile karşılaştırmalı olarak yorumlar. Bu belge |
+| tanı koymaz ve ilaç dozu değiştirme talimatı değildir. Özellikle |
+| mekanik kapak, warfarin ve aktif/en yakın dönem sternal yara |
+| enfeksiyonu nedeniyle değişiklikler ilgili branş hekimlerince |
+| yapılmalıdır. |
 +=======================================================================+
 
 Raporun veri kesim tarihi: 9 Eylül 2026. Dosya "All Historical Data"
@@ -32,116 +32,119 @@ kapağı açısından son INR 2,72 olup, ek tromboembolik risk faktörü yoksa
 güncel ESC/EACTS hedef aralığı olan 2,0-3,0 içindedir \[2\].
 
 +-----------------------------------------------------------------------+
-| **En olumlu gelişme**                                                 |
-|                                                                       |
-| Son 7 gündeki 13 ev ölçümünün ortalaması yaklaşık 111/76 mmHg;        |
+| **En olumlu gelişme** |
+| |
+| Son 7 gündeki 13 ev ölçümünün ortalaması yaklaşık 111/76 mmHg; |
 | dönemin 23 Temmuz-9 Eylül ham ortalaması 118,7/79,7 mmHg. Bu değerler |
 | aort duvar stresinin azaltılması açısından uygun bir kontrol düzeyine |
-| işaret ediyor. 2024 ESC hipertansiyon kılavuzunun tedavi alan         |
-| yetişkinler için 120-129 mmHg sistolik hedefini de genel olarak       |
-| karşılıyor; tolerans ve semptomlar bireyselleştirilmelidir \[5\].     |
+| işaret ediyor. 2024 ESC hipertansiyon kılavuzunun tedavi alan |
+| yetişkinler için 120-129 mmHg sistolik hedefini de genel olarak |
+| karşılıyor; tolerans ve semptomlar bireyselleştirilmelidir \[5\]. |
 +=======================================================================+
 
 +-----------------------------------------------------------------------+
-| **En önemli çözülmemiş konu**                                         |
-|                                                                       |
-| 8 Eylül'de HGB 9,7 g/dL, MCV 76,4 fL, ferritin 19 µg/L ve demir 15    |
-| µg/dL. UIBC 326,8 µg/dL ile hesaplanan transferrin satürasyonu        |
-| yaklaşık %4,4'tür. Bu örüntü demir eksikliği ile güçlü biçimde        |
-| uyumludur ve erkek hastada neden araştırması gerektirir; yalnızca     |
-| "takviye verelim" yaklaşımı yeterli değildir \[4\].                   |
+| **En önemli çözülmemiş konu** |
+| |
+| 8 Eylül'de HGB 9,7 g/dL, MCV 76,4 fL, ferritin 19 µg/L ve demir 15 |
+| µg/dL. UIBC 326,8 µg/dL ile hesaplanan transferrin satürasyonu |
+| yaklaşık %4,4'tür. Bu örüntü demir eksikliği ile güçlü biçimde |
+| uyumludur ve erkek hastada neden araştırması gerektirir; yalnızca |
+| "takviye verelim" yaklaşımı yeterli değildir \[4\]. |
 +=======================================================================+
 
 +-----------------------------------------------------------------------+
-| **En önemli güvenlik konusu**                                         |
-|                                                                       |
-| Warfarin kontrolü geçmişte belirgin dalgalı: INR 16 Mart'ta 8,46'ya   |
+| **En önemli güvenlik konusu** |
+| |
+| Warfarin kontrolü geçmişte belirgin dalgalı: INR 16 Mart'ta 8,46'ya |
 | kadar çıkmış, Temmuz sonunda 1,17'ye kadar düşmüş; son değer 2,72. Bu |
-| nedenle tek son INR iyi görünse de anticoagülasyon kalitesi tarihsel  |
-| olarak istikrarlı değildir. Ayrıca amoksisilin/klavulanatın oral      |
-| antikoagülanlarla birlikte INR'yi yükseltebileceği resmi ilaç         |
-| etiketinde belirtilmektedir; Klamoks 4 Eylül'de başlatılmış ve        |
-| sonraki INR henüz kaydedilmemiştir \[2,8\].                           |
+| nedenle tek son INR iyi görünse de anticoagülasyon kalitesi tarihsel |
+| olarak istikrarlı değildir. Ayrıca amoksisilin/klavulanatın oral |
+| antikoagülanlarla birlikte INR'yi yükseltebileceği resmi ilaç |
+| etiketinde belirtilmektedir; Klamoks 4 Eylül'de başlatılmış ve |
+| sonraki INR henüz kaydedilmemiştir \[2,8\]. |
 +=======================================================================+
 
 +-----------------------------------------------------------------------+
-| **Aort için temel takip sorusu**                                      |
-|                                                                       |
-| 5 Mayıs CTA'sında cerrahi operasyon yatağı stabil olmakla birlikte    |
-| diseksiyon flebinin arkus dallarından başlayıp inen aorta ve iliak    |
-| bifurkasyona kadar devam ettiği, abdominal aortanın 38 mm olduğu      |
-| kayıtlıdır. 2022 ACC/AHA kılavuzu rezidüel aort hastalığında 1, 6 ve  |
-| 12 ayda, ardından stabilite varsa yıllık CT/MR görüntüleme önerir     |
-| \[1\]. Dosyada 5 Mayıs'tan sonra tekrar kontrastlı torakoabdominal    |
-| aort görüntülemesi görünmemektedir; bu, planlanması gereken           |
-| başlıklardan biridir.                                                 |
+| **Aort için temel takip sorusu** |
+| |
+| 5 Mayıs CTA'sında cerrahi operasyon yatağı stabil olmakla birlikte |
+| diseksiyon flebinin arkus dallarından başlayıp inen aorta ve iliak |
+| bifurkasyona kadar devam ettiği, abdominal aortanın 38 mm olduğu |
+| kayıtlıdır. 2022 ACC/AHA kılavuzu rezidüel aort hastalığında 1, 6 ve |
+| 12 ayda, ardından stabilite varsa yıllık CT/MR görüntüleme önerir |
+| \[1\]. Dosyada 5 Mayıs'tan sonra tekrar kontrastlı torakoabdominal |
+| aort görüntülemesi görünmemektedir; bu, planlanması gereken |
+| başlıklardan biridir. |
 +=======================================================================+
 
 ## 2. Klinik zaman çizelgesi ve kritik dönemeçler
 
-  --------------------------------------------------------------------------------
-  **Tarih**               **Dönüm noktası**       **Klinik anlam**
-  ----------------------- ----------------------- --------------------------------
-  19.02.2026              Akut başvuru            Ani yırtıcı göğüs-sırt ağrısı;
-                                                  Tip A diseksiyon şüphesi, ileri
-                                                  merkeze sevk.
+---
 
-  19.02.2026              Tanı                    Torakoabdominal CTA: 5,3 cm
-                                                  asendan aort anevrizması + aort
-                                                  kökünden iliak bifurkasyona
-                                                  uzanan Tip A diseksiyon.
+**Tarih** **Dönüm noktası** **Klinik anlam**
 
-  20.02.2026              Acil cerrahi            Bentall: 32 mm Dacron asendan
-                                                  aort/hemiark grefti + 25 mm
-                                                  Carbomedics bileaflet mekanik
-                                                  aort kapağı + koroner buton
-                                                  reimplantasyonu.
+---
 
-  02.03.2026              Taburculuk              Postoperatif dönem sonrası; ömür
-                                                  boyu warfarin gereksinimi
-                                                  kaydedildi.
+19.02.2026 Akut başvuru Ani yırtıcı göğüs-sırt ağrısı;
+Tip A diseksiyon şüphesi, ileri
+merkeze sevk.
 
-  12-30.03.2026           Antikoagülasyon sorunu  INR 5,74 → 8,46 → 6,04 → 5,87 →
-                                                  4,52 → 4,64; belirgin
-                                                  supraterapötik dönem.
+19.02.2026 Tanı Torakoabdominal CTA: 5,3 cm
+asendan aort anevrizması + aort
+kökünden iliak bifurkasyona
+uzanan Tip A diseksiyon.
 
-  30-31.03.2026           Yatış                   5 gün dışkılayamama,
-                                                  bulantı-kusma; CRP 101,4 mg/L,
-                                                  inflamasyon yüksek; lavman ile
-                                                  rahatlama.
+20.02.2026 Acil cerrahi Bentall: 32 mm Dacron asendan
+aort/hemiark grefti + 25 mm
+Carbomedics bileaflet mekanik
+aort kapağı + koroner buton
+reimplantasyonu.
 
-  16-18.04.2026           Hipertansif ataklar     Ev ölçümleri 156/97, 152/102 ve
-                                                  168/103 mmHg'ye kadar yükseldi;
-                                                  kriz müdahaleleri kaydedildi.
+02.03.2026 Taburculuk Postoperatif dönem sonrası; ömür
+boyu warfarin gereksinimi
+kaydedildi.
 
-  05.05.2026              Aort kontrol CTA        Operasyon yatağı stabil;
-                                                  rezidüel kronik diseksiyon inen
-                                                  aorta ve iliaklara devam ediyor;
-                                                  abdominal aorta 38 mm.
+12-30.03.2026 Antikoagülasyon sorunu INR 5,74 → 8,46 → 6,04 → 5,87 →
+4,52 → 4,64; belirgin
+supraterapötik dönem.
 
-  17.07.2026              Toraks BT               Minimal perikardiyal efüzyon,
-                                                  artmış kardiyotorasik oran,
-                                                  sternal defekt;
-                                                  pnömotoraks/hemotoraks/plevral
-                                                  efüzyon yok.
+30-31.03.2026 Yatış 5 gün dışkılayamama,
+bulantı-kusma; CRP 101,4 mg/L,
+inflamasyon yüksek; lavman ile
+rahatlama.
 
-  23-28.07.2026           Sternal yara            İnsizyon dehisensi, ağır
-                          komplikasyonu           enfeksiyon/doku defekti;
-                                                  sütürler ve yoğun yara bakımı;
-                                                  aynı dönemde INR 1,79 → 1,17,
-                                                  HGB 11,3 → 7,7 g/dL.
+16-18.04.2026 Hipertansif ataklar Ev ölçümleri 156/97, 152/102 ve
+168/103 mmHg'ye kadar yükseldi;
+kriz müdahaleleri kaydedildi.
 
-  01-25.08.2026           Antikoagülasyon         INR 1,21 → 1,55 → 1,70 → 2,59 →
-                          toparlanması            2,76.
+05.05.2026 Aort kontrol CTA Operasyon yatağı stabil;
+rezidüel kronik diseksiyon inen
+aorta ve iliaklara devam ediyor;
+abdominal aorta 38 mm.
 
-  04.09.2026              Yeni antibiyotik        Klamoks 1000 mg günde 2 kez
-                                                  kaydı.
+17.07.2026 Toraks BT Minimal perikardiyal efüzyon,
+artmış kardiyotorasik oran,
+sternal defekt;
+pnömotoraks/hemotoraks/plevral
+efüzyon yok.
 
-  08-09.09.2026           Mevcut durum            HGB 9,7; CRP 11,3; WBC 7,97;
-                                                  kreatinin 1,02; INR 2,72;
-                                                  tansiyon son hafta 111/76
-                                                  ortalama.
-  --------------------------------------------------------------------------------
+23-28.07.2026 Sternal yara İnsizyon dehisensi, ağır
+komplikasyonu enfeksiyon/doku defekti;
+sütürler ve yoğun yara bakımı;
+aynı dönemde INR 1,79 → 1,17,
+HGB 11,3 → 7,7 g/dL.
+
+01-25.08.2026 Antikoagülasyon INR 1,21 → 1,55 → 1,70 → 2,59 →
+toparlanması 2,76.
+
+04.09.2026 Yeni antibiyotik Klamoks 1000 mg günde 2 kez
+kaydı.
+
+08-09.09.2026 Mevcut durum HGB 9,7; CRP 11,3; WBC 7,97;
+kreatinin 1,02; INR 2,72;
+tansiyon son hafta 111/76
+ortalama.
+--------------------------------------------------------------------------------
 
 Veri kalitesi notu: Dışa aktarım içindeki otomatik "klinik
 değerlendirme" metni bazı toplamları/ortalamaları ham satırlarla tam
@@ -169,43 +172,46 @@ distal diseksiyonun devam ettiğini gösterir. Abdominal aorta suprarenal
 düzeyde 38 mm ölçülmüş ve "stabil ektazi" olarak raporlanmıştır. Dosyada
 bu tarihten sonra kontrastlı torakoabdominal CTA/MR bulunmamaktadır.
 
-  -----------------------------------------------------------------------
-  **Aort segmenti /       **05.05.2026**          **Yorum**
-  bulgu**                                         
-  ----------------------- ----------------------- -----------------------
-  Operasyon bölgesi       Stabil                  Greft yatağı açısından
-                                                  olumlu.
+---
 
-  Aort kökü               46 mm                   Ölçüm mevcut;
-                                                  post-Bentall anatomiye
-                                                  göre kardiyovasküler
-                                                  cerrah/radyoloji
-                                                  karşılaştırması önemli.
+**Aort segmenti / **05.05.2026** **Yorum**
+bulgu**
 
-  Arkus                   46 mm                   Rezidüel diseksiyon
-                                                  dallarla ilişkili; seri
-                                                  ölçüm önemli.
+---
 
-  İnen aorta              39 mm                   Rezidüel diseksiyon
-                                                  devam ediyor.
+Operasyon bölgesi Stabil Greft yatağı açısından
+olumlu.
 
-  Abdominal aorta         38 mm                   Stabil ektazi; seri
-                                                  görüntüleme gerekir.
+Aort kökü 46 mm Ölçüm mevcut;
+post-Bentall anatomiye
+göre kardiyovasküler
+cerrah/radyoloji
+karşılaştırması önemli.
 
-  İliaklar                Sol ana ve eksternal    Distal rezidüel
-                          iliak diseke segment    hastalık sürüyor.
-                          devamı                  
-  -----------------------------------------------------------------------
+Arkus 46 mm Rezidüel diseksiyon
+dallarla ilişkili; seri
+ölçüm önemli.
+
+İnen aorta 39 mm Rezidüel diseksiyon
+devam ediyor.
+
+Abdominal aorta 38 mm Stabil ektazi; seri
+görüntüleme gerekir.
+
+İliaklar Sol ana ve eksternal Distal rezidüel
+iliak diseke segment hastalık sürüyor.
+devamı
+-----------------------------------------------------------------------
 
 +-----------------------------------------------------------------------+
-| **Kılavuz karşılaştırması**                                           |
-|                                                                       |
-| 2022 ACC/AHA Aort Hastalığı kılavuzu, akut aort sendromu sonrası      |
+| **Kılavuz karşılaştırması** |
+| |
+| 2022 ACC/AHA Aort Hastalığı kılavuzu, akut aort sendromu sonrası |
 | rezidüel aort hastalığında CT veya MR ile 1., 6. ve 12. aylarda, daha |
-| sonra stabilse yıllık gözetim önerir. Bu nedenle 20 Şubat             |
+| sonra stabilse yıllık gözetim önerir. Bu nedenle 20 Şubat |
 | cerrahisinden yaklaşık 6-7 ay sonra, 2026 yaz sonu/sonbahar döneminde |
-| toraks-abdomen-pelvis düzeyini kapsayan planlı aort görüntülemesinin  |
-| dosyada bulunup bulunmadığı özellikle teyit edilmelidir \[1\].        |
+| toraks-abdomen-pelvis düzeyini kapsayan planlı aort görüntülemesinin |
+| dosyada bulunup bulunmadığı özellikle teyit edilmelidir \[1\]. |
 +=======================================================================+
 
 17 Temmuz nonkontrast toraks BT'si sternal defekt ve minimal
@@ -223,31 +229,34 @@ hedef INR 2,5 (terapötik aralık 2,0-3,0) olarak verilir; ek risk
 faktörleri varsa hedef 3,0 (2,5-3,5) olur. Mekanik kapaklarda ömür boyu
 VKA tedavisi gerekir ve DOAC'lar uygun değildir \[2\].
 
-  -----------------------------------------------------------------------
-  **Dönem**               **INR örnekleri**       **Klinik anlam**
-  ----------------------- ----------------------- -----------------------
-  Ameliyat sonrası        1,10-3,36               Antikoagülasyonun
-  başlangıç                                       kurulma dönemi.
+---
 
-  12-30 Mart              5,74; 8,46; 6,04; 5,87; Belirgin supraterapötik
-                          4,52; 4,64              dönem; kanama açısından
-                                                  yüksek risk.
+**Dönem** **INR örnekleri** **Klinik anlam**
 
-  Nisan-Haziran           2,92 → 2,03 → 1,77 →    Dönem içinde sık
-                          1,65 → 1,94 → 2,05 →    subterapötik değerler.
-                          2,18                    
+---
 
-  15.07.2026              2,46                    Hedef aralık içinde.
+Ameliyat sonrası 1,10-3,36 Antikoagülasyonun
+başlangıç kurulma dönemi.
 
-  23-31.07.2026           1,79 → 1,18             Belirgin subterapötik
-                                                  dönem; bridging kaydı
-                                                  mevcut.
+12-30 Mart 5,74; 8,46; 6,04; 5,87; Belirgin supraterapötik
+4,52; 4,64 dönem; kanama açısından
+yüksek risk.
 
-  03-11.08.2026           1,21 → 1,55 → 1,70      Hâlâ düşük; toparlanma.
+Nisan-Haziran 2,92 → 2,03 → 1,77 → Dönem içinde sık
+1,65 → 1,94 → 2,05 → subterapötik değerler.
+2,18
 
-  18.08-02.09.2026        2,59 → 2,76 → 2,72      Güncel hedef aralıkta
-                                                  ve birbirine yakın.
-  -----------------------------------------------------------------------
+15.07.2026 2,46 Hedef aralık içinde.
+
+23-31.07.2026 1,79 → 1,18 Belirgin subterapötik
+dönem; bridging kaydı
+mevcut.
+
+03-11.08.2026 1,21 → 1,55 → 1,70 Hâlâ düşük; toparlanma.
+
+18.08-02.09.2026 2,59 → 2,76 → 2,72 Güncel hedef aralıkta
+ve birbirine yakın.
+-----------------------------------------------------------------------
 
 Ham dosyada 38 INR sonucu bulunmaktadır. Basit "ölçüm sayısı içinde
 2,0-3,0 arası" hesabında 10/38 (%26,3) sonuç bu aralıktadır; 21/38 ölçüm
@@ -260,17 +269,17 @@ seyrek INR ölçümleri nedeniyle yaklaşık tahminlerdir ve antikoagülasyon
 kliniğinin kullandığı resmi TTR ölçümünün yerine geçmez \[2\].
 
 +-----------------------------------------------------------------------+
-| **Aspirin konusu ayrıca gözden geçirilmeli**                          |
-|                                                                       |
-| Dosyada EcopirinPro 81 mg/gün ile warfarin birlikte görülmektedir.    |
-| 2025 ESC/EACTS kılavuzu mekanik kapakta ilk seçenek olarak VKA tek    |
-| başına tedaviyi vurgular; düşük doz aspirin eklenmesi özellikle       |
-| yeterli INR/TTR'ye rağmen büyük tromboemboli gelişmesi gibi seçilmiş  |
-| durumlarda düşünülür \[2\]. Bu hastada geçmişte belirgin anemi ve     |
-| sternal yara komplikasyonu da olduğundan, aspirin için klinik         |
-| endikasyonun dosyada açık biçimde bulunması ve kanama riskinin        |
-| dengelenmesi önemlidir. Bu, ilacı kendiliğinden kesme önerisi         |
-| değildir.                                                             |
+| **Aspirin konusu ayrıca gözden geçirilmeli** |
+| |
+| Dosyada EcopirinPro 81 mg/gün ile warfarin birlikte görülmektedir. |
+| 2025 ESC/EACTS kılavuzu mekanik kapakta ilk seçenek olarak VKA tek |
+| başına tedaviyi vurgular; düşük doz aspirin eklenmesi özellikle |
+| yeterli INR/TTR'ye rağmen büyük tromboemboli gelişmesi gibi seçilmiş |
+| durumlarda düşünülür \[2\]. Bu hastada geçmişte belirgin anemi ve |
+| sternal yara komplikasyonu da olduğundan, aspirin için klinik |
+| endikasyonun dosyada açık biçimde bulunması ve kanama riskinin |
+| dengelenmesi önemlidir. Bu, ilacı kendiliğinden kesme önerisi |
+| değildir. |
 +=======================================================================+
 
 ## 5. Kan basıncı, hemodinami ve dolaşım güvenliği
@@ -287,18 +296,21 @@ Yara komplikasyonu sonrası (23 Temmuz-9 Eylül): 135 ölçüm; ortalama
 Son 7 gün (3-9 Eylül): 13 ölçüm; ortalama 111.4/75.5 mmHg; en yüksek
 120/80; en düşük 103/68 mmHg.
 
-  --------------------------------------------------------------------------
-  **Dönem**      **Ölçüm**      **Ort.         **Ort.         **Maksimum**
-                                sistolik**     diyastolik**   
-  -------------- -------------- -------------- -------------- --------------
-  19.02-31.03    69             109.2          76.8           154/98
+---
 
-  01.04-22.07    283            118.9          81.2           168/103
+**Dönem** **Ölçüm** **Ort. **Ort. **Maksimum**
+sistolik** diyastolik**
 
-  23.07-09.09    135            118.7          79.7           149/101
+---
 
-  03.09-09.09    13             111.4          75.5           120/80
-  --------------------------------------------------------------------------
+19.02-31.03 69 109.2 76.8 154/98
+
+01.04-22.07 283 118.9 81.2 168/103
+
+23.07-09.09 135 118.7 79.7 149/101
+
+03.09-09.09 13 111.4 75.5 120/80
+--------------------------------------------------------------------------
 
 16-18 Nisan'daki 146/93, 156/97, 152/102 ve 168/103 mmHg ölçümleri
 tarihsel olarak dikkat çekicidir; ancak 23 Temmuz sonrası 135 ölçümde
@@ -309,15 +321,15 @@ hedefleri kullanılır, kronik dönemde ise uzun süreli beta-blokaj ve
 uygun antihipertansif tedavi önerilir \[1\].
 
 +-----------------------------------------------------------------------+
-| **Mevcut hemodinamik tablo**                                          |
-|                                                                       |
+| **Mevcut hemodinamik tablo** |
+| |
 | Son hafta 103/68 ile 120/80 arasında seyreden ölçümler, yüksek basınç |
-| dalgalanmalarının azaldığını gösteriyor. 2024 ESC hipertansiyon       |
-| kılavuzu tedavi alan çoğu yetişkinde 120-129 mmHg sistolik hedefi     |
-| önerir; semptomatik ortostaz veya tolerans sorunu varsa daha gevşek   |
-| hedefler düşünülebilir \[5\]. Dolayısıyla 111/76 tek başına "fazla    |
-| düşük" kabul edilmemeli; baş dönmesi, senkop, soğukluk/hipoperfüzyon  |
-| gibi semptomlar varsa hekimle yeniden değerlendirilmelidir.           |
+| dalgalanmalarının azaldığını gösteriyor. 2024 ESC hipertansiyon |
+| kılavuzu tedavi alan çoğu yetişkinde 120-129 mmHg sistolik hedefi |
+| önerir; semptomatik ortostaz veya tolerans sorunu varsa daha gevşek |
+| hedefler düşünülebilir \[5\]. Dolayısıyla 111/76 tek başına "fazla |
+| düşük" kabul edilmemeli; baş dönmesi, senkop, soğukluk/hipoperfüzyon |
+| gibi semptomlar varsa hekimle yeniden değerlendirilmelidir. |
 +=======================================================================+
 
 ## 6. Sternal yara, enfeksiyon ve protez kapak endokarditi açısından değerlendirme
@@ -329,38 +341,41 @@ inflamasyon; 31 Mart CRP 84,7 mg/L; 15 Haziran 22,7 mg/L; 15 Temmuz 15,6
 mg/L; 23 Temmuz 9,9 mg/L; 7 Ağustos 34,3 mg/L; 25 Ağustos 5,6 mg/L; 2
 Eylül 23,8 mg/L; 8 Eylül 11,3 mg/L olarak kaydedilmiştir.
 
-  ---------------------------------------------------------------------------
-  **Tarih**         **CRP (mg/L)**    **WBC             **Yorum**
-                                      (x10\^9/L)**      
-  ----------------- ----------------- ----------------- ---------------------
-  30.03             101.4             12.05             Yüksek inflamasyon;
-                                                        aynı dönemde yatış ve
-                                                        sternal yara takibi.
+---
 
-  15.06             22.7              \-                Persistan fakat
-                                                        azalmış inflamasyon.
+**Tarih** **CRP (mg/L)** **WBC **Yorum**
+(x10\^9/L)**
 
-  15.07             15.6              \-                Devam eden
-                                                        inflamasyon.
+---
 
-  23.07             9.9               \-                Sternal yara
-                                                        komplikasyonu
-                                                        sırasında hâlâ
-                                                        yüksek.
+30.03 101.4 12.05 Yüksek inflamasyon;
+aynı dönemde yatış ve
+sternal yara takibi.
 
-  07.08             34.3              9.96              Tedavi/komplikasyon
-                                                        sürecinde yeniden
-                                                        yükselme.
+15.06 22.7 \- Persistan fakat
+azalmış inflamasyon.
 
-  25.08             5.6               9.33              Normal sınıra çok
-                                                        yakın CRP.
+15.07 15.6 \- Devam eden
+inflamasyon.
 
-  02.09             23.8              9.96              Yeniden belirgin
-                                                        yükseliş.
+23.07 9.9 \- Sternal yara
+komplikasyonu
+sırasında hâlâ
+yüksek.
 
-  08.09             11.3              7.97              Düşüş var, ancak hâlâ
-                                                        referans üstü.
-  ---------------------------------------------------------------------------
+07.08 34.3 9.96 Tedavi/komplikasyon
+sürecinde yeniden
+yükselme.
+
+25.08 5.6 9.33 Normal sınıra çok
+yakın CRP.
+
+02.09 23.8 9.96 Yeniden belirgin
+yükseliş.
+
+08.09 11.3 7.97 Düşüş var, ancak hâlâ
+referans üstü.
+---------------------------------------------------------------------------
 
 8 Eylül'de WBC'nin 7,97'ye, CRP'nin 23,8'den 11,3 mg/L'ye düşmesi
 enfeksiyon/inflamasyon yükünde son günlerde iyileşme olduğunu
@@ -372,16 +387,16 @@ prostetik kapaklı hastada şüphe varsa TTE'ye ek olarak TEE önemli bir
 tanısal araçtır \[3\].
 
 +-----------------------------------------------------------------------+
-| **Dosyada eksik görünen endokardit değerlendirmeleri**                |
-|                                                                       |
+| **Dosyada eksik görünen endokardit değerlendirmeleri** |
+| |
 | Mevcut dışa aktarımda 2026 yaz sonu için pozitif kan kültürü, TTE/TEE |
-| bulguları, protez kapak vegetasyonu, paravalvüler apse/dehisens veya  |
-| FDG-PET/CT gibi prostetik materyal enfeksiyonu değerlendirmesini      |
-| doğrulayan bir sonuç görünmüyor. Bu nedenle endokardit tanısı         |
-| konulamaz; ancak açıklanamayan ateş, titreme, yeni üfürüm/kapak sesi  |
-| değişikliği, embolik nörolojik bulgu, gecikmiş iyileşen sternal       |
-| enfeksiyon veya persistans gösteren CRP gibi bulgular varsa düşük     |
-| eşikle enfeksiyon-kardiyoloji değerlendirmesi gerekir \[3\].          |
+| bulguları, protez kapak vegetasyonu, paravalvüler apse/dehisens veya |
+| FDG-PET/CT gibi prostetik materyal enfeksiyonu değerlendirmesini |
+| doğrulayan bir sonuç görünmüyor. Bu nedenle endokardit tanısı |
+| konulamaz; ancak açıklanamayan ateş, titreme, yeni üfürüm/kapak sesi |
+| değişikliği, embolik nörolojik bulgu, gecikmiş iyileşen sternal |
+| enfeksiyon veya persistans gösteren CRP gibi bulgular varsa düşük |
+| eşikle enfeksiyon-kardiyoloji değerlendirmesi gerekir \[3\]. |
 +=======================================================================+
 
 26 Mart tarihli yara kültürü kaydında "üreme olmadı" bilgisi bulunması,
@@ -399,33 +414,36 @@ demir 15 µg/dL. B12 638 pg/mL ve tiroid serbest hormonları normal
 aralıkta. UIBC 326,8 µg/dL ile hesaplanan transferrin satürasyonu
 yaklaşık %4,4'tür.
 
-  -----------------------------------------------------------------------
-  **Parametre**     **08.09.2026**    **Laboratuvar     **Yorum**
-                                      sınırı**          
-  ----------------- ----------------- ----------------- -----------------
-  HGB               9,7 g/dL          13,5-17,5         Belirgin anemi
+---
 
-  HCT               29,7 %            40-52             Düşük
+**Parametre** **08.09.2026** **Laboratuvar **Yorum**
+sınırı**
 
-  RBC               3,89              4,2-6,2           Düşük
+---
 
-  MCV               76,4 fL           80-100            Mikrositoz
+HGB 9,7 g/dL 13,5-17,5 Belirgin anemi
 
-  MCH               24,9 pg           27-34             Hipokromi
+HCT 29,7 % 40-52 Düşük
 
-  RDW-CV            17,8 %            10-16,5           Hücre boyutu
-                                                        heterojenliği
+RBC 3,89 4,2-6,2 Düşük
 
-  Ferritin          19 µg/L           30-400            Düşük demir
-                                                        deposu
+MCV 76,4 fL 80-100 Mikrositoz
 
-  Iron              15 µg/dL          59-158            Belirgin düşük
+MCH 24,9 pg 27-34 Hipokromi
 
-  Transferrin sat.  \~4,4 %           \-                Hesaplanan, çok
-                                                        düşük
+RDW-CV 17,8 % 10-16,5 Hücre boyutu
+heterojenliği
 
-  B12               638 pg/mL         211-946           Yeterli görünüyor
-  -----------------------------------------------------------------------
+Ferritin 19 µg/L 30-400 Düşük demir
+deposu
+
+Iron 15 µg/dL 59-158 Belirgin düşük
+
+Transferrin sat. \~4,4 % \- Hesaplanan, çok
+düşük
+
+B12 638 pg/mL 211-946 Yeterli görünüyor
+-----------------------------------------------------------------------
 
 En önemli longitudinal bulgu, 23 Temmuz'da HGB'nin 11,3 g/dL iken 27
 Temmuz'da 7,7 g/dL'ye düşmesi ve 28 Temmuz'da 8,1 g/dL olmasıdır. Aynı
@@ -442,51 +460,54 @@ değerlendirilmesini temel araştırma yollarından biri olarak kabul eder;
 klinik bağlama göre gastroenteroloji değerlendirmesi gerekir \[4\].
 
 +-----------------------------------------------------------------------+
-| **Öncelik sırası**                                                    |
-|                                                                       |
+| **Öncelik sırası** |
+| |
 | Bu laboratuvar örüntüsü "hafif bir laboratuvar sapması" değildir. HGB |
-| 9,7 g/dL düzeyi, çok düşük demir satürasyonu ve mikrositoz birlikte   |
-| düşünüldüğünde hematoloji/gastroenteroloji ve kardiyoloji/KVC ile     |
-| koordineli değerlendirme uygundur. Özellikle melena, dışkıda kan,     |
-| hematüri, artan halsizlik/nefes darlığı veya tekrarlayan düşen HGB    |
-| varsa gecikmeden değerlendirilmelidir.                                |
+| 9,7 g/dL düzeyi, çok düşük demir satürasyonu ve mikrositoz birlikte |
+| düşünüldüğünde hematoloji/gastroenteroloji ve kardiyoloji/KVC ile |
+| koordineli değerlendirme uygundur. Özellikle melena, dışkıda kan, |
+| hematüri, artan halsizlik/nefes darlığı veya tekrarlayan düşen HGB |
+| varsa gecikmeden değerlendirilmelidir. |
 +=======================================================================+
 
 ## 8. Böbrek fonksiyonu, metabolik profil ve diğer laboratuvarlar
 
-  -----------------------------------------------------------------------
-  **Parametre**     **08.09.2026**    **Önceki**        **Yorum**
-  ----------------- ----------------- ----------------- -----------------
-  Kreatinin         1,02 mg/dL        1,12 (02.09)      İyileşme; normal
-                                                        aralık.
+---
 
-  BUN               11 mg/dL          13                Normal.
+**Parametre** **08.09.2026** **Önceki** **Yorum**
 
-  WBC               7,97 x10\^9/L     9,96 (02.09)      Normal aralık;
-                                                        inflamasyon yükü
-                                                        düşüyor.
+---
 
-  PLT               365 x10\^9/L      357               Normal ve stabil.
+Kreatinin 1,02 mg/dL 1,12 (02.09) İyileşme; normal
+aralık.
 
-  CRP               11,3 mg/L         23,8 (02.09)      Düşmüş ancak
-                                                        referans üstü.
+BUN 11 mg/dL 13 Normal.
 
-  LDL               141 mg/dL         119,6 (19.02)     Artmış.
+WBC 7,97 x10\^9/L 9,96 (02.09) Normal aralık;
+inflamasyon yükü
+düşüyor.
 
-  HDL               34 mg/dL          35,4 (19.02)      Düşük.
+PLT 365 x10\^9/L 357 Normal ve stabil.
 
-  Total kolesterol  210 mg/dL         179               Yüksek.
+CRP 11,3 mg/L 23,8 (02.09) Düşmüş ancak
+referans üstü.
 
-  Trigliserid       164 mg/dL         123               Artmış.
+LDL 141 mg/dL 119,6 (19.02) Artmış.
 
-  HbA1c             5,3 %             \-                Diyabet lehine
-                                                        değil.
+HDL 34 mg/dL 35,4 (19.02) Düşük.
 
-  TSH               0,279 mIU/L       0,86 (19.02)      Alt sınıra yakın;
-                                                        FT4/FT3 normal.
+Total kolesterol 210 mg/dL 179 Yüksek.
 
-  Troponin T        6,01 ng/L         7,61 (19.02)      Referans içinde.
-  -----------------------------------------------------------------------
+Trigliserid 164 mg/dL 123 Artmış.
+
+HbA1c 5,3 % \- Diyabet lehine
+değil.
+
+TSH 0,279 mIU/L 0,86 (19.02) Alt sınıra yakın;
+FT4/FT3 normal.
+
+Troponin T 6,01 ng/L 7,61 (19.02) Referans içinde.
+-----------------------------------------------------------------------
 
 Böbrek fonksiyonu açısından 8 Eylül'de kreatinin 1,02 mg/dL ve BUN 11
 mg/dL olması olumlu bir seyir gösteriyor. Bu, hem antihipertansif
@@ -516,16 +537,19 @@ döneminde 40 ölçümün ortalaması 78,75 kg; 9 Eylül son ölçüm 78,8 kg. S
 yüklenmesi açısından belirgin bir sinyal göstermiyor; ancak ödem
 değerlendirmesi yalnızca tartıya dayanmaz.
 
-  --------------------------------------------------------------------------
-  **Dönem**      **Ölçüm        **Ortalama**   **Aralık**     **Son değer**
-                 sayısı**                                     
-  -------------- -------------- -------------- -------------- --------------
-  Tüm kayıtlar   175            \-             74,8-85,3 kg   78,8 kg
+---
 
-  23.07-09.09    40             78,75 kg       77,9-80,0 kg   78,8 kg
+**Dönem** **Ölçüm **Ortalama** **Aralık** **Son değer**
+sayısı**
 
-  03.09-09.09    7              78,84 kg       78,5-79,4 kg   78,8 kg
-  --------------------------------------------------------------------------
+---
+
+Tüm kayıtlar 175 \- 74,8-85,3 kg 78,8 kg
+
+23.07-09.09 40 78,75 kg 77,9-80,0 kg 78,8 kg
+
+03.09-09.09 7 78,84 kg 78,5-79,4 kg 78,8 kg
+--------------------------------------------------------------------------
 
 174 cm ve 78,8 kg üzerinden BMI yaklaşık 26,0 kg/m²'dir. Bu, raporun ana
 klinik sorunlarından biri değildir; şu aşamada daha önemli olan anemi,
@@ -533,52 +557,55 @@ enfeksiyon/yara ve aort/antikoagülasyon takipleridir.
 
 ## 10. İlaç tedavisi ve önemli etkileşimler
 
-  --------------------------------------------------------------------------
-  **İlaç / sınıf**        **Dosyadaki güncel      **Analitik not**
-                          kayıt**                 
-  ----------------------- ----------------------- --------------------------
-  Warfarin                Haftalık toplam 20 mg   Mekanik kapak için temel
-                                                  tedavi; INR yakın
-                                                  izlenmeli.
+---
 
-  Dilatrend (carvedilol)  6,25 mg x2/gün          Beta-blokaj; aort duvar
-                                                  stresinin azaltılması
-                                                  açısından uygun sınıf.
+**İlaç / sınıf** **Dosyadaki güncel **Analitik not**
+kayıt**
 
-  Coversyl (perindopril)  5 mg/gün                Kan basıncı kontrolü için.
+---
 
-  EcopirinPro (ASA)       81 mg/gün               Warfarin ile birlikte;
-                                                  endikasyon/kanama riski
-                                                  yeniden doğrulanmalı.
+Warfarin Haftalık toplam 20 mg Mekanik kapak için temel
+tedavi; INR yakın
+izlenmeli.
 
-  Panto                   40 mg/gün               Gastrointestinal koruma;
-                                                  tek başına kanamayı
-                                                  dışlamaz.
+Dilatrend (carvedilol) 6,25 mg x2/gün Beta-blokaj; aort duvar
+stresinin azaltılması
+açısından uygun sınıf.
 
-  Klamoks                 1000 mg x2/gün; 04.09   Warfarin ile birlikte
-                          başlangıç               PT/INR uzayabilir; yakın
-                                                  INR izlemi önemli \[8\].
+Coversyl (perindopril) 5 mg/gün Kan basıncı kontrolü için.
 
-  Cipro (geçmiş)          750 mg x2/gün,          Warfarin etkisini
-                          28.07-04.08             artırabilir; dönemsel INR
-                                                  takibi gerekir \[9\].
+EcopirinPro (ASA) 81 mg/gün Warfarin ile birlikte;
+endikasyon/kanama riski
+yeniden doğrulanmalı.
 
-  Oksapar/enoksaparin     0,6 mL x2/gün,          Bridging/antikoagülasyon
-  (geçmiş)                27.07-03.08             kaydı; endikasyon ve hedef
-                                                  doz klinik dosyadan teyit
-                                                  edilmeli.
-  --------------------------------------------------------------------------
+Panto 40 mg/gün Gastrointestinal koruma;
+tek başına kanamayı
+dışlamaz.
+
+Klamoks 1000 mg x2/gün; 04.09 Warfarin ile birlikte
+başlangıç PT/INR uzayabilir; yakın
+INR izlemi önemli \[8\].
+
+Cipro (geçmiş) 750 mg x2/gün, Warfarin etkisini
+28.07-04.08 artırabilir; dönemsel INR
+takibi gerekir \[9\].
+
+Oksapar/enoksaparin 0,6 mL x2/gün, Bridging/antikoagülasyon
+(geçmiş) 27.07-03.08 kaydı; endikasyon ve hedef
+doz klinik dosyadan teyit
+edilmeli.
+--------------------------------------------------------------------------
 
 +-----------------------------------------------------------------------+
-| **Klamoks + warfarin: somut izlem konusu**                            |
-|                                                                       |
-| Güncel ilaç kaydında Klamoks (amoksisilin/klavulanat) 4 Eylül'de      |
-| başlanmış; son INR 2 Eylül'de 2,72. Güncel DailyMed etiketi,          |
-| amoksisilin/klavulanat ile oral antikoagülanların birlikte            |
-| kullanımında PT/INR artışı bildirildiğini ve uygun izlemin yapılması  |
-| gerektiğini belirtir \[8\]. Bu nedenle, reçeteleyen ekip tarafından   |
-| yakın tarihli INR planı oluşturulması önemlidir. Kendi başına         |
-| warfarin veya antibiyotik kesilmemelidir.                             |
+| **Klamoks + warfarin: somut izlem konusu** |
+| |
+| Güncel ilaç kaydında Klamoks (amoksisilin/klavulanat) 4 Eylül'de |
+| başlanmış; son INR 2 Eylül'de 2,72. Güncel DailyMed etiketi, |
+| amoksisilin/klavulanat ile oral antikoagülanların birlikte |
+| kullanımında PT/INR artışı bildirildiğini ve uygun izlemin yapılması |
+| gerektiğini belirtir \[8\]. Bu nedenle, reçeteleyen ekip tarafından |
+| yakın tarihli INR planı oluşturulması önemlidir. Kendi başına |
+| warfarin veya antibiyotik kesilmemelidir. |
 +=======================================================================+
 
 2025 ESC/EACTS kılavuzu mekanik kapaklı hastalarda VKA tedavisinin INR
@@ -590,38 +617,41 @@ kardiyoloji tarafından doğrulanmalıdır \[2\].
 
 ## 11. Genel gidişat: stabilizasyon var, fakat düşük riskli dönem henüz değil
 
-  -----------------------------------------------------------------------
-  **Alan**                **Durum**               **Gerekçe**
-  ----------------------- ----------------------- -----------------------
-  Hemodinami              İYİLEŞEN / STABİL       Son hafta 111/76; ciddi
-                                                  hipertansif ataklar
-                                                  belirgin azalmış.
+---
 
-  Aort anatomisi          İZLEM GEREKİR           Operasyon yatağı
-                                                  stabil, ancak distal
-                                                  rezidüel diseksiyon
-                                                  devam ediyor.
+**Alan** **Durum** **Gerekçe**
 
-  Mekanik kapak           STABİL, YAKIN İZLEM     Son INR 2,72 uygun;
-                                                  tarihsel INR
-                                                  dalgalanması belirgin.
+---
 
-  Enfeksiyon/yara         KISMEN İYİLEŞEN         CRP 23,8 → 11,3, WBC
-                                                  9,96 → 7,97; ancak
-                                                  normalleşmiş değil.
+Hemodinami İYİLEŞEN / STABİL Son hafta 111/76; ciddi
+hipertansif ataklar
+belirgin azalmış.
 
-  Anemi/demir             ÖNCELİKLİ SORUN         HGB 9,7 + ferritin 19 +
-                                                  Fe 15 + MCV 76,4.
+Aort anatomisi İZLEM GEREKİR Operasyon yatağı
+stabil, ancak distal
+rezidüel diseksiyon
+devam ediyor.
 
-  Böbrek                  İYİ                     Kreatinin 1,02; son
-                                                  değerde düzelme.
+Mekanik kapak STABİL, YAKIN İZLEM Son INR 2,72 uygun;
+tarihsel INR
+dalgalanması belirgin.
 
-  Kilo/sıvı               STABİL                  Son 7 gün dar aralıkta,
-                                                  78,8 kg.
+Enfeksiyon/yara KISMEN İYİLEŞEN CRP 23,8 → 11,3, WBC
+9,96 → 7,97; ancak
+normalleşmiş değil.
 
-  Lipid                   İYİLEŞTİRİLMELİ         LDL 141, HDL 34, total
-                                                  kolesterol 210.
-  -----------------------------------------------------------------------
+Anemi/demir ÖNCELİKLİ SORUN HGB 9,7 + ferritin 19 +
+Fe 15 + MCV 76,4.
+
+Böbrek İYİ Kreatinin 1,02; son
+değerde düzelme.
+
+Kilo/sıvı STABİL Son 7 gün dar aralıkta,
+78,8 kg.
+
+Lipid İYİLEŞTİRİLMELİ LDL 141, HDL 34, total
+kolesterol 210.
+-----------------------------------------------------------------------
 
 Net prognostik değerlendirme: Şubat 2026'daki akut olaydan sonraki en
 kırılgan erken dönem büyük ölçüde geride kalmış ve özellikle kan basıncı
@@ -692,173 +722,179 @@ belirtilerin bekletilmemesi gerektiğini özetlemek içindir.
   ağrısı/soğukluğu veya emboli düşündüren bulgular.
 
 +-----------------------------------------------------------------------+
-| **Özellikle aort ve mekanik kapak öyküsü nedeniyle**                  |
-|                                                                       |
-| Ani göğüs/sırt ağrısı veya yeni nörolojik belirti ortaya çıkarsa,     |
+| **Özellikle aort ve mekanik kapak öyküsü nedeniyle** |
+| |
+| Ani göğüs/sırt ağrısı veya yeni nörolojik belirti ortaya çıkarsa, |
 | geçmişte benzer belirti "önemsiz" çıkmış olsa bile acil değerlendirme |
-| gerekir. Warfarin kullanımı nedeniyle kanama şüphesinde de beklemek   |
-| uygun değildir.                                                       |
+| gerekir. Warfarin kullanımı nedeniyle kanama şüphesinde de beklemek |
+| uygun değildir. |
 +=======================================================================+
 
 ## 14. Ham veri eki: kritik longitudinal seri
 
 ### 14.1 INR serisi
 
-  -----------------------------------------------------------------------
-  **Tarih/saat**          **INR**                 **2,0-3,0 aralığı**
-  ----------------------- ----------------------- -----------------------
-  19.02.2026 17:22        1.10                    Düşük
+---
 
-  19.02.2026 18:45        1.14                    Düşük
+**Tarih/saat** **INR** **2,0-3,0 aralığı**
 
-  19.02.2026 23:23        1.10                    Düşük
+---
 
-  21.02.2026 00:11        1.29                    Düşük
+19.02.2026 17:22 1.10 Düşük
 
-  22.02.2026 00:29        1.24                    Düşük
+19.02.2026 18:45 1.14 Düşük
 
-  23.02.2026 04:22        1.23                    Düşük
+19.02.2026 23:23 1.10 Düşük
 
-  24.02.2026 00:09        1.28                    Düşük
+21.02.2026 00:11 1.29 Düşük
 
-  25.02.2026 00:35        1.49                    Düşük
+22.02.2026 00:29 1.24 Düşük
 
-  26.02.2026 00:03        1.68                    Düşük
+23.02.2026 04:22 1.23 Düşük
 
-  27.02.2026 00:58        1.92                    Düşük
+24.02.2026 00:09 1.28 Düşük
 
-  28.02.2026 00:26        2.16                    Hedef içi
+25.02.2026 00:35 1.49 Düşük
 
-  01.03.2026 00:04        2.55                    Hedef içi
+26.02.2026 00:03 1.68 Düşük
 
-  02.03.2026 01:00        3.36                    Yüksek
+27.02.2026 00:58 1.92 Düşük
 
-  12.03.2026 09:00        5.74                    Yüksek
+28.02.2026 00:26 2.16 Hedef içi
 
-  16.03.2026 20:24        8.46                    Yüksek
+01.03.2026 00:04 2.55 Hedef içi
 
-  18.03.2026 20:14        6.04                    Yüksek
+02.03.2026 01:00 3.36 Yüksek
 
-  20.03.2026 22:48        5.87                    Yüksek
+12.03.2026 09:00 5.74 Yüksek
 
-  23.03.2026 08:41        4.52                    Yüksek
+16.03.2026 20:24 8.46 Yüksek
 
-  30.03.2026 14:16        4.64                    Yüksek
+18.03.2026 20:14 6.04 Yüksek
 
-  08.04.2026 16:01        2.92                    Hedef içi
+20.03.2026 22:48 5.87 Yüksek
 
-  20.04.2026 22:51        2.03                    Hedef içi
+23.03.2026 08:41 4.52 Yüksek
 
-  05.05.2026 11:36        1.77                    Düşük
+30.03.2026 14:16 4.64 Yüksek
 
-  12.05.2026 15:27        1.65                    Düşük
+08.04.2026 16:01 2.92 Hedef içi
 
-  13.05.2026 11:42        1.94                    Düşük
+20.04.2026 22:51 2.03 Hedef içi
 
-  22.05.2026 13:30        2.05                    Hedef içi
+05.05.2026 11:36 1.77 Düşük
 
-  15.06.2026 12:36        2.18                    Hedef içi
+12.05.2026 15:27 1.65 Düşük
 
-  15.07.2026 15:21        2.46                    Hedef içi
+13.05.2026 11:42 1.94 Düşük
 
-  23.07.2026 11:15        1.79                    Düşük
+22.05.2026 13:30 2.05 Hedef içi
 
-  25.07.2026 00:07        1.70                    Düşük
+15.06.2026 12:36 2.18 Hedef içi
 
-  26.07.2026 01:05        1.38                    Düşük
+15.07.2026 15:21 2.46 Hedef içi
 
-  27.07.2026 00:21        1.17                    Düşük
+23.07.2026 11:15 1.79 Düşük
 
-  31.07.2026 13:34        1.18                    Düşük
+25.07.2026 00:07 1.70 Düşük
 
-  03.08.2026 14:16        1.21                    Düşük
+26.07.2026 01:05 1.38 Düşük
 
-  07.08.2026 20:11        1.55                    Düşük
+27.07.2026 00:21 1.17 Düşük
 
-  11.08.2026 08:59        1.70                    Düşük
+31.07.2026 13:34 1.18 Düşük
 
-  18.08.2026 10:31        2.59                    Hedef içi
+03.08.2026 14:16 1.21 Düşük
 
-  25.08.2026 15:29        2.76                    Hedef içi
+07.08.2026 20:11 1.55 Düşük
 
-  02.09.2026 20:27        2.72                    Hedef içi
-  -----------------------------------------------------------------------
+11.08.2026 08:59 1.70 Düşük
+
+18.08.2026 10:31 2.59 Hedef içi
+
+25.08.2026 15:29 2.76 Hedef içi
+
+02.09.2026 20:27 2.72 Hedef içi
+-----------------------------------------------------------------------
 
 ### 14.2 Son laboratuvar paneli
 
-  --------------------------------------------------------------------------
-  **Kod**        **Tarih**      **Sonuç**      **Birim**      **Lab
-                                                              referansı**
-  -------------- -------------- -------------- -------------- --------------
-  HGB            08.09.2026     9.7            g/dL           13.5000 -
-                 14:15                                        17.5000
+---
 
-  HCT            08.09.2026     29.7           \%             40.0000 -
-                 14:15                                        52.0000
+**Kod** **Tarih** **Sonuç** **Birim** **Lab
+referansı**
 
-  RBC            08.09.2026     3.89           10\^12/L       4.2000 -
-                 14:15                                        6.2000
+---
 
-  MCV            08.09.2026     76.4           fL             80.0000 -
-                 14:15                                        100.0000
+HGB 08.09.2026 9.7 g/dL 13.5000 -
+14:15 17.5000
 
-  MCH            08.09.2026     24.9           pg             27.0000 -
-                 14:15                                        34.0000
+HCT 08.09.2026 29.7 \% 40.0000 -
+14:15 52.0000
 
-  RDW-CV         08.09.2026     17.8           \%             10.0000 -
-                 14:15                                        16.5000
+RBC 08.09.2026 3.89 10\^12/L 4.2000 -
+14:15 6.2000
 
-  RDW-SD         08.09.2026     50.8           fL             37.0000 -
-                 14:15                                        49.0000
+MCV 08.09.2026 76.4 fL 80.0000 -
+14:15 100.0000
 
-  FERRITIN       08.09.2026     19             µg/L           30.0000 -
-                 14:15                                        400.0000
+MCH 08.09.2026 24.9 pg 27.0000 -
+14:15 34.0000
 
-  IRON           08.09.2026     15             µg/dL          59.0000 -
-                 14:15                                        158.0000
+RDW-CV 08.09.2026 17.8 \% 10.0000 -
+14:15 16.5000
 
-  WBC            08.09.2026     7.97           10\^9/L        4.5000 -
-                 14:15                                        11.0000
+RDW-SD 08.09.2026 50.8 fL 37.0000 -
+14:15 49.0000
 
-  CRP            08.09.2026     11.3           mg/L           0.0000 -
-                 14:15                                        5.0000
+FERRITIN 08.09.2026 19 µg/L 30.0000 -
+14:15 400.0000
 
-  PLT            08.09.2026     365            10\^9/L        150.0000 -
-                 14:15                                        403.0000
+IRON 08.09.2026 15 µg/dL 59.0000 -
+14:15 158.0000
 
-  CREA           08.09.2026     1.02           mg/dL          0.6000 -
-                 14:15                                        1.3000
+WBC 08.09.2026 7.97 10\^9/L 4.5000 -
+14:15 11.0000
 
-  BUN            08.09.2026     11             mg/dL          7.0000 -
-                 14:15                                        28.0000
+CRP 08.09.2026 11.3 mg/L 0.0000 -
+14:15 5.0000
 
-  LDL            08.09.2026     141            mg/dL          60.0000 -
-                 14:15                                        130.0000
+PLT 08.09.2026 365 10\^9/L 150.0000 -
+14:15 403.0000
 
-  HDL            08.09.2026     34             mg/dL          35.0000 -
-                 14:15                                        75.0000
+CREA 08.09.2026 1.02 mg/dL 0.6000 -
+14:15 1.3000
 
-  CHOL           08.09.2026     210            mg/dL          140.0000 -
-                 14:15                                        200.0000
+BUN 08.09.2026 11 mg/dL 7.0000 -
+14:15 28.0000
 
-  TRIG           08.09.2026     164            mg/dL          55.0000 -
-                 14:15                                        200.0000
+LDL 08.09.2026 141 mg/dL 60.0000 -
+14:15 130.0000
 
-  B12            08.09.2026     638            pg/mL          211.0000 -
-                 14:15                                        946.0000
+HDL 08.09.2026 34 mg/dL 35.0000 -
+14:15 75.0000
 
-  TSH            08.09.2026     0.279          mIU/L          0.2700 -
-                 14:15                                        4.2000
+CHOL 08.09.2026 210 mg/dL 140.0000 -
+14:15 200.0000
 
-  FT4            08.09.2026     1.45           ng/dL          0.9300 -
-                 14:15                                        1.7000
+TRIG 08.09.2026 164 mg/dL 55.0000 -
+14:15 200.0000
 
-  FT3            08.09.2026     2.58           ng/L           2.0000 -
-                 14:15                                        4.4000
+B12 08.09.2026 638 pg/mL 211.0000 -
+14:15 946.0000
 
-  TROP-T         08.09.2026     6.01           ng/L           0.0000 -
-                 14:15                                        14.0000
-  --------------------------------------------------------------------------
+TSH 08.09.2026 0.279 mIU/L 0.2700 -
+14:15 4.2000
+
+FT4 08.09.2026 1.45 ng/dL 0.9300 -
+14:15 1.7000
+
+FT3 08.09.2026 2.58 ng/L 2.0000 -
+14:15 4.4000
+
+TROP-T 08.09.2026 6.01 ng/L 0.0000 -
+14:15 14.0000
+--------------------------------------------------------------------------
 
 ## 15. Kaynaklar ve kanıt tabanı
 

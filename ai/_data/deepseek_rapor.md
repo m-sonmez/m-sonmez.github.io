@@ -7,7 +7,7 @@
 ## 1. Hasta Künyesi
 
 | Alan             | Değer                             |
-|------------------|-----------------------------------|
+| ---------------- | --------------------------------- |
 | Ad Soyad         | Alaattin SÖNMEZ                   |
 | TC               | 00000000000                       |
 | Yaş / Cinsiyet   | 64 / Erkek                        |
@@ -36,7 +36,7 @@ CRP 11.3 mg/L ile subakut enflamasyon, (4) rezidüel Tip B diseksiyon flebi nede
 ## 3. Biyobelirteç Değişim Tablosu
 
 | Parametre | Referans  | İlk   | Zirve/Dip | Son   | %Δ     | Trend      |
-|-----------|-----------|-------|-----------|-------|--------|------------|
+| --------- | --------- | ----- | --------- | ----- | ------ | ---------- |
 | INR       | 2.0-3.0   | 1.10  | 8.46      | 2.72  | +147%  | Hedefe     |
 | HGB       | 13.5-17.5 | 14.0  | 7.7       | 9.7   | −30.7% | Anemi      |
 | MCV       | 80-100    | 88.0  | 76.4      | 76.4  | −13.2% | Mikrositer |
@@ -50,15 +50,15 @@ CRP 11.3 mg/L ile subakut enflamasyon, (4) rezidüel Tip B diseksiyon flebi nede
 
 ## 4. Aylık Kan Basıncı Özeti
 
-| Ay           | n  | Ortalama   | Min    | Maks    |
-|--------------|----|------------|--------|---------|
-| Mart 2026    | 69 | 109.2/76.8 | 83/60  | 154/98  |
-| Nisan 2026   | 96 | 109.4/77.8 | 85/60  | 168/103 |
-| Mayıs 2026   | 63 | 118.6/80.2 | 100/68 | 140/95  |
-| Haziran 2026 | 68 | 127.2/84.6 | 109/72 | 149/99  |
-| Temmuz 2026  | 84 | 124.9/83.2 | 102/60 | 149/101 |
-| Ağustos 2026 | 89 | 118.7/79.9 | 99/65  | 139/95  |
-| Eylül 2026   | 18 | 111.2/75.7 | 103/68 | 122/82  |
+| Ay           | n   | Ortalama   | Min    | Maks    |
+| ------------ | --- | ---------- | ------ | ------- |
+| Mart 2026    | 69  | 109.2/76.8 | 83/60  | 154/98  |
+| Nisan 2026   | 96  | 109.4/77.8 | 85/60  | 168/103 |
+| Mayıs 2026   | 63  | 118.6/80.2 | 100/68 | 140/95  |
+| Haziran 2026 | 68  | 127.2/84.6 | 109/72 | 149/99  |
+| Temmuz 2026  | 84  | 124.9/83.2 | 102/60 | 149/101 |
+| Ağustos 2026 | 89  | 118.7/79.9 | 99/65  | 139/95  |
+| Eylül 2026   | 18  | 111.2/75.7 | 103/68 | 122/82  |
 
 ## 5. TTR Analizi
 
@@ -68,15 +68,15 @@ et al., 1993, s. 236). Kritik sapmalar: 16 Mart 2026 INR 8.46 (supraterapötik),
 
 ## 6. İnteraktif İlaç Etkileşim Matrisi
 
-| # | Çift                       | Risk   | Mekanizma                                                  | Yönetim                            |
-|---|----------------------------|--------|------------------------------------------------------------|------------------------------------|
-| 1 | Warfarin × Klamoks         | Kritik | Barsak florası K vit. sentezi baskısı + CYP2C9 inhibisyonu | Kür sonrası 48-72 saat kontrol INR |
-| 2 | Karvedilol × Perindopril   | Yüksek | Sinerjik vazodilatasyon                                    | İlk dozda oturur pozisyon          |
-| 3 | Warfarin × Aspirin         | Yüksek | Hemostatik plug + kaskad inhibisyonu                       | Yıllık gaita gizli kan             |
-| 4 | Demir × Panto              | Yüksek | Mide pH artışı demir emilimini azaltır                     | 1 saat önce uygula                 |
-| 5 | Ciprofloksasin × Warfarin  | Yüksek | CYP1A2 inhibisyonu                                         | INR takibi                         |
-| 6 | Perindopril × Warfarin     | Orta   | PAI-1 azalması                                             | Rutin takip                        |
-| 7 | Panto × Aspirin × Warfarin | Yüksek | Kombine kanama riski                                       | Endoskopik takip                   |
+| #   | Çift                       | Risk   | Mekanizma                                                  | Yönetim                            |
+| --- | -------------------------- | ------ | ---------------------------------------------------------- | ---------------------------------- |
+| 1   | Warfarin × Klamoks         | Kritik | Barsak florası K vit. sentezi baskısı + CYP2C9 inhibisyonu | Kür sonrası 48-72 saat kontrol INR |
+| 2   | Karvedilol × Perindopril   | Yüksek | Sinerjik vazodilatasyon                                    | İlk dozda oturur pozisyon          |
+| 3   | Warfarin × Aspirin         | Yüksek | Hemostatik plug + kaskad inhibisyonu                       | Yıllık gaita gizli kan             |
+| 4   | Demir × Panto              | Yüksek | Mide pH artışı demir emilimini azaltır                     | 1 saat önce uygula                 |
+| 5   | Ciprofloksasin × Warfarin  | Yüksek | CYP1A2 inhibisyonu                                         | INR takibi                         |
+| 6   | Perindopril × Warfarin     | Orta   | PAI-1 azalması                                             | Rutin takip                        |
+| 7   | Panto × Aspirin × Warfarin | Yüksek | Kombine kanama riski                                       | Endoskopik takip                   |
 
 ## 7. Kronolojik Klinik Zaman Çizelgesi
 
@@ -101,16 +101,16 @@ Klamoks sonrası kontrol INR; LDL 141 için statin (ESC 2024). **KVC/Radyoloji:*
 
 ## 9. Kaynakça (APA 7th Edition)
 
-1. **Isselbacher, E. M., Preventza, O., Hamilton Black, J., et al. (2022).** 2022 ACC/AHA Guideline for the Diagnosis and Management of Aortic Disease. *Circulation*, 146(24), e334–e482.
-2. **Vahanian, A., Beyersdorf, F., Praz, F., et al. (2022).** 2021 ESC/EACTS Guidelines for the management of valvular heart disease. *European Heart Journal*, 43(7), 561–632.
-3. **Delgado, V., Ajmone Marsan, N., de Waha, S., et al. (2023).** 2023 ESC Guidelines for the management of endocarditis. *European Heart Journal*, 44(39), 3948–4042.
-4. **Czerny, M., Grabenwöger, M., Berger, T., et al. (2024).** EACTS/STS Guidelines for diagnosing and treating acute and chronic syndromes of the aortic organ. *European Journal of Cardio-Thoracic Surgery*, 65(2), ezad426.
-5. **McEvoy, J. W., McCarthy, C. P., Bruno, R. M., et al. (2024).** 2024 ESC Guidelines for the management of elevated blood pressure and hypertension. *European Heart Journal*, 45(38), 3897–3972.
-6. **Fleischmann, D., Afifi, R. O., Casanegra, A. I., et al. (2022).** Imaging and Surveillance of Chronic Aortic Dissection: A Scientific Statement from the American Heart Association. *Circulation: Cardiovascular Imaging*, 15(3), e000075.
-7. **Goddard, A. F., James, M. W., McIntyre, A. S., & Scott, B. B. (2021).** British Society of Gastroenterology guidelines for the management of iron deficiency anaemia in adults. *Gut*, 70(11), 2030–2051.
-8. **McDonagh, T. A., Metra, M., Adamo, M., et al. (2021).** 2021 ESC Guidelines for the diagnosis and treatment of acute and chronic heart failure. *European Heart Journal*, 42(36), 3599–3726.
-9. **Rosendaal, F. R., Cannegieter, S. C., van der Meer, F. J., & Briët, E. (1993).** A method to determine the optimal intensity of oral anticoagulant therapy. *Thrombosis and Haemostasis*, 69(3), 236–239.
-10. **KDIGO. (2024).** Clinical Practice Guideline for the Evaluation and Management of Chronic Kidney Disease. *Kidney International*, 105(4S), S117–S314.
+1. **Isselbacher, E. M., Preventza, O., Hamilton Black, J., et al. (2022).** 2022 ACC/AHA Guideline for the Diagnosis and Management of Aortic Disease. _Circulation_, 146(24), e334–e482.
+2. **Vahanian, A., Beyersdorf, F., Praz, F., et al. (2022).** 2021 ESC/EACTS Guidelines for the management of valvular heart disease. _European Heart Journal_, 43(7), 561–632.
+3. **Delgado, V., Ajmone Marsan, N., de Waha, S., et al. (2023).** 2023 ESC Guidelines for the management of endocarditis. _European Heart Journal_, 44(39), 3948–4042.
+4. **Czerny, M., Grabenwöger, M., Berger, T., et al. (2024).** EACTS/STS Guidelines for diagnosing and treating acute and chronic syndromes of the aortic organ. _European Journal of Cardio-Thoracic Surgery_, 65(2), ezad426.
+5. **McEvoy, J. W., McCarthy, C. P., Bruno, R. M., et al. (2024).** 2024 ESC Guidelines for the management of elevated blood pressure and hypertension. _European Heart Journal_, 45(38), 3897–3972.
+6. **Fleischmann, D., Afifi, R. O., Casanegra, A. I., et al. (2022).** Imaging and Surveillance of Chronic Aortic Dissection: A Scientific Statement from the American Heart Association. _Circulation: Cardiovascular Imaging_, 15(3), e000075.
+7. **Goddard, A. F., James, M. W., McIntyre, A. S., & Scott, B. B. (2021).** British Society of Gastroenterology guidelines for the management of iron deficiency anaemia in adults. _Gut_, 70(11), 2030–2051.
+8. **McDonagh, T. A., Metra, M., Adamo, M., et al. (2021).** 2021 ESC Guidelines for the diagnosis and treatment of acute and chronic heart failure. _European Heart Journal_, 42(36), 3599–3726.
+9. **Rosendaal, F. R., Cannegieter, S. C., van der Meer, F. J., & Briët, E. (1993).** A method to determine the optimal intensity of oral anticoagulant therapy. _Thrombosis and Haemostasis_, 69(3), 236–239.
+10. **KDIGO. (2024).** Clinical Practice Guideline for the Evaluation and Management of Chronic Kidney Disease. _Kidney International_, 105(4S), S117–S314.
 
 ## 10. Sorumluluk Reddi
 
