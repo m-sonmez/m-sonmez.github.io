@@ -2026,5 +2026,9 @@
   {"at":"2026-09-08 14:15","model":"TestItem","test_id":91,"unit":"-","name":"Dansite","code":"USG","result":"1.0110","reference_min":"1.0030","reference_max":"1.0300","description":"İdrar"},
   {"at":"2026-09-08 14:15","model":"TestItem","test_id":91,"unit":"HPF","name":"Lökosit (WBC)","code":"UWBC","result":"<0.23","reference_min":"0.0000","reference_max":"4.0000","description":"İdrar"},
   {"at":"2026-09-08 14:15","model":"TestItem","test_id":91,"unit":"-","name":"Mum Silendir","code":"WAXY","result":"neg","reference_min":null,"reference_max":null,"description":"İdrar"},
-  {"at":"2026-09-08 14:15","model":"TestItem","test_id":91,"unit":"HPF","name":"Lökosit Kümesi","code":"WBCC","result":"neg","reference_min":null,"reference_max":null,"description":"İdrar"}
+  {"at":"2026-09-08 14:15","model":"TestItem","test_id":91,"unit":"HPF","name":"Lökosit Kümesi","code":"WBCC","result":"neg","reference_min":null,"reference_max":null,"description":"İdrar"},
+  {"at":"2026-09-10 16:57","model":"TestItem","test_id":92,"unit":"sn","name":"Protrombin Zamanı (PT)","code":"PT","result":"19.8000","reference_min":"9.6000","reference_max":"12.0000","description":"Koagülasyon"},
+  {"at":"2026-09-10 16:57","model":"TestItem","test_id":92,"unit":"%","name":"Protrombin Aktivitesi (%)","code":"PT%","result":"41.7000","reference_min":"74.4000","reference_max":"130.0000","description":"Koagülasyon"},
+  {"at":"2026-09-10 16:57","model":"TestItem","test_id":92,"unit":"INR","name":"INR","code":"INR","result":"2.1200","reference_min":"0.8000","reference_max":"1.2000","description":"Koagülasyon"},
+  {"at":"2026-09-10 16:57","model":"TestItem","test_id":92,"unit":"sn","name":"aPTT","code":"APTT","result":"44.8000","reference_min":"23.9000","reference_max":"33.2000","description":"Koagülasyon"}
 ]

@@ -88,5 +88,6 @@
   {"at":"2026-08-25 15:29","model":"Test","user_id":1,"hospital_id":2,"id":88,"description":"Kapsamlı laboratuvar değerlendirmesi (Tam Kan Sayımı, Biyokimya, Koagülasyon)","title":"Geniş Biyokimya ve Hemogram Paneli","is_special":false},
   {"at":"2026-09-02 20:27","model":"Test","user_id":1,"hospital_id":2,"id":89,"description":"Acil servis giriş tam kan sayımı, biyokimya ve koagülasyon paneli","title":"Acil Giriş ve Hemogram Paneli","is_special":false},
   {"at":"2026-09-08 14:15","model":"Test","user_id":1,"hospital_id":5,"id":90,"description":"Kapsamlı laboratuvar değerlendirmesi (Tam Kan Sayımı, Biyokimya)","title":"Geniş Biyokimya ve Hemogram Paneli","is_special":false},
-  {"at":"2026-09-08 14:15","model":"Test","user_id":1,"hospital_id":5,"id":91,"description":"Tam İdrar Analizi","title":"Tam İdrar Analizi (Strip + Mikroskopi)","is_special":false}
+  {"at":"2026-09-08 14:15","model":"Test","user_id":1,"hospital_id":5,"id":91,"description":"Tam İdrar Analizi","title":"Tam İdrar Analizi (Strip + Mikroskopi)","is_special":false},
+  {"at":"2026-09-10 16:57","model":"Test","user_id":1,"hospital_id":2,"id":92,"description":"INR ve Koagülasyon Takibi","title":"Koagülasyon Paneli","is_special":false}
 ]

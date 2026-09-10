@@ -64,5 +64,6 @@
   {"at":"2026-08-11 12:00","model":"MedChange","user_id":1,"medication_id":14,"id":59,"amount":25,"timespan":168,"type":"Changed","reason":"Doktor tarafından doz ayarlaması (INR takibine göre)"},
   {"at":"2026-08-18 12:00","model":"MedChange","user_id":1,"medication_id":14,"id":60,"amount":20,"timespan":168,"type":"Changed","reason":"Doktor tarafından doz ayarlaması (INR takibine göre)"},
   {"at":"2026-09-04 08:25","model":"MedChange","user_id":1,"medication_id":20,"id":61,"amount":1000,"timespan":12,"type":"Started","reason":"Enfeksiyon şüphesi (CRP yüksekliği)"},
-  {"at":"2026-09-10 20:59","model":"MedChange","user_id":1,"medication_id":20,"id":62,"amount":0,"timespan":12,"type":"Ended","reason":"7 günlük kür sonu"}
+  {"at":"2026-09-10 20:59","model":"MedChange","user_id":1,"medication_id":20,"id":62,"amount":0,"timespan":12,"type":"Ended","reason":"7 günlük kür sonu"},
+  {"at":"2026-09-11 06:00","model":"MedChange","user_id":1,"medication_id":21,"id":67,"amount":100,"timespan":24,"type":"Started","reason":"Doktor tarafından başlandı (Demir takviyesi)"}
 ]

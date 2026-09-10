@@ -1260,7 +1260,24 @@ export default function registerDashboard(Alpine) {
         })
         .filter((m) => m.segments.length > 0)
         .sort((a, b) => {
-          const order = ['Panto', 'EcopirinPro', 'Warfmadin', 'Dilatrend', 'BelocZOK', 'Cordarone', 'Augmentin', 'Cipro', 'Tavanic', 'Stafine', 'Mikostatin', 'Levopront', 'GeralginePlus', 'Apikobal', 'Kapril'];
+          const order = [
+            'Panto',
+            'EcopirinPro',
+            'Warfmadin',
+            'Dilatrend',
+            'BelocZOK',
+            'Cordarone',
+            'Augmentin',
+            'Cipro',
+            'Tavanic',
+            'Stafine',
+            'Mikostatin',
+            'Levopront',
+            'GeralginePlus',
+            'Apikobal',
+            'FerroSanolDuodenal',
+            'Kapril'
+          ];
           return order.indexOf(a.name) - order.indexOf(b.name);
         });
     },
@@ -1953,7 +1970,7 @@ export default function registerDashboard(Alpine) {
         let addNames = additionalMedIds.map((id) => this.getMedicationName(id));
         let infectMeds = addNames.filter((name) => ['Augmentin', 'Cipro', 'Tavanic', 'Stafine', 'Mikostatin'].includes(name));
         let painMeds = addNames.filter((name) => ['GeralginePlus'].includes(name));
-        let vitaminMeds = addNames.filter((name) => ['Apikobal'].includes(name));
+        let vitaminMeds = addNames.filter((name) => ['Apikobal', 'FerroSanolDuodenal'].includes(name));
         let arrhythmiaMeds = addNames.filter((name) => ['Cordarone'].includes(name));
         let coughMeds = addNames.filter((name) => ['Levopront'].includes(name));
         if (infectMeds.length > 0) {
