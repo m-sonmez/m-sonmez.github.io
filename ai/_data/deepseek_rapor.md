@@ -68,15 +68,15 @@ et al., 1993, s. 236). Kritik sapmalar: 16 Mart 2026 INR 8.46 (supraterapötik),
 
 ## 6. İnteraktif İlaç Etkileşim Matrisi
 
-| #   | Çift                       | Risk   | Mekanizma                                                  | Yönetim                                                     |
-| --- | -------------------------- | ------ | ---------------------------------------------------------- | ----------------------------------------------------------- |
-| 1   | Warfarin × Klamoks         | Kritik | Barsak florası K vit. sentezi baskısı + CYP2C9 inhibisyonu | Kür tamamlandı (10 Eyl); kontrol INR 2.12 ile hedefte       |
-| 2   | Karvedilol × Perindopril   | Yüksek | Sinerjik vazodilatasyon                                    | İlk dozda oturur pozisyon                                   |
-| 3   | Warfarin × Aspirin         | Yüksek | Hemostatik plug + kaskad inhibisyonu                       | Yıllık gaita gizli kan                                      |
-| 4   | Demir × Panto              | Yüksek | Mide pH artışı demir emilimini azaltır                     | 1 saat önce uygula (sabah aç Ferro Sanol, 1 saat sonra Panto)|
-| 5   | Ciprofloksasin × Warfarin  | Yüksek | CYP1A2 inhibisyonu                                         | INR takibi                                                  |
-| 6   | Perindopril × Warfarin     | Orta   | PAI-1 azalması                                             | Rutin takip                                                 |
-| 7   | Panto × Aspirin × Warfarin | Yüksek | Kombine kanama riski                                       | Endoskopik takip                                            |
+| #   | Çift                       | Risk   | Mekanizma                                                  | Yönetim                                                       |
+| --- | -------------------------- | ------ | ---------------------------------------------------------- | ------------------------------------------------------------- |
+| 1   | Warfarin × Klamoks         | Kritik | Barsak florası K vit. sentezi baskısı + CYP2C9 inhibisyonu | Kür tamamlandı (10 Eyl); kontrol INR 2.12 ile hedefte         |
+| 2   | Karvedilol × Perindopril   | Yüksek | Sinerjik vazodilatasyon                                    | İlk dozda oturur pozisyon                                     |
+| 3   | Warfarin × Aspirin         | Yüksek | Hemostatik plug + kaskad inhibisyonu                       | Yıllık gaita gizli kan                                        |
+| 4   | Demir × Panto              | Yüksek | Mide pH artışı demir emilimini azaltır                     | 1 saat önce uygula (sabah aç Ferro Sanol, 1 saat sonra Panto) |
+| 5   | Ciprofloksasin × Warfarin  | Yüksek | CYP1A2 inhibisyonu                                         | INR takibi                                                    |
+| 6   | Perindopril × Warfarin     | Orta   | PAI-1 azalması                                             | Rutin takip                                                   |
+| 7   | Panto × Aspirin × Warfarin | Yüksek | Kombine kanama riski                                       | Endoskopik takip                                              |
 
 ## 7. Kronolojik Klinik Zaman Çizelgesi
 

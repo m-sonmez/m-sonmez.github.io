@@ -2,9 +2,9 @@
 
 /* Service Worker Template */
 /* This file is processed by bump-sw.js to generate a versioned sw.js. */
-/* The medilog_2026-09-10_21-35-54 placeholder is replaced with a timestamp. */
+/* The medilog_2026-09-10_22-21-29 placeholder is replaced with a timestamp. */
 
-const CACHE_NAME = 'medilog_2026-09-10_21-35-54';
+const CACHE_NAME = 'medilog_2026-09-10_22-21-29';
 
 /* ========================================================================== */
 /* AŞAMA 1: KRİTİK DOSYALAR (Uygulamanın açılması için zorunlu olanlar)       */

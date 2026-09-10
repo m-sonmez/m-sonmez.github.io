@@ -78,8 +78,8 @@ yetersiz yanıtta **İntravenöz Ferrik Karboksimaltoz (Ferinject 1000 mg)** rep
 | **C-Reaktif Protein (CRP)** |   0.0 – 5.0 mg/L    |        2.6         | 154.0 (Pik - 21 Şub) |      **11.3**      |    +%334.6     |      **YÜKSEK**       | Horan et al., 2008 [11]     |
 | **Lökosit Sayısı (WBC)**    | 4.5 – 11.0 $10^9$/L |       10.62        | 27.10 (Pik - 21 Şub) |      **7.97**      |     -%24.9     |      **NORMAL**       | Horan et al., 2008 [11]     |
 | **Koagülasyon (INR)**       |  2.0 – 3.0 (Hedef)  |        1.10        | 8.46 (Pik - 16 Mar)  |      **2.12**      |     +92.7%     | **ARALIKTA (10 Eyl)** | ESC/EACTS 2021 [4]; ACC [5] |
-| **Protrombin Zamanı (PT)**  |     9.6 – 12.0 sn   |        13.1        | 64.0 (Pik - 16 Mar)  |      **19.8**      |     +51.1%     |  **UZAMIŞ (10 Eyl)**  | VKA İdamesi                 |
-| **aPTT**                    |    23.9 – 33.2 sn   |        27.9        | 85.5 (Pik - 16 Mar)  |      **44.8**      |     +60.6%     |  **UZAMIŞ (10 Eyl)**  | VKA İdamesi                 |
+| **Protrombin Zamanı (PT)**  |    9.6 – 12.0 sn    |        13.1        | 64.0 (Pik - 16 Mar)  |      **19.8**      |     +51.1%     |  **UZAMIŞ (10 Eyl)**  | VKA İdamesi                 |
+| **aPTT**                    |   23.9 – 33.2 sn    |        27.9        | 85.5 (Pik - 16 Mar)  |      **44.8**      |     +60.6%     |  **UZAMIŞ (10 Eyl)**  | VKA İdamesi                 |
 | **Trombosit (PLT)**         | 150 – 403 $10^9$/L  |       163.0        |  88.0 (Dip) / 489.0  |     **365.0**      |    +%123.9     |      **NORMAL**       | Vahanian et al., 2022 [4]   |
 | **Serum Kreatinin**         |   0.6 – 1.3 mg/dL   |        1.11        |         1.13         |      **1.02**      |     -%8.1      |      **NORMAL**       | KDIGO 2012 [94]             |
 | **eGFR (CKD-EPI)**          |     > 60 mL/dk      |       72.58        |     94.00 (Pik)      |     **75.58**      |     +%4.1      |      **NORMAL**       | Inker et al., 2021 [95]     |
