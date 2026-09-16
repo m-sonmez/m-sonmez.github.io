@@ -17,6 +17,8 @@ Hasta 19.02.2026 tarihinde ani başlayan şiddetli göğüs ve sırt ağrısı i
 
 Postoperatif seyirde Mart ayında gastrointestinal yakınmalar, Nisan ayında tekrarlayan hipertansif ataklar ve Temmuz sonunda ciddi sternal dehissens, enfeksiyon ve doku defekti yaşanmıştır. 23–28.07.2026 döneminde sternal yara için yoğun bakım/yara bakımı, sütürasyon, transfüzyon ve antibakteriyel tedavi kaydı bulunmaktadır. Bu seyir, 15.09.2026 tarihli inflamasyon markerlarının değerlendirilmesinde yakın klinik korelasyonu gerekli kılmaktadır (Delgado et al., 2023).
 
+Boylamsal veri tabanı künyesi: 500 kan basıncı ölçümü (7 günlük ortalama: 113/76 mmHg, 15.09.2026 ortalaması: 115/77 mmHg), 180 kilo ölçümü (en son 16.09.2026: 78,9 kg), 1.213 ilaç uygulama kaydı (67 ilaç değişikliği), 2.071 laboratuvar ölçümü (108 nicel biyobelirteçte 2.033 sayısal sonuç), 40 INR ölçümü (Rosendaal TTR: tüm dönemde %53,7; stabilizasyon sonrası >%68; son 45 günde %73,0).
+
 ## 2. Yönetici Özeti — 6 KPI
 
 | KPI                       | 16.09.2026 klinik durumu | Boylamsal değişim / yorum                                                                     | Durum                                                            |
@@ -44,11 +46,11 @@ Rezidüel patent Tip B diseksiyon flebi nedeniyle medikal kontrol, anatomik izle
 
 25 mm Carbomedics mekanik aort kapağı bulunan bir hastada yaşam boyu vitamin K antagonisti tedavisi temel tedavidir. 2025 ESC/EACTS kılavuzu, ek protrombotik risk faktörü olmayan bileaflet veya güncel nesil tek yapraklı mekanik aort kapağı için hedef INR 2,5 ve terapötik aralık 2,0–3,0 olarak verir (Praz et al., 2025).
 
-15.09.2026 saat 15:27 Test #93'te INR 1,95 bulunması bu klinik aralığın 0,05 birim altındadır. Bir önceki 10.09.2026 INR değeri 2,12 olduğundan mutlak değişim −0,17, yüzdesel değişim yaklaşık −8,0%'dir. Daha önce 23.07–11.08 döneminde INR 1,79'dan 1,17'ye kadar düşmüş, ardından 18.08–02.09 döneminde 2,59–2,76 seviyelerine yükselmiş ve 10.09.2026'da 2,12 olmuştur. Bu dalgalanma antikoagülasyon yönetiminde yakın INR izleminin önemini destekler.
+15.09.2026 saat 15:27 Test #93'te INR 1,95 bulunması bu klinik aralığın 0,05 birim altındadır. Bir önceki 10.09.2026 INR değeri 2,12 olduğundan mutlak değişim −0,17, yüzdesel değişim yaklaşık −8,0%'dir. Daha önce 23.07–11.08 döneminde INR 1,79'dan 1,17'ye kadar düşmüş, ardından 18.08–02.09 döneminde 2,59–2,76 seviyelerine yükselmiş ve 10.09.2026'da 2,12 olmuştur. Bu dalgalanma antikoagülasyon yönetiminde yakın INR izleminin önemini destekler; 40 INR ölçümlük seride Rosendaal lineer interpolasyonu ile genel TTR %53,7 olarak hesaplanmıştır (stabilizasyon sonrası >%68, son 45 günde %73,0; kılavuz hedefi >%70) (Rosendaal et al., 1993; Praz et al., 2025).
 
 Bu sonuç, tek başına kapak trombozunun kanıtı değildir; aynı şekilde tek bir INR değerinden klinik emboli oluştuğu da söylenemez. Buna rağmen mekanik kapak ve mevcut 1,95 INR nedeniyle sorumlu antikoagülasyon ekibinin gecikmeden doz uyumu, son doz zamanı, beslenme ve vitamin K değişiklikleri, yeni ilaçlar, antibiyotik kürü, kanama bulguları ve takip INR zamanlamasını gözden geçirmesi gerekir (Praz et al., 2025). Bu rapor, 20 mg/hafta mevcut warfarin şemasının hekim gözetiminde yeniden titre edilmesi gerektiğini teyit eder; 22,5–25 mg/hafta aralığı ancak önceki yanıtlar, aktif etkileşimler ve kısa aralıklı INR izlemi dikkate alınarak klinisyen tarafından aday doz olarak değerlendirilebilir.
 
-Klamoks kürü 04.09.2026–11.09.2026 arasında kullanılmış ve son doz 11.09.2026'da tamamlanmıştır. Beta-laktam antibiyotikler ve bazı diğer antibiyotikler warfarin etkisini değiştirebildiğinden tedavi sırasında ve sonrasında INR değişkenliği açısından ek takip gerekir. Son INR'nin antibiyotik bitiminden yaklaşık dört gün sonra 1,95'e düşmesi, yalnızca antibiyotik etkileşimi üzerinden nedensellik kurulmasına izin vermez; klinik doz geçmişi ve beslenme daha belirleyicidir (Praz et al., 2025).
+Klamoks kürü 04.09.2026–11.09.2026 arasında kullanılmış ve son doz 11.09.2026 saat 20:59'da tamamlanarak sonlandırılmıştır. Beta-laktam antibiyotikler ve bazı diğer antibiyotikler warfarin etkisini değiştirebildiğinden tedavi sırasında ve sonrasında INR değişkenliği açısından ek takip gerekir. Son INR'nin antibiyotik bitiminden yaklaşık dört gün sonra 1,95'e düşmesi, yalnızca antibiyotik etkileşimi üzerinden nedensellik kurulmasına izin vermez; klinik doz geçmişi ve beslenme daha belirleyicidir (Praz et al., 2025).
 
 ### 3.3 Ferro Sanol Duodenal: demir emilimi ve farmakokinetik değerlendirme
 
@@ -58,7 +60,7 @@ Ferro Sanol Duodenal kaydında bir kapsül 100 mg Fe²⁺ eşdeğeri ferrous gly
 
 Mevcut uygulama protokolü korunmalıdır: **sabah aç karnına Ferro Sanol Duodenal 100 mg Fe²⁺, bol su ile; Pantoprazol 40 mg'dan en az 1 saat önce.** Bu 1 saatlik ayrım mevcut klinik panelin ilaç uygulama protokolüdür. Pantoprazol gibi proton pompa inhibitörleri gastrik asiditeyi azaltarak bazı oral demir preparatlarının çözünürlüğünü ve emilimini azaltabilir; bu nedenle oral demir ile proton pompa inhibitörü arasında zamanlama ayrımı ve klinik yanıta göre tekrar laboratuvar değerlendirmesi rasyoneldir, ancak tek başına 1 saatlik ayrım optimum biyoyararlanımı garanti eden evrensel bir farmakokinetik kural olarak yorumlanmamalıdır (Camaschella, 2015; Snook et al., 2021).
 
-Oral demir tedavisi başladıktan sonra hemoglobin yanıtı, retikülosit yanıtı, ferritin ve transferrin satürasyonu izlenmelidir. Yanıt yetersizse uyum, gastrointestinal tolerans, devam eden kan kaybı, emilim bozukluğu ve gereğinde intravenöz demir seçenekleri değerlendirilir (Snook et al., 2021). Bu hastada erkek cinsiyet ve mekanik kapak nedeniyle uzun süreli antitrombotik tedavi bulunduğu için gizli gastrointestinal kan kaybı olasılığının ayrıca araştırılması önemlidir; sadece demir verilmesi etiyolojik değerlendirme yerine geçmez (Snook et al., 2021).
+Oral demir tedavisi başladıktan sonra hemoglobin yanıtı, retikülosit yanıtı, ferritin ve transferrin satürasyonu izlenmelidir. Yanıt yetersizse uyum, gastrointestinal tolerans, devam eden kan kaybı, emilim bozukluğu ve gereğinde intravenöz demir seçenekleri değerlendirilir (Snook et al., 2021). Bu hastada erkek cinsiyet ve mekanik kapak nedeniyle uzun süreli antitrombotik tedavi bulunduğu için gizli gastrointestinal kan kaybı olasılığının ayrıca araştırılması önemlidir; sadece demir verilmesi etiyolojik değerlendirme yerine geçmez (Snook et al., 2021; Goddard et al., 2011).
 
 ### 3.4 PPI–demir etkileşimi
 
@@ -143,7 +145,7 @@ Kreatinin 08.09.2026'da 1,02 mg/dL iken 15.09.2026'da 1,11 mg/dL olmuştur; değ
 | **Panto / pantoprazol**                | 40 mg, günde 1 kez sabah                                      | Gastrointestinal koruma / mevcut tedavi      | Demir emilimi ve gastrointestinal semptomlar                                   |
 | **Ferro Sanol Duodenal**               | 100 mg Fe²⁺, günde 1 kez                                      | Demir eksikliği anemisi                      | Hemoglobin ve demir indeksleri ile yanıt değerlendirmesi (Snook et al., 2021)  |
 | **Kapril / kaptopril**                 | 25 mg, gerektiğinde önceki akut hipertansif atak kayıtlarında | Geçmişteki ev hipertansif atakları           | Kullanım gereksiniminin hekim tarafından yeniden değerlendirilmesi             |
-| **Klamoks**                            | 1000 mg, günde 2 kez; 11.09.2026'da tamamlandı                | Sternal enfeksiyon tedavi kürü               | Aktif tedavi olarak devam etmiyor; INR ve yara bulgusu izlemi                  |
+| **Klamoks**                            | 1000 mg, günde 2 kez; 11.09.2026 saat 20:59'da tamamlandı     | Sternal enfeksiyon tedavi kürü               | Aktif tedavi olarak devam etmiyor; INR ve yara bulgusu izlemi                  |
 
 ## 7. Branş Bazlı Eylem Planı
 
@@ -175,7 +177,7 @@ Kreatinin 1,11 mg/dL ve eGFR 70,89 mL/dk/1,73 m² mevcut kayıtta stabil kabul e
 
 **Öncelik 1 — INR:** 15.09.2026 INR 1,95 için sorumlu antikoagülasyon hekimiyle gecikmeden temas, klinik etkileşim/uyum değerlendirmesi ve hekim gözetiminde warfarin yeniden titrasyonu. Yeni INR kontrolünün zamanlaması klinik risk ve yapılacak doz değişikliğine göre belirlenmelidir (Praz et al., 2025).
 
-**Öncelik 2 — Demir eksikliği anemisi:** Ferro Sanol Duodenal 100 mg Fe²⁺ tedavisinin sürdürülmesi ve hemoglobin yanıtının izlenmesi; erkek hastada gizli kan kaybı ve gastrointestinal nedenlerin araştırılması (Snook et al., 2021).
+**Öncelik 2 — Demir eksikliği anemisi:** Ferro Sanol Duodenal 100 mg Fe²⁺ tedavisinin sürdürülmesi ve hemoglobin yanıtının izlenmesi; erkek hastada gizli kan kaybı ve gastrointestinal nedenlerin araştırılması (Snook et al., 2021; Goddard et al., 2011).
 
 **Öncelik 3 — Sternal enfeksiyon izlemi:** CRP gerilemesi olumlu olmakla birlikte yara muayenesinin sürdürülmesi; sistemik bulgu ortaya çıkarsa kan kültürü ve prostetik kapak değerlendirmesi (Delgado et al., 2023).
 
@@ -255,7 +257,7 @@ Mekanik aort kapağı için hedef aralık 2,0–3,0 kabul edildiğinde 15.09.202
 
 ## 13. Sonuç ve Klinik Sentez
 
-16.09.2026 itibarıyla klinik tablo iki farklı ekseni aynı anda göstermektedir. Birinci eksen, 113/76 mmHg yedi günlük ev tansiyon ortalaması, stabil kilo ve gerileyen CRP ile temsil edilen hemodinamik ve inflamatuvar iyileşme eğilimidir. İkinci eksen ise 1,95 INR ile mekanik kapak antikoagülasyonunda yeniden hedef dışına çıkış ve 9,7 g/dL hemoglobin ile süren demir eksikliği anemisidir. Bu nedenle mevcut durum “tek yönlü kötüleşme” olarak tanımlanamaz; aynı zamanda tüm risklerin ortadan kalktığı bir stabilizasyon olarak da nitelendirilemez (Isselbacher et al., 2022; Praz et al., 2025; McEvoy et al., 2024; Snook et al., 2021).
+16.09.2026 itibarıyla klinik tablo iki farklı ekseni aynı anda göstermektedir. Birinci eksen, 113/76 mmHg yedi günlük ev tansiyon ortalaması, stabil kilo ve gerileyen CRP ile temsil edilen hemodinamik ve inflamatuvar iyileşme eğilimidir. İkinci eksen ise 1,95 INR ile mekanik kapak antikoagülasyonunda yeniden hedef dışına çıkış ve 9,7 g/dL hemoglobin ile süren demir eksikliği anemisidir. Bu nedenle mevcut durum “tek yönlü kötüleşme” olarak tanımlanamaz; aynı zamanda tüm risklerin ortadan kalktığı bir stabilizasyon olarak da nitelendirilemez (Isselbacher et al., 2022; Praz et al., 2025; McEvoy et al., 2024; Snook et al., 2021; Goddard et al., 2011).
 
 En yakın klinik karar düğümü INR'dir. INR 1,95 değeri mekanik aort kapak için 2,0–3,0 terapötik aralığının altındadır ve warfarin tedavisinin kısa aralıkta klinisyen gözetiminde yeniden değerlendirilmesini gerektirir. Burada amaç tek seferlik agresif doz değişikliği değil, hedef aralıkta sürdürülebilir ve güvenli antikoagülasyon sağlamaktır (Praz et al., 2025).
 
@@ -284,6 +286,10 @@ McEvoy, J. W., McCarthy, C. P., Bruno, R. M., Brouwers, S., Canavan, M. D., Ceco
 Vahanian, A., Beyersdorf, F., Praz, F., Milojevic, M., Baldus, S., Bauersachs, J., Capodanno, D., Conradi, L., De Bonis, M., De Paulis, R., Delgado, V., Freemantle, N., Gilard, M., Haugaa, K. H., Jeppsson, A., Jüni, P., Pierard, L., Prendergast, B. D., Sádaba, J. R., … ESC/EACTS Scientific Document Group. (2022). 2021 ESC/EACTS Guidelines for the management of valvular heart disease. _European Heart Journal, 43_(7), 561–632. https://doi.org/10.1093/eurheartj/ehab395
 
 Praz, F., Borger, M. A., Lanz, J., Marin-Cuartas, M., Abreu, A., Adamo, M., Ajmone Marsan, N., Barili, F., Bonaros, N., Cosyns, B., De Paulis, R., Gamra, H., Jahangiri, M., Jeppsson, A., Klautz, R. J. M., Mores, B., Pérez-David, E., Pöss, J., Prendergast, B. D., Rocca, B., Rossello, X., Suzuki, M., Thiele, H., Tribouilloy, C. M., & Wojakowski, W. (2025). 2025 ESC/EACTS Guidelines for the management of valvular heart disease. _European Heart Journal, 46_(44), 4635–4736. https://doi.org/10.1093/eurheartj/ehaf194
+
+Goddard, A. F., James, M. W., McIntyre, A. S., & Scott, B. B. (2011). Guidelines for the management of iron deficiency anaemia. _Gut, 60_(10), 1309–1316. https://doi.org/10.1136/gut.2010.228874
+
+Rosendaal, F. R., Cannegieter, S. C., van der Meer, F. J., & Briët, E. (1993). A method to determine the optimal intensity of oral anticoagulant therapy. _Thrombosis and Haemostasis, 69_(3), 236–239.
 
 Snook, J., Bhala, N., Beales, I. L. P., Cannings, D., Kightley, C., Logan, R. P. H., Pritchard, D. M., Sidhu, R., Surgenor, S., Thomas, W., Verma, A. M., & Goddard, A. F. (2021). British Society of Gastroenterology guidelines for the management of iron deficiency anaemia in adults. _Gut, 70_(11), 2030–2051. https://doi.org/10.1136/gutjnl-2021-325210
 

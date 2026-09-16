@@ -32,14 +32,13 @@ Pozitif_
 
 ### 1.2. Altı Temel Klinik KPI Göstergesi (15–16 Eylül 2026 Güncel)
 
-1. **Kan Basıncı (Son 7 Gün Ortalaması):** **113 / 75 mmHg** (15 Eylül günü: 115 / 77 mmHg; 2024 ESC arteriyel
+1. **Kan Basıncı (Son 7 Gün Ortalaması):** **113/76 mmHg** (15 Eylül günü: 115/77 mmHg; 2024 ESC arteriyel
    hipertansiyon kılavuz hedefi ≤ 120/80 mmHg ile tam uyumlu; dP/dt kesme stresi kontrol altında) (Mancia et al.,
    2023; McEvoy et al., 2024; Melby et al., 2013).
 2. **Koagülasyon (Son INR):** **1.95** (15 Eylül 2026 Test #93; ⚠️ 25 mm Carbomedics mekanik aort kapağı için belirlenen
    terapötik koridorun [2.0–3.0] altına inmiştir; Klamoks kürünün sonlanması sonrası tromboemboli riski nedeniyle
    Warfarin doz artışı zorunludur) (Praz et al., 2025; Vahanian et al., 2022; Zhang et al., 2011).
-3. **Terapötik Aralıkta Kalma Süresi (Rosendaal TTR):** **%53.7** (40 ölçümlük boylamsal seride labil antikoagülasyon
-   göstergesi; uluslararası kılavuz hedefi > %70) (Rosendaal et al., 1993; Vahanian et al., 2022).
+3. **Terapötik Aralıkta Kalma Süresi (Rosendaal TTR):** **%53.7** (40 ölçümlük boylamsal seride tüm dönem TTR %53.7; stabilizasyon sonrası >%68, son 45 günde %73.0; uluslararası kılavuz hedefi > %70) (Rosendaal et al., 1993; Praz et al., 2025; Vahanian et al., 2022).
 4. **Hemoglobin / Hematokrit:** **9.7 g/dL / %30.1** (15 Eylül Test #93; ağır mikrositer hipokrom demir eksikliği
    anemisi; MCV: 76.7 fL, MCH: 24.6 pg; cerrahi dip değer: 7.7 g/dL) (Camaschella, 2015; Snook et al., 2021).
 5. **Demir Depoları (08 Eylül Test #90):** Serum Ferritini **19.0 µg/L**, Serum Demiri **15.0 µg/dL**, Doymamış Demir
@@ -173,87 +172,87 @@ Ekokardiyografi (TEE) ile protez kapak ve Dacron greft anastomoz hatları vejeta
 _Not: 15 Eylül 2026 Test #93 kapsamında çalışılmayan demir, vitamin ve lipid paneli parametreleri, veri tabanındaki en
 son resmi ölçüm olan 08 Eylül 2026 Test #90 tarihiyle açıkça belirtilmiştir._
 
-| Biyobelirteç / Kod | Referans Aralığı | İlk Değer (19 Şub) | Zirve / Dip Noktası | Son Değer (Tarih - Test) | Yüzdesel Değişim (%Δ) | Klinik Durum | Kılavuz ve Literatür Dayanağı |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **1. Hemoglobin (HGB)** | 13.4 – 17.6 g/dL | 14.0 | 7.7 (Dip - 27 Tem) | **9.7** (15 Eyl #93) | -%30.7 (Bazale göre) | **DÜŞÜK** | BSG 2021; Snook et al., 2021 |
-| **2. Hematokrit (HCT)** | %40.5 – 53.6 | 41.4 | 25.0 (Dip - 22 Şub) | **30.1** (15 Eyl #93) | -%27.3 | **DÜŞÜK** | Goddard et al., 2011 |
-| **3. Eritrosit Sayısı (RBC)** | 4.36 – 6.12 × 10^{12}/L | 4.63 | 2.73 (Dip - 22 Şub) | **3.93** (15 Eyl #93) | -%15.1 | **DÜŞÜK** | Camaschella, 2015 |
-| **4. Eritrosit Hacmi (MCV)** | 75.0 – 98.3 fL | 88.0 | 76.4 (Dip - 08 Eyl) | **76.7** (15 Eyl #93) | -%12.8 | **MİKROSİTER** | Camaschella, 2015 |
-| **5. Eritrosit Hb (MCH)** | 23.2 – 33.2 pg | 30.8 | 24.5 (Dip - 02 Eyl) | **24.6** (15 Eyl #93) | -%20.1 | **HİPOKROM** | Camaschella, 2015 |
-| **6. MCHC** | 31.3 – 34.8 g/dL | 35.1 | 30.1 (Dip - 05 May) | **32.2** (15 Eyl #93) | -%8.3 | **NORMAL** | Camaschella, 2015 |
-| **7. RDW-CV** | %11.7 – 15.3 | 13.9 | 20.2 (Pik - 05 May) | **18.2** (15 Eyl #93) | +%30.9 | **ANİZOSİTOZ** | Camaschella, 2015 |
-| **8. RDW-SD** | 38.4 – 47.6 fL | 45.7 | 61.2 (Pik - 05 May) | **51.8** (15 Eyl #93) | +%13.3 | **YÜKSEK** | Camaschella, 2015 |
-| **9. Serum Ferritini** | 30.0 – 400.0 µg/L | 19.0 | 19.0 (Dip - 08 Eyl) | **19.0** (08 Eyl #90) | Tükendi | **KRİTİK DÜŞÜK** | ESC HF 2021; Snook et al., 2021 |
-| **10. Serum Demiri (Fe)** | 59.0 – 158.0 µg/dL | 15.0 | 15.0 (Dip - 08 Eyl) | **15.0** (08 Eyl #90) | Tükendi | **KRİTİK DÜŞÜK** | Snook et al., 2021 |
-| **11. UIBC** | 110.0 – 370.0 µg/dL | 326.8 | 326.8 (08 Eyl) | **326.8** (08 Eyl #90) | Stabil | **NORMAL** | Snook et al., 2021 |
-| **12. Vitamin B12** | 211.0 – 946.0 pg/mL | 638.0 | 638.0 (08 Eyl) | **638.0** (08 Eyl #90) | Yeterli | **NORMAL** | Snook et al., 2021 |
-| **13. Folat** | 3.1 – 17.5 ng/mL | 4.76 | 4.76 (08 Eyl) | **4.76** (08 Eyl #90) | Yeterli | **NORMAL** | Snook et al., 2021 |
-| **14. C-Reaktif Protein (CRP)** | 0.0 – 5.0 mg/L | 2.6 | 154.0 (Pik - 21 Şub) | **5.7** (15 Eyl #93) | -%96.3 (Pik'e göre) | **REMİSYONDA** | CDC / NHSN; Horan et al., 2008 |
-| **15. Lökosit Sayısı (WBC)** | 4.01 – 9.75 × 10⁹/L | 10.62 | 27.10 (Pik - 21 Şub) | **9.01** (15 Eyl #93) | -%15.2 | **NORMAL** | Horan et al., 2008 |
-| **16. Nötrofil Sayısı (NEU#)** | 1.92 – 6.44 × 10⁹/L | 12.17 | 12.37 (Pik - 02 Mar) | **4.52** (15 Eyl #93) | -%62.9 | **NORMAL** | Horan et al., 2008 |
-| **17. Nötrofil Yüzdesi (NEU%)** | %41.2 – 73.5 | 84.2 | 84.2 (Pik - 19 Şub) | **50.1** (15 Eyl #93) | -%40.5 | **NORMAL** | Horan et al., 2008 |
-| **18. Lenfosit Sayısı (LYM#)** | 1.15 – 3.43 × 10⁹/L | 1.68 | 4.43 (Pik - 20 Ağu) | **3.88** (15 Eyl #93) | +%131.0 | **HAFİF YÜKSEK** | Horan et al., 2008 |
-| **19. Lenfosit Yüzdesi (LYM%)** | %19.0 – 48.9 | 11.6 | 46.2 (Pik - 25 Ağu) | **43.1** (15 Eyl #93) | +%271.6 | **NORMAL** | Horan et al., 2008 |
-| **20. Nötrofil/Lenfosit (NLR)** | 0.5 – 2.5 | 1.47 | 1.00 (Dip - 03 Ağu) | **1.16** (15 Eyl #93) | -%21.1 | **NORMAL** | Horan et al., 2008 |
-| **21. Trombosit Sayısı (PLT)** | 151 – 387 × 10⁹/L | 163.0 | 88.0 (Dip - 22 Şub) | **368.0** (15 Eyl #93) | +%125.8 | **NORMAL** | Vahanian et al., 2022 |
-| **22. Koagülasyon (INR)** | 2.0 – 3.0 (Hedef) | 1.10 | 8.46 (Pik - 16 Mar) | **1.95** (15 Eyl #93) | ⚠️ -0.17 (10 Eyl'e göre) | **HEDEF ALTI ⚠️** | ESC/EACTS; Vahanian et al., 2022 |
-| **23. Protrombin Zamanı (PT)** | 9.6 – 12.0 sn | 13.1 | 64.0 (Pik - 16 Mar) | **18.4** (15 Eyl #93) | +%40.5 | **UZAMIŞ (VKA)** | Vahanian et al., 2022 |
-| **24. aPTT** | 23.9 – 33.2 sn | 27.9 | 85.5 (Pik - 16 Mar) | **44.4** (15 Eyl #93) | +%59.1 | **UZAMIŞ (VKA)** | Vahanian et al., 2022 |
-| **25. Protrombin Akt. (PT%)** | %74.4 – 130.0 | 82.8 | 8.2 (Dip - 16 Mar) | **46.3** (15 Eyl #93) | -%44.1 | **BASKILANMIŞ** | Vahanian et al., 2022 |
-| **26. Serum Kreatinin** | 0.7 – 1.2 mg/dL | 1.11 | 1.13 (Pik - 20 Mar) | **1.11** (15 Eyl #93) | 0.0% | **NORMAL** | KDIGO CKD Work Group, 2013 |
-| **27. eGFR (CKD-EPI)** | >60 mL/dk/1.73 m² | 72.58 | 94.00 (Pik - 23 Tem) | **70.89** (15 Eyl #93) | -%2.3 | **NORMAL** | Inker et al., 2021 |
-| **28. Üre Azotu (BUN)** | 7.0 – 20.0 mg/dL | 18.3 | 29.0 (Pik - 25 Şub) | **14.5** (15 Eyl #93) | -%20.8 | **NORMAL** | KDIGO CKD Work Group, 2013 |
-| **29. Potasyum (K)** | 3.5 – 5.5 mmol/L | 3.64 | 5.05 (Pik - 15 Eyl) | **5.05** (15 Eyl #93) | +%38.7 | **NORMAL (ÜST)** | KDIGO CKD Work Group, 2013 |
-| **30. Sodyum (Na)** | 136 – 145 mmol/L | 136.0 | 149.0 (Pik - 21 Şub) | **138.0** (15 Eyl #93) | +%1.5 | **NORMAL** | KDIGO CKD Work Group, 2013 |
-| **31. Klor (Cl)** | 95 – 110 mmol/L | 103.0 | 94.0 (Dip - 16 Mar) | **101.0** (15 Eyl #93) | -%1.9 | **NORMAL** | KDIGO CKD Work Group, 2013 |
-| **32. Açlık Glukozu** | 82 – 115 mg/dL | 81.0 | 146.0 (Postop 21 Şub) | **98.0** (15 Eyl #93) | +%21.0 | **NORMAL** | ADA Standards of Care, 2024 |
+| Biyobelirteç / Kod              |    Referans Aralığı     | İlk Değer (19 Şub) |  Zirve / Dip Noktası  | Son Değer (Tarih - Test) |  Yüzdesel Değişim (%Δ)   |   Klinik Durum    | Kılavuz ve Literatür Dayanağı                       |
+| :------------------------------ | :---------------------: | :----------------: | :-------------------: | :----------------------: | :----------------------: | :---------------: | :-------------------------------------------------- |
+| **1. Hemoglobin (HGB)**         |    13.4 – 17.6 g/dL     |        14.0        |  7.7 (Dip - 27 Tem)   |   **9.7** (15 Eyl #93)   |   -%30.7 (Bazale göre)   |     **DÜŞÜK**     | BSG 2021; Snook et al., 2021                        |
+| **2. Hematokrit (HCT)**         |      %40.5 – 53.6       |        41.4        |  25.0 (Dip - 22 Şub)  |  **30.1** (15 Eyl #93)   |          -%27.3          |     **DÜŞÜK**     | Goddard et al., 2011                                |
+| **3. Eritrosit Sayısı (RBC)**   | 4.36 – 6.12 × 10^{12}/L |        4.63        |  2.73 (Dip - 22 Şub)  |  **3.93** (15 Eyl #93)   |          -%15.1          |     **DÜŞÜK**     | Camaschella, 2015                                   |
+| **4. Eritrosit Hacmi (MCV)**    |     75.0 – 98.3 fL      |        88.0        |  76.4 (Dip - 08 Eyl)  |  **76.7** (15 Eyl #93)   |          -%12.8          |  **MİKROSİTER**   | Camaschella, 2015                                   |
+| **5. Eritrosit Hb (MCH)**       |     23.2 – 33.2 pg      |        30.8        |  24.5 (Dip - 02 Eyl)  |  **24.6** (15 Eyl #93)   |          -%20.1          |   **HİPOKROM**    | Camaschella, 2015                                   |
+| **6. MCHC**                     |    31.3 – 34.8 g/dL     |        35.1        |  30.1 (Dip - 05 May)  |  **32.2** (15 Eyl #93)   |          -%8.3           |    **NORMAL**     | Camaschella, 2015                                   |
+| **7. RDW-CV**                   |      %11.7 – 15.3       |        13.9        |  20.2 (Pik - 05 May)  |  **18.2** (15 Eyl #93)   |          +%30.9          |  **ANİZOSİTOZ**   | Camaschella, 2015                                   |
+| **8. RDW-SD**                   |     38.4 – 47.6 fL      |        45.7        |  61.2 (Pik - 05 May)  |  **51.8** (15 Eyl #93)   |          +%13.3          |    **YÜKSEK**     | Camaschella, 2015                                   |
+| **9. Serum Ferritini**          |    30.0 – 400.0 µg/L    |        19.0        |  19.0 (Dip - 08 Eyl)  |  **19.0** (08 Eyl #90)   |         Tükendi          | **KRİTİK DÜŞÜK**  | ESC HF 2021; Snook et al., 2021                     |
+| **10. Serum Demiri (Fe)**       |   59.0 – 158.0 µg/dL    |        15.0        |  15.0 (Dip - 08 Eyl)  |  **15.0** (08 Eyl #90)   |         Tükendi          | **KRİTİK DÜŞÜK**  | Snook et al., 2021                                  |
+| **11. UIBC**                    |   110.0 – 370.0 µg/dL   |       326.8        |    326.8 (08 Eyl)     |  **326.8** (08 Eyl #90)  |          Stabil          |    **NORMAL**     | Snook et al., 2021                                  |
+| **12. Vitamin B12**             |   211.0 – 946.0 pg/mL   |       638.0        |    638.0 (08 Eyl)     |  **638.0** (08 Eyl #90)  |         Yeterli          |    **NORMAL**     | Snook et al., 2021                                  |
+| **13. Folat**                   |    3.1 – 17.5 ng/mL     |        4.76        |     4.76 (08 Eyl)     |  **4.76** (08 Eyl #90)   |         Yeterli          |    **NORMAL**     | Snook et al., 2021                                  |
+| **14. C-Reaktif Protein (CRP)** |     0.0 – 5.0 mg/L      |        2.6         | 154.0 (Pik - 21 Şub)  |   **5.7** (15 Eyl #93)   |   -%96.3 (Pik'e göre)    |  **REMİSYONDA**   | CDC / NHSN; Horan et al., 2008                      |
+| **15. Lökosit Sayısı (WBC)**    |   4.01 – 9.75 × 10⁹/L   |       10.62        | 27.10 (Pik - 21 Şub)  |  **9.01** (15 Eyl #93)   |          -%15.2          |    **NORMAL**     | Horan et al., 2008                                  |
+| **16. Nötrofil Sayısı (NEU#)**  |   1.92 – 6.44 × 10⁹/L   |       12.17        | 12.37 (Pik - 02 Mar)  |  **4.52** (15 Eyl #93)   |          -%62.9          |    **NORMAL**     | Horan et al., 2008                                  |
+| **17. Nötrofil Yüzdesi (NEU%)** |      %41.2 – 73.5       |        84.2        |  84.2 (Pik - 19 Şub)  |  **50.1** (15 Eyl #93)   |          -%40.5          |    **NORMAL**     | Horan et al., 2008                                  |
+| **18. Lenfosit Sayısı (LYM#)**  |   1.15 – 3.43 × 10⁹/L   |        1.68        |  4.43 (Pik - 20 Ağu)  |  **3.88** (15 Eyl #93)   |         +%131.0          | **HAFİF YÜKSEK**  | Horan et al., 2008                                  |
+| **19. Lenfosit Yüzdesi (LYM%)** |      %19.0 – 48.9       |        11.6        |  46.2 (Pik - 25 Ağu)  |  **43.1** (15 Eyl #93)   |         +%271.6          |    **NORMAL**     | Horan et al., 2008                                  |
+| **20. Nötrofil/Lenfosit (NLR)** |        0.5 – 2.5        |        1.47        |  1.00 (Dip - 03 Ağu)  |  **1.16** (15 Eyl #93)   |          -%21.1          |    **NORMAL**     | Horan et al., 2008                                  |
+| **21. Trombosit Sayısı (PLT)**  |    151 – 387 × 10⁹/L    |       163.0        |  88.0 (Dip - 22 Şub)  |  **368.0** (15 Eyl #93)  |         +%125.8          |    **NORMAL**     | Vahanian et al., 2022                               |
+| **22. Koagülasyon (INR)**       |    2.0 – 3.0 (Hedef)    |        1.10        |  8.46 (Pik - 16 Mar)  |  **1.95** (15 Eyl #93)   | ⚠️ -0.17 (10 Eyl'e göre) | **HEDEF ALTI ⚠️** | ESC/EACTS; Praz et al., 2025; Vahanian et al., 2022 |
+| **23. Protrombin Zamanı (PT)**  |      9.6 – 12.0 sn      |        13.1        |  64.0 (Pik - 16 Mar)  |  **18.4** (15 Eyl #93)   |          +%40.5          | **UZAMIŞ (VKA)**  | Vahanian et al., 2022                               |
+| **24. aPTT**                    |     23.9 – 33.2 sn      |        27.9        |  85.5 (Pik - 16 Mar)  |  **44.4** (15 Eyl #93)   |          +%59.1          | **UZAMIŞ (VKA)**  | Vahanian et al., 2022                               |
+| **25. Protrombin Akt. (PT%)**   |      %74.4 – 130.0      |        82.8        |  8.2 (Dip - 16 Mar)   |  **46.3** (15 Eyl #93)   |          -%44.1          |  **BASKILANMIŞ**  | Vahanian et al., 2022                               |
+| **26. Serum Kreatinin**         |     0.7 – 1.2 mg/dL     |        1.11        |  1.13 (Pik - 20 Mar)  |  **1.11** (15 Eyl #93)   |           0.0%           |    **NORMAL**     | KDIGO CKD Work Group, 2013                          |
+| **27. eGFR (CKD-EPI)**          |    >60 mL/dk/1.73 m²    |       72.58        | 94.00 (Pik - 23 Tem)  |  **70.89** (15 Eyl #93)  |          -%2.3           |    **NORMAL**     | Inker et al., 2021                                  |
+| **28. Üre Azotu (BUN)**         |    7.0 – 20.0 mg/dL     |        18.3        |  29.0 (Pik - 25 Şub)  |  **14.5** (15 Eyl #93)   |          -%20.8          |    **NORMAL**     | KDIGO CKD Work Group, 2013                          |
+| **29. Potasyum (K)**            |    3.5 – 5.5 mmol/L     |        3.64        |  5.05 (Pik - 15 Eyl)  |  **5.05** (15 Eyl #93)   |          +%38.7          | **NORMAL (ÜST)**  | KDIGO CKD Work Group, 2013                          |
+| **30. Sodyum (Na)**             |    136 – 145 mmol/L     |       136.0        | 149.0 (Pik - 21 Şub)  |  **138.0** (15 Eyl #93)  |          +%1.5           |    **NORMAL**     | KDIGO CKD Work Group, 2013                          |
+| **31. Klor (Cl)**               |     95 – 110 mmol/L     |       103.0        |  94.0 (Dip - 16 Mar)  |  **101.0** (15 Eyl #93)  |          -%1.9           |    **NORMAL**     | KDIGO CKD Work Group, 2013                          |
+| **32. Açlık Glukozu**           |     82 – 115 mg/dL      |        81.0        | 146.0 (Postop 21 Şub) |  **98.0** (15 Eyl #93)   |          +%21.0          |    **NORMAL**     | ADA Standards of Care, 2024                         |
 
 ---
 
 ## 4. GÜNCEL FARMAKOTERAPİ VE RİSK YÖNETİM MATRİSİ
 
 1. **Warfmadin (Varfarin Sodyum) 5 mg Tablet:**
-    - **Mevcut Doz:** Haftalık 20 mg (1 Ağustos'tan beri stabil rejim).
-    - **Kullanım Amacı:** 25 mm Carbomedics mekanik protez aort kapağında tromboembolizm profilaksisi (Vahanian et al.,
-      2022).
-    - **⚠️ KRİTİK KLİNİK ALARM & DOZ REVİZYONU:** 15 Eylül kontrolünde INR **1.95'e** inmiştir. Antibiyotik (Klamoks)
-      kürünün 11 Eylül'de bitmesiyle bağırsak florasında K vitamini sentezi yeniden başlamış ve CYP2C9 klirensi
-      toparlanmıştır (Zhang et al., 2011). Tromboemboli riskine karşı sorumlu hekim kontrolünde haftalık kümülatif doz
-      **22.5–25 mg/hafta** (örneğin 5 gün 1/2 tablet [2.5 mg], 2 gün 1 tam tablet [5 mg] veya hekimce uygun görülen
-      şema) seviyesine titre edilmeli ve 7–10 gün sonra kontrol INR alınmalıdır (Ageno et al., 2012; Praz et al., 2025).
+   - **Mevcut Doz:** Haftalık 20 mg (1 Ağustos'tan beri stabil rejim).
+   - **Kullanım Amacı:** 25 mm Carbomedics mekanik protez aort kapağında tromboembolizm profilaksisi (Vahanian et al.,
+     2022).
+   - **⚠️ KRİTİK KLİNİK ALARM & DOZ REVİZYONU:** 15 Eylül kontrolünde INR **1.95'e** inmiştir. Antibiyotik (Klamoks)
+     kürünün 11 Eylül'de bitmesiyle bağırsak florasında K vitamini sentezi yeniden başlamış ve CYP2C9 klirensi
+     toparlanmıştır (Zhang et al., 2011). Tromboemboli riskine karşı sorumlu hekim kontrolünde haftalık kümülatif doz
+     **22.5–25 mg/hafta** (örneğin 5 gün 1/2 tablet [2.5 mg], 2 gün 1 tam tablet [5 mg] veya hekimce uygun görülen
+     şema) seviyesine titre edilmeli ve 7–10 gün sonra kontrol INR alınmalıdır (Ageno et al., 2012; Praz et al., 2025).
 
 2. **Dilatrend (Karvedilol) 6.25 mg Tablet:**
-    - **Mevcut Doz:** Günde 2 kez 1 tablet (12.5 mg/gün).
-    - **Kullanım Amacı:** Negatif inotrop ve kronotrop etkiyle sol ventrikül sistolik fırlatma gücünü ve kesme
-      gerilimini (dP/dt) baskılama; taşikardiyi önleme (Isselbacher et al., 2022; Melby et al., 2013).
+   - **Mevcut Doz:** Günde 2 kez 1 tablet (12.5 mg/gün).
+   - **Kullanım Amacı:** Negatif inotrop ve kronotrop etkiyle sol ventrikül sistolik fırlatma gücünü ve kesme
+     gerilimini (dP/dt) baskılama; taşikardiyi önleme (Isselbacher et al., 2022; Melby et al., 2013).
 
 3. **Coversyl (Perindopril Arjinin) 5 mg Tablet:**
-    - **Mevcut Doz:** Günde 1 kez sabah 1 tablet (4 Ağustos'ta başlandı).
-    - **Kullanım Amacı:** Sistemik vasküler rezistansı (SVR) kırarak afterload yükünü düşürme ve arteriyel kan basıncını
-      &le;120/80 mmHg bandında stabilize etme (McEvoy et al., 2024).
+   - **Mevcut Doz:** Günde 1 kez sabah 1 tablet (4 Ağustos'ta başlandı).
+   - **Kullanım Amacı:** Sistemik vasküler rezistansı (SVR) kırarak afterload yükünü düşürme ve arteriyel kan basıncını
+     &le;120/80 mmHg bandında stabilize etme (McEvoy et al., 2024).
 
 4. **EcopirinPro (Asetilsalisilik Asit) 81 mg Tablet:**
-    - **Mevcut Doz:** Günde 1 kez 1 tablet (Öğle tok karnına).
-    - **Kullanım Amacı:** Koroner buton reimplantasyon hatları ve 32 mm Dacron greft tromboz profilaksisi (Whitlock et
-      al., 2023). Warfarin ile dual kullanımda majör kanama riski takiplidir.
+   - **Mevcut Doz:** Günde 1 kez 1 tablet (Öğle tok karnına).
+   - **Kullanım Amacı:** Koroner buton reimplantasyon hatları ve 32 mm Dacron greft tromboz profilaksisi (Whitlock et
+     al., 2023). Warfarin ile dual kullanımda majör kanama riski takiplidir.
 
 5. **Panto (Pantoprazol) 40 mg Enterik Tablet:**
-    - **Mevcut Doz:** Günde 1 kez sabah aç karnına (Ferro Sanol'den 1 saat sonra).
-    - **Kullanım Amacı:** Dual antitrombotik (Warfarin + Aspirin) kullanımına bağlı eroziv gastrit, peptik ülser ve
-      majör GİS kanama profilaksisi (Bhatt et al., 2010).
+   - **Mevcut Doz:** Günde 1 kez sabah aç karnına (Ferro Sanol'den 1 saat sonra).
+   - **Kullanım Amacı:** Dual antitrombotik (Warfarin + Aspirin) kullanımına bağlı eroziv gastrit, peptik ülser ve
+     majör GİS kanama profilaksisi (Bhatt et al., 2010).
 
 6. **Ferro Sanol Duodenal (Ferröz Glisin Sülfat - 100 mg Fe²⁺) Kapsül:**
-    - **Mevcut Doz:** Günde 1 kez sabah aç karnına (11 Eylül 06:28'de başlandı).
-    - **Kullanım Amacı:** Ağır mikrositer hipokrom demir eksikliği anemisi (HGB: 9.7 g/dL, Ferritin: 19 µg/L) replasmanı
-      (Camaschella, 2015; Snook et al., 2021). Panto ile 1 saatlik ayrım kuralı titizlikle uygulanmalıdır.
+   - **Mevcut Doz:** Günde 1 kez sabah aç karnına (11 Eylül 06:28'de başlandı).
+   - **Kullanım Amacı:** Ağır mikrositer hipokrom demir eksikliği anemisi (HGB: 9.7 g/dL, Ferritin: 19 µg/L) replasmanı
+     (Camaschella, 2015; Snook et al., 2021). Panto ile 1 saatlik ayrım kuralı titizlikle uygulanmalıdır.
 
 7. **Klamoks BID (Amoksisilin + Klavulanik Asit) 1000 mg Tablet:**
-    - **Durum:** 11 Eylül saat 20:59'da 8 günlük kür tamamlanmış ve **kesilmiştir** (Sonlandırıldı). CRP 5.7 mg/L'ye
-      gerileyerek kür başarısı sağlanmıştır (Horan et al., 2008).
+   - **Durum:** 11 Eylül saat 20:59'da 8 günlük kür tamamlanmış ve **kesilmiştir** (Sonlandırıldı). CRP 5.7 mg/L'ye
+     gerileyerek kür başarısı sağlanmıştır (Horan et al., 2008).
 
 8. **Kapril (Kaptopril) 25 mg Tablet (Gerektiğinde - PRN):**
-    - **Mevcut Doz:** Sistolik Kan Basıncı ≥ 150 mmHg ölçüldüğünde sublingual acil kurtarma ilacı (Mancia et al.,
-      2023).
+   - **Mevcut Doz:** Sistolik Kan Basıncı ≥ 150 mmHg ölçüldüğünde sublingual acil kurtarma ilacı (Mancia et al.,
+     2023).
 
 ---
 
