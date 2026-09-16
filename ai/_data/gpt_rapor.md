@@ -21,7 +21,7 @@ Postoperatif seyirde Mart ayında gastrointestinal yakınmalar, Nisan ayında te
 
 | KPI                       | 16.09.2026 klinik durumu | Boylamsal değişim / yorum                                                                     | Durum                                                            |
 | ------------------------- | -----------------------: | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **7 günlük ev tansiyonu** |          **113/75 mmHg** | Son kayıt 15.09.2026: 115/77 mmHg; ev ölçümleri tedavi altında düşük-normal bantta seyrediyor | Hemodinamik olarak kontrollü                                     |
+| **7 günlük ev tansiyonu** |          **113/76 mmHg** | Son kayıt 15.09.2026: 115/77 mmHg; ev ölçümleri tedavi altında düşük-normal bantta seyrediyor | Hemodinamik olarak kontrollü                                     |
 | **INR**                   |                 **1,95** | 10.09.2026: 2,12 → **−8,0%**; klinik hedef 2,0–3,0 aralığının hemen altında                   | **Öncelikli güvenlik alarmı**                                    |
 | **Hemoglobin**            |             **9,7 g/dL** | 08.09.2026: 9,7 → **0,0%**; 15.09.2026'da anemi sürüyor                                       | Belirgin demir eksikliği anemisi                                 |
 | **Ferritin**              |              **19 µg/L** | Son mevcut değer 08.09.2026; veri setinde yeni ferritin Test #93 içinde bulunmuyor            | Demir depoları düşük                                             |
@@ -34,7 +34,7 @@ Veri kaydına göre 15.09.2026 Test #93'te INR 1,95, CRP 5,7 mg/L, hemoglobin 9,
 
 ### 3.1 Hemodinamik kontrol ve rezidüel aort diseksiyonu
 
-Son 7 günlük ev kan basıncı ortalaması 113/75 mmHg'dir. Bu seviye 2024 ESC kılavuzundaki tedavi altındaki çoğu erişkin için önerilen 120–129/70–79 mmHg hedef bandının altında sistolik basınç sergiler; değerlendirme semptom, ortostatik tolerans ve ölçüm tekniği ile birlikte yapılmalıdır (McEvoy et al., 2024). Aort diseksiyonu sonrası kan basıncı ve nabız kontrolü aort duvar stresini azaltma amacının temel parçalarındandır (Isselbacher et al., 2022).
+Son 7 günlük ev kan basıncı ortalaması 113/76 mmHg'dir. Bu seviye 2024 ESC kılavuzundaki tedavi altındaki çoğu erişkin için önerilen 120–129/70–79 mmHg hedef bandının altında sistolik basınç sergiler; değerlendirme semptom, ortostatik tolerans ve ölçüm tekniği ile birlikte yapılmalıdır (McEvoy et al., 2024). Aort diseksiyonu sonrası kan basıncı ve nabız kontrolü aort duvar stresini azaltma amacının temel parçalarındandır (Isselbacher et al., 2022).
 
 Mevcut ilaç şeması carvedilol eşdeğeri beta-blokaj ve perindopril ile sistemik basınç kontrolünü sürdürmektedir. Karvedilolün negatif kronotropik ve inotropik etkileri ile perindoprilin renin-anjiyotensin sistemini baskılaması, kalp hızı ve sistolik yükün azaltılmasına hizmet eder; ancak mevcut kan basıncı düşük-normal düzeyde olduğundan baş dönmesi, presenkop, ortostatik yakınma veya böbrek fonksiyonunda değişiklik gelişirse tedavi yeniden değerlendirilmelidir (Isselbacher et al., 2022; McEvoy et al., 2024).
 
@@ -181,7 +181,7 @@ Kreatinin 1,11 mg/dL ve eGFR 70,89 mL/dk/1,73 m² mevcut kayıtta stabil kabul e
 
 **Öncelik 4 — Rezidüel aort diseksiyonu:** Önceki BT anjiyografilerle karşılaştırmalı görüntüleme planının kalp-damar cerrahisi/aort ekibi tarafından sürdürülmesi (Isselbacher et al., 2022).
 
-**Öncelik 5 — Hemodinamik tedavi:** 113/75 mmHg ev ortalamasının semptom ve ortostatik tolerans ile birlikte değerlendirilmesi; beta-bloker ve ACE inhibitörü tedavisinin bu bağlamda izlenmesi (McEvoy et al., 2024).
+**Öncelik 5 — Hemodinamik tedavi:** 113/76 mmHg ev ortalamasının semptom ve ortostatik tolerans ile birlikte değerlendirilmesi; beta-bloker ve ACE inhibitörü tedavisinin bu bağlamda izlenmesi (McEvoy et al., 2024).
 
 ## 9. Kırmızı Bayraklar
 
@@ -255,7 +255,7 @@ Mekanik aort kapağı için hedef aralık 2,0–3,0 kabul edildiğinde 15.09.202
 
 ## 13. Sonuç ve Klinik Sentez
 
-16.09.2026 itibarıyla klinik tablo iki farklı ekseni aynı anda göstermektedir. Birinci eksen, 113/75 mmHg yedi günlük ev tansiyon ortalaması, stabil kilo ve gerileyen CRP ile temsil edilen hemodinamik ve inflamatuvar iyileşme eğilimidir. İkinci eksen ise 1,95 INR ile mekanik kapak antikoagülasyonunda yeniden hedef dışına çıkış ve 9,7 g/dL hemoglobin ile süren demir eksikliği anemisidir. Bu nedenle mevcut durum “tek yönlü kötüleşme” olarak tanımlanamaz; aynı zamanda tüm risklerin ortadan kalktığı bir stabilizasyon olarak da nitelendirilemez (Isselbacher et al., 2022; Praz et al., 2025; McEvoy et al., 2024; Snook et al., 2021).
+16.09.2026 itibarıyla klinik tablo iki farklı ekseni aynı anda göstermektedir. Birinci eksen, 113/76 mmHg yedi günlük ev tansiyon ortalaması, stabil kilo ve gerileyen CRP ile temsil edilen hemodinamik ve inflamatuvar iyileşme eğilimidir. İkinci eksen ise 1,95 INR ile mekanik kapak antikoagülasyonunda yeniden hedef dışına çıkış ve 9,7 g/dL hemoglobin ile süren demir eksikliği anemisidir. Bu nedenle mevcut durum “tek yönlü kötüleşme” olarak tanımlanamaz; aynı zamanda tüm risklerin ortadan kalktığı bir stabilizasyon olarak da nitelendirilemez (Isselbacher et al., 2022; Praz et al., 2025; McEvoy et al., 2024; Snook et al., 2021).
 
 En yakın klinik karar düğümü INR'dir. INR 1,95 değeri mekanik aort kapak için 2,0–3,0 terapötik aralığının altındadır ve warfarin tedavisinin kısa aralıkta klinisyen gözetiminde yeniden değerlendirilmesini gerektirir. Burada amaç tek seferlik agresif doz değişikliği değil, hedef aralıkta sürdürülebilir ve güvenli antikoagülasyon sağlamaktır (Praz et al., 2025).
 
@@ -280,6 +280,8 @@ Isselbacher, E. M., Preventza, O., Black, J. H., 3rd, Augoustides, J. G., Beck, 
 Inker, L. A., Eneanya, N. D., Coresh, J., Tighiouart, H., Wang, D., Sang, Y., Crews, D. C., Doria, A., Estrella, M. M., Froissart, M., Grams, M. E., Greene, T., Grubb, A., Gudnason, V., Gutiérrez, O. M., Kalil, R., Karger, A. B., Mauer, M., Navis, G., Nelson, R. G., Poggio, E. D., Rodby, R., Rossing, P., Rule, A. D., Selvin, E., Seegmiller, J. C., Shlipak, M. G., Torres, V. E., Yang, W., Ballew, S. H., Couture, S. J., Powe, N. R., & Levey, A. S. (2021). New creatinine- and cystatin C-based equations to estimate glomerular filtration rate without race. _New England Journal of Medicine, 385_(19), 1737–1749. https://doi.org/10.1056/NEJMoa2102953
 
 McEvoy, J. W., McCarthy, C. P., Bruno, R. M., Brouwers, S., Canavan, M. D., Ceconi, C., Christodorescu, R. M., Daskalopoulou, S. S., Ferro, C. J., Gerdts, E., Hanssen, H., Harris, J., Lauder, L., McManus, R. J., Molloy, G. J., Rahimi, K., Regitz-Zagrosek, V., Rossi, G. P., Sandset, E. C., Scheenaerts, B., Staessen, J. A., Uchmanowicz, I., Volterrani, M., & Touyz, R. M. (2024). 2024 ESC Guidelines for the management of elevated blood pressure and hypertension. _European Heart Journal, 45_(38), 3912–4018. https://doi.org/10.1093/eurheartj/ehae178
+
+Vahanian, A., Beyersdorf, F., Praz, F., Milojevic, M., Baldus, S., Bauersachs, J., Capodanno, D., Conradi, L., De Bonis, M., De Paulis, R., Delgado, V., Freemantle, N., Gilard, M., Haugaa, K. H., Jeppsson, A., Jüni, P., Pierard, L., Prendergast, B. D., Sádaba, J. R., … ESC/EACTS Scientific Document Group. (2022). 2021 ESC/EACTS Guidelines for the management of valvular heart disease. _European Heart Journal, 43_(7), 561–632. https://doi.org/10.1093/eurheartj/ehab395
 
 Praz, F., Borger, M. A., Lanz, J., Marin-Cuartas, M., Abreu, A., Adamo, M., Ajmone Marsan, N., Barili, F., Bonaros, N., Cosyns, B., De Paulis, R., Gamra, H., Jahangiri, M., Jeppsson, A., Klautz, R. J. M., Mores, B., Pérez-David, E., Pöss, J., Prendergast, B. D., Rocca, B., Rossello, X., Suzuki, M., Thiele, H., Tribouilloy, C. M., & Wojakowski, W. (2025). 2025 ESC/EACTS Guidelines for the management of valvular heart disease. _European Heart Journal, 46_(44), 4635–4736. https://doi.org/10.1093/eurheartj/ehaf194
 
