@@ -502,5 +502,7 @@
   {"at":"2026-09-16 11:02","model":"Pressure","user_id":1,"sys":116,"dia":78},
   {"at":"2026-09-16 19:33","model":"Pressure","user_id":1,"sys":103,"dia":70},
   {"at":"2026-09-17 07:21","model":"Pressure","user_id":1,"sys":117,"dia":71},
-  {"at":"2026-09-17 19:55","model":"Pressure","user_id":1,"sys":107,"dia":72}
+  {"at":"2026-09-17 19:55","model":"Pressure","user_id":1,"sys":107,"dia":72},
+  {"at":"2026-09-18 07:10","model":"Pressure","user_id":1,"sys":116,"dia":79},
+  {"at":"2026-09-18 19:45","model":"Pressure","user_id":1,"sys":107,"dia":77}
 ]
