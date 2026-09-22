@@ -90,5 +90,6 @@
   {"at":"2026-09-08 14:15","model":"Test","user_id":1,"hospital_id":5,"id":90,"description":"Kapsamlı laboratuvar değerlendirmesi (Tam Kan Sayımı, Biyokimya)","title":"Geniş Biyokimya ve Hemogram Paneli","is_special":false},
   {"at":"2026-09-08 14:15","model":"Test","user_id":1,"hospital_id":5,"id":91,"description":"Tam İdrar Analizi","title":"Tam İdrar Analizi (Strip + Mikroskopi)","is_special":false},
   {"at":"2026-09-10 16:57","model":"Test","user_id":1,"hospital_id":2,"id":92,"description":"INR ve Koagülasyon Takibi","title":"Koagülasyon Paneli","is_special":false},
-  {"at":"2026-09-15 15:26","model":"Test","user_id":1,"hospital_id":2,"id":93,"description":"Defne Devlet Hastanesi kontrol laboratuvarı (Biyokimya, Hemogram, Koagülasyon, CK-MB)","title":"Geniş Biyokimya, Hemogram ve Koagülasyon Paneli","is_special":false}
+  {"at":"2026-09-15 15:26","model":"Test","user_id":1,"hospital_id":2,"id":93,"description":"Defne Devlet Hastanesi kontrol laboratuvarı (Biyokimya, Hemogram, Koagülasyon, CK-MB)","title":"Geniş Biyokimya, Hemogram ve Koagülasyon Paneli","is_special":false},
+  {"at":"2026-09-22 16:12","model":"Test","user_id":1,"hospital_id":2,"id":94,"description":"Defne Devlet Hastanesi kontrol laboratuvarı (Hemogram, Biyokimya, Koagülasyon)","title":"Geniş Biyokimya, Hemogram ve Koagülasyon Paneli","is_special":false}
 ]
