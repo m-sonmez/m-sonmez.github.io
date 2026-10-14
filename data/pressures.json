@@ -547,5 +547,15 @@
   {"at":"2026-10-08 18:00","model":"Pressure","user_id":1,"sys":144,"dia":93},
   {"at":"2026-10-08 20:20","model":"Pressure","user_id":1,"sys":114,"dia":73},
   {"at":"2026-10-09 09:00","model":"Pressure","user_id":1,"sys":123,"dia":77},
-  {"at":"2026-10-09 20:20","model":"Pressure","user_id":1,"sys":117,"dia":79}
+  {"at":"2026-10-09 20:20","model":"Pressure","user_id":1,"sys":117,"dia":79},
+  {"at":"2026-10-10 11:00","model":"Pressure","user_id":1,"sys":111,"dia":74},
+  {"at":"2026-10-10 20:25","model":"Pressure","user_id":1,"sys":111,"dia":83},
+  {"at":"2026-10-11 10:05","model":"Pressure","user_id":1,"sys":109,"dia":74},
+  {"at":"2026-10-11 20:35","model":"Pressure","user_id":1,"sys":107,"dia":75},
+  {"at":"2026-10-12 10:45","model":"Pressure","user_id":1,"sys":118,"dia":75},
+  {"at":"2026-10-12 20:05","model":"Pressure","user_id":1,"sys":117,"dia":74},
+  {"at":"2026-10-13 09:00","model":"Pressure","user_id":1,"sys":124,"dia":80},
+  {"at":"2026-10-13 20:23","model":"Pressure","user_id":1,"sys":132,"dia":88},
+  {"at":"2026-10-14 08:25","model":"Pressure","user_id":1,"sys":114,"dia":78},
+  {"at":"2026-10-14 22:30","model":"Pressure","user_id":1,"sys":109,"dia":74}
 ]
