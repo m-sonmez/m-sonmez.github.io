@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AQUA-CAST PRO // Marine Fishing Forecast & Solunar Calculator</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            marine: {
+              950: '#060b13',
+              900: '#0b132b',
+              850: '#101a38',
+              800: '#1c2541',
+              700: '#2a365c',
+              cyan: '#06b6d4',
+              teal: '#14b8a6',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              purple: '#a855f7'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Chart.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Styles for Glassmorphism & Animations -->
+  <style>
+    body {
+      background-color: #060b13;
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(6, 182, 212, 0.08) 0px, transparent 50%),
+        radial-gradient(at 85% 85%, rgba(168, 85, 247, 0.06) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.04) 0px, transparent 50%);
+      background-attachment: fixed;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .glass-card {
+      background: rgba(28, 37, 65, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .glass-card-glow {
+      position: relative;
+    }
+    .glass-card-glow::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(255, 255, 255, 0.05), rgba(168, 85, 247, 0.3));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Gauge Arc Animation */
+    .gauge-ring {
+      transition: stroke-dashoffset 0.8s ease-in-out, stroke 0.5s ease;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(11, 19, 43, 0.8);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a365c;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #06b6d4;
+    }
+
+    /* Pulse effects */
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.98); }
+    }
+    .animate-pulse-subtle {
+      animation: pulse-subtle 3s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between antialiased selection:bg-marine-cyan selection:text-slate-950">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-slate-800/80 bg-marine-950/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-gradient-to-tr from-marine-cyan to-marine-teal rounded-xl shadow-lg shadow-marine-cyan/20">
+          <svg class="w-6 h-6 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
+            AQUA-CAST <span class="text-xs px-2 py-0.5 rounded-full bg-marine-cyan/20 text-marine-cyan font-mono border border-marine-cyan/30">PRO v2.5</span>
+          </h1>
+          <p class="text-xs text-slate-400 font-medium hidden sm:block">Hydro-Meteorological & Solunar Activity Engine</p>
+        </div>
+      </div>
+
+      <!-- Current Location & Time Badge -->
+      <div class="flex items-center gap-3">
+        <div class="hidden md:flex flex-col items-end text-right">
+          <span id="headerLocationText" class="text-xs font-semibold text-marine-cyan flex items-center gap-1">
+            <svg class="w-3.5 h-3.5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Detecting Location...
+          </span>
+          <span id="headerClockText" class="text-[11px] text-slate-400 font-mono">--:--:-- UTC</span>
+        </div>
+        <button id="btnAutoGeolocate" title="Detect precise location" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+          <svg class="w-4 h-4 text-marine-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0013 3.06V1h-2v2.06A8.994 8.994 0 003.06 11H1v2h2.06A8.994 8.994 0 0011 20.94V23h2v-2.06A8.994 8.994 0 0020.94 13H23v-2h-2.06z"/></svg>
+          <span class="hidden sm:inline">GPS Sync</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6 flex-grow">
+
+    <!-- Top Control Toolbar: Location, Date & Quick Jumps -->
+    <section class="glass-card rounded-2xl p-4 sm:p-5">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+        
+        <!-- Location Search & Presets -->
+        <div class="md:col-span-5 space-y-2">
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Fishing Spot / Location</label>
+          <div class="flex gap-2">
+            <div class="relative flex-grow">
+              <input type="text" id="searchInput" placeholder="Search city or lake..." class="w-full bg-marine-950/90 border border-slate-700 focus:border-marine-cyan focus:ring-1 focus:ring-marine-cyan rounded-xl px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all" />
+              <div id="searchResults" class="hidden absolute top-full left-0 right-0 mt-1 bg-marine-900 border border-slate-700 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-800 text-sm"></div>
+            </div>
+            <select id="presetSelect" class="bg-marine-950/90 border border-slate-700 focus:border-marine-cyan text-xs sm:text-sm rounded-xl px-3 py-2 text-slate-300 outline-none cursor-pointer max-w-[140px] sm:max-w-none">
+              <option value="">-- Presets --</option>
+              <option value="26.9381,-80.8281,Lake Okeechobee, FL">Lake Okeechobee, FL</option>
+              <option value="38.9784,-76.4922,Chesapeake Bay, MD">Chesapeake Bay, MD</option>
+              <option value="41.8333,-82.4167,Lake Erie, OH">Lake Erie, OH</option>
+              <option value="30.2460,-87.7008,Gulf Shores, AL">Gulf Shores, AL</option>
+              <option value="32.7157,-117.1611,San Diego Bay, CA">San Diego Bay, CA</option>
+              <option value="39.0968,-120.0324,Lake Tahoe, CA/NV">Lake Tahoe, CA/NV</option>
+              <option value="-16.8389,145.8925,Cairns / Reef, AU">Cairns / Barrier Reef</option>
+              <option value="57.3229,-4.4244,Loch Ness, Scotland">Loch Ness, Scotland</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Date & Time Controls -->
+        <div class="md:col-span-4 space-y-2">
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Forecast Moment</label>
+          <div class="flex gap-2">
+            <input type="date" id="datePicker" class="bg-marine-950/90 border border-slate-700 focus:border-marine-cyan rounded-xl px-3 py-2 text-sm text-slate-200 outline-none w-1/2 cursor-pointer" />
+            <div class="flex items-center bg-marine-950/90 border border-slate-700 rounded-xl px-3 py-2 w-1/2 justify-between">
+              <span id="hourLabel" class="text-sm font-mono font-bold text-marine-cyan">12:00</span>
+              <input type="range" id="hourSlider" min="0" max="23" step="1" value="12" class="w-20 accent-marine-cyan cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Jump Preset Buttons -->
+        <div class="md:col-span-3 space-y-2">
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Quick Jump</label>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button id="btnJumpNow" class="px-2 py-2 bg-marine-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-slate-200 transition-all border border-slate-700/60 flex flex-col items-center justify-center gap-0.5 active:scale-95">
+              <span>⚡</span>
+              <span class="text-[10px]">Now</span>
+            </button>
+            <button id="btnJumpDawn" class="px-2 py-2 bg-marine-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-amber-400 transition-all border border-slate-700/60 flex flex-col items-center justify-center gap-0.5 active:scale-95">
+              <span>🌅</span>
+              <span class="text-[10px]">Dawn</span>
+            </button>
+            <button id="btnJumpDusk" class="px-2 py-2 bg-marine-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-indigo-400 transition-all border border-slate-700/60 flex flex-col items-center justify-center gap-0.5 active:scale-95">
+              <span>🌇</span>
+              <span class="text-[10px]">Dusk</span>
+            </button>
+            <button id="btnJumpPeak" class="px-2 py-2 bg-marine-800 hover:bg-slate-700 text-xs font-semibold rounded-lg text-marine-cyan transition-all border border-slate-700/60 flex flex-col items-center justify-center gap-0.5 active:scale-95">
+              <span>🔥</span>
+              <span class="text-[10px]">Peak</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Hero Score Section & Primary Activity Meter -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Circular Gauge Meter & Status (5 cols) -->
+      <div class="lg:col-span-5 glass-card glass-card-glow rounded-3xl p-6 flex flex-col items-center justify-between text-center relative overflow-hidden">
+        <div class="w-full flex items-center justify-between text-xs text-slate-400 mb-2">
+          <span class="font-mono tracking-wider text-slate-400">COMPOSITE FISHING INDEX</span>
+          <span id="targetMomentLabel" class="text-marine-cyan font-semibold">Today @ 12:00</span>
+        </div>
+
+        <!-- SVG Circular Gauge -->
+        <div class="relative w-56 h-56 my-2 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+            <!-- Background Arc -->
+            <circle cx="60" cy="60" r="50" stroke="#1c2541" stroke-width="10" fill="none" />
+            <!-- Animated Score Arc -->
+            <circle id="gaugeArc" class="gauge-ring" cx="60" cy="60" r="50" stroke="#06b6d4" stroke-width="10" fill="none" stroke-dasharray="314.15" stroke-dashoffset="314.15" stroke-linecap="round" />
+          </svg>
+          
+          <!-- Inner Gauge Content -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span id="gaugeScoreNumber" class="text-5xl font-black tracking-tight text-white font-mono">0</span>
+            <span class="text-xs uppercase tracking-widest text-slate-400 font-bold mt-1">out of 100</span>
+          </div>
+        </div>
+
+        <!-- Activity Status Badge -->
+        <div class="w-full space-y-2 mt-2">
+          <div id="statusBadge" class="inline-block px-4 py-1.5 rounded-full text-sm font-extrabold tracking-wide bg-marine-cyan/20 text-marine-cyan border border-marine-cyan/30 shadow-lg animate-pulse-subtle">
+            CALCULATING...
+          </div>
+          <p id="activitySummaryText" class="text-xs text-slate-300 px-4 leading-relaxed">
+            Fetching real-time atmospheric & lunar telemetry to evaluate bite potential.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tactical Advice & Score Component Breakdown (7 cols) -->
+      <div class="lg:col-span-7 flex flex-col justify-between gap-4">
+        
+        <!-- Actionable Tactical Advice Box -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-marine-cyan">
+          <div class="flex items-center gap-2 text-marine-cyan font-bold text-sm uppercase tracking-wider mb-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Tactical Fishing Recommendations
+          </div>
+          <p id="tacticalAdviceText" class="text-sm text-slate-200 leading-relaxed font-normal">
+            Analyzing environmental factors...
+          </p>
+        </div>
+
+        <!-- Factor Score Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          
+          <!-- Pressure Factor Card -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col justify-between hover:border-slate-600 transition-all">
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+              <span class="font-semibold">Barometric</span>
+              <span id="pressureScoreBadge" class="font-mono font-bold text-marine-cyan">0/30</span>
+            </div>
+            <div class="flex items-baseline justify-between mt-2">
+              <span id="pressureValueText" class="text-xl font-bold font-mono text-white">---- hPa</span>
+              <span id="pressureTrendArrow" class="text-base font-bold text-emerald-400">➔</span>
+            </div>
+            <p id="pressureDescText" class="text-[11px] text-slate-400 mt-2 line-clamp-2">Loading pressure trend...</p>
+          </div>
+
+          <!-- Solunar Factor Card -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col justify-between hover:border-slate-600 transition-all">
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+              <span class="font-semibold">Solunar Proximity</span>
+              <span id="solunarScoreBadge" class="font-mono font-bold text-marine-purple">0/35</span>
+            </div>
+            <div class="flex items-baseline justify-between mt-2">
+              <span id="solunarStatusText" class="text-sm font-bold text-white truncate">Outside Window</span>
+              <span id="moonPhaseIcon" class="text-xl">🌒</span>
+            </div>
+            <p id="solunarDescText" class="text-[11px] text-slate-400 mt-2 line-clamp-2">Evaluating lunar transit...</p>
+          </div>
+
+          <!-- Weather / Light Factor Card -->
+          <div class="glass-card rounded-2xl p-4 flex flex-col justify-between hover:border-slate-600 transition-all">
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+              <span class="font-semibold">Light & Wind</span>
+              <span id="weatherScoreBadge" class="font-mono font-bold text-marine-amber">0/35</span>
+            </div>
+            <div class="flex items-baseline justify-between mt-2">
+              <span id="lightStateText" class="text-sm font-bold text-white">Daylight</span>
+              <span id="windSpeedText" class="text-xs font-mono text-slate-300">-- km/h</span>
+            </div>
+            <p id="weatherDescText" class="text-[11px] text-slate-400 mt-2 line-clamp-2">Analyzing wind & clouds...</p>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 24-Hour Activity Chart Timeline -->
+    <section class="glass-card rounded-3xl p-5 sm:p-6 space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-marine-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+            24-Hour Feeding Activity Forecast
+          </h2>
+          <p class="text-xs text-slate-400">Click any bar to set the interactive forecast hour</p>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-medium text-slate-400">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-marine-cyan inline-block"></span> Epic (>80)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-marine-emerald inline-block"></span> High (65-79)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-marine-amber inline-block"></span> Fair (45-64)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-slate-600 inline-block"></span> Slow (&lt;45)</span>
+        </div>
+      </div>
+
+      <!-- Chart Canvas Container -->
+      <div class="relative w-full h-64 sm:h-72 pt-2">
+        <canvas id="activityChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Deep Details Row: Solunar Timetable & Live Weather Metrics -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Solunar & Astronomical Panel (6 cols) -->
+      <div class="lg:col-span-6 glass-card rounded-3xl p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span>🌙</span> Solunar & Astronomical Timetable
+          </h3>
+          <span id="astronomyDateLabel" class="text-xs font-mono text-marine-cyan">--</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Moon Graphic & Illumination -->
+          <div class="bg-marine-950/80 rounded-2xl p-4 border border-slate-800 flex flex-col items-center justify-center text-center">
+            <div id="moonVisualIcon" class="text-5xl my-2 filter drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]">🌑</div>
+            <span id="moonPhaseNameText" class="text-sm font-bold text-white">--</span>
+            <span id="moonIllumText" class="text-xs text-slate-400 mt-0.5 font-mono">0% Illumination</span>
+          </div>
+
+          <!-- Solar Timings -->
+          <div class="bg-marine-950/80 rounded-2xl p-4 border border-slate-800 space-y-3 flex flex-col justify-center">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400 flex items-center gap-1">🌅 Sunrise</span>
+              <span id="timeSunriseText" class="font-mono font-bold text-amber-400">--:--</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400 flex items-center gap-1">🌇 Sunset</span>
+              <span id="timeSunsetText" class="font-mono font-bold text-indigo-400">--:--</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400 flex items-center gap-1">✨ Golden Hour</span>
+              <span id="timeGoldenHourText" class="font-mono font-bold text-emerald-400">--:--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Solunar Peak Windows List -->
+        <div class="space-y-2">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Peak Feeding Windows</span>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="p-2.5 rounded-xl bg-marine-900/90 border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="block font-bold text-marine-cyan">Major 1 (Transit)</span>
+                <span class="text-[10px] text-slate-400">Moon Overhead</span>
+              </div>
+              <span id="solunarMajor1Text" class="font-mono font-bold text-slate-200">--:--</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-marine-900/90 border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="block font-bold text-marine-cyan">Major 2 (Underfoot)</span>
+                <span class="text-[10px] text-slate-400">Moon Opposite</span>
+              </div>
+              <span id="solunarMajor2Text" class="font-mono font-bold text-slate-200">--:--</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-marine-900/90 border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="block font-bold text-slate-300">Minor 1 (Moonrise)</span>
+                <span class="text-[10px] text-slate-400">Rising Window</span>
+              </div>
+              <span id="solunarMinor1Text" class="font-mono font-bold text-slate-200">--:--</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-marine-900/90 border border-slate-800 flex items-center justify-between">
+              <div>
+                <span class="block font-bold text-slate-300">Minor 2 (Moonset)</span>
+                <span class="text-[10px] text-slate-400">Setting Window</span>
+              </div>
+              <span id="solunarMinor2Text" class="font-mono font-bold text-slate-200">--:--</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Atmospheric & Hydrological Metrics (6 cols) -->
+      <div class="lg:col-span-6 glass-card rounded-3xl p-5 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <span>🌡️</span> Live Environmental Telemetry
+          </h3>
+          <span class="text-xs font-mono text-slate-400">Source: Open-Meteo API</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          
+          <div class="bg-marine-950/80 p-3.5 rounded-2xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 block mb-1">Air Temperature</span>
+            <span id="metricTemp" class="text-lg font-mono font-bold text-white">--°C</span>
+            <span id="metricTempF" class="text-[10px] text-slate-500 block font-mono">(--°F)</span>
+          </div>
+
+          <div class="bg-marine-950/80 p-3.5 rounded-2xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 block mb-1">Surface Pressure</span>
+            <span id="metricPressure" class="text-lg font-mono font-bold text-marine-cyan">---- hPa</span>
+            <span id="metricInHg" class="text-[10px] text-slate-500 block font-mono">(-- inHg)</span>
+          </div>
+
+          <div class="bg-marine-950/80 p-3.5 rounded-2xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 block mb-1">3h Pressure Delta</span>
+            <span id="metricPressureDelta" class="text-lg font-mono font-bold text-emerald-400">0.0 hPa</span>
+            <span id="metricPressureTrendText" class="text-[10px] text-slate-400 block">Steady</span>
+          </div>
+
+          <div class="bg-marine-950/80 p-3.5 rounded-2xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 block mb-1">Wind Velocity</span>
+            <span id="metricWind" class="text-lg font-mono font-bold text-white">-- km/h</span>
+            <span id="metricWindDir" class="text-[10px] text-slate-400 block">Direction: --°</span>
+          </div>
+
+          <div class="bg-marine-950/80 p-3.5 rounded-2xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 block mb-1">Cloud Cover</span>
+            <span id="metricClouds" class="text-lg font-mono font-bold text-white">--%</span>
+            <span id="metricCloudDesc" class="text-[10px] text-slate-400 block">--</span>
+          </div>
+
+          <div class="bg-marine-950/80 p-3.5 rounded-2xl border border-slate-800">
+            <span class="text-[11px] text-slate-400 block mb-1">Relative Humidity</span>
+            <span id="metricHumidity" class="text-lg font-mono font-bold text-white">--%</span>
+            <span class="text-[10px] text-slate-500 block font-mono">Surface Air</span>
+          </div>
+
+        </div>
+
+        <!-- Target Species Presentation Guide -->
+        <div class="p-3.5 rounded-2xl bg-marine-900/60 border border-slate-800/80 space-y-1.5">
+          <span class="text-xs font-bold text-marine-cyan uppercase tracking-wider block">Recommended Presentation Strategy</span>
+          <p id="speciesStrategyText" class="text-xs text-slate-300 leading-relaxed">
+            Select a location and moment to load custom lure presentation tactics.
+          </p>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 bg-marine-950/90 py-4 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+      <p>© AQUA-CAST PRO. Real-time open meteorological & astronomical telemetry engine.</p>
+      <p class="font-mono">Open-Meteo API • Solunar Engine JS</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // Global Application State
+    const state = {
+      lat: 38.9784, // Default to Chesapeake Bay, MD
+      lon: -76.4922,
+      locationName: "Chesapeake Bay, MD",
+      selectedDate: new Date().toISOString().split('T')[0],
+      selectedHour: new Date().getHours(),
+      weatherData: null,
+      hourlyForecast: [],
+      chartInstance: null
+    };
+
+    // DOM Elements
+    const elements = {
+      headerLocationText: document.getElementById('headerLocationText'),
+      headerClockText: document.getElementById('headerClockText'),
+      btnAutoGeolocate: document.getElementById('btnAutoGeolocate'),
+      searchInput: document.getElementById('searchInput'),
+      searchResults: document.getElementById('searchResults'),
+      presetSelect: document.getElementById('presetSelect'),
+      datePicker: document.getElementById('datePicker'),
+      hourSlider: document.getElementById('hourSlider'),
+      hourLabel: document.getElementById('hourLabel'),
+      btnJumpNow: document.getElementById('btnJumpNow'),
+      btnJumpDawn: document.getElementById('btnJumpDawn'),
+      btnJumpDusk: document.getElementById('btnJumpDusk'),
+      btnJumpPeak: document.getElementById('btnJumpPeak'),
+      gaugeArc: document.getElementById('gaugeArc'),
+      gaugeScoreNumber: document.getElementById('gaugeScoreNumber'),
+      targetMomentLabel: document.getElementById('targetMomentLabel'),
+      statusBadge: document.getElementById('statusBadge'),
+      activitySummaryText: document.getElementById('activitySummaryText'),
+      tacticalAdviceText: document.getElementById('tacticalAdviceText'),
+      pressureScoreBadge: document.getElementById('pressureScoreBadge'),
+      pressureValueText: document.getElementById('pressureValueText'),
+      pressureTrendArrow: document.getElementById('pressureTrendArrow'),
+      pressureDescText: document.getElementById('pressureDescText'),
+      solunarScoreBadge: document.getElementById('solunarScoreBadge'),
+      solunarStatusText: document.getElementById('solunarStatusText'),
+      moonPhaseIcon: document.getElementById('moonPhaseIcon'),
+      solunarDescText: document.getElementById('solunarDescText'),
+      weatherScoreBadge: document.getElementById('weatherScoreBadge'),
+      lightStateText: document.getElementById('lightStateText'),
+      windSpeedText: document.getElementById('windSpeedText'),
+      weatherDescText: document.getElementById('weatherDescText'),
+      astronomyDateLabel: document.getElementById('astronomyDateLabel'),
+      moonVisualIcon: document.getElementById('moonVisualIcon'),
+      moonPhaseNameText: document.getElementById('moonPhaseNameText'),
+      moonIllumText: document.getElementById('moonIllumText'),
+      timeSunriseText: document.getElementById('timeSunriseText'),
+      timeSunsetText: document.getElementById('timeSunsetText'),
+      timeGoldenHourText: document.getElementById('timeGoldenHourText'),
+      solunarMajor1Text: document.getElementById('solunarMajor1Text'),
+      solunarMajor2Text: document.getElementById('solunarMajor2Text'),
+      solunarMinor1Text: document.getElementById('solunarMinor1Text'),
+      solunarMinor2Text: document.getElementById('solunarMinor2Text'),
+      metricTemp: document.getElementById('metricTemp'),
+      metricTempF: document.getElementById('metricTempF'),
+      metricPressure: document.getElementById('metricPressure'),
+      metricInHg: document.getElementById('metricInHg'),
+      metricPressureDelta: document.getElementById('metricPressureDelta'),
+      metricPressureTrendText: document.getElementById('metricPressureTrendText'),
+      metricWind: document.getElementById('metricWind'),
+      metricWindDir: document.getElementById('metricWindDir'),
+      metricClouds: document.getElementById('metricClouds'),
+      metricCloudDesc: document.getElementById('metricCloudDesc'),
+      metricHumidity: document.getElementById('metricHumidity'),
+      speciesStrategyText: document.getElementById('speciesStrategyText')
+    };
+
+    // Astronomical Computation Engine
+    function getJulianDate(date) {
+      return (date.getTime() / 86400000) + 2440587.5;
+    }
+
+    function calculateSolunarData(dateObj, lat, lon) {
+      const jd = getJulianDate(dateObj);
+      const synodicMonth = 29.53058867;
+      const knownNewMoonJD = 2451549.26; // Jan 6, 2000 18:14 UTC
+      
+      let daysSinceNew = (jd - knownNewMoonJD) % synodicMonth;
+      if (daysSinceNew < 0) daysSinceNew += synodicMonth;
+      
+      const phaseRatio = daysSinceNew / synodicMonth;
+      const illumination = Math.round((1 - Math.cos(2 * Math.PI * phaseRatio)) / 2 * 100);
+      
+      let phaseName = "";
+      let phaseIcon = "🌑";
+      if (phaseRatio < 0.03 || phaseRatio > 0.97) { phaseName = "New Moon"; phaseIcon = "🌑"; }
+      else if (phaseRatio < 0.22) { phaseName = "Waxing Crescent"; phaseIcon = "🌒"; }
+      else if (phaseRatio < 0.28) { phaseName = "First Quarter"; phaseIcon = "🌓"; }
+      else if (phaseRatio < 0.47) { phaseName = "Waxing Gibbous"; phaseIcon = "🌔"; }
+      else if (phaseRatio < 0.53) { phaseName = "Full Moon"; phaseIcon = "🌕"; }
+      else if (phaseRatio < 0.72) { phaseName = "Waning Gibbous"; phaseIcon = "🌖"; }
+      else if (phaseRatio < 0.78) { phaseName = "Last Quarter"; phaseIcon = "🌗"; }
+      else { phaseName = "Waning Crescent"; phaseIcon = "🌘"; }
+
+      // Solar & Lunar Hour Approximations
+      const tzOffsetHours = -dateObj.getTimezoneOffset() / 60;
+      const solarNoonHour = 12 + (tzOffsetHours - (lon / 15));
+
+      // Major / Minor Solunar Hours (Local Decimal Hours)
+      let transitHour = (solarNoonHour + daysSinceNew * (24 / 29.53)) % 24;
+      if (transitHour < 0) transitHour += 24;
+      
+      let underfootHour = (transitHour + 12.42) % 24;
+      let moonriseHour = (transitHour - 6.21 + 24) % 24;
+      let moonsetHour = (transitHour + 6.21) % 24;
+
+      // Solar Sunrise / Sunset Approximation
+      const dayOfYear = Math.floor((dateObj - new Date(dateObj.getFullYear(), 0, 0)) / 86400000);
+      const declination = 23.45 * Math.sin((2 * Math.PI / 365) * (dayOfYear - 81)) * (Math.PI / 180);
+      const latRad = lat * (Math.PI / 180);
+      
+      let hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(declination));
+      if (isNaN(hourAngle)) hourAngle = Math.PI * 0.8; // Fallback for extreme latitudes
+
+      const hourAngleDeg = hourAngle * (180 / Math.PI);
+      const sunriseHour = (solarNoonHour - hourAngleDeg / 15 + 24) % 24;
+      const sunsetHour = (solarNoonHour + hourAngleDeg / 15) % 24;
+
+      return {
+        ageDays: daysSinceNew,
+        phaseRatio,
+        illumination,
+        phaseName,
+        phaseIcon,
+        transitHour,    // Major 1
+        underfootHour,  // Major 2
+        moonriseHour,   // Minor 1
+        moonsetHour,    // Minor 2
+        sunriseHour,
+        sunsetHour
+      };
+    }
+
+    function formatDecimalTime(decimalHour) {
+      let hrs = Math.floor(decimalHour);
+      let mins = Math.round((decimalHour - hrs) * 60);
+      if (mins === 60) { hrs = (hrs + 1) % 24; mins = 0; }
+      const hh = String(hrs).padStart(2, '0');
+      const mm = String(mins).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    // Dynamic Fishing Activity Algorithm (0 - 100 Index)
+    function calculateActivityScore(hourIndex, astro, hourlyData) {
+      let pressureScore = 15;
+      let solunarScore = 10;
+      let lightWeatherScore = 15;
+
+      const currentHour = hourIndex;
+      
+      // 1. Barometric Pressure Factor (0 - 30 pts)
+      let pressure = 1013.25;
+      let pressureDelta = 0;
+      let pressureTrendText = "Steady";
+
+      if (hourlyData && hourlyData.surface_pressure && hourlyData.surface_pressure[hourIndex] !== undefined) {
+        pressure = hourlyData.surface_pressure[hourIndex];
+        const prevHourIdx = Math.max(0, hourIndex - 3);
+        const prevPressure = hourlyData.surface_pressure[prevHourIdx] || pressure;
+        pressureDelta = pressure - prevPressure;
+
+        // Base Pressure Rating
+        if (pressure >= 1008 && pressure <= 1018) {
+          pressureScore = 15; // Optimal stable range
+        } else if (pressure < 1008) {
+          pressureScore = 12; // Low pressure
+        } else {
+          pressureScore = 8; // High pressure (sluggish)
+        }
+
+        // Pressure Trend Modifier
+        if (pressureDelta <= -1.5) {
+          pressureScore += 15; // Rapidly falling: Pre-front surge!
+          pressureTrendText = "Rapidly Falling (Pre-Front Surge)";
+        } else if (pressureDelta < -0.4) {
+          pressureScore += 10; // Moderately falling
+          pressureTrendText = "Falling";
+        } else if (pressureDelta >= -0.4 && pressureDelta <= 0.4) {
+          pressureScore += 5; // Steady
+          pressureTrendText = "Steady";
+        } else if (pressureDelta > 0.4 && pressureDelta <= 1.5) {
+          pressureScore += 2; // Rising
+          pressureTrendText = "Slowly Rising";
+        } else {
+          pressureScore += 0; // Rapidly rising: Post-front lockjaw
+          pressureTrendText = "Rapidly Rising (Post-Front)";
+        }
+      }
+      pressureScore = Math.min(30, Math.max(0, pressureScore));
+
+      // 2. Solunar Proximity Factor (0 - 35 pts)
+      const major1Diff = Math.abs(currentHour - astro.transitHour);
+      const major2Diff = Math.abs(currentHour - astro.underfootHour);
+      const minor1Diff = Math.abs(currentHour - astro.moonriseHour);
+      const minor2Diff = Math.abs(currentHour - astro.moonsetHour);
+
+      const minMajorDiff = Math.min(major1Diff, 24 - major1Diff, major2Diff, 24 - major2Diff);
+      const minMinorDiff = Math.min(minor1Diff, 24 - minor1Diff, minor2Diff, 24 - minor2Diff);
+
+      let solunarProximityPts = 0;
+      let solunarStatus = "Off-Peak Window";
+
+      if (minMajorDiff <= 1.0) {
+        solunarProximityPts = 25;
+        solunarStatus = "🔥 MAJOR SOLUNAR PERIOD";
+      } else if (minMajorDiff <= 2.0) {
+        solunarProximityPts = 16;
+        solunarStatus = "Major Window Approaching";
+      } else if (minMinorDiff <= 1.0) {
+        solunarProximityPts = 15;
+        solunarStatus = "⚡ MINOR SOLUNAR PERIOD";
+      } else if (minMinorDiff <= 1.5) {
+        solunarProximityPts = 9;
+        solunarStatus = "Minor Window Approaching";
+      } else {
+        solunarProximityPts = 4;
+        solunarStatus = "Off-Peak Window";
+      }
+
+      // Moon Phase Bonus (New Moon / Full Moon boost)
+      let phaseBonus = 3;
+      if (astro.phaseRatio < 0.08 || astro.phaseRatio > 0.92 || (astro.phaseRatio >= 0.44 && astro.phaseRatio <= 0.56)) {
+        phaseBonus = 10; // New or Full Moon peak
+      } else if ((astro.phaseRatio >= 0.20 && astro.phaseRatio <= 0.30) || (astro.phaseRatio >= 0.70 && astro.phaseRatio <= 0.80)) {
+        phaseBonus = 6; // Quarters
+      }
+
+      solunarScore = Math.min(35, solunarProximityPts + phaseBonus);
+
+      // 3. Weather & Light Factor (0 - 35 pts)
+      let windSpeed = 10;
+      let cloudCover = 50;
+      let temp = 20;
+      let humidity = 60;
+
+      if (hourlyData) {
+        windSpeed = hourlyData.wind_speed_10m ? hourlyData.wind_speed_10m[hourIndex] : 10;
+        cloudCover = hourlyData.cloud_cover ? hourlyData.cloud_cover[hourIndex] : 50;
+        temp = hourlyData.temperature_2m ? hourlyData.temperature_2m[hourIndex] : 20;
+        humidity = hourlyData.relative_humidity_2m ? hourlyData.relative_humidity_2m[hourIndex] : 60;
+      }
+
+      // Light Proximity (Dawn / Dusk)
+      const dawnDiff = Math.abs(currentHour - astro.sunriseHour);
+      const duskDiff = Math.abs(currentHour - astro.sunsetHour);
+      const minLightDiff = Math.min(dawnDiff, 24 - dawnDiff, duskDiff, 24 - duskDiff);
+
+      let lightPts = 5;
+      let lightState = "Daylight";
+      if (minLightDiff <= 1.0) {
+        lightPts = 18; // Dawn / Dusk Golden Window!
+        lightState = currentHour < 12 ? "🌅 Dawn Golden Hour" : "🌇 Dusk Golden Hour";
+      } else if (minLightDiff <= 2.0) {
+        lightPts = 12;
+        lightState = "Twilight transition";
+      } else if (currentHour < astro.sunriseHour || currentHour > astro.sunsetHour) {
+        lightPts = 8;
+        lightState = "Nighttime";
+      } else {
+        lightPts = 6;
+        lightState = "Midday Sun";
+      }
+
+      // Wind & Cloud Score
+      let windCloudPts = 8;
+      if (windSpeed >= 6 && windSpeed <= 22) {
+        windCloudPts += 9; // Good wind ripple
+      } else if (windSpeed < 6) {
+        windCloudPts += 5; // Glass calm
+      } else {
+        windCloudPts += 2; // Gale / heavy wind
+      }
+
+      if (cloudCover >= 60) windCloudPts += 8; // Overcast encourages feeding
+      else if (cloudCover >= 30) windCloudPts += 5;
+
+      lightWeatherScore = Math.min(35, lightPts + windCloudPts);
+
+      // Composite Total
+      const totalScore = Math.min(100, Math.round(pressureScore + solunarScore + lightWeatherScore));
+
+      return {
+        totalScore,
+        pressureScore,
+        solunarScore,
+        lightWeatherScore,
+        pressure,
+        pressureDelta,
+        pressureTrendText,
+        solunarStatus,
+        lightState,
+        windSpeed,
+        cloudCover,
+        temp,
+        humidity
+      };
+    }
+
+    // Fetch live weather data from Open-Meteo API
+    async function fetchWeatherData(lat, lon, dateStr) {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,surface_pressure,cloud_cover,wind_speed_10m,wind_direction_10m&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Weather API request failed");
+        const data = await res.json();
+        return data.hourly;
+      } catch (err) {
+        console.warn("Using simulated weather model due to API error:", err);
+        // Fallback mock weather for offline robustness
+        const mockTimes = Array.from({length: 24}, (_, i) => `${dateStr}T${String(i).padStart(2,'0')}:00`);
+        return {
+          time: mockTimes,
+          temperature_2m: Array(24).fill(21),
+          relative_humidity_2m: Array(24).fill(65),
+          surface_pressure: Array.from({length: 24}, (_, i) => 1014 - Math.sin(i / 3) * 3),
+          cloud_cover: Array(24).fill(45),
+          wind_speed_10m: Array(24).fill(12),
+          wind_direction_10m: Array(24).fill(140)
+        };
+      }
+    }
+
+    // Update Dashboard Interface
+    async function updateDashboard() {
+      // 1. Astro Calculations
+      const targetDateObj = new Date(state.selectedDate + 'T' + String(state.selectedHour).padStart(2, '0') + ':00:00');
+      const astro = calculateSolunarData(targetDateObj, state.lat, state.lon);
+
+      // 2. Weather Fetch
+      state.hourlyForecast = await fetchWeatherData(state.lat, state.lon, state.selectedDate);
+
+      // 3. Current Hour Score
+      const hourIndex = Math.min(23, Math.max(0, state.selectedHour));
+      const scoreData = calculateActivityScore(hourIndex, astro, state.hourlyForecast);
+
+      // 4. Render Primary Gauge
+      renderGauge(scoreData.totalScore);
+
+      // 5. Render Status & Badges
+      updateBadgesAndAdvice(scoreData, astro);
+
+      // 6. Update Factor Score Cards
+      elements.pressureScoreBadge.textContent = `${scoreData.pressureScore}/30`;
+      elements.pressureValueText.textContent = `${scoreData.pressure.toFixed(1)} hPa`;
+      elements.pressureTrendArrow.textContent = scoreData.pressureDelta <= -0.5 ? '📉' : scoreData.pressureDelta >= 0.5 ? '📈' : '➔';
+      elements.pressureDescText.textContent = scoreData.pressureTrendText;
+
+      elements.solunarScoreBadge.textContent = `${scoreData.solunarScore}/35`;
+      elements.solunarStatusText.textContent = scoreData.solunarStatus;
+      elements.moonPhaseIcon.textContent = astro.phaseIcon;
+      elements.solunarDescText.textContent = `${astro.phaseName} (${astro.illumination}% Lit)`;
+
+      elements.weatherScoreBadge.textContent = `${scoreData.lightWeatherScore}/35`;
+      elements.lightStateText.textContent = scoreData.lightState;
+      elements.windSpeedText.textContent = `${scoreData.windSpeed.toFixed(0)} km/h`;
+      elements.weatherDescText.textContent = `Cloud Cover: ${scoreData.cloudCover}% | Temp: ${scoreData.temp.toFixed(1)}°C`;
+
+      // 7. Update Detailed Astronomy Panel
+      elements.astronomyDateLabel.textContent = state.selectedDate;
+      elements.moonVisualIcon.textContent = astro.phaseIcon;
+      elements.moonPhaseNameText.textContent = astro.phaseName;
+      elements.moonIllumText.textContent = `${astro.illumination}% Illumination`;
+      elements.timeSunriseText.textContent = formatDecimalTime(astro.sunriseHour);
+      elements.timeSunsetText.textContent = formatDecimalTime(astro.sunsetHour);
+      elements.timeGoldenHourText.textContent = formatDecimalTime(astro.sunsetHour - 0.75);
+
+      elements.solunarMajor1Text.textContent = formatDecimalTime(astro.transitHour);
+      elements.solunarMajor2Text.textContent = formatDecimalTime(astro.underfootHour);
+      elements.solunarMinor1Text.textContent = formatDecimalTime(astro.moonriseHour);
+      elements.solunarMinor2Text.textContent = formatDecimalTime(astro.moonsetHour);
+
+      // 8. Update Live Weather Metrics Panel
+      elements.metricTemp.textContent = `${scoreData.temp.toFixed(1)}°C`;
+      elements.metricTempF.textContent = `(${(scoreData.temp * 1.8 + 32).toFixed(1)}°F)`;
+      elements.metricPressure.textContent = `${scoreData.pressure.toFixed(1)} hPa`;
+      elements.metricInHg.textContent = `(${(scoreData.pressure * 0.02953).toFixed(2)} inHg)`;
+      elements.metricPressureDelta.textContent = `${scoreData.pressureDelta >= 0 ? '+' : ''}${scoreData.pressureDelta.toFixed(1)} hPa`;
+      elements.metricPressureTrendText.textContent = scoreData.pressureTrendText;
+      elements.metricWind.textContent = `${scoreData.windSpeed.toFixed(1)} km/h`;
+      elements.metricClouds.textContent = `${scoreData.cloudCover}%`;
+      elements.metricCloudDesc.textContent = scoreData.cloudCover > 70 ? 'Overcast / Dark' : scoreData.cloudCover > 30 ? 'Partly Cloudy' : 'Clear Sky';
+      elements.metricHumidity.textContent = `${scoreData.humidity}%`;
+
+      // 9. Render 24-Hour Timeline Chart
+      renderChart(astro);
+    }
+
+    // SVG Circular Gauge Arc Render
+    function renderGauge(score) {
+      elements.gaugeScoreNumber.textContent = score;
+      const circumference = 314.15; // 2 * PI * 50
+      const offset = circumference - (score / 100) * circumference;
+      elements.gaugeArc.style.strokeDashoffset = offset;
+
+      // Color stroke based on score
+      if (score >= 80) {
+        elements.gaugeArc.style.stroke = "#06b6d4"; // Cyan
+      } else if (score >= 65) {
+        elements.gaugeArc.style.stroke = "#10b981"; // Emerald
+      } else if (score >= 45) {
+        elements.gaugeArc.style.stroke = "#f59e0b"; // Amber
+      } else {
+        elements.gaugeArc.style.stroke = "#64748b"; // Slate
+      }
+    }
+
+    // Dynamic Status Badge & Tactical Advice Content
+    function updateBadgesAndAdvice(scoreData, astro) {
+      const score = scoreData.totalScore;
+      elements.targetMomentLabel.textContent = `${state.selectedDate} @ ${String(state.selectedHour).padStart(2,'0')}:00`;
+
+      if (score >= 80) {
+        elements.statusBadge.className = "inline-block px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold tracking-wide bg-marine-cyan/20 text-marine-cyan border border-marine-cyan/40 shadow-lg shadow-marine-cyan/10 animate-pulse-subtle";
+        elements.statusBadge.textContent = "⚡ EPIC FEEDING WINDOW";
+        elements.activitySummaryText.textContent = "Prime environmental conditions! Major solunar alignment, favorable atmospheric pressure, and peak predatory activity active.";
+        elements.tacticalAdviceText.textContent = "🔥 HIGH PRIORITY: Cast fast-moving aggressive search lures (spinnerbaits, topwater plugs, crankbaits). Predators are actively hunting in open water and edge structures. Maximize time on water now!";
+        elements.speciesStrategyText.textContent = "Bass & Pike: Work outer weed edges with reaction baits. Saltwater Gamefish: Target current points, bottlenecks, and baitfish blitzes. Trout: Aggressive nymphing or dry-fly strikes in fast riffles.";
+      } else if (score >= 65) {
+        elements.statusBadge.className = "inline-block px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold tracking-wide bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-lg";
+        elements.statusBadge.textContent = "🎣 EXCELLENT CONDITIONS";
+        elements.activitySummaryText.textContent = "Above-average bite activity. Good pressure balance combined with favorable light or lunar timing.";
+        elements.tacticalAdviceText.textContent = "Focus on transition zones, drop-offs, and windward banks. Mix steady retrieve presentations with occasional pauses to trigger strikes.";
+        elements.speciesStrategyText.textContent = "Target shallow cover during twilight hours and shift to 8-15ft structure as sun brightens. Swimbaits and jigs highly effective.";
+      } else if (score >= 45) {
+        elements.statusBadge.className = "inline-block px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold tracking-wide bg-amber-500/20 text-amber-400 border border-amber-500/40";
+        elements.statusBadge.textContent = "🐟 MODERATE BITE";
+        elements.activitySummaryText.textContent = "Fair fishing conditions. Fish may be selective or holding tighter to primary cover.";
+        elements.tacticalAdviceText.textContent = "Downsize your presentation. Use finesse tactics (Texas rig, Ned rig, drop-shot, or live bait). Target tight shade pockets and deeper structure.";
+        elements.speciesStrategyText.textContent = "Slow down presentation speed significantly. Natural colors (green pumpkin, watermelon) will yield more consistent takes.";
+      } else {
+        elements.statusBadge.className = "inline-block px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold tracking-wide bg-slate-700/50 text-slate-300 border border-slate-600";
+        elements.statusBadge.textContent = "🐢 SLOW / LOCKJAW";
+        elements.activitySummaryText.textContent = "Low feeding motivation. Likely high pressure bluebird skies or post-front conditions.";
+        elements.tacticalAdviceText.textContent = "Tough conditions. Dead-sticking live bait or micro-finesse lures in deep sanctuaries is required. Focus on exact major/minor hour mark for brief bite windows.";
+        elements.speciesStrategyText.textContent = "Fish are sluggish. Target deep brush piles, bottom channels, or thickest vegetation mats with heavy punching rigs.";
+      }
+    }
+
+    // 24-Hour Interactive Forecast Chart
+    function renderChart(astro) {
+      const ctx = document.getElementById('activityChart').getContext('2d');
+      const hourlyScores = [];
+      const labels = [];
+      const barColors = [];
+
+      for (let h = 0; h < 24; h++) {
+        labels.push(`${String(h).padStart(2,'0')}:00`);
+        const scoreObj = calculateActivityScore(h, astro, state.hourlyForecast);
+        const s = scoreObj.totalScore;
+        hourlyScores.push(s);
+
+        // Highlight selected hour
+        if (h === state.selectedHour) {
+          barColors.push('#a855f7'); // Purple for currently selected
+        } else if (s >= 80) {
+          barColors.push('#06b6d4'); // Cyan
+        } else if (s >= 65) {
+          barColors.push('#10b981'); // Emerald
+        } else if (s >= 45) {
+          barColors.push('#f59e0b'); // Amber
+        } else {
+          barColors.push('#334155'); // Slate
+        }
+      }
+
+      if (state.chartInstance) {
+        state.chartInstance.destroy();
+      }
+
+      state.chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Activity Index',
+            data: hourlyScores,
+            backgroundColor: barColors,
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#06b6d4',
+              bodyColor: '#f8fafc',
+              borderColor: '#334155',
+              borderWidth: 1,
+              padding: 10,
+              callbacks: {
+                label: (context) => ` Activity Score: ${context.raw}/100`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            y: {
+              min: 0,
+              max: 100,
+              grid: { color: 'rgba(255, 255, 255, 0.08)' },
+              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+            }
+          },
+          onClick: (evt, activeElements) => {
+            if (activeElements.length > 0) {
+              const clickedHour = activeElements[0].index;
+              state.selectedHour = clickedHour;
+              elements.hourSlider.value = clickedHour;
+              elements.hourLabel.textContent = `${String(clickedHour).padStart(2,'0')}:00`;
+              updateDashboard();
+            }
+          }
+        }
+      });
+    }
+
+    // Location Search Autocomplete (Open-Meteo Geocoding)
+    let searchDebounce = null;
+    elements.searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchDebounce);
+      const query = e.target.value.trim();
+      if (query.length < 2) {
+        elements.searchResults.classList.add('hidden');
+        return;
+      }
+
+      searchDebounce = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            elements.searchResults.innerHTML = '';
+            data.results.forEach(loc => {
+              const div = document.createElement('div');
+              div.className = "p-2.5 hover:bg-marine-800 cursor-pointer text-slate-200 transition-colors flex justify-between items-center";
+              const admin = loc.admin1 ? `, ${loc.admin1}` : '';
+              const country = loc.country ? ` (${loc.country})` : '';
+              div.innerHTML = `<span><strong>${loc.name}</strong>${admin}${country}</span> <span class="text-[10px] font-mono text-slate-500">${loc.latitude.toFixed(2)}, ${loc.longitude.toFixed(2)}</span>`;
+              div.onclick = () => {
+                state.lat = loc.latitude;
+                state.lon = loc.longitude;
+                state.locationName = `${loc.name}${admin}`;
+                elements.headerLocationText.innerHTML = `📍 ${state.locationName}`;
+                elements.searchInput.value = state.locationName;
+                elements.searchResults.classList.add('hidden');
+                updateDashboard();
+              };
+              elements.searchResults.appendChild(div);
+            });
+            elements.searchResults.classList.remove('hidden');
+          } else {
+            elements.searchResults.innerHTML = '<div class="p-3 text-slate-500 text-xs">No spots found</div>';
+            elements.searchResults.classList.remove('hidden');
+          }
+        } catch (err) {
+          console.error("Geocoding search error:", err);
+        }
+      }, 300);
+    });
+
+    // Close search dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!elements.searchInput.contains(e.target) && !elements.searchResults.contains(e.target)) {
+        elements.searchResults.classList.add('hidden');
+      }
+    });
+
+    // Preset Select Dropdown
+    elements.presetSelect.addEventListener('change', (e) => {
+      if (!e.target.value) return;
+      const [lat, lon, name] = e.target.value.split(',');
+      state.lat = parseFloat(lat);
+      state.lon = parseFloat(lon);
+      state.locationName = name;
+      elements.headerLocationText.innerHTML = `📍 ${name}`;
+      elements.searchInput.value = name;
+      updateDashboard();
+    });
+
+    // Browser Geolocation
+    elements.btnAutoGeolocate.addEventListener('click', () => {
+      if (navigator.geolocation) {
+        elements.headerLocationText.textContent = "Locating GPS...";
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            state.lat = pos.coords.latitude;
+            state.lon = pos.coords.longitude;
+            state.locationName = `GPS (${state.lat.toFixed(2)}, ${state.lon.toFixed(2)})`;
+            elements.headerLocationText.innerHTML = `📍 ${state.locationName}`;
+            elements.searchInput.value = state.locationName;
+            updateDashboard();
+          },
+          (err) => {
+            alert("Could not access location. Please enter a city or select a preset.");
+            elements.headerLocationText.innerHTML = `📍 ${state.locationName}`;
+          }
+        );
+      }
+    });
+
+    // Date & Time Inputs
+    elements.datePicker.value = state.selectedDate;
+    elements.datePicker.addEventListener('change', (e) => {
+      state.selectedDate = e.target.value;
+      updateDashboard();
+    });
+
+    elements.hourSlider.addEventListener('input', (e) => {
+      state.selectedHour = parseInt(e.target.value);
+      elements.hourLabel.textContent = `${String(state.selectedHour).padStart(2,'0')}:00`;
+      updateDashboard();
+    });
+
+    // Quick Jump Buttons
+    elements.btnJumpNow.addEventListener('click', () => {
+      const now = new Date();
+      state.selectedDate = now.toISOString().split('T')[0];
+      state.selectedHour = now.getHours();
+      elements.datePicker.value = state.selectedDate;
+      elements.hourSlider.value = state.selectedHour;
+      elements.hourLabel.textContent = `${String(state.selectedHour).padStart(2,'0')}:00`;
+      updateDashboard();
+    });
+
+    elements.btnJumpDawn.addEventListener('click', async () => {
+      const targetDateObj = new Date(state.selectedDate + 'T12:00:00');
+      const astro = calculateSolunarData(targetDateObj, state.lat, state.lon);
+      const dawnHour = Math.round(astro.sunriseHour);
+      state.selectedHour = Math.min(23, Math.max(0, dawnHour));
+      elements.hourSlider.value = state.selectedHour;
+      elements.hourLabel.textContent = `${String(state.selectedHour).padStart(2,'0')}:00`;
+      updateDashboard();
+    });
+
+    elements.btnJumpDusk.addEventListener('click', async () => {
+      const targetDateObj = new Date(state.selectedDate + 'T12:00:00');
+      const astro = calculateSolunarData(targetDateObj, state.lat, state.lon);
+      const duskHour = Math.round(astro.sunsetHour);
+      state.selectedHour = Math.min(23, Math.max(0, duskHour));
+      elements.hourSlider.value = state.selectedHour;
+      elements.hourLabel.textContent = `${String(state.selectedHour).padStart(2,'0')}:00`;
+      updateDashboard();
+    });
+
+    elements.btnJumpPeak.addEventListener('click', async () => {
+      const targetDateObj = new Date(state.selectedDate + 'T12:00:00');
+      const astro = calculateSolunarData(targetDateObj, state.lat, state.lon);
+      let bestHour = 12;
+      let maxScore = -1;
+      
+      for (let h = 0; h < 24; h++) {
+        const scoreObj = calculateActivityScore(h, astro, state.hourlyForecast);
+        if (scoreObj.totalScore > maxScore) {
+          maxScore = scoreObj.totalScore;
+          bestHour = h;
+        }
+      }
+      state.selectedHour = bestHour;
+      elements.hourSlider.value = state.selectedHour;
+      elements.hourLabel.textContent = `${String(state.selectedHour).padStart(2,'0')}:00`;
+      updateDashboard();
+    });
+
+    // Real-time Header Clock
+    setInterval(() => {
+      const now = new Date();
+      elements.headerClockText.textContent = `${now.toISOString().substring(11, 19)} UTC`;
+    }, 1000);
+
+    // Initialize Dashboard
+    window.onload = () => {
+      elements.headerLocationText.innerHTML = `📍 ${state.locationName}`;
+      elements.searchInput.value = state.locationName;
+      updateDashboard();
+    };
+  </script>
+</body>
+</html>
