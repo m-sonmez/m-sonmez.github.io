@@ -1,0 +1,45 @@
+{
+  "id": "./",
+  "name": "Hazır Cevaplar & QuickTextPaste Yöneticisi",
+  "short_name": "QTP Panel",
+  "description": "Çevrimdışı çalışan yerel Hazır Cevaplar ve QuickTextPaste (.ini / .json) yönetim ve düzenleme uygulaması.",
+  "lang": "tr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tam Yönetim & INI Düzenleyici",
+      "short_name": "Düzenleyici",
+      "url": "./index.html"
+    },
+    {
+      "name": "Hızlı Kopyalama Panosu",
+      "short_name": "Hızlı Pano",
+      "url": "./cevaplar.html"
+    }
+  ]
+}
