@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hazır Cevaplar Hızlı Pano | QTP Uyumlu</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <script>
+    (function () {
+      try {
+        const savedTheme = localStorage.getItem('qtp_pwa_theme_v2');
+        document.documentElement.classList.toggle('dark', savedTheme !== 'light');
+      } catch (_) {}
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: { brand: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' } }
+        }
+      }
+    };
+  </script>
+  <style>
+    mark { background: #fde047; color: #0f172a; padding: 0 2px; border-radius: 3px; }
+    .dark mark { background: #eab308; color: #0f172a; }
+    .card-copied { box-shadow: 0 0 0 2px #10b981 !important; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; color: #000 !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors">
+
+  <header class="no-print sticky top-0 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div id="headerInner" class="max-w-7xl mx-auto px-3 sm:px-4 py-2 space-y-2">
+
+      <div id="headerTopBar" class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-2 min-w-0">
+          <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow shrink-0">⚡</div>
+          <h1 class="font-bold text-sm sm:text-base leading-none">Hazır Cevaplar Hızlı Pano</h1>
+          <span id="sourceBadge" class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">Yükleniyor</span>
+          <span id="statsText" class="text-xs text-slate-500 dark:text-slate-400">Yükleniyor...</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5">
+          <a href="./index.html" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
+            ⚙️ Tam Yönetim Paneli
+          </a>
+          <label class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition">
+            📂 INI / JSON Yükle
+            <input id="fileInput" type="file" accept=".ini,.json" class="hidden" />
+          </label>
+
+          <div id="toolsDropdownWrap" class="relative">
+            <button id="toolsMenuBtn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition inline-flex items-center gap-1">
+              ⚙️ Araçlar <span class="text-[10px]">▼</span>
+            </button>
+            <div id="toolsDropdownMenu" class="hidden absolute right-0 mt-1.5 w-60 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-40 text-xs">
+              <button id="toggleEmojiBtn" type="button" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                😊 Emojili Kopyala
+              </button>
+              <button id="toggleFavBtn" type="button" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                ⭐ Sadece Favoriler
+              </button>
+              <button id="reloadSeedBtn" type="button" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 transition">
+                🔄 ./data.json Varsayılanları Yükle
+              </button>
+              <button id="printBtn" type="button" onclick="window.print()" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                🖨️ Yazdır (A4)
+              </button>
+            </div>
+          </div>
+
+          <button id="themeBtn" type="button" class="px-2 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Tema Değiştir">
+            ☀️
+          </button>
+          <button id="collapseHeaderBtn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Üst menüyü daralt (Alt+H)">
+            ▲ Gizle
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap md:flex-nowrap items-center gap-2">
+        <div class="relative flex-1 min-w-[200px]">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+          <input id="searchInput" type="text" placeholder="Metin, başlık, kategori veya kısayol ara (/)"
+            class="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button id="clearSearchBtn" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
+        </div>
+
+        <div id="catDropdownWrap" class="relative shrink-0 flex items-center">
+          <div class="inline-flex items-stretch rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <button id="catDropdownBtn" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[230px] sm:max-w-[280px]" title="Çoklu kategori filtrele">
+              <span id="catBtnLabel" class="truncate">📁 Kategoriler: Tümü (0)</span>
+              <span id="catBtnCaret" class="text-[10px] opacity-70 shrink-0">▼</span>
+            </button>
+            <button id="catClearBtn" type="button" class="hidden px-2 py-1.5 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-slate-200 dark:hover:bg-slate-700 border-l border-slate-300 dark:border-slate-700 transition" title="Kategori filtresini sıfırla">✕</button>
+          </div>
+
+          <div id="catDropdownMenu" class="hidden absolute left-0 md:right-0 md:left-auto top-full mt-1.5 w-[310px] sm:w-[390px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl z-40 overflow-hidden">
+            <div class="p-2.5 border-b border-slate-200 dark:border-slate-800 space-y-2 bg-slate-50/80 dark:bg-slate-800/40">
+              <div class="relative">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔎</span>
+                <input id="catSearchInput" type="text" placeholder="Kategori ara..."
+                  class="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <button id="catSearchClearBtn" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button id="catResetAllBtn" type="button" class="px-2 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 font-medium transition">Tümünü Temizle</button>
+                  <button id="catSelectVisibleBtn" type="button" class="px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition">Görünenleri Seç</button>
+                </div>
+                <button id="catSelectedFirstBtn" type="button" class="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium transition">↑ Seçili (0)</button>
+              </div>
+              <div id="catPrefixBar" class="flex flex-wrap items-center gap-1 pt-0.5"></div>
+            </div>
+            <div id="catOptionsList" class="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80"></div>
+          </div>
+        </div>
+
+        <div id="expandedFilters" class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 shrink-0">
+          <select id="hotkeyFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="ALL">⌨️ Tüm Kısayollar</option>
+          </select>
+
+          <select id="scopeFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="all">🎯 Tümü</option>
+            <option value="text">📝 Metin</option>
+            <option value="label">🏷️ Başlık</option>
+            <option value="group">📁 Kategori</option>
+            <option value="keys">⌨️ Kısayol</option>
+          </select>
+
+          <select id="sortFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="default">↕️ Varsayılan</option>
+            <option value="popular">🔥 Popüler</option>
+            <option value="az">🔤 A → Z</option>
+          </select>
+        </div>
+
+        <div id="collapsedControls" class="hidden items-center gap-1.5 shrink-0">
+          <span id="collapsedStatsBadge" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">0 / 0</span>
+          <button id="showHeaderBtn" type="button" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition" title="Üst menüyü göster (Alt+H)">
+            ▼ Menüyü Göster
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="dropBanner" class="hidden max-w-3xl mx-auto mt-6 px-4 no-print">
+    <div id="dropZone" class="p-6 rounded-2xl border-2 border-dashed border-indigo-400 bg-white dark:bg-slate-900 text-center space-y-3">
+      <div class="text-3xl">📂</div>
+      <p class="font-bold text-indigo-700 dark:text-indigo-300">QuickTextPaste.ini veya data.json Dosyanızı Yükleyin</p>
+      <p id="dropBannerDesc" class="text-xs text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed">
+        Dosyanızı bu pencereye sürükleyip bırakabilir veya aşağıdaki butonla seçebilirsiniz. Yerel tam full-stack kurulum için <code>baslat.bat</code> / <code>./baslat.sh</code> çalıştırın.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+        <button id="bannerPickFileBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white">📥 Dosya Seç (.ini / .json)</button>
+        <a href="./index.html" class="px-4 py-2 rounded-xl text-xs font-medium bg-slate-200 dark:bg-slate-800">⚙️ Yönetim Panelini Aç</a>
+      </div>
+    </div>
+  </div>
+
+  <main id="content" class="max-w-7xl mx-auto px-3 sm:px-4 py-4 space-y-4"></main>
+
+  <div id="toast" class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-200 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2">
+    <span id="toastIcon">✅</span><span id="toastMsg">Panoya kopyalandı!</span>
+  </div>
+
+  <script>
+    let allData = [];
+    let selectedGroups = [];
+    let categoryDropdownOpen = false;
+    let categorySearch = '';
+    let categorySelectedFirst = false;
+    let headerCollapsed = false;
+    let stripEmoji = false;
+    let onlyFavorites = false;
+    const collapsedGroups = new Set();
+
+    const DB_NAME = 'QTPManagerPWADB';
+    const DB_VERSION = 1;
+    const LS_ITEMS_KEY = 'qtp_pwa_items_v2';
+    const LS_META_KEY = 'qtp_pwa_meta_v2';
+    const LS_SETTINGS_KEY = 'qtp_pwa_settings_v2';
+    const LS_THEME_KEY = 'qtp_pwa_theme_v2';
+    const favKey = 'qtp_favorites_v1';
+    const countKey = 'qtp_copy_counts_v1';
+
+    function safeJsonParse(raw, fallback) {
+      try { return raw ? JSON.parse(raw) : fallback; } catch (_) { return fallback; }
+    }
+
+    const favorites = new Set(safeJsonParse(localStorage.getItem(favKey), []));
+    const copyCounts = safeJsonParse(localStorage.getItem(countKey), {});
+
+    const el = {
+      headerInner: document.getElementById('headerInner'),
+      headerTopBar: document.getElementById('headerTopBar'),
+      expandedFilters: document.getElementById('expandedFilters'),
+      collapsedControls: document.getElementById('collapsedControls'),
+      collapsedStatsBadge: document.getElementById('collapsedStatsBadge'),
+      collapseHeaderBtn: document.getElementById('collapseHeaderBtn'),
+      showHeaderBtn: document.getElementById('showHeaderBtn'),
+      toolsDropdownWrap: document.getElementById('toolsDropdownWrap'),
+      toolsMenuBtn: document.getElementById('toolsMenuBtn'),
+      toolsDropdownMenu: document.getElementById('toolsDropdownMenu'),
+      search: document.getElementById('searchInput'),
+      clearSearch: document.getElementById('clearSearchBtn'),
+      hotkey: document.getElementById('hotkeyFilter'),
+      scope: document.getElementById('scopeFilter'),
+      sort: document.getElementById('sortFilter'),
+      catWrap: document.getElementById('catDropdownWrap'),
+      catBtn: document.getElementById('catDropdownBtn'),
+      catBtnLabel: document.getElementById('catBtnLabel'),
+      catBtnCaret: document.getElementById('catBtnCaret'),
+      catClearBtn: document.getElementById('catClearBtn'),
+      catMenu: document.getElementById('catDropdownMenu'),
+      catSearchInput: document.getElementById('catSearchInput'),
+      catSearchClearBtn: document.getElementById('catSearchClearBtn'),
+      catResetAllBtn: document.getElementById('catResetAllBtn'),
+      catSelectVisibleBtn: document.getElementById('catSelectVisibleBtn'),
+      catSelectedFirstBtn: document.getElementById('catSelectedFirstBtn'),
+      catPrefixBar: document.getElementById('catPrefixBar'),
+      catOptionsList: document.getElementById('catOptionsList'),
+      content: document.getElementById('content'),
+      stats: document.getElementById('statsText'),
+      sourceBadge: document.getElementById('sourceBadge'),
+      toast: document.getElementById('toast'),
+      toastIcon: document.getElementById('toastIcon'),
+      toastMsg: document.getElementById('toastMsg'),
+      dropBanner: document.getElementById('dropBanner'),
+      dropBannerDesc: document.getElementById('dropBannerDesc'),
+      bannerPickFileBtn: document.getElementById('bannerPickFileBtn'),
+      fileInput: document.getElementById('fileInput'),
+      toggleEmoji: document.getElementById('toggleEmojiBtn'),
+      toggleFav: document.getElementById('toggleFavBtn'),
+      reloadSeedBtn: document.getElementById('reloadSeedBtn'),
+      themeBtn: document.getElementById('themeBtn'),
+    };
+
+    const SharedStore = {
+      _dbPromise: null,
+      openDB() {
+        if (!('indexedDB' in window)) return Promise.resolve(null);
+        if (this._dbPromise) return this._dbPromise;
+        this._dbPromise = new Promise((resolve) => {
+          try {
+            const req = indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = (e) => {
+              const db = e.target.result;
+              if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv', { keyPath: 'key' });
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => resolve(null);
+            req.onblocked = () => resolve(null);
+          } catch (_) { resolve(null); }
+        });
+        return this._dbPromise;
+      },
+      async idbGet(key) {
+        const db = await this.openDB();
+        if (!db) return null;
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction('kv', 'readonly');
+            const req = tx.objectStore('kv').get(key);
+            req.onsuccess = () => resolve(req.result ? req.result.value : null);
+            req.onerror = () => resolve(null);
+          } catch (_) { resolve(null); }
+        });
+      },
+      async idbSet(key, value) {
+        const db = await this.openDB();
+        if (!db) return false;
+        const plain = JSON.parse(JSON.stringify(value));
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction('kv', 'readwrite');
+            tx.objectStore('kv').put({ key, value: plain, updatedAt: Date.now() });
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => resolve(false);
+            tx.onabort = () => resolve(false);
+          } catch (_) { resolve(false); }
+        });
+      },
+      async loadStoredState() {
+        const idbItems = await this.idbGet('items');
+        const idbMeta = await this.idbGet('itemsMeta');
+        const lsItems = safeJsonParse(localStorage.getItem(LS_ITEMS_KEY), null);
+        const lsMeta = safeJsonParse(localStorage.getItem(LS_META_KEY), null);
+
+        let items = idbItems;
+        let meta = idbMeta && typeof idbMeta === 'object' ? idbMeta : null;
+        let source = 'IndexedDB';
+
+        const idbTs = Number(idbMeta?.updatedAt || 0);
+        const lsTs = Number(lsMeta?.updatedAt || 0);
+        if ((!Array.isArray(idbItems) || (idbItems.length === 0 && idbMeta?.count !== 0)) && Array.isArray(lsItems)) {
+          items = lsItems;
+          meta = lsMeta;
+          source = 'Tarayıcı Belleği';
+        } else if (Array.isArray(lsItems) && lsTs > idbTs) {
+          items = lsItems;
+          meta = lsMeta;
+          source = 'Tarayıcı Belleği';
+        } else if (!meta && lsMeta) {
+          meta = lsMeta;
+        }
+        return { items, meta, source };
+      },
+      async saveItems(items, meta = {}) {
+        const plain = JSON.parse(JSON.stringify(items));
+        const metaObj = { updatedAt: Date.now(), count: plain.length, sourceKind: 'import', unsyncedToServer: false, ...meta };
+        try {
+          localStorage.setItem(LS_ITEMS_KEY, JSON.stringify(plain));
+          localStorage.setItem(LS_META_KEY, JSON.stringify(metaObj));
+        } catch (_) {}
+        await this.idbSet('items', plain);
+        await this.idbSet('itemsMeta', metaObj);
+      },
+      async loadSettings() {
+        const idbSettings = await this.idbGet('settings');
+        const lsSettings = safeJsonParse(localStorage.getItem(LS_SETTINGS_KEY), null);
+        return (idbSettings && typeof idbSettings === 'object') ? idbSettings : (lsSettings || {});
+      },
+      async saveHeaderCollapsed(val) {
+        const cur = await this.loadSettings();
+        const next = { ...cur, headerCollapsed: Boolean(val) };
+        try { localStorage.setItem(LS_SETTINGS_KEY, JSON.stringify(next)); } catch (_) {}
+        await this.idbSet('settings', next);
+      }
+    };
+
+    function detectUtf16NoBom(uint8) {
+      if (uint8.length < 6 || uint8.length % 2 !== 0) return null;
+      const limit = Math.min(200, uint8.length);
+      let evenZero = 0;
+      let oddZero = 0;
+      for (let i = 0; i < limit; i += 2) {
+        if (uint8[i] === 0) evenZero++;
+        if (uint8[i + 1] === 0) oddZero++;
+      }
+      const half = limit / 2;
+      if (oddZero >= Math.max(3, Math.floor(half * 0.6)) && evenZero <= Math.max(1, Math.floor(half * 0.15))) return 'utf-16le';
+      if (evenZero >= Math.max(3, Math.floor(half * 0.6)) && oddZero <= Math.max(1, Math.floor(half * 0.15))) return 'utf-16be';
+      return null;
+    }
+
+    function decodeBytesAuto(uint8) {
+      if (uint8.length >= 2 && uint8[0] === 0xFF && uint8[1] === 0xFE) {
+        return new TextDecoder('utf-16le').decode(uint8.subarray(2));
+      }
+      if (uint8.length >= 2 && uint8[0] === 0xFE && uint8[1] === 0xFF) {
+        return new TextDecoder('utf-16be').decode(uint8.subarray(2));
+      }
+      if (uint8.length >= 3 && uint8[0] === 0xEF && uint8[1] === 0xBB && uint8[2] === 0xBF) {
+        return new TextDecoder('utf-8').decode(uint8.subarray(3));
+      }
+      const noBom16 = detectUtf16NoBom(uint8);
+      if (noBom16) {
+        try { return new TextDecoder(noBom16).decode(uint8); } catch (_) {}
+      }
+      try {
+        return new TextDecoder('utf-8', { fatal: true }).decode(uint8);
+      } catch (_) {
+        try { return new TextDecoder('windows-1254').decode(uint8); }
+        catch (__) { return new TextDecoder('utf-8').decode(uint8); }
+      }
+    }
+
+    function sanitizeGroupPart(text) {
+      return String(text || '').replace(/[\r\n]+/g, ' ').split('/').map(s => s.trim()).filter(Boolean).join('/');
+    }
+
+    function parseQtpIni(content) {
+      let section = null;
+      const texts = {};
+      const orders = {};
+      const labels = {};
+      let seq = 0;
+
+      for (const rawLine of content.split(/\r?\n/)) {
+        const stripped = rawLine.trim();
+        if (!stripped || stripped.startsWith(';') || stripped.startsWith('#')) continue;
+        if (stripped.startsWith('[') && stripped.endsWith(']')) {
+          section = stripped.slice(1, -1).trim().toLowerCase();
+          continue;
+        }
+        const firstEq = rawLine.indexOf('=');
+        if (firstEq === -1) continue;
+
+        if (section === 'list_text') {
+          const tid = rawLine.slice(0, firstEq).trim();
+          const rest = rawLine.slice(firstEq + 1);
+          const secondEq = rest.indexOf('=');
+          if (secondEq === -1) continue;
+          const hotkey = rest.slice(0, secondEq).trim();
+          let val = rest.slice(secondEq + 1);
+          while (val.trimEnd().endsWith('<E<N<D|')) {
+            val = val.trimEnd().slice(0, -7);
+          }
+          val = val.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n');
+          texts[tid] = { hotkey, text: val, seq: seq++ };
+        } else if (section === 'list_order') {
+          const k = rawLine.slice(0, firstEq).trim();
+          const v = parseInt(rawLine.slice(firstEq + 1).trim(), 10);
+          if (Number.isFinite(v)) orders[k] = v;
+        } else if (section === 'list_label') {
+          const k = rawLine.slice(0, firstEq).trim();
+          labels[k] = rawLine.slice(firstEq + 1).trim();
+        }
+      }
+
+      return Object.keys(texts).sort((a, b) => {
+        const oa = orders[a] ?? 1e9;
+        const ob = orders[b] ?? 1e9;
+        if (oa !== ob) return oa - ob;
+        if (texts[a].seq !== texts[b].seq) return texts[a].seq - texts[b].seq;
+        const ma = a.match(/(\d+)$/);
+        const mb = b.match(/(\d+)$/);
+        return (ma ? parseInt(ma[1], 10) : 999999) - (mb ? parseInt(mb[1], 10) : 999999);
+      }).map((tid) => {
+        const { hotkey, text } = texts[tid];
+        const rawLbl = labels[tid] || '';
+        const slashIdx = rawLbl.lastIndexOf('/');
+        let group = 'Genel';
+        let label = '';
+        if (slashIdx !== -1) {
+          group = sanitizeGroupPart(rawLbl.slice(0, slashIdx)) || 'Genel';
+          label = rawLbl.slice(slashIdx + 1).trim();
+        } else {
+          label = rawLbl.trim();
+        }
+        return { keys: hotkey, group, label, text };
+      });
+    }
+
+    function normTR(str) {
+      return (str || '')
+        .toLocaleLowerCase('tr-TR')
+        .replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u')
+        .replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c');
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function removeEmojis(str) {
+      return str.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').replace(/\s{2,}/g, ' ').trim();
+    }
+
+    function itemHash(item) {
+      return `${item.group || 'Genel'}||${item.text || ''}`;
+    }
+
+    function highlightText(raw, terms) {
+      let safe = escapeHtml(raw);
+      if (!terms.length) return safe.replace(/\n/g, '<br>');
+      const cleanTerms = terms.filter(t => t.length >= 2);
+      if (!cleanTerms.length) return safe.replace(/\n/g, '<br>');
+      const pattern = cleanTerms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+      try {
+        safe = safe.replace(new RegExp(`(${pattern})`, 'gi'), '<mark>$1</mark>');
+      } catch (_) {}
+      return safe.replace(/\n/g, '<br>');
+    }
+
+    let toastTimer;
+    function showToast(msg, type = 'success') {
+      el.toastMsg.textContent = msg;
+      el.toastIcon.textContent = type === 'error' ? '⚠️' : (type === 'info' ? 'ℹ️' : '✅');
+      el.toast.classList.toggle('bg-red-600', type === 'error');
+      el.toast.classList.toggle('bg-slate-700', type === 'info');
+      el.toast.classList.toggle('bg-emerald-600', type === 'success');
+      el.toast.classList.remove('opacity-0', 'translate-y-3');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.toast.classList.add('opacity-0', 'translate-y-3');
+      }, 2200);
+    }
+
+    function applyHeaderCollapsedUI() {
+      el.headerTopBar.classList.toggle('hidden', headerCollapsed);
+      el.expandedFilters.classList.toggle('hidden', headerCollapsed);
+      el.collapsedControls.classList.toggle('hidden', !headerCollapsed);
+      el.collapsedControls.classList.toggle('flex', headerCollapsed);
+      el.headerInner.classList.toggle('py-1.5', headerCollapsed);
+      el.headerInner.classList.toggle('space-y-0', headerCollapsed);
+      el.headerInner.classList.toggle('py-2', !headerCollapsed);
+      el.headerInner.classList.toggle('space-y-2', !headerCollapsed);
+    }
+
+    async function toggleHeaderCollapsed(forceState = null) {
+      headerCollapsed = forceState === null ? !headerCollapsed : Boolean(forceState);
+      if (headerCollapsed) el.toolsDropdownMenu.classList.add('hidden');
+      applyHeaderCollapsedUI();
+      await SharedStore.saveHeaderCollapsed(headerCollapsed);
+    }
+
+    function getAllGroupsMeta() {
+      const counts = new Map();
+      const hotkeysMap = new Map();
+      allData.forEach((i) => {
+        const g = (i.group || 'Genel').trim() || 'Genel';
+        counts.set(g, (counts.get(g) || 0) + 1);
+        if (!hotkeysMap.has(g)) hotkeysMap.set(g, new Set());
+        if (i.keys) hotkeysMap.get(g).add(i.keys);
+      });
+      return Array.from(counts.entries()).map(([name, count]) => ({
+        name,
+        count,
+        hotkeys: Array.from(hotkeysMap.get(name) || []),
+        prefix: name.includes(' - ') ? name.split(' - ')[0].trim() : ''
+      }));
+    }
+
+    function getFilteredCategoryOptions(groupsMeta) {
+      const q = normTR(categorySearch.trim());
+      const terms = q ? q.split(/\s+/).filter(Boolean) : [];
+      let list = groupsMeta.filter((g) => {
+        if (!terms.length) return true;
+        const hay = normTR(`${g.name} ${g.hotkeys.join(' ')}`);
+        return terms.every((t) => hay.includes(t));
+      });
+      if (categorySelectedFirst && selectedGroups.length) {
+        const selSet = new Set(selectedGroups);
+        list = [...list.filter((g) => selSet.has(g.name)), ...list.filter((g) => !selSet.has(g.name))];
+      }
+      return list;
+    }
+
+    function pruneSelectedGroups() {
+      if (!selectedGroups.length) return;
+      const valid = new Set(getAllGroupsMeta().map((g) => g.name));
+      selectedGroups = selectedGroups.filter((g) => valid.has(g));
+    }
+
+    function updateCategoryDropdownUI() {
+      const groupsMeta = getAllGroupsMeta();
+      const filteredCats = getFilteredCategoryOptions(groupsMeta);
+      const selSet = new Set(selectedGroups);
+
+      if (selectedGroups.length === 0) {
+        el.catBtnLabel.textContent = `📁 Kategoriler: Tümü (${groupsMeta.length})`;
+      } else if (selectedGroups.length === 1) {
+        const gName = selectedGroups[0];
+        const found = groupsMeta.find((g) => g.name === gName);
+        el.catBtnLabel.textContent = `📁 ${gName} (${found ? found.count : 0})`;
+      } else {
+        const total = groupsMeta.filter((g) => selSet.has(g.name)).reduce((s, g) => s + g.count, 0);
+        el.catBtnLabel.textContent = `📁 ${selectedGroups.length} kategori seçili (${total} kayıt)`;
+      }
+
+      el.catClearBtn.classList.toggle('hidden', selectedGroups.length === 0);
+      el.catBtn.classList.toggle('text-indigo-700', selectedGroups.length > 0);
+      el.catBtn.classList.toggle('dark:text-indigo-300', selectedGroups.length > 0);
+      el.catBtnCaret.textContent = categoryDropdownOpen ? '▲' : '▼';
+      el.catSearchClearBtn.classList.toggle('hidden', !categorySearch);
+      el.catSelectVisibleBtn.textContent = `Görünenleri Seç (${filteredCats.length})`;
+      el.catSelectedFirstBtn.textContent = `↑ Seçili (${selectedGroups.length})`;
+      el.catSelectedFirstBtn.classList.toggle('bg-amber-500', categorySelectedFirst);
+      el.catSelectedFirstBtn.classList.toggle('text-white', categorySelectedFirst);
+
+      const prefMap = new Map();
+      groupsMeta.forEach((g) => {
+        if (!g.prefix) return;
+        if (!prefMap.has(g.prefix)) prefMap.set(g.prefix, { prefix: g.prefix, groupNames: [], selectedCount: 0, itemCount: 0 });
+        const p = prefMap.get(g.prefix);
+        p.groupNames.push(g.name);
+        p.itemCount += g.count;
+        if (selSet.has(g.name)) p.selectedCount++;
+      });
+
+      el.catPrefixBar.innerHTML = '';
+      if (prefMap.size === 0) {
+        el.catPrefixBar.classList.add('hidden');
+      } else {
+        el.catPrefixBar.classList.remove('hidden');
+        prefMap.forEach((pref) => {
+          const allSel = pref.selectedCount === pref.groupNames.length;
+          const partSel = pref.selectedCount > 0 && !allSel;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `px-2 py-0.5 rounded-full text-[11px] font-medium border transition ${
+            allSel
+              ? 'bg-indigo-600 text-white border-indigo-600'
+              : (partSel
+                ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 border-indigo-400'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-indigo-400')
+          }`;
+          btn.title = `${pref.prefix} rolündeki tüm kategorileri seç/kaldır (${pref.itemCount} kayıt)`;
+          btn.textContent = `${pref.prefix} (${pref.selectedCount ? pref.selectedCount + '/' : ''}${pref.groupNames.length})`;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const next = new Set(selectedGroups);
+            if (allSel) pref.groupNames.forEach((g) => next.delete(g));
+            else pref.groupNames.forEach((g) => next.add(g));
+            selectedGroups = Array.from(next);
+            updateCategoryDropdownUI();
+            render();
+          });
+          el.catPrefixBar.appendChild(btn);
+        });
+      }
+
+      if (!filteredCats.length) {
+        el.catOptionsList.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">Eşleşen kategori bulunamadı.</div>';
+        return;
+      }
+
+      el.catOptionsList.innerHTML = '';
+      filteredCats.forEach((g) => {
+        const checked = selSet.has(g.name);
+        const row = document.createElement('label');
+        row.className = 'flex items-center justify-between gap-2 px-3 py-2 text-xs hover:bg-slate-100/80 dark:hover:bg-slate-800/70 cursor-pointer select-none';
+        row.innerHTML = `
+          <span class="flex items-center gap-2 min-w-0">
+            <input type="checkbox" ${checked ? 'checked' : ''} class="w-3.5 h-3.5 rounded accent-indigo-600 shrink-0" />
+            <span class="truncate ${checked ? 'font-semibold text-indigo-700 dark:text-indigo-300' : ''}" title="${escapeHtml(g.name)}">${escapeHtml(g.name)}</span>
+          </span>
+          <span class="flex items-center gap-1 shrink-0">
+            ${g.hotkeys.map((k) => `<kbd class="px-1 py-0.5 text-[10px] font-mono rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-indigo-300">${escapeHtml(k)}</kbd>`).join('')}
+            <span class="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">${g.count}</span>
+          </span>`;
+        row.querySelector('input').addEventListener('change', () => {
+          if (selectedGroups.includes(g.name)) selectedGroups = selectedGroups.filter((x) => x !== g.name);
+          else selectedGroups = [...selectedGroups, g.name];
+          updateCategoryDropdownUI();
+          render();
+        });
+        el.catOptionsList.appendChild(row);
+      });
+    }
+
+    function setCategoryDropdownOpen(open) {
+      categoryDropdownOpen = Boolean(open);
+      el.catMenu.classList.toggle('hidden', !categoryDropdownOpen);
+      el.catBtnCaret.textContent = categoryDropdownOpen ? '▲' : '▼';
+      if (categoryDropdownOpen) {
+        updateCategoryDropdownUI();
+        requestAnimationFrame(() => el.catSearchInput.focus());
+      }
+    }
+
+    async function copyToClipboard(text, item, cardEl) {
+      const output = stripEmoji ? removeEmojis(text) : text;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(output);
+        } else {
+          throw new Error('fallback');
+        }
+      } catch (_) {
+        const ta = document.createElement('textarea');
+        ta.value = output;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+
+      const h = itemHash(item);
+      copyCounts[h] = (copyCounts[h] || 0) + 1;
+      try { localStorage.setItem(countKey, JSON.stringify(copyCounts)); } catch (_) {}
+
+      if (cardEl) {
+        cardEl.classList.add('card-copied');
+        const badge = cardEl.querySelector('.copy-count-badge');
+        if (badge) badge.textContent = `${copyCounts[h]}x kopyalandı`;
+        setTimeout(() => cardEl.classList.remove('card-copied'), 900);
+      }
+      showToast(stripEmoji ? 'Emojisiz kopyalandı!' : 'Panoya kopyalandı!');
+    }
+
+    function toggleFavorite(item) {
+      const h = itemHash(item);
+      if (favorites.has(h)) favorites.delete(h);
+      else favorites.add(h);
+      try { localStorage.setItem(favKey, JSON.stringify([...favorites])); } catch (_) {}
+      render();
+    }
+
+    function populateFilters() {
+      const hotkeys = [...new Set(allData.map(i => i.keys).filter(Boolean))];
+      el.hotkey.innerHTML = '<option value="ALL">⌨️ Tüm Kısayollar</option>' +
+        hotkeys.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
+      pruneSelectedGroups();
+      updateCategoryDropdownUI();
+    }
+
+    function render() {
+      const rawQuery = el.search.value.trim();
+      el.clearSearch.classList.toggle('hidden', !rawQuery);
+      const terms = rawQuery ? rawQuery.split(/\s+/).filter(Boolean) : [];
+      const normTerms = terms.map(normTR);
+      const hk = el.hotkey.value;
+      const scope = el.scope.value;
+      const sortMode = el.sort.value;
+      const hasSelGroups = selectedGroups.length > 0;
+      const selGroupSet = hasSelGroups ? new Set(selectedGroups) : null;
+
+      let filtered = allData.filter(item => {
+        const grp = (item.group || 'Genel').trim() || 'Genel';
+        if (hasSelGroups && !selGroupSet.has(grp)) return false;
+        if (hk !== 'ALL' && item.keys !== hk) return false;
+        const isFav = Boolean(item.favorite) || favorites.has(itemHash(item));
+        if (onlyFavorites && !isFav) return false;
+        if (normTerms.length) {
+          let haystack = '';
+          if (scope === 'text') haystack = item.text || '';
+          else if (scope === 'label') haystack = item.label || '';
+          else if (scope === 'group') haystack = grp;
+          else if (scope === 'keys') haystack = item.keys || '';
+          else haystack = `${item.text || ''} ${item.label || ''} ${grp} ${item.keys || ''}`;
+          const nh = normTR(haystack);
+          if (!normTerms.every(t => nh.includes(t))) return false;
+        }
+        return true;
+      });
+
+      if (sortMode === 'popular') {
+        filtered = [...filtered].sort((a, b) => ((b.copyCount || 0) + (copyCounts[itemHash(b)] || 0)) - ((a.copyCount || 0) + (copyCounts[itemHash(a)] || 0)));
+      } else if (sortMode === 'az') {
+        filtered = [...filtered].sort((a, b) => (a.label || a.text).localeCompare(b.label || b.text, 'tr'));
+      }
+
+      el.stats.textContent = `${filtered.length} / ${allData.length} kayıt`;
+      el.collapsedStatsBadge.textContent = `${filtered.length} / ${allData.length}`;
+
+      if (!filtered.length) {
+        if (allData.length === 0) {
+          el.content.innerHTML = '';
+          return;
+        }
+        el.content.innerHTML = `
+          <div class="text-center py-14 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="text-4xl mb-2">🔎</div>
+            <p class="font-semibold">Aramanızla eşleşen hazır cevap bulunamadı.</p>
+            <p class="text-xs text-slate-500 mt-1">Filtreleri temizleyerek tüm cevapları tekrar görebilirsiniz.</p>
+          </div>`;
+        return;
+      }
+
+      const grouped = new Map();
+      filtered.forEach(item => {
+        const g = (item.group || 'Genel').trim() || 'Genel';
+        if (!grouped.has(g)) grouped.set(g, []);
+        grouped.get(g).push(item);
+      });
+
+      el.content.innerHTML = '';
+      grouped.forEach((items, groupName) => {
+        const isCollapsed = collapsedGroups.has(groupName);
+        const groupKeys = [...new Set(items.map(i => i.keys).filter(Boolean))];
+
+        const section = document.createElement('section');
+        section.className = 'bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden';
+
+        const header = document.createElement('div');
+        header.className = 'flex flex-wrap items-center justify-between gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 cursor-pointer select-none';
+        header.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="text-xs text-slate-400 transition-transform ${isCollapsed ? '-rotate-90' : ''}">▼</span>
+            <h2 class="font-bold text-sm sm:text-base">${escapeHtml(groupName)}</h2>
+            <span class="px-2 py-0.5 text-xs rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-semibold">${items.length}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            ${groupKeys.map(k => `<kbd class="px-2 py-0.5 text-xs font-mono rounded-md bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-indigo-300">${escapeHtml(k)}</kbd>`).join('')}
+          </div>`;
+        header.addEventListener('click', () => {
+          if (collapsedGroups.has(groupName)) collapsedGroups.delete(groupName);
+          else collapsedGroups.add(groupName);
+          render();
+        });
+        section.appendChild(header);
+
+        if (!isCollapsed) {
+          const grid = document.createElement('div');
+          grid.className = 'p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3';
+
+          items.forEach(item => {
+            const isNote = (item.text || '').startsWith('[DAHİLİ NOT]');
+            const h = itemHash(item);
+            const isFav = Boolean(item.favorite) || favorites.has(h);
+            const count = Math.max(Number(item.copyCount || 0), copyCounts[h] || 0);
+
+            const card = document.createElement('article');
+            card.className = `group relative flex flex-col justify-between p-4 rounded-xl border transition cursor-pointer ${
+              isNote
+                ? 'bg-amber-50/70 dark:bg-amber-950/25 border-amber-300 dark:border-amber-700/60 hover:border-amber-500'
+                : 'bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md'
+            }`;
+
+            card.innerHTML = `
+              <div>
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    ${item.keys ? `<kbd class="px-1.5 py-0.5 text-[11px] font-mono rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">${escapeHtml(item.keys)}</kbd>` : ''}
+                    ${isNote ? `<span class="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-white">Dahili Not</span>` : ''}
+                    ${item.label ? `<span class="text-xs font-semibold text-slate-600 dark:text-slate-300">${highlightText(item.label, terms)}</span>` : ''}
+                  </div>
+                  <button class="fav-btn no-print text-base leading-none opacity-75 hover:opacity-100 transition" title="Favorilere Ekle/Çıkar">
+                    ${isFav ? '⭐' : '☆'}
+                  </button>
+                </div>
+                <p class="text-sm leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-line break-words">${highlightText(item.text, terms)}</p>
+              </div>
+              <div class="no-print flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-slate-200/70 dark:border-slate-800/80">
+                <span class="copy-count-badge text-[11px] text-slate-400">${count > 0 ? `${count}x kopyalandı` : 'Tıkla & kopyala'}</span>
+                <button class="copy-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
+                  📋 Kopyala
+                </button>
+              </div>`;
+
+            card.querySelector('.fav-btn').addEventListener('click', e => {
+              e.stopPropagation();
+              toggleFavorite(item);
+            });
+            card.querySelector('.copy-btn').addEventListener('click', e => {
+              e.stopPropagation();
+              copyToClipboard(item.text, item, card);
+            });
+            card.addEventListener('click', () => copyToClipboard(item.text, item, card));
+
+            grid.appendChild(card);
+          });
+          section.appendChild(grid);
+        }
+        el.content.appendChild(section);
+      });
+    }
+
+    function loadJsonData(data, sourceLabel = 'data.json') {
+      if (data && typeof data === 'object' && !Array.isArray(data) && Array.isArray(data.items)) {
+        data = data.items;
+      }
+      if (!Array.isArray(data)) {
+        alert('Geçersiz veri biçimi! Dosya bir liste ([ ... ]) veya QTP yedek nesnesi olmalıdır.');
+        return false;
+      }
+      allData = data;
+      el.dropBanner.classList.add('hidden');
+      el.sourceBadge.textContent = sourceLabel;
+      selectedGroups = [];
+      populateFilters();
+      render();
+      return true;
+    }
+
+    async function handleFile(file) {
+      if (!file) return;
+      try {
+        const buf = await file.arrayBuffer();
+        const text = decodeBytesAuto(new Uint8Array(buf));
+        let loadedOk = false;
+        if (file.name.toLowerCase().endsWith('.ini') || text.includes('[list_text]') || text.includes('[Program]')) {
+          const parsed = parseQtpIni(text);
+          loadedOk = loadJsonData(parsed, file.name);
+        } else {
+          loadedOk = loadJsonData(JSON.parse(text), file.name);
+        }
+        if (!loadedOk) return;
+
+        const isLocalHttp = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') && location.protocol.startsWith('http');
+        let unsynced = true;
+        if (isLocalHttp) {
+          try {
+            const res = await fetch('./api/data', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ items: allData, createBackup: true, backupReason: 'cevaplar_import', reloadQtp: false })
+            });
+            const srv = await res.json();
+            if (!res.ok || !srv.ok || Number(srv.count) !== allData.length) {
+              throw new Error(srv.error || 'Sunucu sayısı eşleşmedi');
+            }
+            unsynced = false;
+          } catch (err) {
+            await SharedStore.saveItems(allData, { sourceKind: 'import', unsyncedToServer: true });
+            showToast(`${file.name} tarayıcıya yüklendi (${allData.length} kayıt) ancak sunucuya yazılamadı: ${err.message}`, 'error');
+            return;
+          }
+        }
+        await SharedStore.saveItems(allData, { sourceKind: 'import', unsyncedToServer: unsynced });
+        showToast(`${file.name} yüklendi (${allData.length} kayıt)`);
+      } catch (err) {
+        alert('Dosya okunamadı: ' + err.message);
+      }
+    }
+
+    el.search.addEventListener('input', render);
+    el.clearSearch.addEventListener('click', () => { el.search.value = ''; render(); el.search.focus(); });
+    el.hotkey.addEventListener('change', render);
+    el.scope.addEventListener('change', render);
+    el.sort.addEventListener('change', render);
+    el.fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+    el.bannerPickFileBtn.addEventListener('click', () => el.fileInput.click());
+
+    el.collapseHeaderBtn.addEventListener('click', () => toggleHeaderCollapsed(true));
+    el.showHeaderBtn.addEventListener('click', () => toggleHeaderCollapsed(false));
+
+    el.toolsMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      el.toolsDropdownMenu.classList.toggle('hidden');
+      if (categoryDropdownOpen) setCategoryDropdownOpen(false);
+    });
+
+    el.catBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      el.toolsDropdownMenu.classList.add('hidden');
+      setCategoryDropdownOpen(!categoryDropdownOpen);
+    });
+    el.catClearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectedGroups = [];
+      updateCategoryDropdownUI();
+      render();
+    });
+    el.catSearchInput.addEventListener('input', () => {
+      categorySearch = el.catSearchInput.value;
+      updateCategoryDropdownUI();
+    });
+    el.catSearchClearBtn.addEventListener('click', () => {
+      categorySearch = '';
+      el.catSearchInput.value = '';
+      updateCategoryDropdownUI();
+      el.catSearchInput.focus();
+    });
+    el.catResetAllBtn.addEventListener('click', () => {
+      selectedGroups = [];
+      updateCategoryDropdownUI();
+      render();
+    });
+    el.catSelectVisibleBtn.addEventListener('click', () => {
+      const visible = getFilteredCategoryOptions(getAllGroupsMeta());
+      const next = new Set(selectedGroups);
+      visible.forEach((g) => next.add(g.name));
+      selectedGroups = Array.from(next);
+      updateCategoryDropdownUI();
+      render();
+    });
+    el.catSelectedFirstBtn.addEventListener('click', () => {
+      categorySelectedFirst = !categorySelectedFirst;
+      updateCategoryDropdownUI();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (categoryDropdownOpen && !el.catWrap.contains(e.target)) {
+        setCategoryDropdownOpen(false);
+      }
+      if (!el.toolsDropdownWrap.contains(e.target)) {
+        el.toolsDropdownMenu.classList.add('hidden');
+      }
+    });
+
+    el.toggleEmoji.addEventListener('click', () => {
+      stripEmoji = !stripEmoji;
+      el.toggleEmoji.textContent = stripEmoji ? '🚫 Emojisiz Kopyala' : '😊 Emojili Kopyala';
+    });
+
+    el.toggleFav.addEventListener('click', () => {
+      onlyFavorites = !onlyFavorites;
+      el.toggleFav.textContent = onlyFavorites ? '⭐ Tüm Kayıtları Göster' : '⭐ Sadece Favoriler';
+      render();
+    });
+
+    el.reloadSeedBtn.addEventListener('click', async () => {
+      el.toolsDropdownMenu.classList.add('hidden');
+      try {
+        const res = await fetch('./data.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const arr = await res.json();
+        loadJsonData(arr, 'data.json');
+        await SharedStore.saveItems(allData, { sourceKind: 'seed', unsyncedToServer: false });
+        showToast(`./data.json'dan güncel varsayılanlar yüklendi (${allData.length} kayıt).`);
+      } catch (err) {
+        showToast('file:// modunda ./data.json okunamadı. Dosya Seç ile yükleyin.', 'error');
+      }
+    });
+
+    el.themeBtn.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      el.themeBtn.textContent = isDark ? '☀️' : '🌙';
+      try { localStorage.setItem(LS_THEME_KEY, isDark ? 'dark' : 'light'); } catch (_) {}
+    });
+
+    ['dragover', 'drop'].forEach(ev => window.addEventListener(ev, e => e.preventDefault()));
+    window.addEventListener('drop', e => {
+      const file = e.dataTransfer?.files?.[0];
+      if (file && (file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.ini'))) {
+        handleFile(file);
+      }
+    });
+
+    window.addEventListener('keydown', e => {
+      if (e.altKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        toggleHeaderCollapsed();
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (categoryDropdownOpen) { setCategoryDropdownOpen(false); return; }
+        el.toolsDropdownMenu.classList.add('hidden');
+        if (document.activeElement === el.search) {
+          el.search.value = '';
+          render();
+          el.search.blur();
+        }
+        return;
+      }
+      if (e.key === '/' && document.activeElement !== el.search && document.activeElement !== el.catSearchInput) {
+        e.preventDefault();
+        el.search.focus();
+      }
+    });
+
+    async function bootstrapData() {
+      const settings = await SharedStore.loadSettings();
+      headerCollapsed = Boolean(settings.headerCollapsed);
+      applyHeaderCollapsedUI();
+
+      const stored = await SharedStore.loadStoredState();
+      const hasUserData = Array.isArray(stored.items) && (
+        (stored.meta?.sourceKind && stored.meta.sourceKind !== 'seed') ||
+        (!stored.meta && stored.items.length > 0)
+      );
+      const isUnsynced = Boolean(stored.meta?.unsyncedToServer);
+
+      const isLocalHttp = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') && location.protocol.startsWith('http');
+      if (isLocalHttp && !isUnsynced) {
+        try {
+          const res = await fetch('./api/data', { cache: 'no-store' });
+          if (res.ok) {
+            const payload = await res.json();
+            if (payload.ok && Array.isArray(payload.items)) {
+              loadJsonData(payload.items, 'Full-Stack Disk');
+              await SharedStore.saveItems(payload.items, { sourceKind: 'server', unsyncedToServer: false });
+              return;
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (hasUserData) {
+        loadJsonData(stored.items, stored.source);
+        return;
+      }
+
+      try {
+        const res = await fetch('./data.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const arr = await res.json();
+        loadJsonData(arr, 'data.json');
+        await SharedStore.saveItems(arr, { sourceKind: 'seed', unsyncedToServer: false });
+      } catch (_) {
+        if (Array.isArray(stored.items) && stored.items.length > 0) {
+          loadJsonData(stored.items, stored.source);
+          return;
+        }
+        el.dropBanner.classList.remove('hidden');
+        if (location.protocol === 'file:') {
+          el.dropBannerDesc.textContent = 'Sayfa doğrudan file:// protokolü ile açıldığı için tarayıcı ./data.json erişimini kısıtladı. QuickTextPaste.ini veya data.json dosyanızı seçin/bırakın ya da baslat.bat / ./baslat.sh çalıştırın.';
+        }
+        el.sourceBadge.textContent = 'Dosya Bekleniyor';
+        el.stats.textContent = '0 kayıt';
+        el.collapsedStatsBadge.textContent = '0 / 0';
+      }
+    }
+
+    bootstrapData();
+  </script>
+</body>
+</html>

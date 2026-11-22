@@ -1,0 +1,29 @@
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+
+# Çalışma zamanı yedekleri, durum ve geçici dosyalar
+backups/
+.qtp_state.json
+.qtp_tmp_*
+*.log
+
+# Üçüncü parti çalıştırılabilir dosyalar ve indirilen arşivler
+# (baslat.bat / baslat.sh / kurulum.ps1 / qtp_server.py eksikse resmi kaynaktan indirir)
+*.exe
+*.zip
+
+# İşletim sistemi artıkları
+.DS_Store
+Thumbs.db
+desktop.ini

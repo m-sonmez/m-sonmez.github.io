@@ -1,0 +1,30 @@
+name: QTP Full-Stack CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Python 3.12 kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Bash betiği sözdizimi kontrolü
+        run: bash -n baslat.sh
+
+      - name: Birim ve Full-Stack API testlerini çalıştır
+        run: python -m unittest discover -s tests -v
