@@ -14,7 +14,7 @@ import pytest
 
 from qtp_app.core.engine import QtpEngine
 from qtp_app.core.ini_parser import build_qtp_ini, write_qtp_ini
-from qtp_app.ui.theme import ACCENT_CYAN, ACCENT_PURPLE, DARK_PALETTE, FOOTER_HINTS_TEXT
+from qtp_app.ui.theme import ACCENT_CYAN, ACCENT_PURPLE, DARK_PALETTE, FOOTER_HINTS_TEXT, LIGHT_PALETTE
 from qtp_app.web import create_web_server, run_web_server
 
 
@@ -47,6 +47,14 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         conn.request("GET", "/docs/KULLANIM.md")
         assert conn.getresponse().status == 200
 
+        conn.request("GET", "/docs/KURULUM.md")
+        assert conn.getresponse().status == 200
+
+        conn.request("GET", "/qtp.html")
+        r_qtp_html = conn.getresponse()
+        assert r_qtp_html.status == 200
+        assert r_qtp_html.read().decode("utf-8") == html
+
         for blob in (html, css):
             assert "http://" not in blob
             assert "https://" not in blob
@@ -56,10 +64,15 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         assert 'href="./theme.css"' in html
         assert 'href="/theme.css"' not in html
         assert "detectBackendMode" in html
-        assert "./qtp.exe" in html and "./qtp.bin" in html and "./old.html" in html
+        assert "./qtp.exe" in html and "./qtp.bin" in html
+        assert "./index.html" in html and "./legacy/cevaplar.html" in html
+        assert "btnThemeToggle" in html and "btnAddNew" in html and "btnInstallPwa" in html and "osDownloadLink" in html
 
         assert ACCENT_PURPLE in css
         assert ACCENT_CYAN in css
+        assert LIGHT_PALETTE.surface in css
+        assert LIGHT_PALETTE.window_bg in css
+        assert LIGHT_PALETTE.text_primary in css
         assert DARK_PALETTE.surface in css
         assert DARK_PALETTE.window_bg in css
         assert DARK_PALETTE.text_primary in css
@@ -70,7 +83,46 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         conn.request("GET", "/api")
         api_idx = json.loads(conn.getresponse().read().decode("utf-8"))
         assert api_idx["ok"] is True
-        assert len(api_idx["data"]["routes"]) >= 18
+        assert len(api_idx["data"]["routes"]) >= 21
+
+        conn.request(
+            "POST",
+            "/api/items/add",
+            body=json.dumps({"text": "Web Yeni Cevap", "keys": "A", "group": "Web", "label": "W1"}),
+            headers={"Content-Type": "application/json"},
+        )
+        add_res = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert add_res["ok"] is True
+        created_key = add_res["data"]["item"]["raw_key"]
+
+        conn.request(
+            "POST",
+            "/api/items/update",
+            body=json.dumps({"target": created_key, "text": "Web Güncel Cevap"}),
+            headers={"Content-Type": "application/json"},
+        )
+        upd_res = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert upd_res["ok"] is True and upd_res["data"]["item"]["text"] == "Web Güncel Cevap"
+
+        conn.request(
+            "POST",
+            "/api/items/delete",
+            body=json.dumps({"target": created_key}),
+            headers={"Content-Type": "application/json"},
+        )
+        del_res = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert del_res["ok"] is True
+
+        conn.request(
+            "POST",
+            "/api/items/add",
+            body=json.dumps({"text": "   "}),
+            headers={"Content-Type": "application/json"},
+        )
+        bad_add_resp = conn.getresponse()
+        assert bad_add_resp.status == 404
+        bad_add_json = json.loads(bad_add_resp.read().decode("utf-8"))
+        assert bad_add_json["exit_code"] == 2 and "Metin alanı boş olamaz." in bad_add_json["error"]
 
         conn.request("GET", "/api/completion?shell=powershell")
         comp = json.loads(conn.getresponse().read().decode("utf-8"))
@@ -101,11 +153,11 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         conn.request("GET", "/api/help?verbose=1")
         h_resp = json.loads(conn.getresponse().read().decode("utf-8"))
         assert h_resp["ok"] is True
-        for key in ("usage", "usage_verbose", "kullanim", "kisayollar", "sss"):
+        for key in ("usage", "usage_verbose", "kullanim", "kurulum", "kisayollar", "sss"):
             assert h_resp["data"][key], f"/api/help eksik alan: {key}"
         assert "Ayrıntılı Başvuru (--verbose):" in h_resp["message"]
         assert "btnHelp" in html and "showHelpModal" in html and "/api/help?verbose=1" in html
-        assert "helpTabs" in html and "CLI &amp; Parametreler" in html
+        assert "helpTabs" in html and "CLI &amp; Parametreler" in html and "Kurulum &amp; SSS" in html
 
         conn.request("GET", "/api/revision")
         rev = json.loads(conn.getresponse().read().decode("utf-8"))
@@ -195,12 +247,12 @@ def test_web_server_backups_shutdown_and_error_status(tmp_path: Path):
 
     mei = tmp_path / "mei_web"
     (mei / "qtp_app" / "web").mkdir(parents=True)
-    (mei / "qtp_app" / "web" / "index.html").write_text("<h1>frozen</h1>", encoding="utf-8")
+    (mei / "qtp_app" / "web" / "qtp.html").write_text("<h1>frozen</h1>", encoding="utf-8")
     (mei / "qtp_app" / "web" / "theme.css").write_text(":root{}", encoding="utf-8")
     with mock.patch.object(sys, "frozen", True, create=True), \
          mock.patch.object(sys, "_MEIPASS", str(mei), create=True), \
          mock.patch("qtp_app.web.importlib.resources.files", side_effect=RuntimeError("frozen")):
-        assert _read_web_asset("index.html") == b"<h1>frozen</h1>"
+        assert _read_web_asset("qtp.html") == b"<h1>frozen</h1>"
         assert _read_web_asset("theme.css") == b":root{}"
 
 
@@ -210,15 +262,22 @@ def test_github_pages_sync_static_http_serving_and_js_syntax(tmp_path: Path):
     import re
     import subprocess
 
-    qtp_root = Path(__file__).resolve().parent.parent.parent
+    standalone_dir = Path(__file__).resolve().parent.parent.parent
+    qtp_root = standalone_dir.parent
     repo_root = qtp_root.parent
-    web_dir = qtp_root / "qtp_app" / "web"
+    web_dir = standalone_dir / "qtp_app" / "web"
 
-    assert (qtp_root / "index.html").read_bytes() == (web_dir / "index.html").read_bytes()
+    assert (qtp_root / "qtp.html").read_bytes() == (web_dir / "qtp.html").read_bytes()
     assert (qtp_root / "theme.css").read_bytes() == (web_dir / "theme.css").read_bytes()
-    assert (qtp_root / "old.html").is_file() and (qtp_root / "old.html").stat().st_size > 50_000
+    assert not (qtp_root / "old.html").exists()
 
-    html = (qtp_root / "index.html").read_text(encoding="utf-8")
+    legacy_pwa_html = (qtp_root / "index.html").read_text(encoding="utf-8")
+    assert "./legacy/cevaplar.html" in legacy_pwa_html
+    assert "./qtp.html" in legacy_pwa_html
+    assert "standaloneDownloadMeta" in legacy_pwa_html
+    assert "installPwa" in legacy_pwa_html
+
+    html = (qtp_root / "qtp.html").read_text(encoding="utf-8")
     scripts = re.findall(r"<script>([\s\S]*?)</script>", html)
     assert len(scripts) == 1
 
@@ -285,9 +344,12 @@ function runSim(liveMode) {
       addEventListener() {},
       appendChild(c) { this.children.push(c); return c; },
       removeChild(c) { this.children = this.children.filter((x) => x !== c); },
+      attributes: {},
+      setAttribute(k, v) { this.attributes[k] = String(v); },
+      removeAttribute(k) { delete this.attributes[k]; },
       querySelectorAll(sel) {
         if (sel === '[data-section]') {
-          return ['all','usage_verbose','kullanim','kisayollar','sss'].map((s) => {
+          return ['genel','gui','tui','usage_verbose','kisayollar','kurulum_sss'].map((s) => {
             const b = mkEl('button'); b.dataset.section = s; return b;
           });
         }
@@ -299,9 +361,15 @@ function runSim(liveMode) {
       scrollIntoView() {},
       get textContent() { return this._text; },
       set textContent(v) { this._text = String(v); },
-      set innerHTML(v) { if (v === '') this.children = []; },
+      get innerHTML() { return this._html || ''; },
+      set innerHTML(v) { this._html = String(v); if (v === '') this.children = []; },
     };
     return el;
+  }
+  const htmlRoot = mkEl('html');
+  function flattenText(node) {
+    if (!node) return '';
+    return (node._text || '') + ' ' + (node.value || '') + ' ' + (node._html || '') + ' ' + (node.children || []).map(flattenText).join(' ');
   }
   const sandbox = {
     console, setTimeout: () => 1, clearTimeout: () => {}, setInterval: () => 2, clearInterval: () => {},
@@ -309,13 +377,15 @@ function runSim(liveMode) {
     Blob: class FakeBlob { constructor(parts, opts) { this.parts = parts; this.type = opts?.type || ''; } },
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} },
     location: { protocol: 'https:', search: liveMode ? '' : '?category=Z' },
-    navigator: { onLine: true, clipboard: { writeText: async () => {} } },
+    navigator: { onLine: true, platform: 'Win32', userAgent: 'Windows NT 10.0', clipboard: { writeText: async () => {} } },
+    window: { addEventListener() {}, matchMedia: () => ({ matches: false }) },
     localStorage: { getItem: (k) => (k in ls ? ls[k] : null), setItem: (k, v) => { ls[k] = String(v); } },
     document: {
+      documentElement: htmlRoot,
       addEventListener() {},
       execCommand: () => true,
       createElement: (t) => mkEl(t),
-      createTextNode: (t) => ({ nodeType: 3, textContent: String(t) }),
+      createTextNode: (t) => ({ nodeType: 3, _text: String(t), textContent: String(t) }),
       getElementById: (id) => { if (!elsById.has(id)) elsById.set(id, mkEl('div')); return elsById.get(id); },
       body: mkEl('body'),
       activeElement: null,
@@ -346,6 +416,9 @@ function runSim(liveMode) {
   return new Promise((resolve) => setTimeout(() => resolve({
     ctx,
     elsById,
+    htmlRoot,
+    ls,
+    flattenText,
     getState: () => vm.runInContext('state', ctx),
   }), 60));
 }
@@ -356,11 +429,29 @@ function runSim(liveMode) {
   assert.strictEqual(stState.isStatic, true);
   assert.strictEqual(stState.category, 'Z');
   assert(stState.allItems.length >= 500);
+  assert.strictEqual(st.htmlRoot.attributes['data-theme'], 'light');
   assert(st.elsById.get('modeBadge').textContent.includes('Statik Web'));
-  await st.ctx.showHelpModal('all');
-  assert(st.elsById.get('modalBody').textContent.includes('QTP v2.1.0'));
+  await st.ctx.showHelpModal('genel');
+  assert(st.elsById.get('modalBody').innerHTML.includes('<div class="md-view">'));
+  await st.ctx.showHelpModal('usage_verbose');
+  assert(st.elsById.get('modalBody').innerHTML.includes('CLI'));
+  await st.ctx.showHelpModal('kurulum_sss');
+  assert(st.elsById.get('modalBody').innerHTML.includes('<div class="md-view">'));
   await st.ctx.showHotkeysModal();
-  assert(st.elsById.get('modalBody').textContent.includes('Win+Alt+Space'));
+  assert(st.flattenText(st.elsById.get('modalBody')).includes('Win+Alt+Space'));
+
+  const beforeLen = stState.allItems.length;
+  st.ctx.openCrudModal(null);
+  st.elsById.get('crudText').value = 'Statik Web Yeni Cevap';
+  st.elsById.get('crudKeys').value = 'L-Win+A';
+  st.elsById.get('crudGroup').value = 'Test';
+  st.elsById.get('crudLabel').value = 'Etiket';
+  await st.ctx.saveCrudModal();
+  assert.strictEqual(st.getState().allItems.length, beforeLen + 1);
+  assert(st.ls.qtp_unified_items_v1 && st.ls.qtp_unified_items_v1.includes('Statik Web Yeni Cevap'));
+  await st.elsById.get('btnThemeToggle').onclick();
+  assert.strictEqual(st.htmlRoot.attributes['data-theme'], 'dark');
+  assert.strictEqual(st.ls.qtp_unified_theme_v1, 'dark');
 
   const lv = await runSim(true);
   const lvState = lv.getState();
@@ -372,7 +463,7 @@ function runSim(liveMode) {
 """
         env = dict(
             __import__("os").environ,
-            QTP_INDEX_HTML=str(qtp_root / "index.html"),
+            QTP_INDEX_HTML=str(qtp_root / "qtp.html"),
             QTP_DATA_JSON=str(qtp_root / "data.json"),
         )
         proc_dual = subprocess.run([node, "-e", full_vm_script], capture_output=True, text=True, env=env, check=False)
@@ -389,11 +480,13 @@ function runSim(liveMode) {
         for req_path in (
             "/qtp/",
             "/qtp/index.html",
+            "/qtp/qtp.html",
             "/qtp/theme.css",
-            "/qtp/old.html",
             "/qtp/data.json",
             "/qtp/QuickTextPaste.ini",
+            "/qtp/legacy/cevaplar.html",
             "/qtp/docs/KULLANIM.md",
+            "/qtp/docs/KURULUM.md",
             "/qtp/docs/KISAYOLLAR.md",
             "/qtp/docs/SSS.md",
         ):

@@ -231,7 +231,7 @@ def test_python38_runtime_compatibility_and_importlib_fallback(tmp_path: Path, m
         assert get_bundled_default_path("QuickTextPaste.ini").is_file()
         assert get_bundled_docs_dir().is_dir()
         assert get_asset_path("icon.svg").is_file()
-        assert len(_read_web_asset("index.html")) > 100
+        assert len(_read_web_asset("qtp.html")) > 100
 
 
 def test_headless_modes_zero_pyqt6_dependency(tmp_path: Path, capsys):

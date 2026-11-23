@@ -77,11 +77,18 @@ def test_help_settings_and_tray_smoke(qtbot):
 
     help_dlg = HelpDialog(DARK_PALETTE)
     qtbot.addWidget(help_dlg)
-    assert help_dlg.tabs.count() == 4
+    assert help_dlg.tabs.count() == 5
     tab_titles = [help_dlg.tabs.tabText(i) for i in range(help_dlg.tabs.count())]
-    assert tab_titles == ["Kullanım Kılavuzu", "Kısayollar", "Sorun Giderme (SSS)", "CLI & Parametreler"]
-    assert "--hotkey-preset" in help_dlg.browsers[3].toPlainText()
-    assert build_cli_help_text(verbose=True).splitlines()[0] in help_dlg.browsers[3].toPlainText()
+    assert tab_titles == [
+        "Kullanım (Web/GUI/TUI/CLI)",
+        "Kurulum & İndirme",
+        "Kısayollar & Profiller",
+        "Sorun Giderme (SSS)",
+        "CLI & Parametreler",
+    ]
+    assert "--hotkey-preset" in help_dlg.browsers[4].toPlainText()
+    assert build_cli_help_text(verbose=True).splitlines()[0] in help_dlg.browsers[4].toPlainText()
+    assert "Windows" in help_dlg.browsers[1].toPlainText()
 
     settings_dlg = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE)
     qtbot.addWidget(settings_dlg)
@@ -160,14 +167,14 @@ def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(q
     dlg.add_hotkey_slot("W", "Ctrl+Shift+W")
 
     dlg.web_port_spin.setValue(9123)
-    dlg.theme_cb.setCurrentText("light")
+    dlg.theme_cb.setCurrentText("dark")
     dlg.auto_reload_chk.setChecked(False)
     dlg.auto_reload_interval_spin.setValue(900)
     dlg._save_and_accept()
 
     assert dlg.result_settings is not None
     assert dlg.result_settings["web"]["port"] == 9123
-    assert dlg.result_settings["theme"] == "light"
+    assert dlg.result_settings["theme"] == "dark"
     assert dlg.result_settings["auto_reload"] is False
     assert dlg.result_settings["auto_reload_interval_ms"] == 900
     assert dlg.result_settings["hotkeys"]["W"] == "Ctrl+Shift+W"
@@ -179,7 +186,7 @@ def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(q
 
     dlg._reset_defaults()
     assert dlg.web_port_spin.value() == 8765
-    assert dlg.theme_cb.currentText() == "dark"
+    assert dlg.theme_cb.currentText() == "light"
     assert "W" not in dlg.hk_edits
 
 
@@ -226,3 +233,42 @@ def test_gui_live_reload_event_handler_updates_overlay_tray_and_hotkeys(qtbot, t
     assert tray.act_open.text() == "Aç (Win+Ctrl+Space)"
     assert overlay.size().width() == 800
     assert "otomatik yenilendi" in overlay.toast_label.text()
+
+    from PyQt6.QtWidgets import QMessageBox
+    from qtp_app.ui.overlay import SnippetEditorDialog
+    from qtp_app.ui.theme import LIGHT_PALETTE
+
+    crud_events: list[tuple[str, str]] = []
+    ov_crud = OverlayWindow(
+        eng.items,
+        theme="light",
+        on_add=lambda payload: (crud_events.append(("add", payload["text"])), eng.op_add_item(**payload))[1],
+        on_edit=lambda it, payload: (crud_events.append(("edit", payload["text"])), eng.op_update_item(it["raw_key"], **payload))[1],
+        on_delete=lambda it: (crud_events.append(("del", it["raw_key"])), eng.op_delete_item(it["raw_key"]))[1],
+    )
+    qtbot.addWidget(ov_crud)
+
+    ed_empty = SnippetEditorDialog(LIGHT_PALETTE, ["Genel"], parent=ov_crud)
+    qtbot.addWidget(ed_empty)
+    with mock.patch.object(QMessageBox, "warning") as warn_box:
+        ed_empty._on_save()
+        assert warn_box.called
+    ed_empty.text_edit.setPlainText("GUI Yeni Snippet")
+    ed_empty.keys_cb.setCurrentText("L-Win+A")
+    ed_empty._on_save()
+    assert ed_empty.result_payload is not None and ed_empty.result_payload["text"] == "GUI Yeni Snippet"
+
+    with mock.patch("qtp_app.ui.overlay.SnippetEditorDialog.exec", return_value=int(SnippetEditorDialog.DialogCode.Accepted)), \
+         mock.patch.object(SnippetEditorDialog, "result_payload", new_callable=mock.PropertyMock, return_value={"text": "GUI Dialog Cevap", "keys": "L-Win+A", "group": "Genel", "label": "G1", "terminator": "<E<N<D|"}, create=True):
+        ov_crud._open_add_dialog()
+    assert any(ev[0] == "add" and ev[1] == "GUI Dialog Cevap" for ev in crud_events)
+
+    first_item = dict(eng.items[0])
+    with mock.patch("qtp_app.ui.overlay.SnippetEditorDialog.exec", return_value=int(SnippetEditorDialog.DialogCode.Accepted)), \
+         mock.patch.object(SnippetEditorDialog, "result_payload", new_callable=mock.PropertyMock, return_value={"text": "GUI Güncel", "keys": "L-Win+A", "group": "Genel", "label": "G1", "terminator": "<E<N<D|"}, create=True):
+        ov_crud._open_edit_dialog(first_item)
+    assert any(ev[0] == "edit" and ev[1] == "GUI Güncel" for ev in crud_events)
+
+    with mock.patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
+        ov_crud._confirm_delete_item(first_item)
+    assert any(ev[0] == "del" for ev in crud_events)

@@ -77,7 +77,7 @@ def test_watcher_reloads_data_json_and_suppresses_internal_writes(tmp_path: Path
     events: list[ReloadEvent] = []
     eng.start_watcher(on_reload=events.append, debounce_ms=80)
     try:
-        assert eng.op_set_setting("theme", "light").exit_code == 0
+        assert eng.op_set_setting("theme", "dark").exit_code == 0
         time.sleep(0.35)
         assert not any(e.settings_changed for e in events)
 
@@ -110,7 +110,7 @@ def test_watcher_settings_hotkeys_theme_datapath_and_corrupt_resilience(tmp_path
     try:
         new_cfg = copy.deepcopy(eng.settings)
         new_cfg["hotkeys"]["A"] = "Ctrl+Shift+Alt+A"
-        new_cfg["theme"] = "light"
+        new_cfg["theme"] = "dark"
         new_cfg["log_level"] = "debug"
         new_cfg["window_size"] = [820, 600]
         new_cfg["data_path"] = "./alternatif.ini"
@@ -123,20 +123,20 @@ def test_watcher_settings_hotkeys_theme_datapath_and_corrupt_resilience(tmp_path
             )
         )
         assert eng.settings["hotkeys"]["A"] == "Ctrl+Alt+Shift+A"
-        assert eng.settings["theme"] == "light"
+        assert eng.settings["theme"] == "dark"
         assert eng.settings["window_size"] == [820, 600]
         assert eng.items[0]["text"] == "Alternatif INI kaydı"
 
         cfg_path.write_text("{bozuk ayar!!!", encoding="utf-8")
         _wait_until(lambda: any(e.warning and "Otomatik ayar yenileme başarısız" in e.warning for e in events))
-        assert eng.settings["theme"] == "light"
+        assert eng.settings["theme"] == "dark"
 
         alt_ini.write_text("[bozuk_ini\r\n", encoding="utf-16-le")
         _wait_until(lambda: any(e.warning and "Otomatik veri yenileme başarısız" in e.warning for e in events))
         assert eng.items[0]["text"] == "Alternatif INI kaydı"
 
         log_text = (work / LOG_FILENAME).read_text(encoding="utf-8")
-        sss = (Path(__file__).resolve().parent.parent.parent / "docs" / "SSS.md").read_text(encoding="utf-8")
+        sss = (Path(__file__).resolve().parent.parent.parent.parent / "docs" / "SSS.md").read_text(encoding="utf-8")
         assert "Otomatik ayar yenileme başarısız (mevcut ayarlar korundu):" in log_text
         assert "Otomatik ayar yenileme başarısız (mevcut ayarlar korundu):" in sss
         assert "Otomatik veri yenileme başarısız (önceki geçerli kayıtlar korundu):" in log_text

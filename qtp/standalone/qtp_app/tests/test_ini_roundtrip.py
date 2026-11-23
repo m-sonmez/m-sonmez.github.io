@@ -20,7 +20,7 @@ from qtp_app.core.ini_parser import (
 )
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def test_bundled_quicktextpaste_ini_byte_identical_roundtrip():

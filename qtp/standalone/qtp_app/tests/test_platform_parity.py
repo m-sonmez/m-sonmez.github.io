@@ -8,7 +8,8 @@ from pathlib import Path
 
 from qtp_app.core.operations import OPERATIONS
 
-QTP_ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+STANDALONE_DIR = Path(__file__).resolve().parent.parent.parent
+QTP_ROOT_DIR = STANDALONE_DIR.parent
 UI_DIR = Path(__file__).resolve().parent.parent / "ui"
 DOCS_DIR = QTP_ROOT_DIR / "docs"
 
@@ -332,7 +333,7 @@ def test_no_unnecessary_comments():
     import tokenize
     from qtp_app.ui.theme import DARK_PALETTE, build_dialog_stylesheet, build_overlay_stylesheet
 
-    app_dir = QTP_ROOT_DIR / "qtp_app"
+    app_dir = STANDALONE_DIR / "qtp_app"
     py_violations: list[str] = []
     for path in sorted(list(app_dir.rglob("*.py")) + list((app_dir / "build").glob("*.spec"))):
         if "__pycache__" in path.parts:
@@ -342,21 +343,31 @@ def test_no_unnecessary_comments():
             if tok.type == tokenize.COMMENT:
                 if tok.start[0] == 1 and tok.string.startswith("#!"):
                     continue
-                rel = path.relative_to(QTP_ROOT_DIR).as_posix()
+                rel = path.relative_to(STANDALONE_DIR).as_posix()
                 py_violations.append(f"{rel}:{tok.start[0]}: {tok.string}")
 
     assert not py_violations, "Python/.spec dosyalarında gereksiz yorumlar bulundu:\n" + "\n".join(py_violations)
 
-    web_html = (app_dir / "web" / "index.html").read_text(encoding="utf-8")
+    web_html = (app_dir / "web" / "qtp.html").read_text(encoding="utf-8")
     web_css = (app_dir / "web" / "theme.css").read_text(encoding="utf-8")
-    assert not _scan_html_comments_safe(web_html), "qtp_app/web/index.html içinde yorum bulundu"
+    root_web_html = (QTP_ROOT_DIR / "qtp.html").read_text(encoding="utf-8")
+    root_web_css = (QTP_ROOT_DIR / "theme.css").read_text(encoding="utf-8")
+    assert not _scan_html_comments_safe(web_html), "qtp_app/web/qtp.html içinde yorum bulundu"
     assert not _scan_css_comments_safe(web_css), "qtp_app/web/theme.css içinde yorum bulundu"
+    assert not _scan_html_comments_safe(root_web_html), "qtp/qtp.html içinde yorum bulundu"
+    assert not _scan_css_comments_safe(root_web_css), "qtp/theme.css içinde yorum bulundu"
 
     for qss in (build_overlay_stylesheet(DARK_PALETTE), build_dialog_stylesheet(DARK_PALETTE)):
         assert not _scan_css_comments_safe(qss), "ui/theme.py QSS çıktısında CSS yorumu bulundu"
 
-    for rel_cfg in (".gitignore", "Makefile", "make.bat", ".github/workflows/ci.yml"):
-        lines = (QTP_ROOT_DIR / rel_cfg).read_text(encoding="utf-8").splitlines()
+    cfg_files = [
+        (".gitignore", QTP_ROOT_DIR / ".gitignore"),
+        ("Makefile", STANDALONE_DIR / "Makefile"),
+        ("make.bat", STANDALONE_DIR / "make.bat"),
+        (".github/workflows/qtp-publish-linux.yml", QTP_ROOT_DIR.parent / ".github" / "workflows" / "qtp-publish-linux.yml"),
+    ]
+    for rel_cfg, cfg_path in cfg_files:
+        lines = cfg_path.read_text(encoding="utf-8").splitlines()
         for ln_no, ln in enumerate(lines, start=1):
             st = ln.strip()
             if ln_no == 1 and st.startswith("#!"):

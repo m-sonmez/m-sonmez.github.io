@@ -34,7 +34,7 @@ from qtp_app.core.hotkeys import (
 )
 from qtp_app.core.settings import DEFAULT_HOTKEYS
 
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _all_15_modifier_combos() -> list[tuple[str, ...]]:

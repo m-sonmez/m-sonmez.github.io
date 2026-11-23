@@ -94,6 +94,9 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "check_hotkeys": ["--check-hotkeys", "--json"],
             "hotkey_preset": ["--hotkey-preset", "recommended", "--json"],
             "hotkey_modifiers": ["--hotkey-modifiers", "Win+Alt", "--json"],
+            "add_item": ["--add-item", "Parite yeni cevap", "--item-keys", "A", "--item-group", "Parite", "--item-label", "Etiket", "--json"],
+            "update_item": ["--update-item", "text_000", "--item-text", "Parite güncel cevap", "--json"],
+            "delete_item": ["--delete-item", "text_000", "--json"],
         }
         parser = cli.build_arg_parser()
         args = parser.parse_args(argv_map[op_id])
@@ -127,6 +130,9 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "check_hotkeys": ("", ""),
             "hotkey_preset": ("recommended", ""),
             "hotkey_modifiers": ("Win+Alt", ""),
+            "add_item": ("Parite yeni cevap", json.dumps({"keys": "A", "group": "Parite", "label": "Etiket"})),
+            "update_item": ("text_000", json.dumps({"text": "Parite güncel cevap"})),
+            "delete_item": ("text_000", ""),
         }
         a1, a2 = arg_map[op_id]
         res = tui.execute_operation(op_id, a1, a2)
@@ -165,6 +171,9 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
                 "check_hotkeys": ("GET", "/api/hotkeys/check", None),
                 "hotkey_preset": ("POST", "/api/hotkeys/preset", {"preset": "recommended"}),
                 "hotkey_modifiers": ("POST", "/api/hotkeys/modifiers", {"modifiers": "Win+Alt"}),
+                "add_item": ("POST", "/api/items/add", {"text": "Parite yeni cevap", "keys": "A", "group": "Parite", "label": "Etiket"}),
+                "update_item": ("POST", "/api/items/update", {"target": "text_000", "text": "Parite güncel cevap"}),
+                "delete_item": ("POST", "/api/items/delete", {"target": "text_000"}),
             }
             method, url, body = route_map[op_id]
             headers = {"Content-Type": "application/json"} if body is not None else {}
@@ -240,6 +249,12 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             res = engine.op_apply_hotkey_preset("recommended")
         elif op_id == "hotkey_modifiers":
             res = engine.op_apply_hotkey_modifiers("Win+Alt")
+        elif op_id == "add_item":
+            res = engine.op_add_item("Parite yeni cevap", keys="A", group="Parite", label="Etiket")
+        elif op_id == "update_item":
+            res = engine.op_update_item("text_000", text="Parite güncel cevap")
+        elif op_id == "delete_item":
+            res = engine.op_delete_item("text_000")
         else:
             raise AssertionError(f"Bilinmeyen GUI işlemi: {op_id}")
         return res.exit_code, res.message, res.to_api_dict()
@@ -397,6 +412,21 @@ def test_tui_interactive_keys_ansi_and_win_console_shim(tmp_path: Path):
     assert tui.execute_operation("set_setting", "theme", "dark").exit_code == 0
     assert tui.execute_operation("nonexistent_op").exit_code == 2
     tui.run_scripted(["/", "z", "z", "z", "q", "q", "q", "UP", "DOWN", "ESC", "x", "q"])
+    tui_crud = QtpTui(eng, term_size=(100, 22), use_color=False)
+    before_crud = len(eng.items)
+    tui_crud.run_scripted([
+        "a", "I", "p", "t", "ESC",
+        "a", "T", "U", "I", "X", "BACKSPACE", "1", "ENTER",
+        "E", "2", "ENTER",
+        "d", "n", "ESC",
+        "d", "y",
+        "k", "P", "C", "s",
+        "q",
+    ])
+    assert len(eng.items) == before_crud
+    assert tui_crud.execute_operation("add_item", "Kısa", "{bozuk json").exit_code == 0
+    assert tui_crud.execute_operation("update_item", eng.items[-1]["raw_key"], "{bozuk").exit_code == 0
+    assert tui_crud.execute_operation("delete_item", eng.items[-1]["raw_key"]).exit_code == 0
 
     fake_stdscr = mock.Mock()
     fake_stdscr.getmaxyx.return_value = (24, 90)
@@ -695,8 +725,8 @@ def test_cross_mode_verbose_quiet_and_initial_filters_parity(mode: str, tmp_path
     assert captured_overlays[-1][3] == expected_keys
 
     help_dlg = HelpDialog(DARK_PALETTE)
-    assert help_dlg.tabs.count() == 4
-    assert cli.format_help_text(verbose=True).splitlines()[0] in help_dlg.browsers[3].toPlainText()
+    assert help_dlg.tabs.count() == 5
+    assert cli.format_help_text(verbose=True).splitlines()[0] in help_dlg.browsers[4].toPlainText()
     help_dlg.close()
     help_dlg.deleteLater()
 

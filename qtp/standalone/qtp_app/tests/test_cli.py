@@ -14,7 +14,7 @@ from qtp_app.core.json_store import load_data_json, save_data_json
 from qtp_app.main import main
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def test_cli_version(capsys, tmp_path: Path, monkeypatch):
@@ -434,9 +434,20 @@ def test_cli_unknown_flag_and_full_subcommands(tmp_path: Path, capsys, monkeypat
     bak_out = tmp_path / "tam_yedek.json"
     assert cli.run(["--work-dir", str(work_dir), "--export-backup", str(bak_out)]) == 0
     assert cli.run(["--work-dir", str(work_dir), "--restore", str(bak_out), "--replace"]) == 0
-    assert cli.run(["--work-dir", str(work_dir), "--set", "theme", "light"]) == 0
+    assert cli.run(["--work-dir", str(work_dir), "--set", "theme", "dark"]) == 0
     assert cli.run(["--work-dir", str(work_dir), "--get", "theme"]) == 0
-    assert "theme=light" in capsys.readouterr().out
+    assert "theme=dark" in capsys.readouterr().out
+    assert cli.run(["--work-dir", str(work_dir), "--add-item", "CLI Yeni", "--item-keys", "A", "--item-group", "CLIGrup", "--item-label", "Etiket", "--json"]) == 0
+    add_payload = json.loads(capsys.readouterr().out)
+    new_key = add_payload["data"]["item"]["raw_key"]
+    assert cli.run(["--work-dir", str(work_dir), "--update-item", new_key, "--item-text", "CLI Güncel", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["data"]["item"]["text"] == "CLI Güncel"
+    assert cli.run(["--work-dir", str(work_dir), "--delete-item", new_key, "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    assert cli.run(["--work-dir", str(work_dir), "--add-item", "   ", "--json"]) == 2
+    assert "Metin alanı boş olamaz." in json.loads(capsys.readouterr().out)["error"]
+    assert cli.run(["--work-dir", str(work_dir), "--delete-item", "olmayan_999", "--json"]) == 2
+    assert "Öğe bulunamadı:" in json.loads(capsys.readouterr().out)["error"]
     assert cli.run(["--work-dir", str(work_dir), "--web", "--port", "0", "--shutdown-after", "0.15"]) == 0
     assert "http://127.0.0.1:" in capsys.readouterr().out
 

@@ -1,7 +1,7 @@
 {
   "data": {
     "key": "theme",
-    "value": "dark"
+    "value": "light"
   },
   "error": null,
   "exit_code": 0,

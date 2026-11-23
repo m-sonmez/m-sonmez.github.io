@@ -44,7 +44,7 @@ def test_first_run_creates_default_settings_in_portable_dir(tmp_path: Path):
     assert settings["auto_reload_interval_ms"] == 500
 
     loaded_raw = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert loaded_raw["theme"] == "dark"
+    assert loaded_raw["theme"] == "light"
     assert loaded_raw["backup_count"] == 15
 
 
@@ -131,7 +131,7 @@ def test_readonly_folder_selects_os_fallback_dir(tmp_path: Path, monkeypatch):
 
 def test_save_settings_and_logging_levels(tmp_path: Path):
     custom = copy.deepcopy(DEFAULT_SETTINGS)
-    custom["theme"] = "light"
+    custom["theme"] = "dark"
     custom["log_level"] = "debug"
     custom["backup_count"] = 25
     custom["auto_reload"] = False
@@ -141,7 +141,7 @@ def test_save_settings_and_logging_levels(tmp_path: Path):
 
     loaded, _, warn = load_settings(tmp_path)
     assert warn is None
-    assert loaded["theme"] == "light"
+    assert loaded["theme"] == "dark"
     assert loaded["log_level"] == "debug"
     assert loaded["backup_count"] == 25
     assert loaded["auto_reload"] is False
@@ -164,7 +164,7 @@ def test_save_settings_and_logging_levels(tmp_path: Path):
 
 def test_get_and_set_setting_value_validation_and_custom_slots():
     cfg = copy.deepcopy(DEFAULT_SETTINGS)
-    assert get_setting_value(cfg, "theme") == "dark"
+    assert get_setting_value(cfg, "theme") == "light"
     assert get_setting_value(cfg, "web.port") == 8765
     assert get_setting_value(cfg, "hotkeys.A") == "Win+Alt+A"
     assert get_setting_value(cfg, "auto_reload") is True
