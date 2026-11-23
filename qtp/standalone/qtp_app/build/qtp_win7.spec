@@ -3,6 +3,7 @@ from pathlib import Path
 SPEC_DIR = Path(SPECPATH).resolve()
 PKG_DIR = SPEC_DIR.parent
 ROOT_DIR = PKG_DIR.parent
+QTP_ROOT = ROOT_DIR.parent
 
 datas = [
     (str(PKG_DIR / "assets" / "icon.svg"), "qtp_app/assets"),
@@ -10,13 +11,14 @@ datas = [
     (str(PKG_DIR / "assets" / "icon-512.png"), "qtp_app/assets"),
     (str(PKG_DIR / "assets" / "fonts" / "*.ttf"), "qtp_app/assets/fonts"),
     (str(PKG_DIR / "assets" / "defaults" / "*"), "qtp_app/assets/defaults"),
-    (str(PKG_DIR / "web" / "index.html"), "qtp_app/web"),
+    (str(PKG_DIR / "web" / "qtp.html"), "qtp_app/web"),
     (str(PKG_DIR / "web" / "theme.css"), "qtp_app/web"),
     (str(PKG_DIR / "tui" / "_win_console.py"), "qtp_app/tui"),
     (str(PKG_DIR / "core" / "EXTERNAL_CALLS.md"), "qtp_app/core"),
-    (str(ROOT_DIR / "docs" / "KULLANIM.md"), "docs"),
-    (str(ROOT_DIR / "docs" / "KISAYOLLAR.md"), "docs"),
-    (str(ROOT_DIR / "docs" / "SSS.md"), "docs"),
+    (str(QTP_ROOT / "docs" / "KULLANIM.md"), "docs"),
+    (str(QTP_ROOT / "docs" / "KURULUM.md"), "docs"),
+    (str(QTP_ROOT / "docs" / "KISAYOLLAR.md"), "docs"),
+    (str(QTP_ROOT / "docs" / "SSS.md"), "docs"),
 ]
 
 hiddenimports = [

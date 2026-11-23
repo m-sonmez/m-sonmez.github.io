@@ -221,11 +221,44 @@ def launch_gui(
         target = str(item.get("raw_key") or item.get("text") or "")
         return engine.op_copy(target)
 
+    def handle_add(payload: dict[str, Any]) -> Any:
+        res = engine.op_add_item(
+            str(payload.get("text", "")),
+            keys=str(payload.get("keys", "")),
+            group=str(payload.get("group", "Genel")),
+            label=str(payload.get("label", "")),
+            terminator=str(payload.get("terminator", "<E<N<D|")),
+        )
+        if res.ok:
+            overlay.set_items(engine.items)
+        return res
+
+    def handle_edit(item: dict[str, Any], payload: dict[str, Any]) -> Any:
+        target = str(item.get("raw_key") or item.get("text") or "")
+        res = engine.op_update_item(
+            target,
+            keys=payload.get("keys"),
+            group=payload.get("group"),
+            label=payload.get("label"),
+            text=payload.get("text"),
+            terminator=payload.get("terminator"),
+        )
+        if res.ok:
+            overlay.set_items(engine.items)
+        return res
+
+    def handle_delete(item: dict[str, Any]) -> Any:
+        target = str(item.get("raw_key") or item.get("text") or "")
+        res = engine.op_delete_item(target)
+        if res.ok:
+            overlay.set_items(engine.items)
+        return res
+
     effective_cat = (initial_category or str(engine.settings.get("last_category", "ALL"))).strip().upper() or "ALL"
     ws = engine.settings.get("window_size") or [720, 520]
     overlay = OverlayWindow(
         engine.items,
-        theme=str(engine.settings.get("theme", "dark")),
+        theme=str(engine.settings.get("theme", "light")),
         window_size=(int(ws[0]), int(ws[1])),
         last_category=effective_cat,
         last_category_by_hotkey=engine.settings.get("last_category_by_hotkey") or {},
@@ -233,11 +266,14 @@ def launch_gui(
         ini_path=str(engine.ini_path),
         on_paste=handle_paste,
         on_copy=handle_copy,
+        on_add=handle_add,
+        on_edit=handle_edit,
+        on_delete=handle_delete,
     )
     logger.info(
         "GUI başlatılıyor (platform=%s, tema=%s, yazı_tipi=%s, ilk_kategori=%s, ilk_sorgu=%r).",
         app.platformName(),
-        engine.settings.get("theme", "dark"),
+        engine.settings.get("theme", "light"),
         overlay._font_family,
         overlay.active_category,
         initial_query,
@@ -254,7 +290,7 @@ def launch_gui(
     overlay.window_resized.connect(persist_window_size)
 
     def current_palette() -> Any:
-        return resolve_palette(str(engine.settings.get("theme", "dark")), os_is_dark=True)
+        return resolve_palette(str(engine.settings.get("theme", "light")), os_is_dark=True)
 
     def open_help() -> None:
         dlg = HelpDialog(current_palette(), parent=overlay if overlay.isVisible() else None)

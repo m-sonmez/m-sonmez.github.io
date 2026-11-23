@@ -27,7 +27,7 @@ LEGACY_DEFAULT_HOTKEYS: dict[str, str] = {
 }
 
 DEFAULT_SETTINGS: dict[str, Any] = {
-    "theme": "dark",
+    "theme": "light",
     "hotkeys": dict(DEFAULT_HOTKEYS),
     "last_category": "ALL",
     "last_category_by_hotkey": {},

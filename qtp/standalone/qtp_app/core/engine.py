@@ -130,6 +130,14 @@ _DEFAULT_CLI_FLAGS: tuple[str, ...] = (
     "--check-hotkeys",
     "--hotkey-preset",
     "--hotkey-modifiers",
+    "--add-item",
+    "--update-item",
+    "--delete-item",
+    "--item-keys",
+    "--item-group",
+    "--item-label",
+    "--item-text",
+    "--no-end-marker",
     "--category",
     "--query",
     "--json",
@@ -320,7 +328,10 @@ def get_bundled_default_path(filename: str) -> Path:
     local = Path(__file__).resolve().parent.parent / "assets" / "defaults" / filename
     if local.is_file():
         return local
-    return Path(__file__).resolve().parent.parent.parent / filename
+    standalone_cand = Path(__file__).resolve().parent.parent.parent / filename
+    if standalone_cand.is_file():
+        return standalone_cand
+    return Path(__file__).resolve().parent.parent.parent.parent / filename
 
 
 def get_bundled_docs_dir() -> Path:
@@ -329,7 +340,7 @@ def get_bundled_docs_dir() -> Path:
         files_fn = getattr(importlib.resources, "files", None)
         if files_fn is not None:
             pkg_root = Path(str(files_fn("qtp_app")))
-            for candidate in (pkg_root / "docs", pkg_root.parent / "docs"):
+            for candidate in (pkg_root / "docs", pkg_root.parent / "docs", pkg_root.parent.parent / "docs"):
                 if candidate.is_dir():
                     return candidate
     except Exception:
@@ -338,7 +349,10 @@ def get_bundled_docs_dir() -> Path:
         meipass_docs = Path(getattr(sys, "_MEIPASS")) / "docs"
         if meipass_docs.is_dir():
             return meipass_docs
-    return Path(__file__).resolve().parent.parent.parent / "docs"
+    standalone_docs = Path(__file__).resolve().parent.parent.parent / "docs"
+    if standalone_docs.is_dir():
+        return standalone_docs
+    return Path(__file__).resolve().parent.parent.parent.parent / "docs"
 
 
 def read_doc_text(filename: str) -> str:
@@ -399,6 +413,9 @@ def build_cli_help_text(*, verbose: bool = False) -> str:
         "  --port N                               --web için 127.0.0.1 bağlantı noktası (varsayılan: 8765)\n"
         "  --open-browser                         --web başlatıldığında tarayıcıyı açar\n"
         "  --shutdown-after SN                    --web sunucusunu belirtilen saniye sonra zarifçe kapatır\n"
+        "  --item-keys TUS / --item-group GRUP    --add-item / --update-item için kısayol, grup, etiket ve metin alanları\n"
+        "  --item-label ETIKET / --item-text METIN / --no-end-marker\n"
+        "                                         Yeni veya güncellenen kaydın alanlarını ve <E<N<D| son ekini belirler\n"
     )
     if not verbose:
         return base
@@ -888,6 +905,7 @@ class QtpEngine:
                 "usage": usage,
                 "usage_verbose": usage_verbose,
                 "kullanim": read_doc_text("KULLANIM.md"),
+                "kurulum": read_doc_text("KURULUM.md"),
                 "kisayollar": read_doc_text("KISAYOLLAR.md"),
                 "sss": read_doc_text("SSS.md"),
                 "verbose": bool(verbose),
@@ -1446,4 +1464,136 @@ class QtpEngine:
             message="Değiştirici bileşimi tüm kısayollara uygulandı ✔",
             data={"modifiers": modifiers, "hotkeys": dict(self.settings["hotkeys"]), "conflicts": conflicts},
             warning=warn,
+        )
+
+    def _persist_items_change(
+        self,
+        items: list[dict[str, Any]],
+        reason: str,
+        *,
+        create_backup_flag: bool = False,
+    ) -> None:
+        normalized: list[dict[str, Any]] = []
+        for idx, raw in enumerate(items):
+            entry = dict(raw)
+            entry["keys"] = str(entry.get("keys", "")).strip()
+            entry["group"] = str(entry.get("group", "Genel")).strip() or "Genel"
+            entry["label"] = str(entry.get("label", "")).strip()
+            entry["text"] = str(entry.get("text", ""))
+            if "terminator" not in entry or entry["terminator"] is None:
+                entry["terminator"] = DEFAULT_TERMINATOR
+            entry["raw_key"] = f"text_{idx:03d}"
+            normalized.append(entry)
+
+        with self._suppress_write(self.ini_path, self.work_dir / "data.json"):
+            save_state(
+                self.work_dir,
+                normalized,
+                program=self.program_meta,
+                extra_sections=self.extra_sections,
+                create_backup_flag=create_backup_flag,
+                backup_reason=reason,
+                max_backups=int(self.settings.get("backup_count", 15)),
+                ini_path=self.ini_path,
+            )
+        self.items = normalized
+        self.revision += 1
+
+    def op_add_item(
+        self,
+        text: str,
+        *,
+        keys: str = "",
+        group: str = "Genel",
+        label: str = "",
+        terminator: str = DEFAULT_TERMINATOR,
+    ) -> OperationResult:
+        raw_text = str(text or "")
+        if not raw_text.strip():
+            err = "Metin alanı boş olamaz."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        new_item: dict[str, Any] = {
+            "keys": str(keys or "").strip(),
+            "group": str(group or "Genel").strip() or "Genel",
+            "label": str(label or "").strip(),
+            "text": raw_text,
+            "terminator": DEFAULT_TERMINATOR if terminator is None else str(terminator),
+        }
+        updated_list = [dict(it) for it in self.items] + [new_item]
+        self._persist_items_change(updated_list, "add_item", create_backup_flag=False)
+        created = dict(self.items[-1])
+        msg = f"Yeni cevap eklendi ✔ ({created['raw_key']})"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={"item": created, "count": len(self.items), "revision": self.revision},
+        )
+
+    def op_update_item(
+        self,
+        target: str,
+        *,
+        keys: str | None = None,
+        group: str | None = None,
+        label: str | None = None,
+        text: str | None = None,
+        terminator: str | None = None,
+    ) -> OperationResult:
+        found = self.resolve_item(target)
+        if found is None:
+            err = f"Öğe bulunamadı: {target}"
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        idx, _existing = found
+        updated_list = [dict(it) for it in self.items]
+        item = updated_list[idx]
+        if text is not None:
+            if not str(text).strip():
+                err = "Metin alanı boş olamaz."
+                return OperationResult(ok=False, exit_code=2, message=err, error=err)
+            item["text"] = str(text)
+        elif not str(item.get("text", "")).strip():
+            err = "Metin alanı boş olamaz."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        if keys is not None:
+            item["keys"] = str(keys).strip()
+        if group is not None:
+            item["group"] = str(group).strip() or "Genel"
+        if label is not None:
+            item["label"] = str(label).strip()
+        if terminator is not None:
+            item["terminator"] = str(terminator)
+
+        self._persist_items_change(updated_list, "update_item", create_backup_flag=False)
+        saved_item = dict(self.items[idx])
+        msg = f"Kayıt güncellendi ✔ ({saved_item['raw_key']})"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={"item": saved_item, "count": len(self.items), "revision": self.revision},
+        )
+
+    def op_delete_item(self, target: str) -> OperationResult:
+        found = self.resolve_item(target)
+        if found is None:
+            err = f"Öğe bulunamadı: {target}"
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        idx, existing = found
+        deleted_item = dict(existing)
+        remaining = [dict(it) for i, it in enumerate(self.items) if i != idx]
+        self._persist_items_change(remaining, "delete_item", create_backup_flag=True)
+        msg = f"Kayıt silindi ✔ ({deleted_item.get('raw_key', target)})"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={"deleted": deleted_item, "count": len(self.items), "revision": self.revision},
         )

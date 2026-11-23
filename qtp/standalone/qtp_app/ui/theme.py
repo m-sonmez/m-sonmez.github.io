@@ -127,12 +127,12 @@ LIGHT_PALETTE = ThemePalette(
 
 def resolve_palette(theme_setting: str, *, os_is_dark: bool = True) -> ThemePalette:
     """Tema ayarını ('auto' | 'dark' | 'light') ThemePalette nesnesine çözer."""
-    t = (theme_setting or "dark").strip().lower()
-    if t == "light":
-        return LIGHT_PALETTE
+    t = (theme_setting or "light").strip().lower()
+    if t == "dark":
+        return DARK_PALETTE
     if t == "auto":
         return DARK_PALETTE if os_is_dark else LIGHT_PALETTE
-    return DARK_PALETTE
+    return LIGHT_PALETTE
 
 
 def get_asset_path(relative_path: str) -> Path:

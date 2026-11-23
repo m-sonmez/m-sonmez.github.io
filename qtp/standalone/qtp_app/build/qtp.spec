@@ -7,6 +7,7 @@ import sys
 SPEC_DIR = Path(SPECPATH).resolve()
 PKG_DIR = SPEC_DIR.parent
 ROOT_DIR = PKG_DIR.parent
+QTP_ROOT = ROOT_DIR.parent
 
 datas = [
     (str(PKG_DIR / "assets" / "icon.svg"), "qtp_app/assets"),
@@ -14,13 +15,14 @@ datas = [
     (str(PKG_DIR / "assets" / "icon-512.png"), "qtp_app/assets"),
     (str(PKG_DIR / "assets" / "fonts" / "*.ttf"), "qtp_app/assets/fonts"),
     (str(PKG_DIR / "assets" / "defaults" / "*"), "qtp_app/assets/defaults"),
-    (str(PKG_DIR / "web" / "index.html"), "qtp_app/web"),
+    (str(PKG_DIR / "web" / "qtp.html"), "qtp_app/web"),
     (str(PKG_DIR / "web" / "theme.css"), "qtp_app/web"),
     (str(PKG_DIR / "tui" / "_win_console.py"), "qtp_app/tui"),
     (str(PKG_DIR / "core" / "EXTERNAL_CALLS.md"), "qtp_app/core"),
-    (str(ROOT_DIR / "docs" / "KULLANIM.md"), "docs"),
-    (str(ROOT_DIR / "docs" / "KISAYOLLAR.md"), "docs"),
-    (str(ROOT_DIR / "docs" / "SSS.md"), "docs"),
+    (str(QTP_ROOT / "docs" / "KULLANIM.md"), "docs"),
+    (str(QTP_ROOT / "docs" / "KURULUM.md"), "docs"),
+    (str(QTP_ROOT / "docs" / "KISAYOLLAR.md"), "docs"),
+    (str(QTP_ROOT / "docs" / "SSS.md"), "docs"),
 ]
 
 hiddenimports = [
@@ -53,6 +55,30 @@ excludes = [
     "numpy",
     "tests",
     "qtp_app.tests",
+    "PyQt6.QtWebEngineCore",
+    "PyQt6.QtWebEngineWidgets",
+    "PyQt6.QtWebEngineQuick",
+    "PyQt6.QtQuick",
+    "PyQt6.QtQuickWidgets",
+    "PyQt6.QtQml",
+    "PyQt6.QtMultimedia",
+    "PyQt6.QtMultimediaWidgets",
+    "PyQt6.QtPdf",
+    "PyQt6.QtPdfWidgets",
+    "PyQt6.QtSql",
+    "PyQt6.QtBluetooth",
+    "PyQt6.QtNfc",
+    "PyQt6.QtPositioning",
+    "PyQt6.QtSensors",
+    "PyQt6.QtSerialPort",
+    "PyQt6.Qt3DCore",
+    "PyQt6.Qt3DRender",
+    "PyQt6.QtDesigner",
+    "PyQt6.QtHelp",
+    "PyQt6.QtWebSockets",
+    "PyQt6.QtCharts",
+    "PyQt6.QtDataVisualization",
+    "PyQt6.QtWebChannel",
 ]
 
 icon_path = str(PKG_DIR / "assets" / "icon-192.png")
@@ -82,6 +108,14 @@ if sys.platform != "win32":
         "libqwbmp",
         "libqvnc",
         "libqvkkhrdisplay",
+        "libqt6quick",
+        "libqt6qml",
+        "libqt6multimedia",
+        "libqt6sql",
+        "libqt6webengine",
+        "libqt6charts",
+        "libqt63d",
+        "libqt6designer",
     )
     a.binaries = [
         item for item in a.binaries

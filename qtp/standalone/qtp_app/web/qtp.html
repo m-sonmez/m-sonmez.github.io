@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>QTP — Hazır Cevaplar (Web &amp; Çevrimdışı Arayüz)</title>
   <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="stylesheet" href="./theme.css" />
 </head>
 <body>
   <main class="overlay-card" role="application" aria-label="QTP Hızlı Yapıştırma Katmanı">
     <div class="top-row">
       <input id="searchInput" class="search-input" type="text" placeholder="Ara… (mesaj, kategori, etiket)" autofocus />
+      <button class="action-btn primary" id="btnAddNew" title="Yeni hazır cevap ekle">+ Yeni Ekle</button>
+      <button class="action-btn" id="btnThemeToggle" title="Açık/Koyu tema değiştir">🌙 Koyu</button>
       <button class="action-btn" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi">Kısayollar</button>
       <button class="action-btn" id="btnReload" title="INI Yeniden Yükle">Yenile</button>
       <button class="action-btn" id="btnBackup" title="Anlık Yedek Al / Dışa Aktar">Yedekle</button>
@@ -28,10 +31,12 @@
     <nav class="links-bar" aria-label="Sürümler ve Bağlantılar">
       <span id="modeBadge" class="mode-badge">Mod algılanıyor…</span>
       <div class="links-group">
+        <a id="osDownloadLink" class="link-chip primary" href="./qtp.exe" download="qtp.exe">⬇ Windows İndir (qtp.exe)</a>
+        <button id="btnInstallPwa" class="link-chip" type="button" style="display:none;">📲 Uygulamayı Kur (PWA)</button>
         <a class="link-chip" href="./qtp.exe" download="qtp.exe">Windows (qtp.exe)</a>
         <a class="link-chip" href="./qtp.bin" download="qtp.bin">Linux (qtp.bin)</a>
-        <a class="link-chip" href="./old.html">Eski Arayüz (old.html)</a>
-        <a class="link-chip" href="./cevaplar.html">Hızlı Pano</a>
+        <a class="link-chip" href="./index.html">Eski Sistem (index.html)</a>
+        <a class="link-chip" href="./legacy/cevaplar.html">Hızlı Pano</a>
       </div>
     </nav>
   </main>
@@ -45,11 +50,12 @@
         <button class="action-btn" id="modalClose">Kapat (Esc)</button>
       </div>
       <div id="helpTabs" class="pills-row" style="display:none;margin-bottom:10px;">
-        <button class="pill active" data-section="all">Tümü</button>
+        <button class="pill active" data-section="genel">Genel &amp; Web</button>
+        <button class="pill" data-section="gui">GUI (Masaüstü)</button>
+        <button class="pill" data-section="tui">TUI (Terminal)</button>
         <button class="pill" data-section="usage_verbose">CLI &amp; Parametreler</button>
-        <button class="pill" data-section="kullanim">Kullanım</button>
         <button class="pill" data-section="kisayollar">Kısayollar</button>
-        <button class="pill" data-section="sss">SSS</button>
+        <button class="pill" data-section="kurulum_sss">Kurulum &amp; SSS</button>
       </div>
       <div id="hotkeyControls" style="display:none;margin-bottom:10px;gap:6px;flex-wrap:wrap;align-items:center;">
         <select id="presetSelect" class="action-btn">
@@ -85,13 +91,72 @@
         <button class="action-btn primary" id="btnDownloadBackupJson">Tam Yedek İndir (.json v2)</button>
         <button class="action-btn" id="btnDownloadIniUtf16">QuickTextPaste.ini İndir (UTF-16 LE BOM)</button>
       </div>
-      <pre id="modalBody"></pre>
+      <div id="modalBody" class="modal-body-scroll"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="crudModalBackdrop">
+    <div class="modal-card" style="width:580px;">
+      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
+        <strong id="crudModalTitle">Yeni Hazır Cevap Ekle</strong>
+        <button class="action-btn" id="crudClose">İptal (Esc)</button>
+      </div>
+      <div class="field-grid">
+        <div class="field-col">
+          <label class="field-label" for="crudKeys">Kategori Kısayolu</label>
+          <select id="crudKeys" class="field-select">
+            <option value="L-Win+A">L-Win+A (İş Ortağı)</option>
+            <option value="L-Win+Z">L-Win+Z (Kurye)</option>
+            <option value="L-Win+X">L-Win+X (Canlı Yardım)</option>
+            <option value="L-Win+Q">L-Win+Q (Turkcell)</option>
+            <option value="L-Win+W">L-Win+W</option>
+            <option value="L-Win+1">L-Win+1</option>
+            <option value="">Kısayolsuz (Tümü)</option>
+          </select>
+        </div>
+        <div class="field-col">
+          <label class="field-label" for="crudGroup">Grup</label>
+          <input id="crudGroup" class="field-input" list="crudGroupList" placeholder="Örn. Müşteri - Ödeme" />
+          <datalist id="crudGroupList"></datalist>
+        </div>
+      </div>
+      <div class="field-col">
+        <label class="field-label" for="crudLabel">Etiket / Başlık</label>
+        <input id="crudLabel" class="field-input" placeholder="Kısa başlık (isteğe bağlı)" />
+      </div>
+      <div class="field-col">
+        <label class="field-label" for="crudText">Hazır Cevap Metni</label>
+        <textarea id="crudText" class="field-textarea" rows="5" placeholder="Hazır cevap metnini girin…"></textarea>
+      </div>
+      <label class="field-check">
+        <input id="crudEndMarker" type="checkbox" checked />
+        <span>Yapıştırma sonrası Enter gönder (&lt;E&lt;N&lt;D|)</span>
+      </label>
+      <div class="top-row" style="justify-content:flex-end;">
+        <button class="action-btn" id="crudCancel">İptal</button>
+        <button class="action-btn primary" id="crudSave">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="deleteConfirmBackdrop">
+    <div class="modal-card" style="width:460px;">
+      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
+        <strong>Kaydı Sil</strong>
+        <button class="action-btn" id="delCancelTop">Kapat</button>
+      </div>
+      <p id="delConfirmMsg" style="font-size:13px;line-height:1.5;margin:0 0 14px;"></p>
+      <div class="top-row" style="justify-content:flex-end;">
+        <button class="action-btn" id="delCancelBtn">Vazgeç</button>
+        <button class="action-btn danger" id="delConfirmBtn">Evet, Sil</button>
+      </div>
     </div>
   </div>
 
   <script>
     const LS_ITEMS_KEY = 'qtp_unified_items_v1';
     const LS_HOTKEYS_KEY = 'qtp_unified_hotkeys_v1';
+    const LS_THEME_KEY = 'qtp_unified_theme_v1';
     const DEFAULT_TERMINATOR = '<E<N<D|';
 
     const CATEGORY_TABS = [
@@ -140,7 +205,7 @@
     };
 
     const CLI_HELP_STATIC_TEXT = [
-      'QTP v2.1.0 — Komut Satırı Kullanımı',
+      'QTP v2.2.0 — Komut Satırı Kullanımı',
       '',
       'Kullanım:',
       '  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]',
@@ -154,11 +219,14 @@
       '  --category KOD             Başlangıç kategori filtresi (ALL/A/Z/X/Q).',
       '  --query METIN              Başlangıç arama filtresi.',
       '',
-      'Temel İşlemler:',
+      'Temel ve CRUD İşlemleri:',
       '  --version, --help, --selftest, --modes, --completion [powershell|bash|zsh|fish]',
       '  --list-categories, --list-items, --search <sorgu>, --show-ini <hedef>',
-      '  --copy <hedef>, --paste <hedef>, --export-ini <yol>, --import-ini <yol>',
-      '  --export-backup <yol>, --restore <hedef>, --backup, --reload',
+      '  --copy <hedef>, --paste <hedef>',
+      '  --add-item <metin> [--item-keys K] [--item-group G] [--item-label E] [--no-end-marker]',
+      '  --update-item <hedef> [--item-text T] [--item-keys K] [--item-group G] [--item-label E]',
+      '  --delete-item <hedef>',
+      '  --export-ini <yol>, --import-ini <yol>, --export-backup <yol>, --restore <hedef>, --backup, --reload',
       '  --get <anahtar>, --set <anahtar> <değer>, --check-hotkeys',
       '  --hotkey-preset <profil>, --hotkey-modifiers <değiştiriciler>',
       '',
@@ -168,6 +236,7 @@
 
     const state = {
       isStatic: false,
+      theme: 'light',
       category: 'ALL',
       query: '',
       allItems: [],
@@ -179,7 +248,10 @@
       selected: 0,
       revision: 0,
       helpData: null,
-      helpSection: 'all',
+      helpSection: 'genel',
+      crudEditRawKey: null,
+      crudDeleteTarget: null,
+      deferredPrompt: null,
       pollTimer: null,
       toastTimer: null,
     };
@@ -198,6 +270,19 @@
       btnDownloadSettings: document.getElementById('btnDownloadSettings'),
       backupControls: document.getElementById('backupControls'),
       helpTabs: document.getElementById('helpTabs'),
+      btnThemeToggle: document.getElementById('btnThemeToggle'),
+      osDownloadLink: document.getElementById('osDownloadLink'),
+      btnInstallPwa: document.getElementById('btnInstallPwa'),
+      crudModal: document.getElementById('crudModalBackdrop'),
+      crudTitle: document.getElementById('crudModalTitle'),
+      crudKeys: document.getElementById('crudKeys'),
+      crudGroup: document.getElementById('crudGroup'),
+      crudGroupList: document.getElementById('crudGroupList'),
+      crudLabel: document.getElementById('crudLabel'),
+      crudText: document.getElementById('crudText'),
+      crudEndMarker: document.getElementById('crudEndMarker'),
+      delModal: document.getElementById('deleteConfirmBackdrop'),
+      delConfirmMsg: document.getElementById('delConfirmMsg'),
     };
 
     function trLower(text) {
@@ -586,11 +671,124 @@
       return conflicts;
     }
 
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderInlineMd(text) {
+      let s = escapeHtml(text);
+      s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      return s;
+    }
+
+    function renderMarkdownSafeHtml(mdText) {
+      const lines = String(mdText || '').split(/\r?\n/);
+      const out = [];
+      let inCode = false;
+      let inList = false;
+      let inTable = false;
+      let tableHeaderDone = false;
+      const closeBlocks = () => {
+        if (inList) { out.push('</ul>'); inList = false; }
+        if (inTable) { out.push('</table>'); inTable = false; tableHeaderDone = false; }
+      };
+      for (const raw of lines) {
+        const st = raw.trim();
+        if (st.startsWith('```')) {
+          closeBlocks();
+          if (!inCode) { out.push('<pre><code>'); inCode = true; }
+          else { out.push('</code></pre>'); inCode = false; }
+          continue;
+        }
+        if (inCode) {
+          out.push(escapeHtml(raw) + '\n');
+          continue;
+        }
+        if (!st) {
+          closeBlocks();
+          continue;
+        }
+        if (st.startsWith('|') && st.endsWith('|')) {
+          if (inList) { out.push('</ul>'); inList = false; }
+          const cells = st.slice(1, -1).split('|').map((c) => c.trim());
+          if (cells.every((c) => /^:?-{2,}:?$/.test(c))) continue;
+          if (!inTable) { out.push('<table>'); inTable = true; tableHeaderDone = false; }
+          const tag = tableHeaderDone ? 'td' : 'th';
+          out.push('<tr>' + cells.map((c) => `<${tag}>${renderInlineMd(c)}</${tag}>`).join('') + '</tr>');
+          tableHeaderDone = true;
+          continue;
+        } else if (inTable) {
+          out.push('</table>');
+          inTable = false;
+          tableHeaderDone = false;
+        }
+        if (st.startsWith('### ')) { closeBlocks(); out.push(`<h3>${renderInlineMd(st.slice(4))}</h3>`); }
+        else if (st.startsWith('## ')) { closeBlocks(); out.push(`<h2>${renderInlineMd(st.slice(3))}</h2>`); }
+        else if (st.startsWith('# ')) { closeBlocks(); out.push(`<h1>${renderInlineMd(st.slice(2))}</h1>`); }
+        else if (st.startsWith('> ')) { closeBlocks(); out.push(`<blockquote>${renderInlineMd(st.slice(2))}</blockquote>`); }
+        else if (/^([-*]|\d+\.)\s+/.test(st)) {
+          if (!inList) { out.push('<ul>'); inList = true; }
+          out.push(`<li>${renderInlineMd(st.replace(/^([-*]|\d+\.)\s+/, ''))}</li>`);
+        } else if (st === '---') {
+          closeBlocks();
+          out.push('<hr/>');
+        } else {
+          closeBlocks();
+          out.push(`<p>${renderInlineMd(st)}</p>`);
+        }
+      }
+      closeBlocks();
+      if (inCode) out.push('</code></pre>');
+      return out.join('\n');
+    }
+
+    function applyThemeDom(themeName) {
+      const clean = themeName === 'dark' ? 'dark' : 'light';
+      state.theme = clean;
+      if (document.documentElement && document.documentElement.setAttribute) {
+        document.documentElement.setAttribute('data-theme', clean);
+      }
+      if (els.btnThemeToggle) {
+        els.btnThemeToggle.textContent = clean === 'dark' ? '☀️ Açık' : '🌙 Koyu';
+      }
+    }
+
+    function setupOsDownloadButton() {
+      if (!els.osDownloadLink) return;
+      const nav = typeof navigator !== 'undefined' ? navigator : {};
+      const hint = `${nav.userAgentData?.platform || ''} ${nav.platform || ''} ${nav.userAgent || ''}`.toLowerCase();
+      if (hint.includes('win')) {
+        els.osDownloadLink.textContent = '⬇ Windows İndir (qtp.exe)';
+        els.osDownloadLink.setAttribute('href', './qtp.exe');
+        els.osDownloadLink.setAttribute('download', 'qtp.exe');
+        els.osDownloadLink.setAttribute('title', 'Tek dosya Windows x64 QTP indir (kurulum gerektirmez)');
+        els.osDownloadLink.onclick = null;
+      } else if (hint.includes('mac') || hint.includes('darwin')) {
+        els.osDownloadLink.textContent = '⬇ Sürüm / Kurulum';
+        els.osDownloadLink.setAttribute('href', '#kurulum');
+        els.osDownloadLink.removeAttribute('download');
+        els.osDownloadLink.setAttribute('title', 'macOS ve Unix kurulum talimatlarını aç');
+        els.osDownloadLink.onclick = (ev) => { ev.preventDefault(); showHelpModal('kurulum_sss'); };
+      } else {
+        els.osDownloadLink.textContent = '⬇ Linux İndir (qtp.bin)';
+        els.osDownloadLink.setAttribute('href', './qtp.bin');
+        els.osDownloadLink.setAttribute('download', 'qtp.bin');
+        els.osDownloadLink.setAttribute('title', 'chmod +x qtp.bin && ./qtp.bin');
+        els.osDownloadLink.onclick = null;
+      }
+    }
+
     function showToast(msg) {
       els.toast.textContent = msg;
       els.toast.style.display = 'block';
       if (state.toastTimer) clearTimeout(state.toastTimer);
-      state.toastTimer = setTimeout(() => { els.toast.style.display = 'none'; }, 1600);
+      state.toastTimer = setTimeout(() => { els.toast.style.display = 'none'; }, 1800);
     }
 
     async function api(path, method = 'GET', body = null) {
@@ -630,6 +828,14 @@
       };
     }
 
+    function saveItemsStaticLocal() {
+      state.allItems = state.allItems.map((it, idx) => normalizeRawItem({ ...it, raw_key: `text_${String(idx).padStart(3, '0')}` }, idx));
+      try {
+        localStorage.setItem(LS_ITEMS_KEY, JSON.stringify(state.allItems));
+      } catch (_err) {
+      }
+    }
+
     function saveHotkeysLocal() {
       try {
         localStorage.setItem(LS_HOTKEYS_KEY, JSON.stringify(state.hotkeys));
@@ -652,7 +858,19 @@
 
     async function loadStaticData(forceNetwork = false) {
       let loaded = null;
-      if (forceNetwork || navigator.onLine !== false) {
+      if (!forceNetwork) {
+        try {
+          const cached = localStorage.getItem(LS_ITEMS_KEY);
+          if (cached) {
+            const arr = JSON.parse(cached);
+            if (Array.isArray(arr) && arr.length) {
+              loaded = arr.map((it, idx) => normalizeRawItem(it, idx));
+            }
+          }
+        } catch (_err) {
+        }
+      }
+      if (!loaded && (forceNetwork || navigator.onLine !== false)) {
         try {
           const res = await fetch('./data.json', { cache: 'no-store' });
           if (res.ok) {
@@ -680,19 +898,7 @@
       }
       if (loaded) {
         state.allItems = loaded;
-        try {
-          localStorage.setItem(LS_ITEMS_KEY, JSON.stringify(loaded));
-        } catch (_err) {
-        }
-      } else {
-        try {
-          const cached = localStorage.getItem(LS_ITEMS_KEY);
-          if (cached) {
-            const arr = JSON.parse(cached);
-            if (Array.isArray(arr)) state.allItems = arr.map((it, idx) => normalizeRawItem(it, idx));
-          }
-        } catch (_err) {
-        }
+        saveItemsStaticLocal();
       }
       loadHotkeysLocal();
     }
@@ -748,6 +954,13 @@
       els.btnDownloadSettings.style.display = state.isStatic ? 'inline-flex' : 'none';
     }
 
+    function setModalText(text) {
+      const pre = document.createElement('pre');
+      pre.textContent = String(text || '');
+      els.modalBody.innerHTML = '';
+      els.modalBody.appendChild(pre);
+    }
+
     function renderHotkeysModalContent(hotkeysMap, conflictsMap) {
       const lines = Object.entries(hotkeysMap).map(([k, v]) => `${k}: ${v}`);
       const ckeys = Object.keys(conflictsMap || {});
@@ -759,7 +972,7 @@
       } else {
         lines.push('', 'Çakışma algılanmadı ✔');
       }
-      els.modalBody.textContent = lines.join('\n');
+      setModalText(lines.join('\n'));
     }
 
     async function showHotkeysModal() {
@@ -781,12 +994,12 @@
       resetModalControls();
       els.modalTitle.textContent = `INI Kaydı (${item.raw_key || 'text'})`;
       if (state.isStatic) {
-        els.modalBody.textContent = formatIniPreview(item, index);
+        setModalText(formatIniPreview(item, index));
         els.modal.style.display = 'flex';
         return;
       }
       const res = await api(`/api/show-ini?target=${encodeURIComponent(item.raw_key || item.text || '')}`);
-      els.modalBody.textContent = res.ok && res.data ? res.data.preview : (res.error || res.message || 'Gösterilemedi');
+      setModalText(res.ok && res.data ? res.data.preview : (res.error || res.message || 'Gösterilemedi'));
       els.modal.style.display = 'flex';
     }
 
@@ -794,13 +1007,13 @@
       resetModalControls();
       els.modalTitle.textContent = 'Yedekle & Dışa Aktar (Statik Web)';
       els.backupControls.style.display = 'flex';
-      els.modalBody.textContent = [
+      setModalText([
         `Toplam hazır cevap kaydı: ${state.allItems.length}`,
         '',
         'Seçenekler:',
         '• Tam Yedek İndir (.json v2): Tüm kayıtları, program meta verilerini ve kısayol ayarlarını JSON yedek dosyası olarak indirir.',
         '• QuickTextPaste.ini İndir (UTF-16 LE BOM): QuickTextPaste ve QTP masaüstü uygulamasıyla %100 uyumlu INI dosyası üretir.',
-      ].join('\n');
+      ].join('\n'));
       els.modal.style.display = 'flex';
     }
 
@@ -814,32 +1027,47 @@
       }
     }
 
+    function extractMdSubsection(mdText, headingNeedle) {
+      const text = String(mdText || '');
+      const idx = text.indexOf(headingNeedle);
+      if (idx === -1) return text;
+      const nextH2 = text.indexOf('\n## ', idx + headingNeedle.length);
+      return nextH2 === -1 ? text.slice(idx) : text.slice(idx, nextH2);
+    }
+
     function renderHelpSection(sectionKey) {
       if (!state.helpData) return;
       state.helpSection = sectionKey;
       for (const btn of els.helpTabs.querySelectorAll('[data-section]')) {
         btn.classList.toggle('active', btn.dataset.section === sectionKey);
       }
-      if (sectionKey === 'all') {
-        const sep = '\n\n' + '='.repeat(60) + '\n\n';
-        els.modalBody.textContent = [
-          '=== CLI & Parametreler ===\n\n' + (state.helpData.usage_verbose || state.helpData.usage || ''),
-          '=== Kullanım ===\n\n' + (state.helpData.kullanim || ''),
-          '=== Kısayollar ===\n\n' + (state.helpData.kisayollar || ''),
-          '=== Sorun Giderme (SSS) ===\n\n' + (state.helpData.sss || ''),
-        ].join(sep);
+      if (sectionKey === 'usage_verbose') {
+        const cliTxt = state.helpData.usage_verbose || state.helpData.usage || CLI_HELP_STATIC_TEXT;
+        els.modalBody.innerHTML = `<div class="md-view"><h1>CLI &amp; Parametreler (--verbose --help)</h1><pre><code>${escapeHtml(cliTxt)}</code></pre></div>`;
+      } else if (sectionKey === 'gui') {
+        const sub = extractMdSubsection(state.helpData.kullanim || '', '## 1. Katmanı');
+        els.modalBody.innerHTML = `<div class="md-view">${renderMarkdownSafeHtml(sub)}</div>`;
+      } else if (sectionKey === 'tui') {
+        const sub = extractMdSubsection(state.helpData.kullanim || '', '## 11. TUI Modu');
+        els.modalBody.innerHTML = `<div class="md-view">${renderMarkdownSafeHtml(sub)}</div>`;
+      } else if (sectionKey === 'kisayollar') {
+        els.modalBody.innerHTML = `<div class="md-view">${renderMarkdownSafeHtml(state.helpData.kisayollar || '')}</div>`;
+      } else if (sectionKey === 'kurulum_sss') {
+        const combined = `${state.helpData.kurulum || ''}\n\n---\n\n${state.helpData.sss || ''}`;
+        els.modalBody.innerHTML = `<div class="md-view">${renderMarkdownSafeHtml(combined)}</div>`;
       } else {
-        els.modalBody.textContent = state.helpData[sectionKey] || '';
+        els.modalBody.innerHTML = `<div class="md-view">${renderMarkdownSafeHtml(state.helpData.kullanim || '')}</div>`;
       }
       els.modalBody.scrollTop = 0;
     }
 
-    async function showHelpModal(sectionKey = 'all') {
+    async function showHelpModal(sectionKey = 'genel') {
       resetModalControls();
       if (!state.helpData) {
         if (state.isStatic) {
-          const [kullanim, kisayollar, sss] = await Promise.all([
-            fetchTextSafe('./docs/KULLANIM.md', 'Kullanım belgesi çevrimdışı/yerel dosyada okunamadı (./docs/KULLANIM.md).'),
+          const [kullanim, kurulum, kisayollar, sss] = await Promise.all([
+            fetchTextSafe('./docs/KULLANIM.md', 'Kullanım belgesi okunamadı (./docs/KULLANIM.md).'),
+            fetchTextSafe('./docs/KURULUM.md', 'Kurulum belgesi okunamadı (./docs/KURULUM.md).'),
             fetchTextSafe('./docs/KISAYOLLAR.md', 'Kısayol belgesi okunamadı (./docs/KISAYOLLAR.md).'),
             fetchTextSafe('./docs/SSS.md', 'SSS belgesi okunamadı (./docs/SSS.md).'),
           ]);
@@ -847,6 +1075,7 @@
             usage: CLI_HELP_STATIC_TEXT,
             usage_verbose: CLI_HELP_STATIC_TEXT,
             kullanim,
+            kurulum,
             kisayollar,
             sss,
           };
@@ -861,6 +1090,115 @@
       els.modalTitle.textContent = 'QTP Türkçe Yardım (F1)';
       renderHelpSection(sectionKey);
       els.modal.style.display = 'flex';
+    }
+
+    function openCrudModal(item = null) {
+      const sourceItems = state.isStatic ? state.allItems : state.items;
+      const groups = Array.from(new Set(sourceItems.map((it) => it.group || 'Genel').concat(['Genel']))).sort();
+      els.crudGroupList.innerHTML = '';
+      groups.forEach((g) => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        els.crudGroupList.appendChild(opt);
+      });
+      if (item) {
+        state.crudEditRawKey = item.raw_key;
+        els.crudTitle.textContent = `Cevabı Düzenle (${item.raw_key || ''})`;
+        els.crudKeys.value = item.keys || '';
+        els.crudGroup.value = item.group || 'Genel';
+        els.crudLabel.value = item.label || '';
+        els.crudText.value = item.text || '';
+        els.crudEndMarker.checked = item.terminator === DEFAULT_TERMINATOR;
+      } else {
+        state.crudEditRawKey = null;
+        els.crudTitle.textContent = 'Yeni Hazır Cevap Ekle';
+        els.crudKeys.value = state.category !== 'ALL' ? `L-Win+${state.category}` : 'L-Win+A';
+        els.crudGroup.value = 'Genel';
+        els.crudLabel.value = '';
+        els.crudText.value = '';
+        els.crudEndMarker.checked = true;
+      }
+      els.crudModal.style.display = 'flex';
+      els.crudText.focus();
+    }
+
+    async function saveCrudModal() {
+      const textVal = String(els.crudText.value || '');
+      if (!textVal.trim()) {
+        showToast('Metin alanı boş olamaz.');
+        return;
+      }
+      const payload = {
+        keys: String(els.crudKeys.value || '').trim(),
+        group: String(els.crudGroup.value || 'Genel').trim() || 'Genel',
+        label: String(els.crudLabel.value || '').trim(),
+        text: textVal,
+        terminator: els.crudEndMarker.checked ? DEFAULT_TERMINATOR : '',
+      };
+
+      if (state.isStatic) {
+        if (state.crudEditRawKey) {
+          const idx = state.allItems.findIndex((it) => it.raw_key === state.crudEditRawKey);
+          if (idx === -1) {
+            showToast(`Öğe bulunamadı: ${state.crudEditRawKey}`);
+            return;
+          }
+          state.allItems[idx] = { ...state.allItems[idx], ...payload };
+          saveItemsStaticLocal();
+          showToast('Kayıt güncellendi ✔');
+        } else {
+          state.allItems.push({ ...payload, raw_key: `text_${String(state.allItems.length).padStart(3, '0')}` });
+          saveItemsStaticLocal();
+          showToast('Yeni cevap eklendi ✔');
+        }
+        els.crudModal.style.display = 'none';
+        updateStaticCategories();
+        updateStaticItems();
+        return;
+      }
+
+      const res = state.crudEditRawKey
+        ? await api('/api/items/update', 'POST', { target: state.crudEditRawKey, ...payload })
+        : await api('/api/items/add', 'POST', payload);
+      if (res.ok) {
+        els.crudModal.style.display = 'none';
+        await loadCategories();
+        await loadItems();
+      }
+      showToast(res.message || res.error || 'İşlem tamamlandı');
+    }
+
+    function openDeleteModal(item) {
+      state.crudDeleteTarget = item;
+      const preview = String(item.label || item.text || '').slice(0, 60);
+      els.delConfirmMsg.textContent = `'${preview}' kaydını kalıcı olarak silmek istediğinize emin misiniz?`;
+      els.delModal.style.display = 'flex';
+    }
+
+    async function confirmDeleteModal() {
+      const item = state.crudDeleteTarget;
+      if (!item) return;
+      if (state.isStatic) {
+        const before = state.allItems.length;
+        state.allItems = state.allItems.filter((it) => it.raw_key !== item.raw_key);
+        if (state.allItems.length === before) {
+          showToast(`Öğe bulunamadı: ${item.raw_key}`);
+          return;
+        }
+        saveItemsStaticLocal();
+        els.delModal.style.display = 'none';
+        state.crudDeleteTarget = null;
+        updateStaticCategories();
+        updateStaticItems();
+        showToast('Kayıt silindi ✔');
+        return;
+      }
+      const res = await api('/api/items/delete', 'POST', { target: item.raw_key || item.text });
+      els.delModal.style.display = 'none';
+      state.crudDeleteTarget = null;
+      await loadCategories();
+      await loadItems();
+      showToast(res.message || res.error || 'Kayıt silindi ✔');
     }
 
     function renderPills() {
@@ -954,6 +1292,20 @@
 
         const right = document.createElement('div');
         right.className = 'row-actions';
+        const editBtn = document.createElement('button');
+        editBtn.className = 'action-btn';
+        editBtn.textContent = 'Düzenle';
+        editBtn.onclick = (ev) => {
+          ev.stopPropagation();
+          openCrudModal(it);
+        };
+        const delBtn = document.createElement('button');
+        delBtn.className = 'action-btn danger';
+        delBtn.textContent = 'Sil';
+        delBtn.onclick = (ev) => {
+          ev.stopPropagation();
+          openDeleteModal(it);
+        };
         const iniBtn = document.createElement('button');
         iniBtn.className = 'action-btn';
         iniBtn.textContent = "INI'de Göster";
@@ -971,6 +1323,8 @@
         const badge = document.createElement('span');
         badge.className = 'badge';
         badge.textContent = hotkeyBadge(it.keys || '') || '•';
+        right.appendChild(editBtn);
+        right.appendChild(delBtn);
         right.appendChild(iniBtn);
         right.appendChild(copyBtn);
         right.appendChild(badge);
@@ -1002,24 +1356,34 @@
     els.modal.addEventListener('click', (ev) => {
       if (ev.target === els.modal) els.modal.style.display = 'none';
     });
+    els.crudModal.addEventListener('click', (ev) => {
+      if (ev.target === els.crudModal) els.crudModal.style.display = 'none';
+    });
+    els.delModal.addEventListener('click', (ev) => {
+      if (ev.target === els.delModal) els.delModal.style.display = 'none';
+    });
 
     document.addEventListener('keydown', async (e) => {
+      const crudOpen = els.crudModal.style.display === 'flex';
+      const delOpen = els.delModal.style.display === 'flex';
       const modalOpen = els.modal.style.display === 'flex';
       if (e.key === 'F1') {
         e.preventDefault();
-        await showHelpModal('all');
+        await showHelpModal('genel');
         return;
       }
       if (e.key === 'Escape') {
-        if (modalOpen) {
-          els.modal.style.display = 'none';
-        } else {
+        if (crudOpen) els.crudModal.style.display = 'none';
+        else if (delOpen) els.delModal.style.display = 'none';
+        else if (modalOpen) els.modal.style.display = 'none';
+        else {
           els.search.value = '';
           state.query = '';
           loadItems();
         }
         return;
       }
+      if (crudOpen || delOpen) return;
       if (modalOpen) {
         if (e.key === 'ArrowDown') {
           e.preventDefault();
@@ -1074,7 +1438,27 @@
     });
 
     document.getElementById('modalClose').onclick = () => { els.modal.style.display = 'none'; };
-    document.getElementById('btnHelp').onclick = () => showHelpModal('all');
+    document.getElementById('btnHelp').onclick = () => showHelpModal('genel');
+    document.getElementById('btnAddNew').onclick = () => openCrudModal(null);
+    document.getElementById('crudClose').onclick = () => { els.crudModal.style.display = 'none'; };
+    document.getElementById('crudCancel').onclick = () => { els.crudModal.style.display = 'none'; };
+    document.getElementById('crudSave').onclick = saveCrudModal;
+    document.getElementById('delCancelTop').onclick = () => { els.delModal.style.display = 'none'; };
+    document.getElementById('delCancelBtn').onclick = () => { els.delModal.style.display = 'none'; };
+    document.getElementById('delConfirmBtn').onclick = confirmDeleteModal;
+
+    els.btnThemeToggle.onclick = async () => {
+      const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
+      applyThemeDom(nextTheme);
+      if (state.isStatic) {
+        try { localStorage.setItem(LS_THEME_KEY, nextTheme); } catch (_err) {}
+        showToast(nextTheme === 'dark' ? 'Koyu tema etkinleştirildi.' : 'Açık tema etkinleştirildi.');
+        return;
+      }
+      const r = await api('/api/settings', 'POST', { key: 'theme', value: nextTheme });
+      showToast(r.message || r.error || 'Tema güncellendi');
+    };
+
     for (const btn of els.helpTabs.querySelectorAll('[data-section]')) {
       btn.onclick = () => renderHelpSection(btn.dataset.section);
     }
@@ -1114,7 +1498,7 @@
     };
     els.btnDownloadSettings.onclick = () => {
       const payload = {
-        theme: 'dark',
+        theme: state.theme,
         hotkeys: state.hotkeys,
         last_category: state.category,
         window_size: [720, 520],
@@ -1160,7 +1544,7 @@
         type: 'qtp-pwa-backup',
         version: 2,
         exportedAt: new Date().toISOString(),
-        settings: { hotkeys: state.hotkeys },
+        settings: { theme: state.theme, hotkeys: state.hotkeys },
         program: state.program || {},
         extraSections: state.extraSections || [],
         items: cleanItems,
@@ -1175,6 +1559,26 @@
       showToast(`QuickTextPaste.ini indirildi: ${state.allItems.length} kayıt ✔`);
     };
 
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        state.deferredPrompt = e;
+        if (els.btnInstallPwa) els.btnInstallPwa.style.display = 'inline-flex';
+      });
+      if (els.btnInstallPwa) {
+        els.btnInstallPwa.onclick = async () => {
+          if (!state.deferredPrompt) {
+            showToast("Tarayıcı menüsünden 'Uygulamayı yükle / Ana Ekrana Ekle' seçin.");
+            return;
+          }
+          state.deferredPrompt.prompt();
+          await state.deferredPrompt.userChoice;
+          state.deferredPrompt = null;
+          els.btnInstallPwa.style.display = 'none';
+        };
+      }
+    }
+
     function startLivePolling() {
       if (state.isStatic || state.pollTimer) return;
       state.pollTimer = setInterval(async () => {
@@ -1183,6 +1587,7 @@
           if (r.ok && r.data.revision !== state.revision) {
             const prevRev = state.revision;
             state.revision = r.data.revision;
+            if (r.data.theme) applyThemeDom(r.data.theme === 'dark' ? 'dark' : 'light');
             if (prevRev !== 0) {
               await loadCategories();
               await loadItems();
@@ -1195,10 +1600,13 @@
     }
 
     async function initWebUi() {
+      setupOsDownloadButton();
       const revPayload = await detectBackendMode();
       if (revPayload) {
         state.isStatic = false;
         state.revision = revPayload.data.revision || 0;
+        const srvTheme = revPayload.data.theme === 'dark' ? 'dark' : 'light';
+        applyThemeDom(srvTheme);
         if (revPayload.data.initial_category) {
           state.category = String(revPayload.data.initial_category).toUpperCase();
         }
@@ -1211,6 +1619,13 @@
       } else {
         state.isStatic = true;
         els.modeBadge.textContent = 'Statik Web (Çevrimdışı / GitHub Pages)';
+        let savedTheme = 'light';
+        try {
+          const lsTheme = localStorage.getItem(LS_THEME_KEY);
+          if (lsTheme === 'dark' || lsTheme === 'light') savedTheme = lsTheme;
+        } catch (_err) {
+        }
+        applyThemeDom(savedTheme);
         const params = new URLSearchParams(location.search || '');
         const pCat = params.get('category');
         const pQuery = params.get('query') || params.get('q');

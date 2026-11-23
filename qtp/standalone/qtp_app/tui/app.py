@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import sys
@@ -72,6 +73,9 @@ class QtpTui:
         self._visible_items: list[dict[str, Any]] = []
         self._categories_cache: list[dict[str, Any]] = []
         self.recorded_frames: list[str] = []
+        self.prompt_mode: str = ""
+        self.prompt_buffer: str = ""
+        self.prompt_target: str = ""
         self._reload_lock = threading.RLock()
         self._refresh_view_data()
 
@@ -174,7 +178,15 @@ class QtpTui:
                     lines.append("")
 
             lines.append("-" * min(inner_w, 96))
-            lines.append(f"Durum: {self.status_message[:inner_w - 7]}")
+            if self.prompt_mode == "add":
+                status_line = f"Yeni Cevap (⏎ Kaydet · Esc İptal): {self.prompt_buffer}"
+            elif self.prompt_mode == "edit":
+                status_line = f"Düzenle [{self.prompt_target}] (⏎ Kaydet · Esc İptal): {self.prompt_buffer}"
+            elif self.prompt_mode == "delete":
+                status_line = f"Sil [{self.prompt_target}]? (⏎/e Onayla · Esc İptal)"
+            else:
+                status_line = f"Durum: {self.status_message[:inner_w - 7]}"
+            lines.append(status_line[:inner_w])
             lines.append(TUI_FOOTER_HINTS[:inner_w])
             return lines
 
@@ -227,6 +239,7 @@ class QtpTui:
                 (
                     "=== CLI & Parametreler (--verbose --help) ===\n\n" + res.data["usage_verbose"],
                     "=== Kullanım Kılavuzu ===\n\n" + res.data["kullanim"],
+                    "=== Kurulum ve Sistem Gereksinimleri ===\n\n" + res.data.get("kurulum", ""),
                     "=== Kısayollar ===\n\n" + res.data["kisayollar"],
                     "=== Sorun Giderme (SSS) ===\n\n" + res.data["sss"],
                 )
@@ -311,6 +324,49 @@ class QtpTui:
             return self._record_result(self.engine.op_apply_hotkey_preset(arg or "recommended"))
         if op_id == "hotkey_modifiers":
             return self._record_result(self.engine.op_apply_hotkey_modifiers(arg or "Win+Alt"))
+        if op_id == "add_item":
+            payload: dict[str, Any] = {}
+            if extra and extra.lstrip().startswith("{"):
+                try:
+                    raw_p = json.loads(extra)
+                    if isinstance(raw_p, dict):
+                        payload = raw_p
+                except Exception:
+                    payload = {}
+            res = self.engine.op_add_item(
+                arg,
+                keys=str(payload.get("keys", extra if not payload else "")),
+                group=str(payload.get("group", "Genel")),
+                label=str(payload.get("label", "")),
+                terminator=str(payload.get("terminator", "<E<N<D|")),
+            )
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "update_item":
+            payload = {}
+            text_arg: str | None = extra if extra != "" else None
+            if extra and extra.lstrip().startswith("{"):
+                try:
+                    raw_p = json.loads(extra)
+                    if isinstance(raw_p, dict):
+                        payload = raw_p
+                        text_arg = payload.get("text")
+                except Exception:
+                    payload = {}
+            res = self.engine.op_update_item(
+                target,
+                keys=payload.get("keys"),
+                group=payload.get("group"),
+                label=payload.get("label"),
+                text=text_arg,
+                terminator=payload.get("terminator"),
+            )
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "delete_item":
+            res = self.engine.op_delete_item(target)
+            self._refresh_view_data()
+            return self._record_result(res)
 
         err = f"Bilinmeyen TUI işlemi: {op_id}"
         return self._record_result(OperationResult(ok=False, exit_code=2, message=err, error=err))
@@ -334,6 +390,39 @@ class QtpTui:
                 self.modal_lines = []
                 self.modal_title = ""
                 self.modal_scroll = 0
+            return
+
+        if self.prompt_mode:
+            if key == "ESC":
+                self.prompt_mode = ""
+                self.prompt_buffer = ""
+                self.prompt_target = ""
+                return
+            if self.prompt_mode == "delete":
+                if key in ("ENTER", "e", "E", "y", "Y"):
+                    tgt = self.prompt_target
+                    self.prompt_mode = ""
+                    self.prompt_target = ""
+                    self.execute_operation("delete_item", tgt)
+                return
+            if key == "ENTER":
+                mode_now = self.prompt_mode
+                buf_now = self.prompt_buffer
+                tgt_now = self.prompt_target
+                self.prompt_mode = ""
+                self.prompt_buffer = ""
+                self.prompt_target = ""
+                if mode_now == "add":
+                    self.execute_operation("add_item", buf_now)
+                elif mode_now == "edit":
+                    self.execute_operation("update_item", tgt_now, buf_now)
+                return
+            if key == "BACKSPACE":
+                self.prompt_buffer = self.prompt_buffer[:-1]
+                return
+            if len(key) == 1 and key.isprintable():
+                self.prompt_buffer += key
+                return
             return
 
         if self.search_mode:
@@ -405,6 +494,22 @@ class QtpTui:
             self.execute_operation("selftest")
         elif key == "M":
             self.execute_operation("modes")
+        elif key == "a":
+            self.prompt_mode = "add"
+            self.prompt_buffer = ""
+            self.prompt_target = ""
+        elif key == "E":
+            cur = self.current_item()
+            if cur is not None:
+                self.prompt_mode = "edit"
+                self.prompt_target = self.current_raw_key()
+                self.prompt_buffer = str(cur.get("text", ""))
+        elif key == "d":
+            cur = self.current_item()
+            if cur is not None:
+                self.prompt_mode = "delete"
+                self.prompt_target = self.current_raw_key()
+                self.prompt_buffer = ""
         elif key in ("q", "ESC"):
             self.running = False
 
@@ -428,7 +533,7 @@ class QtpTui:
                 or (
                     not prev_modal
                     and (not prev_search or k == "ENTER")
-                    and k in ("c", "ENTER", "F1", "e", "b", "B", "x", "r", "s", "k", "C", "P", "V", "T", "M")
+                    and k in ("c", "ENTER", "F1", "e", "b", "B", "x", "r", "s", "k", "C", "P", "V", "T", "M", "a", "E", "d")
                 )
             ):
                 self._capture_script_frame()

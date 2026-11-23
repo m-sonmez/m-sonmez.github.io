@@ -168,8 +168,9 @@ class HelpDialog(QDialog):
         self.tabs = QTabWidget(self)
         self.browsers: list[QTextBrowser] = []
         for title, doc_file in (
-            ("Kullanım Kılavuzu", "KULLANIM.md"),
-            ("Kısayollar", "KISAYOLLAR.md"),
+            ("Kullanım (Web/GUI/TUI/CLI)", "KULLANIM.md"),
+            ("Kurulum & İndirme", "KURULUM.md"),
+            ("Kısayollar & Profiller", "KISAYOLLAR.md"),
             ("Sorun Giderme (SSS)", "SSS.md"),
         ):
             browser = QTextBrowser(self)

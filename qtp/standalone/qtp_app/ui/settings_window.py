@@ -635,7 +635,7 @@ class SettingsWindow(QDialog):
         self.conflict_label.setText("\n".join(lines))
 
     def _populate(self, data: dict[str, Any]) -> None:
-        self.theme_cb.setCurrentText(str(data.get("theme", "dark")))
+        self.theme_cb.setCurrentText(str(data.get("theme", "light")))
         self.last_cat_cb.setCurrentText(str(data.get("last_category", "ALL")))
         ws = data.get("window_size") or [720, 520]
         self.width_spin.setValue(int(ws[0]))

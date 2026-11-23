@@ -40,6 +40,9 @@ _CLI_ACTION_FLAGS = frozenset(
         "--check-hotkeys",
         "--hotkey-preset",
         "--hotkey-modifiers",
+        "--add-item",
+        "--update-item",
+        "--delete-item",
     }
 )
 
@@ -278,6 +281,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--check-hotkeys", action="store_true")
     parser.add_argument("--hotkey-preset", metavar="PROFIL")
     parser.add_argument("--hotkey-modifiers", metavar="DEGISTIRICILER")
+    parser.add_argument("--add-item", metavar="METIN")
+    parser.add_argument("--update-item", metavar="HEDEF")
+    parser.add_argument("--delete-item", metavar="HEDEF")
+    parser.add_argument("--item-keys", default=None, metavar="TUS")
+    parser.add_argument("--item-group", default=None, metavar="GRUP")
+    parser.add_argument("--item-label", default=None, metavar="ETIKET")
+    parser.add_argument("--item-text", default=None, metavar="METIN")
+    parser.add_argument("--no-end-marker", action="store_true")
 
     parser.add_argument("--category", default="ALL")
     parser.add_argument("--query", default="")
@@ -329,6 +340,9 @@ def _has_cli_action(args: argparse.Namespace) -> bool:
             args.check_hotkeys,
             args.hotkey_preset is not None,
             args.hotkey_modifiers is not None,
+            args.add_item is not None,
+            args.update_item is not None,
+            args.delete_item is not None,
         )
     )
 
@@ -512,6 +526,33 @@ def _dispatch_cli_action(
         res = engine.op_apply_hotkey_modifiers(args.hotkey_modifiers)
         if res.warning and not as_json and not quiet:
             print(f"UYARI: {res.warning}", file=sys.stderr)
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "add_item", None) is not None:
+        term = "" if args.no_end_marker else "<E<N<D|"
+        res = engine.op_add_item(
+            args.add_item,
+            keys=args.item_keys or "",
+            group=args.item_group or "Genel",
+            label=args.item_label or "",
+            terminator=term,
+        )
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "update_item", None) is not None:
+        term = "" if args.no_end_marker else None
+        res = engine.op_update_item(
+            args.update_item,
+            keys=args.item_keys,
+            group=args.item_group,
+            label=args.item_label,
+            text=args.item_text,
+            terminator=term,
+        )
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "delete_item", None) is not None:
+        res = engine.op_delete_item(args.delete_item)
         return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
 
     if str(getattr(args, "category", "ALL")).strip().upper() != "ALL" or str(getattr(args, "query", "")):

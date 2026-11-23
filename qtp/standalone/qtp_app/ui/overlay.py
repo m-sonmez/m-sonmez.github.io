@@ -36,6 +36,8 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QCheckBox,
+    QComboBox,
     QDialog,
     QFrame,
     QGraphicsDropShadowEffect,
@@ -45,6 +47,7 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QListView,
     QMenu,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QSizeGrip,
@@ -411,6 +414,92 @@ class IniSnippetViewerDialog(QDialog):
         layout.addLayout(btn_row)
 
 
+class SnippetEditorDialog(QDialog):
+    """Katman üzerinden yeni hazır cevap ekleme veya mevcut kaydı düzenleme iletişim kutusu."""
+
+    def __init__(
+        self,
+        palette: ThemePalette,
+        groups: list[str],
+        *,
+        item: dict[str, Any] | None = None,
+        parent: QWidget | None = None,
+    ):
+        super().__init__(parent)
+        is_edit = item is not None
+        self.setWindowTitle("Hazır Cevap Düzenle" if is_edit else "Yeni Hazır Cevap Ekle")
+        self.resize(540, 420)
+        self.setStyleSheet(build_dialog_stylesheet(palette))
+        self.result_payload: dict[str, Any] | None = None
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(16, 16, 16, 16)
+        lay.setSpacing(10)
+
+        top_fields = QHBoxLayout()
+        top_fields.setSpacing(8)
+        self.keys_cb = QComboBox(self)
+        self.keys_cb.setEditable(True)
+        self.keys_cb.addItems(["L-Win+A", "L-Win+Z", "L-Win+X", "L-Win+Q", "L-Win+W", "L-Win+1", ""])
+        cur_keys = str((item or {}).get("keys", "L-Win+A"))
+        self.keys_cb.setCurrentText(cur_keys)
+
+        self.group_cb = QComboBox(self)
+        self.group_cb.setEditable(True)
+        uniq_groups = sorted({g for g in groups if g} | {"Genel"})
+        self.group_cb.addItems(uniq_groups)
+        self.group_cb.setCurrentText(str((item or {}).get("group", "Genel")) or "Genel")
+
+        top_fields.addWidget(QLabel("Kategori Kısayolu:"))
+        top_fields.addWidget(self.keys_cb, 1)
+        top_fields.addWidget(QLabel("Grup:"))
+        top_fields.addWidget(self.group_cb, 2)
+        lay.addLayout(top_fields)
+
+        lbl_row = QHBoxLayout()
+        lbl_row.addWidget(QLabel("Etiket / Başlık:"))
+        self.label_edit = QLineEdit(self)
+        self.label_edit.setText(str((item or {}).get("label", "")))
+        self.label_edit.setPlaceholderText("Kısa başlık (isteğe bağlı)")
+        lbl_row.addWidget(self.label_edit, 1)
+        lay.addLayout(lbl_row)
+
+        lay.addWidget(QLabel("Hazır Cevap Metni:"))
+        self.text_edit = QPlainTextEdit(self)
+        self.text_edit.setPlainText(str((item or {}).get("text", "")))
+        lay.addWidget(self.text_edit, 1)
+
+        self.end_marker_chk = QCheckBox("Yapıştırma sonrası Enter gönder (<E<N<D|)", self)
+        term_now = (item or {}).get("terminator", "<E<N<D|")
+        self.end_marker_chk.setChecked(term_now == "<E<N<D|" or item is None)
+        lay.addWidget(self.end_marker_chk)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        cancel_btn = QPushButton("İptal", self)
+        save_btn = QPushButton("Kaydet", self)
+        save_btn.setObjectName("PrimaryBtn")
+        cancel_btn.clicked.connect(self.reject)
+        save_btn.clicked.connect(self._on_save)
+        btn_row.addWidget(cancel_btn)
+        btn_row.addWidget(save_btn)
+        lay.addLayout(btn_row)
+
+    def _on_save(self) -> None:
+        raw_text = self.text_edit.toPlainText()
+        if not raw_text.strip():
+            QMessageBox.warning(self, "Eksik Metin", "Metin alanı boş olamaz.")
+            return
+        self.result_payload = {
+            "keys": self.keys_cb.currentText().strip(),
+            "group": self.group_cb.currentText().strip() or "Genel",
+            "label": self.label_edit.text().strip(),
+            "text": raw_text,
+            "terminator": "<E<N<D|" if self.end_marker_chk.isChecked() else "",
+        }
+        self.accept()
+
+
 class OverlayWindow(QWidget):
     """
     Modern, çerçevesiz, animasyonlu ve klavye öncelikli QTP hızlı yapıştırma katmanı.
@@ -419,6 +508,9 @@ class OverlayWindow(QWidget):
 
     paste_triggered = pyqtSignal(dict)
     copy_triggered = pyqtSignal(dict)
+    add_item_requested = pyqtSignal()
+    edit_item_requested = pyqtSignal(dict)
+    delete_item_requested = pyqtSignal(dict)
     settings_requested = pyqtSignal()
     help_requested = pyqtSignal()
     window_resized = pyqtSignal(int, int)
@@ -427,7 +519,7 @@ class OverlayWindow(QWidget):
         self,
         items: list[dict[str, Any]] | None = None,
         *,
-        theme: str = "dark",
+        theme: str = "light",
         window_size: tuple[int, int] = (WINDOW_WIDTH, WINDOW_HEIGHT),
         last_category: str = "ALL",
         last_category_by_hotkey: dict[str, str] | None = None,
@@ -435,6 +527,9 @@ class OverlayWindow(QWidget):
         ini_path: str = "QuickTextPaste.ini",
         on_paste: Callable[[dict[str, Any], Any], None] | None = None,
         on_copy: Callable[[dict[str, Any]], None] | None = None,
+        on_add: Callable[[dict[str, Any]], Any] | None = None,
+        on_edit: Callable[[dict[str, Any], dict[str, Any]], Any] | None = None,
+        on_delete: Callable[[dict[str, Any]], Any] | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
@@ -443,6 +538,9 @@ class OverlayWindow(QWidget):
         self._ini_path = ini_path
         self._on_paste_cb = on_paste
         self._on_copy_cb = on_copy
+        self._on_add_cb = on_add
+        self._on_edit_cb = on_edit
+        self._on_delete_cb = on_delete
         self._active_category = (last_category or "ALL").upper()
         self._last_cat_by_hotkey: dict[str, str] = dict(last_category_by_hotkey or {})
         self._active_hotkey_trigger: str = "all"
@@ -530,6 +628,12 @@ class OverlayWindow(QWidget):
 
         search_wrap_layout.addWidget(self.search_input)
         top_row.addWidget(search_wrap, 1)
+
+        self.add_btn = QPushButton("+ Yeni Cevap", self.card)
+        self.add_btn.setObjectName("HeaderActionBtn")
+        self.add_btn.setToolTip("Yeni hazır cevap ekle")
+        self.add_btn.clicked.connect(self._open_add_dialog)
+        top_row.addWidget(self.add_btn)
 
         self.help_btn = QPushButton("Yardım (F1)", self.card)
         self.help_btn.setObjectName("HeaderActionBtn")
@@ -735,20 +839,59 @@ class OverlayWindow(QWidget):
         menu = QMenu(self)
         act_paste = QAction("Yapıştır", menu)
         act_copy = QAction("Kopyala", menu)
+        act_edit = QAction("Düzenle", menu)
+        act_delete = QAction("Sil", menu)
         act_ini = QAction("INI'de Göster", menu)
         act_help = QAction("Yardım", menu)
 
         act_paste.triggered.connect(lambda: self.paste_row(row))
         act_copy.triggered.connect(lambda: self.copy_row(row))
+        act_edit.triggered.connect(lambda: self._open_edit_dialog(item))
+        act_delete.triggered.connect(lambda: self._confirm_delete_item(item))
         act_ini.triggered.connect(lambda: self._show_ini_preview(item, row))
         act_help.triggered.connect(self.help_requested.emit)
 
         menu.addAction(act_paste)
         menu.addAction(act_copy)
         menu.addSeparator()
+        menu.addAction(act_edit)
+        menu.addAction(act_delete)
+        menu.addSeparator()
         menu.addAction(act_ini)
         menu.addAction(act_help)
         menu.exec(global_pos)
+
+    def _open_add_dialog(self) -> None:
+        self.add_item_requested.emit()
+        groups = [str(it.get("group", "Genel")) for it in self._items]
+        dlg = SnippetEditorDialog(self._palette, groups, item=None, parent=self)
+        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None:
+            if self._on_add_cb is not None:
+                res = self._on_add_cb(dlg.result_payload)
+                if res is not None and hasattr(res, "message"):
+                    self.show_toast(res.message)
+
+    def _open_edit_dialog(self, item: dict[str, Any]) -> None:
+        self.edit_item_requested.emit(item)
+        groups = [str(it.get("group", "Genel")) for it in self._items]
+        dlg = SnippetEditorDialog(self._palette, groups, item=item, parent=self)
+        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None:
+            if self._on_edit_cb is not None:
+                res = self._on_edit_cb(item, dlg.result_payload)
+                if res is not None and hasattr(res, "message"):
+                    self.show_toast(res.message)
+
+    def _confirm_delete_item(self, item: dict[str, Any]) -> None:
+        self.delete_item_requested.emit(item)
+        ans = QMessageBox.question(
+            self,
+            "Kaydı Sil",
+            f"'{item.get('label') or str(item.get('text', ''))[:40]}' kaydı silinsin mi?",
+        )
+        if ans == QMessageBox.StandardButton.Yes and self._on_delete_cb is not None:
+            res = self._on_delete_cb(item)
+            if res is not None and hasattr(res, "message"):
+                self.show_toast(res.message)
 
     def _show_ini_preview(self, item: dict[str, Any], row: int) -> None:
         dlg = IniSnippetViewerDialog(item, row, self._ini_path, self._palette, self)

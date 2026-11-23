@@ -78,7 +78,7 @@ class QtpWebServer(ThreadingHTTPServer):
 
 
 class QtpWebRequestHandler(BaseHTTPRequestHandler):
-    server_version = "QTPWeb/2.1.0"
+    server_version = "QTPWeb/2.2.0"
 
     @property
     def engine(self) -> QtpEngine:
@@ -126,8 +126,8 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             path += "/"
         qs = urllib.parse.parse_qs(parsed.query)
 
-        if path in ("/", "/index.html"):
-            self._send_bytes(_read_web_asset("index.html"), "text/html; charset=utf-8")
+        if path in ("/", "/qtp.html", "/index.html"):
+            self._send_bytes(_read_web_asset("qtp.html"), "text/html; charset=utf-8")
             return
         if path == "/theme.css":
             self._send_bytes(_read_web_asset("theme.css"), "text/css; charset=utf-8")
@@ -138,7 +138,7 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
                 return
             except OSError:
                 pass
-        if path in ("/docs/KULLANIM.md", "/docs/KISAYOLLAR.md", "/docs/SSS.md"):
+        if path in ("/docs/KULLANIM.md", "/docs/KURULUM.md", "/docs/KISAYOLLAR.md", "/docs/SSS.md"):
             doc_file = get_bundled_docs_dir() / Path(path).name
             if doc_file.is_file():
                 self._send_bytes(doc_file.read_bytes(), "text/markdown; charset=utf-8")
@@ -266,6 +266,34 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
                     str(body.get("target", body.get("path", ""))),
                     mode=str(body.get("mode", "replace")),
                 )
+            )
+            return
+        if path == "/api/items/add":
+            self._send_result(
+                self.engine.op_add_item(
+                    str(body.get("text", "")),
+                    keys=str(body.get("keys", "")),
+                    group=str(body.get("group", "Genel")),
+                    label=str(body.get("label", "")),
+                    terminator=body.get("terminator", "<E<N<D|"),
+                )
+            )
+            return
+        if path == "/api/items/update":
+            self._send_result(
+                self.engine.op_update_item(
+                    str(body.get("target", body.get("raw_key", ""))),
+                    keys=body.get("keys"),
+                    group=body.get("group"),
+                    label=body.get("label"),
+                    text=body.get("text"),
+                    terminator=body.get("terminator"),
+                )
+            )
+            return
+        if path == "/api/items/delete":
+            self._send_result(
+                self.engine.op_delete_item(str(body.get("target", body.get("raw_key", ""))))
             )
             return
         if path == "/api/shutdown":
