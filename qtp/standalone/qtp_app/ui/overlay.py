@@ -62,13 +62,10 @@ from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.paster import capture_previous_app
 from qtp_app.ui.search import FuzzyMatcher
 from qtp_app.ui.theme import (
-    ACCENT_CYAN,
-    ACCENT_PURPLE,
     ANIMATION_DURATION_MS,
     ANIMATION_SLIDE_OFFSET_PX,
     BADGE_RADIUS,
     CATEGORY_TABS,
-    DARK_PALETTE,
     FONT_FAMILY_PRIMARY,
     FONT_SIZE_META,
     FONT_SIZE_TEXT,
@@ -90,8 +87,10 @@ from qtp_app.ui.theme import (
     WINDOW_WIDTH,
     build_dialog_stylesheet,
     build_overlay_stylesheet,
+    build_qpalette,
     create_app_font,
     load_bundled_fonts,
+    parse_qcolor,
     resolve_palette,
 )
 
@@ -229,15 +228,21 @@ class SnippetItemDelegate(QStyledItemDelegate):
             float(ROW_RADIUS),
             float(ROW_RADIUS),
         )
+        painter.fillPath(path, parse_qcolor(self.palette.card_bg))
         if is_selected:
-            painter.fillPath(path, QColor(self.palette.selected_bg))
-            pen = QPen(QColor(self.palette.selected_border), 1.4)
+            painter.fillPath(path, parse_qcolor(self.palette.card_selected))
+            pen = QPen(parse_qcolor(self.palette.selected_border), 1.4)
             painter.setPen(pen)
             painter.drawPath(path)
         elif is_hovered:
-            painter.fillPath(path, QColor(self.palette.hover_bg))
+            painter.fillPath(path, parse_qcolor(self.palette.card_hover))
+            pen = QPen(parse_qcolor(self.palette.border), 1.0)
+            painter.setPen(pen)
+            painter.drawPath(path)
         else:
-            painter.fillPath(path, QColor(self.palette.surface))
+            pen = QPen(parse_qcolor(self.palette.border), 1.0)
+            painter.setPen(pen)
+            painter.drawPath(path)
 
         badge_rect = QRect(
             card_rect.right() - PADDING_ROW_H - self.BADGE_WIDTH,
@@ -254,10 +259,10 @@ class SnippetItemDelegate(QStyledItemDelegate):
             float(BADGE_RADIUS),
             float(BADGE_RADIUS),
         )
-        painter.fillPath(badge_path, QColor(self.palette.badge_bg))
+        painter.fillPath(badge_path, parse_qcolor(self.palette.badge_bg))
         badge_font = create_app_font(self.font_family, FONT_SIZE_META, bold=True)
         painter.setFont(badge_font)
-        painter.setPen(QColor(self.palette.badge_text))
+        painter.setPen(parse_qcolor(self.palette.badge_text))
         painter.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, _extract_badge(str(item.get("keys", ""))))
 
         right_reserved = self.BADGE_WIDTH + PADDING_ROW_H + 14
@@ -272,9 +277,11 @@ class SnippetItemDelegate(QStyledItemDelegate):
                 float(BADGE_RADIUS),
                 float(BADGE_RADIUS),
             )
-            painter.fillPath(copy_path, QColor(self.palette.pill_bg))
-            painter.setPen(QColor(self.palette.text_secondary))
-            painter.setFont(create_app_font(self.font_family, FONT_SIZE_META))
+            painter.fillPath(copy_path, parse_qcolor(self.palette.btn_bg))
+            painter.setPen(QPen(parse_qcolor(self.palette.btn_border), 1.0))
+            painter.drawPath(copy_path)
+            painter.setPen(parse_qcolor(self.palette.btn_text))
+            painter.setFont(create_app_font(self.font_family, FONT_SIZE_META, bold=True))
             painter.drawText(copy_rect, Qt.AlignmentFlag.AlignCenter, "Kopyala")
             right_reserved += self.COPY_BTN_WIDTH + 8
 
@@ -318,7 +325,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
         meta_text = f"{grp}  ·  {lbl}" if lbl else grp
         meta_font = create_app_font(self.font_family, FONT_SIZE_META)
         painter.setFont(meta_font)
-        painter.setPen(QColor(self.palette.text_muted))
+        painter.setPen(parse_qcolor(self.palette.text_muted))
         elided_meta = QFontMetrics(meta_font).elidedText(
             meta_text, Qt.TextElideMode.ElideRight, meta_rect.width()
         )
@@ -389,6 +396,7 @@ class IniSnippetViewerDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("INI Kaydını Göster")
         self.resize(560, 320)
+        self.setPalette(build_qpalette(palette))
         self.setStyleSheet(build_dialog_stylesheet(palette))
 
         layout = QVBoxLayout(self)
@@ -429,6 +437,7 @@ class SnippetEditorDialog(QDialog):
         is_edit = item is not None
         self.setWindowTitle("Hazır Cevap Düzenle" if is_edit else "Yeni Hazır Cevap Ekle")
         self.resize(540, 420)
+        self.setPalette(build_qpalette(palette))
         self.setStyleSheet(build_dialog_stylesheet(palette))
         self.result_payload: dict[str, Any] | None = None
 
@@ -513,6 +522,7 @@ class OverlayWindow(QWidget):
     delete_item_requested = pyqtSignal(dict)
     settings_requested = pyqtSignal()
     help_requested = pyqtSignal()
+    theme_toggle_requested = pyqtSignal(str)
     window_resized = pyqtSignal(int, int)
 
     def __init__(
@@ -530,6 +540,7 @@ class OverlayWindow(QWidget):
         on_add: Callable[[dict[str, Any]], Any] | None = None,
         on_edit: Callable[[dict[str, Any], dict[str, Any]], Any] | None = None,
         on_delete: Callable[[dict[str, Any]], Any] | None = None,
+        on_theme_change: Callable[[str], Any] | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
@@ -541,6 +552,7 @@ class OverlayWindow(QWidget):
         self._on_add_cb = on_add
         self._on_edit_cb = on_edit
         self._on_delete_cb = on_delete
+        self._on_theme_cb = on_theme_change
         self._active_category = (last_category or "ALL").upper()
         self._last_cat_by_hotkey: dict[str, str] = dict(last_category_by_hotkey or {})
         self._active_hotkey_trigger: str = "all"
@@ -592,11 +604,11 @@ class OverlayWindow(QWidget):
 
         self.card = QFrame(self)
         self.card.setObjectName("OverlayCard")
-        shadow = QGraphicsDropShadowEffect(self.card)
-        shadow.setBlurRadius(28)
-        shadow.setOffset(0, 8)
-        shadow.setColor(QColor(0, 0, 0, 140))
-        self.card.setGraphicsEffect(shadow)
+        self._card_shadow = QGraphicsDropShadowEffect(self.card)
+        self._card_shadow.setBlurRadius(28)
+        self._card_shadow.setOffset(0, 8)
+        self._card_shadow.setColor(parse_qcolor(self._palette.shadow_color))
+        self.card.setGraphicsEffect(self._card_shadow)
         outer.addWidget(self.card)
 
         card_layout = QVBoxLayout(self.card)
@@ -634,6 +646,12 @@ class OverlayWindow(QWidget):
         self.add_btn.setToolTip("Yeni hazır cevap ekle")
         self.add_btn.clicked.connect(self._open_add_dialog)
         top_row.addWidget(self.add_btn)
+
+        self.theme_btn = QPushButton("🌙 Koyu", self.card)
+        self.theme_btn.setObjectName("HeaderActionBtn")
+        self.theme_btn.setToolTip("Açık / koyu temayı değiştir")
+        self.theme_btn.clicked.connect(self.toggle_theme)
+        top_row.addWidget(self.theme_btn)
 
         self.help_btn = QPushButton("Yardım (F1)", self.card)
         self.help_btn.setObjectName("HeaderActionBtn")
@@ -725,10 +743,44 @@ class OverlayWindow(QWidget):
 
     def _apply_theme(self) -> None:
         self._palette = resolve_palette(self._theme_setting, os_is_dark=self._detect_os_dark())
+        qpal = build_qpalette(self._palette)
+        app = QApplication.instance()
+        if app is not None:
+            app.setPalette(qpal)
+        self.setPalette(qpal)
+        self._card_shadow.setColor(parse_qcolor(self._palette.shadow_color))
         self.setStyleSheet(build_overlay_stylesheet(self._palette, translucent=False))
+        is_dark = self._palette.name == "dark"
+        self.theme_btn.setText("☀️ Açık" if is_dark else "🌙 Koyu")
+        self.theme_btn.setToolTip("Açık temaya geç" if is_dark else "Koyu temaya geç")
         self.list_delegate.set_palette(self._palette)
-        self.list_view.viewport().update()
+        for w in (
+            self.card,
+            self.search_input,
+            self.shortcut_chip,
+            self.add_btn,
+            self.theme_btn,
+            self.help_btn,
+            self.settings_btn,
+            self.toast_label,
+            self.list_view,
+        ):
+            w.setPalette(qpal)
+            w.style().unpolish(w)
+            w.style().polish(w)
         self._update_pill_styles()
+        self.list_view.viewport().update()
+        self.update()
+
+    def toggle_theme(self) -> None:
+        """Açık ve koyu tema arasında tek tıkla geçiş yapar."""
+        next_theme = "light" if self._palette.name == "dark" else "dark"
+        self._theme_setting = next_theme
+        self._apply_theme()
+        if self._on_theme_cb is not None:
+            self._on_theme_cb(next_theme)
+        self.theme_toggle_requested.emit(next_theme)
+        self.show_toast("Koyu tema etkinleştirildi ✔" if next_theme == "dark" else "Açık tema etkinleştirildi ✔")
 
     def apply_settings(
         self,
@@ -837,6 +889,8 @@ class OverlayWindow(QWidget):
         if not item:
             return
         menu = QMenu(self)
+        menu.setPalette(build_qpalette(self._palette))
+        menu.setStyleSheet(build_overlay_stylesheet(self._palette))
         act_paste = QAction("Yapıştır", menu)
         act_copy = QAction("Kopyala", menu)
         act_edit = QAction("Düzenle", menu)

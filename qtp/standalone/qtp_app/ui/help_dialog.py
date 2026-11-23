@@ -17,9 +17,9 @@ from PyQt6.QtWidgets import (
 
 from qtp_app.core.engine import build_cli_help_text, get_bundled_docs_dir, read_doc_text
 from qtp_app.ui.theme import (
-    ACCENT_CYAN,
     ThemePalette,
     build_dialog_stylesheet,
+    build_qpalette,
     create_app_font,
     load_bundled_fonts,
 )
@@ -36,16 +36,19 @@ def markdown_to_html(md_text: str, palette: ThemePalette) -> str:
     lines = md_text.splitlines()
     out: list[str] = [
         f"<html><head><meta charset='utf-8'><style>"
-        f"body {{ color: {palette.text_primary}; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.55; }}"
-        f"h1 {{ font-size: 20px; color: {ACCENT_CYAN}; border-bottom: 1px solid {palette.border}; padding-bottom: 6px; }}"
-        f"h2 {{ font-size: 16px; color: {ACCENT_CYAN}; margin-top: 16px; }}"
+        f"body {{ background-color: {palette.input_bg}; color: {palette.text_primary}; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.55; }}"
+        f"h1 {{ font-size: 20px; color: {palette.heading_color}; border-bottom: 1px solid {palette.border}; padding-bottom: 6px; }}"
+        f"h2 {{ font-size: 16px; color: {palette.heading_color}; margin-top: 16px; }}"
         f"h3 {{ font-size: 14px; color: {palette.text_primary}; margin-top: 12px; }}"
-        f"code {{ background: {palette.surface_alt}; padding: 1px 5px; border-radius: 4px; font-family: monospace; }}"
-        f"pre {{ background: {palette.surface_alt}; padding: 10px; border-radius: 8px; border: 1px solid {palette.border}; }}"
+        f"a {{ color: {palette.heading_color}; }}"
+        f"code {{ background: {palette.surface_alt}; color: {palette.text_primary}; border: 1px solid {palette.border}; padding: 1px 5px; border-radius: 4px; font-family: monospace; }}"
+        f"pre {{ background: {palette.surface_alt}; color: {palette.text_primary}; padding: 10px; border-radius: 8px; border: 1px solid {palette.border}; }}"
+        f"pre code {{ border: none; padding: 0; background: transparent; }}"
         f"table {{ border-collapse: collapse; width: 100%; margin: 10px 0; }}"
-        f"th, td {{ border: 1px solid {palette.border}; padding: 6px 8px; text-align: left; }}"
-        f"th {{ background: {palette.pill_bg}; font-weight: bold; }}"
-        f"blockquote {{ border-left: 3px solid {ACCENT_CYAN}; padding-left: 10px; color: {palette.text_secondary}; }}"
+        f"th, td {{ border: 1px solid {palette.border}; color: {palette.text_primary}; padding: 6px 8px; text-align: left; }}"
+        f"th {{ background: {palette.surface_alt}; color: {palette.text_primary}; font-weight: bold; }}"
+        f"blockquote {{ border-left: 3px solid {palette.heading_color}; padding-left: 10px; color: {palette.text_secondary}; }}"
+        f"hr {{ border: none; border-top: 1px solid {palette.border}; }}"
         f"</style></head><body>"
     ]
 
@@ -159,6 +162,7 @@ class HelpDialog(QDialog):
         self._palette = palette
         self._font_family = load_bundled_fonts()
         self.setFont(create_app_font(self._font_family, 13))
+        self.setPalette(build_qpalette(palette))
         self.setStyleSheet(build_dialog_stylesheet(palette))
 
         layout = QVBoxLayout(self)
@@ -174,6 +178,7 @@ class HelpDialog(QDialog):
             ("Sorun Giderme (SSS)", "SSS.md"),
         ):
             browser = QTextBrowser(self)
+            browser.setPalette(build_qpalette(palette))
             browser.setOpenExternalLinks(False)
             browser.setFont(create_app_font(self._font_family, 13))
             md_text = read_doc_markdown(doc_file)
@@ -184,6 +189,7 @@ class HelpDialog(QDialog):
 
         cli_help_text = build_cli_help_text(verbose=True)
         cli_browser = QTextBrowser(self)
+        cli_browser.setPalette(build_qpalette(palette))
         cli_browser.setOpenExternalLinks(False)
         cli_browser.setFont(create_app_font(self._font_family, 13))
         cli_md = f"# QTP CLI & Parametreler (--verbose --help)\n\n```\n{cli_help_text}\n```\n"

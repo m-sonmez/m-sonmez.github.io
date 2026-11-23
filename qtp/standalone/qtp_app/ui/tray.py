@@ -8,7 +8,7 @@ from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QMenu, QSystemTrayIcon, QWidget
 
-from qtp_app.ui.theme import get_asset_path
+from qtp_app.ui.theme import ThemePalette, build_overlay_stylesheet, build_qpalette, get_asset_path
 
 
 def load_tray_icon() -> QIcon:
@@ -46,6 +46,7 @@ class QtpTrayIcon(QSystemTrayIcon):
         on_help: Callable[[], None],
         on_quit: Callable[[], None],
         open_hotkey: str = "Win+Alt+Space",
+        palette: ThemePalette | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__(load_tray_icon(), parent)
@@ -80,8 +81,14 @@ class QtpTrayIcon(QSystemTrayIcon):
         self.menu.addAction(self.act_quit)
 
         self.update_hotkeys_label(open_hotkey)
+        if palette is not None:
+            self.apply_palette(palette)
         self.setContextMenu(self.menu)
         self.activated.connect(self._handle_activated)
+
+    def apply_palette(self, palette: ThemePalette) -> None:
+        self.menu.setPalette(build_qpalette(palette))
+        self.menu.setStyleSheet(build_overlay_stylesheet(palette))
 
     def update_hotkeys_label(self, open_hotkey: str) -> None:
         hk = (open_hotkey or "").strip()

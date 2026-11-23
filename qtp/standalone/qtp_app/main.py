@@ -126,6 +126,8 @@ def apply_reload_event_gui(
 
     if event.theme_changed or event.data_path_changed:
         overlay.apply_settings(theme=engine.settings["theme"], ini_path=str(engine.ini_path))
+        if event.theme_changed and hasattr(tray, "apply_palette") and hasattr(overlay, "_palette"):
+            tray.apply_palette(overlay._palette)
 
     if event.window_size_changed:
         ws = engine.settings.get("window_size") or [720, 520]
@@ -183,7 +185,7 @@ def launch_gui(
         from qtp_app.ui.help_dialog import HelpDialog
         from qtp_app.ui.overlay import OverlayWindow
         from qtp_app.ui.settings_window import SettingsWindow
-        from qtp_app.ui.theme import build_dialog_stylesheet, resolve_palette
+        from qtp_app.ui.theme import build_dialog_stylesheet, build_qpalette, resolve_palette
         from qtp_app.ui.tray import QtpTrayIcon
     except ImportError as exc:
         msg = (
@@ -254,6 +256,9 @@ def launch_gui(
             overlay.set_items(engine.items)
         return res
 
+    def handle_theme_change(new_theme: str) -> None:
+        engine.op_set_setting("theme", new_theme)
+
     effective_cat = (initial_category or str(engine.settings.get("last_category", "ALL"))).strip().upper() or "ALL"
     ws = engine.settings.get("window_size") or [720, 520]
     overlay = OverlayWindow(
@@ -269,6 +274,7 @@ def launch_gui(
         on_add=handle_add,
         on_edit=handle_edit,
         on_delete=handle_delete,
+        on_theme_change=handle_theme_change,
     )
     logger.info(
         "GUI başlatılıyor (platform=%s, tema=%s, yazı_tipi=%s, ilk_kategori=%s, ilk_sorgu=%r).",
@@ -290,7 +296,9 @@ def launch_gui(
     overlay.window_resized.connect(persist_window_size)
 
     def current_palette() -> Any:
-        return resolve_palette(str(engine.settings.get("theme", "light")), os_is_dark=True)
+        return resolve_palette(str(engine.settings.get("theme", "light")), os_is_dark=overlay._detect_os_dark())
+
+    app.setPalette(build_qpalette(current_palette()))
 
     def open_help() -> None:
         dlg = HelpDialog(current_palette(), parent=overlay if overlay.isVisible() else None)
@@ -327,6 +335,7 @@ def launch_gui(
             merged["last_category_by_hotkey"] = overlay.last_category_by_hotkey
             engine.save_current_settings(merged)
             overlay.apply_settings(theme=engine.settings["theme"], ini_path=str(engine.ini_path))
+            tray.apply_palette(current_palette())
             ws_new = engine.settings.get("window_size") or [720, 520]
             overlay.resize(int(ws_new[0]), int(ws_new[1]))
             conflicts = register_all_hotkeys()
@@ -365,6 +374,7 @@ def launch_gui(
         dlg = QDialog(overlay if overlay.isVisible() else None)
         dlg.setWindowTitle("Yedekleme ve Geri Yükleme")
         dlg.resize(520, 400)
+        dlg.setPalette(build_qpalette(pal))
         dlg.setStyleSheet(build_dialog_stylesheet(pal))
         lay = QVBoxLayout(dlg)
         lay.addWidget(QLabel(f"Yedek Klasörü: {engine.work_dir / 'backups'}"))
@@ -470,7 +480,9 @@ def launch_gui(
         on_help=open_help,
         on_quit=quit_app,
         open_hotkey=open_hk,
+        palette=current_palette(),
     )
+    overlay.theme_toggle_requested.connect(lambda _t: tray.apply_palette(current_palette()))
     tray.setVisible(bool(engine.settings.get("tray_icon", True)))
 
     bridge.file_reloaded.connect(

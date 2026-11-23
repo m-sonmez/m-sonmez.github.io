@@ -47,6 +47,7 @@ from qtp_app.ui.help_dialog import HelpDialog
 from qtp_app.ui.theme import (
     ThemePalette,
     build_dialog_stylesheet,
+    build_qpalette,
     create_app_font,
     load_bundled_fonts,
 )
@@ -323,6 +324,7 @@ class SettingsWindow(QDialog):
         self._base_settings = copy.deepcopy(current_settings)
         self._font_family = load_bundled_fonts()
         self.setFont(create_app_font(self._font_family, 13))
+        self.setPalette(build_qpalette(palette))
         self.setStyleSheet(build_dialog_stylesheet(palette))
         self.result_settings: dict[str, Any] | None = None
         self.hk_rows: dict[str, HotkeyRow] = {}
@@ -345,6 +347,7 @@ class SettingsWindow(QDialog):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         container = QWidget()
+        container.setObjectName("DialogScrollContainer")
         container_layout = QVBoxLayout(container)
         container_layout.setSpacing(12)
 
@@ -624,14 +627,14 @@ class SettingsWindow(QDialog):
         hk_map = self._current_hotkeys_map()
         conflicts = detect_hotkey_conflicts(hk_map)
         if not conflicts:
-            self.conflict_label.setStyleSheet("color: #10B981; font-weight: 600;")
+            self.conflict_label.setStyleSheet(f"color: {self._palette.success_text}; font-weight: 600;")
             self.conflict_label.setText("Çakışma algılanmadı ✔")
             return
         lines = []
         for slot, msgs in conflicts.items():
             combo = hk_map.get(slot, "")
             lines.append(f"[{slot}: {combo}] {'; '.join(msgs)}")
-        self.conflict_label.setStyleSheet("color: #F59E0B; font-weight: 600;")
+        self.conflict_label.setStyleSheet(f"color: {self._palette.warning_text}; font-weight: 600;")
         self.conflict_label.setText("\n".join(lines))
 
     def _populate(self, data: dict[str, Any]) -> None:

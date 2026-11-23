@@ -78,7 +78,7 @@ class QtpWebServer(ThreadingHTTPServer):
 
 
 class QtpWebRequestHandler(BaseHTTPRequestHandler):
-    server_version = "QTPWeb/2.2.0"
+    server_version = "QTPWeb/2.2.1"
 
     @property
     def engine(self) -> QtpEngine:

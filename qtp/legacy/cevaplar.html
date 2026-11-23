@@ -25,6 +25,8 @@
     };
   </script>
   <style>
+    :root { color-scheme: light; }
+    :root.dark { color-scheme: dark; }
     mark { background: #fde047; color: #0f172a; padding: 0 2px; border-radius: 3px; }
     .dark mark { background: #eab308; color: #0f172a; }
     .card-copied { box-shadow: 0 0 0 2px #10b981 !important; }
@@ -990,6 +992,7 @@
       }
     });
 
+    el.themeBtn.textContent = (typeof document.documentElement?.classList?.contains === 'function' && document.documentElement.classList.contains('dark')) ? '☀️' : '🌙';
     el.themeBtn.addEventListener('click', () => {
       const isDark = document.documentElement.classList.toggle('dark');
       el.themeBtn.textContent = isDark ? '☀️' : '🌙';

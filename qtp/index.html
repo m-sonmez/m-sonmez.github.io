@@ -37,6 +37,8 @@
   </script>
 
   <style>
+    :root { color-scheme: light; }
+    :root.dark { color-scheme: dark; }
     [x-cloak] { display: none !important; }
     mark { background: #fde047; color: #0f172a; padding: 0 2px; border-radius: 3px; }
     .dark mark { background: #eab308; color: #0f172a; }
@@ -2476,10 +2478,10 @@
   <input x-ref="importInput" type="file" multiple accept=".ini,.json" class="hidden" @change="handleFileInput($event)" />
 
   <div x-show="dragActive" x-cloak class="fixed inset-0 z-50 bg-indigo-950/80 backdrop-blur-sm flex items-center justify-center p-6 pointer-events-none">
-    <div class="max-w-lg w-full rounded-3xl border-2 border-dashed border-indigo-300 bg-slate-900/90 p-10 text-center text-white shadow-2xl">
+    <div class="max-w-lg w-full rounded-3xl border-2 border-dashed border-indigo-400 dark:border-indigo-300 bg-white/95 dark:bg-slate-900/95 p-10 text-center text-slate-900 dark:text-white shadow-2xl">
       <div class="text-5xl mb-3">📥</div>
       <h2 class="text-xl font-bold">Dosyaları Bırakın (.ini veya .json)</h2>
-      <p class="text-sm text-indigo-200 mt-1">Kendi <code>QuickTextPaste.ini</code>, <code>data.json</code> veya tam yedek dosyalarınızı sürükleyip bırakabilirsiniz.</p>
+      <p class="text-sm text-indigo-700 dark:text-indigo-200 mt-1">Kendi <code>QuickTextPaste.ini</code>, <code>data.json</code> veya tam yedek dosyalarınızı sürükleyip bırakabilirsiniz.</p>
     </div>
   </div>
 
@@ -3038,7 +3040,7 @@
     <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
         <h3 class="font-bold text-base" x-text="editorMode === 'add' ? '➕ Yeni Hazır Cevap Ekle' : '✏️ Hazır Cevabı Düzenle'"></h3>
-        <button @click="editorOpen = false" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button @click="editorOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="p-5 space-y-4 max-h-[78vh] overflow-y-auto">
@@ -3121,7 +3123,7 @@
     <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
         <h3 class="font-bold text-base">✏️ Toplu Düzenle (<span x-text="selectedIds.length"></span> Seçili Kayıt)</h3>
-        <button @click="bulkOpen = false" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button @click="bulkOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="p-5 space-y-3 text-sm max-h-[75vh] overflow-y-auto">
@@ -3192,7 +3194,7 @@
     <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
         <h3 class="font-bold text-base">📥 İçe Aktarma Seçenekleri</h3>
-        <button @click="importOpen = false" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button @click="importOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="p-5 space-y-4 text-sm">
@@ -3255,7 +3257,7 @@
         <h3 class="font-bold text-base">
           ⚙️ QuickTextPaste.ini Dışa Aktar (<span x-text="iniExportOnlySelected ? selectedIds.length : items.length"></span> Kayıt)
         </h3>
-        <button @click="iniModalOpen = false" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button @click="iniModalOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="p-5 space-y-4 text-sm">
@@ -3304,7 +3306,7 @@
     <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
         <h3 class="font-bold text-base">⚙️ Yedekler, Depolama & PWA Ayarları</h3>
-        <button @click="settingsOpen = false" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button @click="settingsOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="p-5 space-y-4 text-xs max-h-[78vh] overflow-y-auto">
@@ -3402,7 +3404,7 @@
     <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
         <h3 class="font-bold text-base">⚡ QuickTextPaste Gereksinimi & Full-Stack Köprü</h3>
-        <button @click="qtpModalOpen = false" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button @click="qtpModalOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="p-5 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
@@ -3475,7 +3477,7 @@
             <div class="pt-1">
               <div class="text-[11px] text-slate-500 dark:text-slate-400 mb-1">Veya PowerShell ile tek satırda otomatik kur & başlat:</div>
               <div class="flex items-center gap-2">
-                <code class="flex-1 px-2.5 py-2 rounded-lg bg-slate-900 text-emerald-300 font-mono text-[11px] overflow-x-auto" x-text="qtpLinks.psCommand"></code>
+                <code class="flex-1 px-2.5 py-2 rounded-lg bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 font-mono text-[11px] overflow-x-auto" x-text="qtpLinks.psCommand"></code>
                 <button @click="copyCommand(qtpLinks.psCommand)" class="px-2.5 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 font-semibold shrink-0">📋 Kopyala</button>
               </div>
             </div>
@@ -3518,7 +3520,7 @@
     <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
         <h3 class="font-bold text-base">📁 Grup Yönetimi (<span x-text="allGroups.length"></span> Grup)</h3>
-        <button @click="groupsModalOpen = false" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button @click="groupsModalOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="p-5 space-y-4 text-xs max-h-[75vh] overflow-y-auto">
