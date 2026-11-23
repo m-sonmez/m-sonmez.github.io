@@ -1,0 +1,91 @@
+name: Publish QTP Linux x64 Binary (qtp.bin)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'qtp/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish-linux-bin:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Setup Python 3.12 and dependencies
+        working-directory: qtp
+        run: |
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv -r requirements-dev.txt
+
+      - name: Run full test & coverage gate before build
+        working-directory: qtp
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          uv run --python .venv python -m unittest discover -s tests -v
+          uv run --python .venv pytest -q --cov=qtp_app.core --cov=qtp_app.ui.search --cov=qtp_app.tui --cov=qtp_app.web --cov=qtp_app.cli --cov-report=term-missing --cov-fail-under=90
+
+      - name: Build native Linux x64 ELF binary
+        working-directory: qtp
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          .venv/bin/python -m qtp_app.build.build_unix
+
+      - name: Verify ELF header, size and clean-dir stripped-PATH execution
+        run: |
+          file qtp/dist/qtp.bin
+          python3 -c '
+          from pathlib import Path
+          p = Path("qtp/dist/qtp.bin")
+          raw = p.read_bytes()
+          assert raw[:4] == b"\x7fELF", f"Not ELF: {raw[:4]!r}"
+          assert len(raw) <= 50 * 1024 * 1024, f"Too large: {len(raw)}"
+          print("ELF verified, bytes:", len(raw))
+          '
+          mkdir -p /tmp/qtp_clean
+          cp qtp/dist/qtp.bin /tmp/qtp_clean/qtp.bin
+          chmod +x /tmp/qtp_clean/qtp.bin
+          (
+            cd /tmp/qtp_clean
+            export PATH="/usr/bin:/bin" HOME="/tmp/qtp_clean_home" LANG="C" LC_ALL="C" QT_QPA_PLATFORM="offscreen"
+            mkdir -p "$HOME"
+            ./qtp.bin --selftest
+            ./qtp.bin --version
+            ./qtp.bin --list-categories --json >/dev/null
+            ./qtp.bin --search "şifre" --json >/dev/null
+            printf "c\nq\n" | ./qtp.bin --tui >/dev/null
+            ./qtp.bin --web --port 0 --shutdown-after 0.5
+          )
+          cp qtp/dist/qtp.bin qtp/qtp.bin
+          chmod +x qtp/qtp.bin
+
+      - name: Commit and push qtp/qtp.bin to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git update-index --chmod=+x qtp/qtp.bin || true
+          git add qtp/qtp.bin
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(qtp/dist): publish Linux x64 portable binary qtp.bin [skip ci]"
+            for i in 1 2 3; do
+              if git push origin main; then
+                exit 0
+              fi
+              git pull --rebase origin main
+            done
+            exit 1
+          fi
