@@ -12,6 +12,8 @@
   --selected-bg: rgba(124, 58, 237, 0.28);
   --badge-bg: rgba(34, 211, 238, 0.14);
   --badge-text: #22D3EE;
+  --highlight-bg: rgba(34, 211, 238, 0.28);
+  --highlight-text: #FFFFFF;
   --pill-bg: rgba(255, 255, 255, 0.07);
   --radius-window: 12px;
   --radius-row: 10px;
@@ -43,9 +45,9 @@ body {
   gap: 10px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
 }
-.top-row { display: flex; gap: 8px; align-items: center; }
+.top-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .search-input {
-  flex: 1;
+  flex: 1 1 220px;
   background: var(--surface);
   color: var(--text-primary);
   border: 1.5px solid var(--border);
@@ -62,9 +64,19 @@ body {
   border-radius: 8px;
   padding: 7px 12px;
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .action-btn:hover { background: var(--hover-bg); color: var(--text-primary); }
+.action-btn.primary {
+  background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
+  color: #fff;
+  border-color: transparent;
+}
 .pills-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .pill {
   background: var(--pill-bg);
@@ -82,7 +94,7 @@ body {
 }
 .snippet-list {
   flex: 1;
-  max-height: 350px;
+  max-height: 360px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -104,8 +116,23 @@ body {
   background: var(--selected-bg);
   border-color: var(--accent-cyan);
 }
-.snippet-text { font-size: 14px; line-height: 1.35; }
+.snippet-main { min-width: 0; flex: 1; }
+.snippet-text { font-size: 14px; line-height: 1.35; word-break: break-word; }
 .snippet-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.row-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.hl {
+  background: var(--highlight-bg);
+  color: var(--highlight-text);
+  font-weight: 700;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 28px 12px;
+  font-size: 13px;
+}
 .badge {
   background: var(--badge-bg);
   color: var(--badge-text);
@@ -116,12 +143,54 @@ body {
 }
 .footer-bar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   border-top: 1px solid var(--border);
   padding-top: 8px;
   font-size: 11px;
   color: var(--text-muted);
+}
+.links-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  font-size: 11px;
+}
+.links-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.mode-badge {
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.link-chip {
+  background: var(--pill-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.link-chip:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--accent-cyan);
 }
 .toast {
   position: fixed;
@@ -134,6 +203,7 @@ body {
   padding: 8px 14px;
   font-size: 12px;
   display: none;
+  z-index: 50;
 }
 .modal {
   position: fixed;
@@ -143,15 +213,27 @@ body {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  z-index: 40;
 }
 .modal-card {
-  width: 600px;
+  width: 660px;
   max-width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-window);
   padding: 16px;
 }
-pre { white-space: pre-wrap; background: var(--surface-alt); padding: 10px; border-radius: 8px; font-size: 12px; }
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--surface-alt);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+}

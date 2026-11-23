@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.resources
 import json
 import os
+import posixpath
 import sys
 import threading
 import urllib.parse
@@ -14,7 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from qtp_app.core.engine import OperationResult, QtpEngine
+from qtp_app.core.engine import OperationResult, QtpEngine, get_bundled_docs_dir
 from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.operations import OPERATIONS
 
@@ -31,20 +32,24 @@ _EXIT_TO_HTTP_STATUS = {
 
 
 def _read_web_asset(filename: str) -> bytes:
+    return _read_pkg_asset("web", filename)
+
+
+def _read_pkg_asset(subdir: str, filename: str) -> bytes:
     try:
         files_fn = getattr(importlib.resources, "files", None)
         if files_fn is not None:
             pkg_root = Path(str(files_fn("qtp_app")))
-            candidate = pkg_root / "web" / filename
+            candidate = pkg_root / subdir / filename
             if candidate.is_file():
                 return candidate.read_bytes()
     except Exception:
         pass
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        meipass_candidate = Path(getattr(sys, "_MEIPASS")) / "qtp_app" / "web" / filename
+        meipass_candidate = Path(getattr(sys, "_MEIPASS")) / "qtp_app" / subdir / filename
         if meipass_candidate.is_file():
             return meipass_candidate.read_bytes()
-    local = Path(__file__).resolve().parent / "web" / filename
+    local = Path(__file__).resolve().parent / subdir / filename
     return local.read_bytes()
 
 
@@ -113,7 +118,12 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
-        path = parsed.path
+        raw_path = parsed.path or "/"
+        path = posixpath.normpath(raw_path)
+        if not path.startswith("/"):
+            path = "/" + path
+        if raw_path.endswith("/") and path != "/":
+            path += "/"
         qs = urllib.parse.parse_qs(parsed.query)
 
         if path in ("/", "/index.html"):
@@ -122,6 +132,17 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         if path == "/theme.css":
             self._send_bytes(_read_web_asset("theme.css"), "text/css; charset=utf-8")
             return
+        if path in ("/icon.svg", "/favicon.ico"):
+            try:
+                self._send_bytes(_read_pkg_asset("assets", "icon.svg"), "image/svg+xml; charset=utf-8")
+                return
+            except OSError:
+                pass
+        if path in ("/docs/KULLANIM.md", "/docs/KISAYOLLAR.md", "/docs/SSS.md"):
+            doc_file = get_bundled_docs_dir() / Path(path).name
+            if doc_file.is_file():
+                self._send_bytes(doc_file.read_bytes(), "text/markdown; charset=utf-8")
+                return
         if path == "/api":
             routes = [
                 {"op_id": op.op_id, "label": op.label_tr, "route": op.web_route}

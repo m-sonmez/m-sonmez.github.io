@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QTP — Hazır Cevaplar (Web Modu)</title>
-  <link rel="stylesheet" href="/theme.css" />
+  <title>QTP — Hazır Cevaplar (Web &amp; Çevrimdışı Arayüz)</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="stylesheet" href="./theme.css" />
 </head>
 <body>
   <main class="overlay-card" role="application" aria-label="QTP Hızlı Yapıştırma Katmanı">
@@ -12,7 +13,7 @@
       <input id="searchInput" class="search-input" type="text" placeholder="Ara… (mesaj, kategori, etiket)" autofocus />
       <button class="action-btn" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi">Kısayollar</button>
       <button class="action-btn" id="btnReload" title="INI Yeniden Yükle">Yenile</button>
-      <button class="action-btn" id="btnBackup" title="Anlık Yedek Al">Yedekle</button>
+      <button class="action-btn" id="btnBackup" title="Anlık Yedek Al / Dışa Aktar">Yedekle</button>
       <button class="action-btn" id="btnHelp" title="Türkçe Yardım (F1)">Yardım (F1)</button>
     </div>
 
@@ -23,6 +24,16 @@
       <span>↑↓ Gezin · ⏎ Yapıştır · Ctrl+⏎ Kopyala · Esc Kapat</span>
       <span id="itemCount">0 kayıt</span>
     </footer>
+
+    <nav class="links-bar" aria-label="Sürümler ve Bağlantılar">
+      <span id="modeBadge" class="mode-badge">Mod algılanıyor…</span>
+      <div class="links-group">
+        <a class="link-chip" href="./qtp.exe" download="qtp.exe">Windows (qtp.exe)</a>
+        <a class="link-chip" href="./qtp.bin" download="qtp.bin">Linux (qtp.bin)</a>
+        <a class="link-chip" href="./old.html">Eski Arayüz (old.html)</a>
+        <a class="link-chip" href="./cevaplar.html">Hızlı Pano</a>
+      </div>
+    </nav>
   </main>
 
   <div class="toast" id="toastBox"></div>
@@ -56,34 +67,530 @@
           <option value="Ctrl+Alt">Ctrl+Alt</option>
           <option value="Ctrl+Alt+Shift">Ctrl+Alt+Shift</option>
           <option value="Ctrl+Shift">Ctrl+Shift</option>
+          <option value="Alt+Shift">Alt+Shift</option>
+          <option value="Win+Shift">Win+Shift</option>
+          <option value="Win+Ctrl+Alt">Win+Ctrl+Alt</option>
+          <option value="Win+Ctrl+Shift">Win+Ctrl+Shift</option>
+          <option value="Win+Alt+Shift">Win+Alt+Shift</option>
+          <option value="Win+Ctrl+Alt+Shift">Win+Ctrl+Alt+Shift</option>
           <option value="Ctrl">Ctrl</option>
+          <option value="Alt">Alt</option>
+          <option value="Shift">Shift</option>
           <option value="Win">Win</option>
         </select>
         <button class="action-btn" id="btnApplyMods">Değiştirici Uygula</button>
+        <button class="action-btn primary" id="btnDownloadSettings" style="display:none;">Ayarları İndir (qtp_settings.json)</button>
+      </div>
+      <div id="backupControls" style="display:none;margin-bottom:10px;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="action-btn primary" id="btnDownloadBackupJson">Tam Yedek İndir (.json v2)</button>
+        <button class="action-btn" id="btnDownloadIniUtf16">QuickTextPaste.ini İndir (UTF-16 LE BOM)</button>
       </div>
       <pre id="modalBody"></pre>
     </div>
   </div>
 
   <script>
-    const state = { category: 'ALL', query: '', items: [], categories: [], selected: 0, revision: 0, helpData: null, helpSection: 'all' };
+    const LS_ITEMS_KEY = 'qtp_unified_items_v1';
+    const LS_HOTKEYS_KEY = 'qtp_unified_hotkeys_v1';
+    const DEFAULT_TERMINATOR = '<E<N<D|';
+
+    const CATEGORY_TABS = [
+      { code: 'ALL', label: 'Tümü', hotkey_prefix: '' },
+      { code: 'A', label: 'A · İş Ortağı', hotkey_prefix: 'L-Win+A' },
+      { code: 'Z', label: 'Z · Kurye', hotkey_prefix: 'L-Win+Z' },
+      { code: 'X', label: 'X · Canlı Yardım', hotkey_prefix: 'L-Win+X' },
+      { code: 'Q', label: 'Q · Turkcell', hotkey_prefix: 'L-Win+Q' },
+    ];
+
+    const HOTKEY_PRESETS = {
+      recommended: { all: 'Win+Alt+Space', A: 'Win+Alt+A', Z: 'Win+Alt+Z', X: 'Win+Alt+X', Q: 'Win+Alt+Q' },
+      win_ctrl: { all: 'Win+Ctrl+Space', A: 'Win+Ctrl+A', Z: 'Win+Ctrl+Z', X: 'Win+Ctrl+X', Q: 'Win+Ctrl+Q' },
+      ctrl_alt: { all: 'Ctrl+Alt+Space', A: 'Ctrl+Alt+A', Z: 'Ctrl+Alt+Z', X: 'Ctrl+Alt+X', Q: 'Ctrl+Alt+Q' },
+      ctrl_shift_alt: { all: 'Ctrl+Alt+Shift+Space', A: 'Ctrl+Alt+Shift+A', Z: 'Ctrl+Alt+Shift+Z', X: 'Ctrl+Alt+Shift+X', Q: 'Ctrl+Alt+Shift+Q' },
+      function_keys: { all: 'Ctrl+Shift+F1', A: 'Ctrl+Shift+F2', Z: 'Ctrl+Shift+F3', X: 'Ctrl+Shift+F4', Q: 'Ctrl+Shift+F5' },
+      legacy_win: { all: 'Ctrl+Shift+Space', A: 'Win+A', Z: 'Win+Z', X: 'Win+X', Q: 'Win+Q' },
+    };
+
+    const CANONICAL_MODIFIERS = ['Win', 'Ctrl', 'Alt', 'Shift'];
+    const WIN_RESERVED = {
+      'Win+A': 'Windows Hızlı Ayarlar (Quick Settings) sistem kısayolu ile çakışır.',
+      'Win+Z': 'Windows 11 Ekran Düzeni (Snap Layouts) sistem kısayolu ile çakışır.',
+      'Win+X': 'Windows Hızlı Bağlantı Menüsü (Power User) ile çakışır.',
+      'Win+Q': 'Windows Arama sistem kısayolu ile çakışır.',
+      'Win+Space': 'Klavye düzeni değiştirme sistem kısayolu ile çakışır.',
+      'Win+Ctrl+Space': 'Windows klavye düzeni değiştirme sistem kısayolu ile çakışır.',
+      'Win+Ctrl+Q': 'Windows Hızlı Yardım (Quick Assist) sistem kısayolu ile çakışır.',
+      'Alt+Space': 'Pencere sistem menüsü kısayolu ile çakışır.',
+      'Ctrl+Alt+Delete': 'Windows güvenlik ekranı sistem kısayolu ile çakışır.',
+    };
+    const TRQ_ALTGR = {
+      'Ctrl+Alt+Q': 'Türkçe-Q klavyede AltGr+Q (@ işareti) yazımını engelleyebilir.',
+      'Ctrl+Alt+A': 'Türkçe-Q klavyede AltGr+A (æ karakteri) yazımını engelleyebilir.',
+      'Ctrl+Alt+E': 'Türkçe-Q klavyede AltGr+E (€ işareti) yazımını engelleyebilir.',
+      'Ctrl+Alt+S': 'Türkçe-Q klavyede AltGr+S (ß karakteri) yazımını engelleyebilir.',
+      'Ctrl+Alt+1': 'Türkçe-Q klavyede AltGr+1 (>) yazımını engelleyebilir.',
+      'Ctrl+Alt+2': 'Türkçe-Q klavyede AltGr+2 (£) yazımını engelleyebilir.',
+      'Ctrl+Alt+3': 'Türkçe-Q klavyede AltGr+3 (#) yazımını engelleyebilir.',
+      'Ctrl+Alt+4': 'Türkçe-Q klavyede AltGr+4 ($) yazımını engelleyebilir.',
+      'Ctrl+Alt+5': 'Türkçe-Q klavyede AltGr+5 (½) yazımını engelleyebilir.',
+      'Ctrl+Alt+6': 'Türkçe-Q klavyede AltGr+6 yazımını engelleyebilir.',
+      'Ctrl+Alt+7': 'Türkçe-Q klavyede AltGr+7 ({) yazımını engelleyebilir.',
+      'Ctrl+Alt+8': 'Türkçe-Q klavyede AltGr+8 ([) yazımını engelleyebilir.',
+      'Ctrl+Alt+9': 'Türkçe-Q klavyede AltGr+9 (]) yazımını engelleyebilir.',
+    };
+
+    const CLI_HELP_STATIC_TEXT = [
+      'QTP v2.1.0 — Komut Satırı Kullanımı',
+      '',
+      'Kullanım:',
+      '  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]',
+      '',
+      'Çalışma Modları:',
+      '  --mode {gui,tui,cli,web}   Çalışma modunu seçer (--gui, --tui, --cli, --web).',
+      '  --work-dir DIZIN           Veri ve ayarlar için çalışma dizini belirler.',
+      '  --json                     Salt-okunur CLI çıktılarını UTF-8 JSON basar.',
+      '  -v, --verbose / -vv        Ayrıntılı yardım ve stderr tanılama günlüğü.',
+      '  -q, --quiet                Bilgi başlıklarını gizler (hatalar stderr üzerinde kalır).',
+      '  --category KOD             Başlangıç kategori filtresi (ALL/A/Z/X/Q).',
+      '  --query METIN              Başlangıç arama filtresi.',
+      '',
+      'Temel İşlemler:',
+      '  --version, --help, --selftest, --modes, --completion [powershell|bash|zsh|fish]',
+      '  --list-categories, --list-items, --search <sorgu>, --show-ini <hedef>',
+      '  --copy <hedef>, --paste <hedef>, --export-ini <yol>, --import-ini <yol>',
+      '  --export-backup <yol>, --restore <hedef>, --backup, --reload',
+      '  --get <anahtar>, --set <anahtar> <değer>, --check-hotkeys',
+      '  --hotkey-preset <profil>, --hotkey-modifiers <değiştiriciler>',
+      '',
+      'Kısayol Profilleri (--hotkey-preset):',
+      '  recommended (Win+Alt), win_ctrl, ctrl_alt, ctrl_shift_alt, function_keys (Ctrl+Shift+F1-F5), legacy_win',
+    ].join('\n');
+
+    const state = {
+      isStatic: false,
+      category: 'ALL',
+      query: '',
+      allItems: [],
+      items: [],
+      categories: [],
+      program: {},
+      extraSections: [],
+      hotkeys: { ...HOTKEY_PRESETS.recommended },
+      selected: 0,
+      revision: 0,
+      helpData: null,
+      helpSection: 'all',
+      pollTimer: null,
+      toastTimer: null,
+    };
+
     const els = {
       search: document.getElementById('searchInput'),
       pills: document.getElementById('categoryPills'),
       list: document.getElementById('snippetList'),
       count: document.getElementById('itemCount'),
+      modeBadge: document.getElementById('modeBadge'),
       toast: document.getElementById('toastBox'),
       modal: document.getElementById('modalBackdrop'),
       modalTitle: document.getElementById('modalTitle'),
       modalBody: document.getElementById('modalBody'),
       hotkeyControls: document.getElementById('hotkeyControls'),
+      btnDownloadSettings: document.getElementById('btnDownloadSettings'),
+      backupControls: document.getElementById('backupControls'),
       helpTabs: document.getElementById('helpTabs'),
     };
+
+    function trLower(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/\u0130/g, 'i')
+        .replace(/I/g, '\u0131')
+        .replace(/\u015e/g, '\u015f')
+        .replace(/\u011e/g, '\u011f')
+        .replace(/\u00dc/g, '\u00fc')
+        .replace(/\u00d6/g, '\u00f6')
+        .replace(/\u00c7/g, '\u00e7')
+        .replace(/\u0307/g, '')
+        .toLowerCase();
+    }
+
+    function isWordChar(ch) {
+      return Boolean(ch && /[\p{L}\p{N}]/u.test(ch));
+    }
+
+    function hotkeyBadge(keys) {
+      const raw = String(keys || '').trim();
+      if (raw.includes('+')) {
+        return raw.slice(raw.lastIndexOf('+') + 1).trim().toUpperCase();
+      }
+      return raw.toUpperCase();
+    }
+
+    function itemMatchesCategory(item, categoryCode) {
+      const code = String(categoryCode || 'ALL').trim().toUpperCase();
+      if (!code || code === 'ALL') return true;
+      const keys = String(item.keys || item.hotkey_prefix || '').trim().toUpperCase();
+      return keys.endsWith('+' + code) || keys === code;
+    }
+
+    function matchText(query, target) {
+      const qClean = trLower(String(query || '').trim());
+      if (!qClean) return { score: 0, matchedIndices: [] };
+      const tNorm = trLower(String(target || ''));
+      if (!tNorm) return null;
+
+      const exactPos = tNorm.indexOf(qClean);
+      if (exactPos !== -1) {
+        const indices = [];
+        for (let i = exactPos; i < exactPos + qClean.length; i++) {
+          indices.push(i);
+        }
+        const boundaryBonus = (exactPos === 0 || !isWordChar(tNorm[exactPos - 1])) ? 40.0 : 15.0;
+        const score = 200.0 + boundaryBonus - (exactPos * 0.15) - (tNorm.length * 0.01);
+        return { score, matchedIndices: indices };
+      }
+
+      const qChars = Array.from(qClean).filter((ch) => !/\s/.test(ch));
+      if (!qChars.length) return { score: 0, matchedIndices: [] };
+
+      const matched = [];
+      let tIdx = 0;
+      const n = tNorm.length;
+      for (const qch of qChars) {
+        let found = -1;
+        while (tIdx < n) {
+          if (tNorm[tIdx] === qch) {
+            found = tIdx;
+            tIdx += 1;
+            break;
+          }
+          tIdx += 1;
+        }
+        if (found === -1) return null;
+        matched.push(found);
+      }
+
+      let score = 80.0;
+      for (let posI = 0; posI < matched.length; posI++) {
+        const idx = matched[posI];
+        if (idx === 0 || !isWordChar(tNorm[idx - 1])) score += 12.0;
+        if (posI > 0) {
+          const gap = idx - matched[posI - 1] - 1;
+          score += gap === 0 ? 18.0 : -Math.min(gap * 1.2, 10.0);
+        }
+      }
+      const span = matched[matched.length - 1] - matched[0] + 1;
+      score -= (span - matched.length) * 0.4;
+      score -= matched[0] * 0.1;
+      return { score, matchedIndices: matched };
+    }
+
+    function scoreItem(query, item) {
+      const qClean = trLower(String(query || '').trim());
+      if (!qClean) return { score: 0, matchedIndices: [] };
+
+      const textMatch = matchText(query, item.text || '');
+      const labelMatch = item.label ? matchText(query, item.label) : null;
+      const groupMatch = item.group ? matchText(query, item.group) : null;
+      const badge = hotkeyBadge(item.keys || '');
+      const badgeMatch = badge ? matchText(query, badge) : null;
+
+      const candidates = [];
+      if (textMatch) candidates.push(textMatch.score + 10.0);
+      if (labelMatch) candidates.push(labelMatch.score + 25.0);
+      if (groupMatch) candidates.push(groupMatch.score + 5.0);
+      if (badgeMatch) candidates.push(badgeMatch.score);
+      if (!candidates.length) return null;
+
+      return {
+        score: Math.max(...candidates),
+        matchedIndices: textMatch ? textMatch.matchedIndices : [],
+      };
+    }
+
+    function filterItemsStatic(query, items) {
+      const qStripped = String(query || '').trim();
+      if (!qStripped) {
+        return items.map((it) => ({ ...it, matched_indices: [] }));
+      }
+      const scored = [];
+      for (let idx = 0; idx < items.length; idx++) {
+        const res = scoreItem(qStripped, items[idx]);
+        if (res) {
+          scored.push({ score: res.score, idx, item: items[idx], indices: res.matchedIndices });
+        }
+      }
+      scored.sort((a, b) => (b.score !== a.score ? b.score - a.score : a.idx - b.idx));
+      return scored.map((row) => ({ ...row.item, matched_indices: row.indices }));
+    }
+
+    function decodeBytesAuto(uint8) {
+      if (uint8.length >= 2 && uint8[0] === 0xFF && uint8[1] === 0xFE) {
+        return { text: new TextDecoder('utf-16le').decode(uint8.subarray(2)), encoding: 'utf-16-le-bom' };
+      }
+      if (uint8.length >= 2 && uint8[0] === 0xFE && uint8[1] === 0xFF) {
+        return { text: new TextDecoder('utf-16be').decode(uint8.subarray(2)), encoding: 'utf-16-be-bom' };
+      }
+      if (uint8.length >= 3 && uint8[0] === 0xEF && uint8[1] === 0xBB && uint8[2] === 0xBF) {
+        return { text: new TextDecoder('utf-8').decode(uint8.subarray(3)), encoding: 'utf-8-bom' };
+      }
+      try {
+        return { text: new TextDecoder('utf-8', { fatal: true }).decode(uint8), encoding: 'utf-8' };
+      } catch (_err) {
+        try {
+          return { text: new TextDecoder('windows-1254').decode(uint8), encoding: 'windows-1254' };
+        } catch (_err2) {
+          return { text: new TextDecoder('utf-8').decode(uint8), encoding: 'utf-8' };
+        }
+      }
+    }
+
+    function parseQtpIni(content) {
+      let sectionLower = null;
+      let sectionOrig = null;
+      const texts = {};
+      const orders = {};
+      const labels = {};
+      const program = {};
+      const extraMap = new Map();
+      let seq = 0;
+
+      for (const rawLine of String(content || '').replace(/^\ufeff/, '').split(/\r?\n/)) {
+        const stripped = rawLine.trim();
+        if (!stripped) continue;
+        if (stripped.startsWith('[') && stripped.endsWith(']')) {
+          sectionOrig = stripped.slice(1, -1).trim();
+          sectionLower = sectionOrig.toLowerCase();
+          if (!['program', 'list_text', 'list_order', 'list_label'].includes(sectionLower)) {
+            if (!extraMap.has(sectionOrig)) extraMap.set(sectionOrig, []);
+          }
+          continue;
+        }
+        if (sectionOrig && !['program', 'list_text', 'list_order', 'list_label'].includes(sectionLower)) {
+          extraMap.get(sectionOrig).push(rawLine);
+          continue;
+        }
+        if (stripped.startsWith(';') || stripped.startsWith('#')) continue;
+        const firstEq = rawLine.indexOf('=');
+        if (firstEq === -1) continue;
+        if (sectionLower === 'program') {
+          const k = rawLine.slice(0, firstEq).trim();
+          if (k) program[k] = rawLine.slice(firstEq + 1).trim();
+        } else if (sectionLower === 'list_text') {
+          const tid = rawLine.slice(0, firstEq).trim();
+          const rest = rawLine.slice(firstEq + 1);
+          const secondEq = rest.indexOf('=');
+          if (secondEq === -1) continue;
+          const keys = rest.slice(0, secondEq).trim();
+          let val = rest.slice(secondEq + 1);
+          let term = '';
+          const trimmedEnd = val.trimEnd();
+          if (trimmedEnd.endsWith(DEFAULT_TERMINATOR)) {
+            term = DEFAULT_TERMINATOR;
+            let clean = trimmedEnd;
+            while (clean.endsWith(DEFAULT_TERMINATOR)) {
+              clean = clean.slice(0, -DEFAULT_TERMINATOR.length);
+            }
+            val = clean;
+          }
+          val = val.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n');
+          texts[tid] = { keys, text: val, terminator: term, seq: seq++ };
+        } else if (sectionLower === 'list_order') {
+          const v = parseInt(rawLine.slice(firstEq + 1).trim(), 10);
+          if (Number.isFinite(v)) orders[rawLine.slice(0, firstEq).trim()] = v;
+        } else if (sectionLower === 'list_label') {
+          labels[rawLine.slice(0, firstEq).trim()] = rawLine.slice(firstEq + 1).trim();
+        }
+      }
+
+      const sortedIds = Object.keys(texts).sort((a, b) => {
+        const oa = orders[a] ?? 1e9;
+        const ob = orders[b] ?? 1e9;
+        if (oa !== ob) return oa - ob;
+        return texts[a].seq - texts[b].seq;
+      });
+
+      const items = sortedIds.map((tid) => {
+        const rawLbl = labels[tid] || '';
+        const slash = rawLbl.lastIndexOf('/');
+        const group = slash !== -1 ? (rawLbl.slice(0, slash).trim() || 'Genel') : 'Genel';
+        const label = slash !== -1 ? rawLbl.slice(slash + 1).trim() : rawLbl.trim();
+        return {
+          raw_key: tid,
+          keys: texts[tid].keys,
+          group,
+          label,
+          text: texts[tid].text,
+          terminator: texts[tid].terminator,
+        };
+      });
+
+      const extraSections = [];
+      extraMap.forEach((lines, name) => {
+        if (lines.length) extraSections.push({ name, lines });
+      });
+      return { items, program, extraSections };
+    }
+
+    function buildQtpIni(items, program = {}, extraSections = []) {
+      const progOut = {
+        TestIni: String(Math.floor(Date.now() / 1000)),
+        m_show_tree: '1',
+        listcmd_count: String(items.length),
+        WinRC: '2399;17;3368;1335;1;x,y,w,h,SW',
+        lng: '21',
+        start_tray: '1',
+        ...program,
+      };
+      progOut.listcmd_count = String(items.length);
+      const lines = ['[Program]'];
+      for (const [k, v] of Object.entries(progOut)) {
+        lines.push(`${k}=${v}`);
+      }
+      lines.push('[list_text]');
+      items.forEach((it, i) => {
+        const tid = it.raw_key || `text_${String(i).padStart(3, '0')}`;
+        const txt = String(it.text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\\n');
+        const term = it.terminator !== undefined ? it.terminator : DEFAULT_TERMINATOR;
+        lines.push(`${tid}=${String(it.keys || '').trim()}=${txt}${term}`);
+      });
+      lines.push('[list_order]');
+      items.forEach((it, i) => {
+        const tid = it.raw_key || `text_${String(i).padStart(3, '0')}`;
+        lines.push(`${tid}=${i + 1}`);
+      });
+      lines.push('[list_label]');
+      items.forEach((it, i) => {
+        const tid = it.raw_key || `text_${String(i).padStart(3, '0')}`;
+        const grp = String(it.group || '').trim();
+        let lbl = String(it.label || '').replace(/\//g, '-').replace(/[\r\n]+/g, ' ').trim();
+        if (!lbl) {
+          const prev = String(it.text || '').replace(/\n/g, ' ').trim();
+          lbl = prev.slice(0, 45) + (prev.length > 45 ? '...' : '');
+        }
+        lines.push(`${tid}=${grp && grp !== 'Genel' ? `${grp}/${lbl}` : lbl}`);
+      });
+      if (Array.isArray(extraSections)) {
+        for (const sec of extraSections) {
+          if (sec && sec.name && Array.isArray(sec.lines) && sec.lines.length) {
+            lines.push(`[${sec.name}]`);
+            sec.lines.forEach((l) => lines.push(String(l)));
+          }
+        }
+      }
+      return lines.join('\r\n') + '\r\n';
+    }
+
+    function encodeUtf16LeBom(str) {
+      const buf = new ArrayBuffer(2 + str.length * 2);
+      const view = new DataView(buf);
+      view.setUint8(0, 0xFF);
+      view.setUint8(1, 0xFE);
+      for (let i = 0; i < str.length; i++) {
+        view.setUint16(2 + i * 2, str.charCodeAt(i), true);
+      }
+      return new Uint8Array(buf);
+    }
+
+    function formatIniPreview(item, index) {
+      const tid = String(item.raw_key || `text_${String(index).padStart(3, '0')}`);
+      const keys = String(item.keys || '');
+      const term = item.terminator !== undefined ? item.terminator : DEFAULT_TERMINATOR;
+      const textEnc = String(item.text || '').replace(/\r\n/g, '\n').replace(/\n/g, '\\n');
+      const grp = String(item.group || 'Genel');
+      const lbl = String(item.label || '');
+      const fullLabel = grp && grp !== 'Genel' ? `${grp}/${lbl}` : lbl;
+      return `[list_text]\n${tid}=${keys}=${textEnc}${term}\n\n[list_order]\n${tid}=${index + 1}\n\n[list_label]\n${tid}=${fullLabel}`;
+    }
+
+    function downloadBytes(bytesOrStr, filename, mimeType) {
+      const blob = new Blob([bytesOrStr], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function copyTextBrowser(text) {
+      const value = String(text || '');
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        try {
+          await navigator.clipboard.writeText(value);
+          return true;
+        } catch (_err) {
+        }
+      }
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = value;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return Boolean(ok);
+      } catch (_err2) {
+        return false;
+      }
+    }
+
+    function normalizeComboText(combo) {
+      const parts = String(combo || '').split('+').map((p) => p.trim()).filter(Boolean);
+      const mods = new Set();
+      let trigger = '';
+      for (const p of parts) {
+        const low = p.toLowerCase();
+        if (low === 'win' || low === 'l-win' || low === 'cmd' || low === 'super') mods.add('Win');
+        else if (low === 'ctrl' || low === 'control') mods.add('Ctrl');
+        else if (low === 'alt' || low === 'opt') mods.add('Alt');
+        else if (low === 'shift') mods.add('Shift');
+        else if (low === 'space' || low === 'spc') trigger = 'Space';
+        else trigger = p.length === 1 ? p.toUpperCase() : p;
+      }
+      const ordered = CANONICAL_MODIFIERS.filter((m) => mods.has(m));
+      return trigger ? [...ordered, trigger].join('+') : combo;
+    }
+
+    function detectHotkeyConflictsStatic(hkMap) {
+      const conflicts = {};
+      const byCombo = {};
+      for (const [slot, raw] of Object.entries(hkMap)) {
+        const clean = String(raw || '').trim();
+        if (!clean) continue;
+        const norm = normalizeComboText(clean);
+        if (!byCombo[norm]) byCombo[norm] = [];
+        byCombo[norm].push(slot);
+        if (WIN_RESERVED[norm]) {
+          if (!conflicts[slot]) conflicts[slot] = [];
+          conflicts[slot].push(WIN_RESERVED[norm]);
+        }
+        if (TRQ_ALTGR[norm]) {
+          if (!conflicts[slot]) conflicts[slot] = [];
+          conflicts[slot].push(TRQ_ALTGR[norm]);
+        }
+      }
+      for (const [norm, owners] of Object.entries(byCombo)) {
+        if (owners.length > 1) {
+          for (const slot of owners) {
+            if (!conflicts[slot]) conflicts[slot] = [];
+            conflicts[slot].push(`Çift atama: '${norm}' başka kategorilerde de kullanılıyor.`);
+          }
+        }
+      }
+      return conflicts;
+    }
 
     function showToast(msg) {
       els.toast.textContent = msg;
       els.toast.style.display = 'block';
-      setTimeout(() => { els.toast.style.display = 'none'; }, 1500);
+      if (state.toastTimer) clearTimeout(state.toastTimer);
+      state.toastTimer = setTimeout(() => { els.toast.style.display = 'none'; }, 1600);
     }
 
     async function api(path, method = 'GET', body = null) {
@@ -92,11 +599,126 @@
         opts.headers['Content-Type'] = 'application/json';
         opts.body = JSON.stringify(body);
       }
-      const resp = await fetch(path, opts);
+      const cleanPath = path.startsWith('/') ? '.' + path : path;
+      const resp = await fetch(cleanPath, opts);
       return await resp.json();
     }
 
+    async function detectBackendMode() {
+      try {
+        const resp = await fetch('./api/revision', { cache: 'no-store' });
+        const ctype = (resp.headers.get('content-type') || '').toLowerCase();
+        if (!resp.ok || !ctype.includes('application/json')) return null;
+        const payload = await resp.json();
+        if (payload && payload.ok === true && payload.data && typeof payload.data.revision === 'number') {
+          return payload;
+        }
+        return null;
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function normalizeRawItem(raw, idx) {
+      return {
+        raw_key: String(raw.raw_key || `text_${String(idx).padStart(3, '0')}`),
+        keys: String(raw.keys || raw.hotkey_prefix || '').trim(),
+        group: String(raw.group || 'Genel').trim() || 'Genel',
+        label: String(raw.label || '').trim(),
+        text: String(raw.text || ''),
+        terminator: raw.terminator !== undefined ? String(raw.terminator) : DEFAULT_TERMINATOR,
+      };
+    }
+
+    function saveHotkeysLocal() {
+      try {
+        localStorage.setItem(LS_HOTKEYS_KEY, JSON.stringify(state.hotkeys));
+      } catch (_err) {
+      }
+    }
+
+    function loadHotkeysLocal() {
+      try {
+        const raw = localStorage.getItem(LS_HOTKEYS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            state.hotkeys = { ...HOTKEY_PRESETS.recommended, ...parsed };
+          }
+        }
+      } catch (_err) {
+      }
+    }
+
+    async function loadStaticData(forceNetwork = false) {
+      let loaded = null;
+      if (forceNetwork || navigator.onLine !== false) {
+        try {
+          const res = await fetch('./data.json', { cache: 'no-store' });
+          if (res.ok) {
+            const arr = await res.json();
+            if (Array.isArray(arr)) {
+              loaded = arr.map((it, idx) => normalizeRawItem(it, idx));
+            }
+          }
+        } catch (_err) {
+        }
+        if (!loaded) {
+          try {
+            const resIni = await fetch('./QuickTextPaste.ini', { cache: 'no-store' });
+            if (resIni.ok) {
+              const buf = new Uint8Array(await resIni.arrayBuffer());
+              const decoded = decodeBytesAuto(buf);
+              const parsed = parseQtpIni(decoded.text);
+              loaded = parsed.items;
+              state.program = parsed.program;
+              state.extraSections = parsed.extraSections;
+            }
+          } catch (_err2) {
+          }
+        }
+      }
+      if (loaded) {
+        state.allItems = loaded;
+        try {
+          localStorage.setItem(LS_ITEMS_KEY, JSON.stringify(loaded));
+        } catch (_err) {
+        }
+      } else {
+        try {
+          const cached = localStorage.getItem(LS_ITEMS_KEY);
+          if (cached) {
+            const arr = JSON.parse(cached);
+            if (Array.isArray(arr)) state.allItems = arr.map((it, idx) => normalizeRawItem(it, idx));
+          }
+        } catch (_err) {
+        }
+      }
+      loadHotkeysLocal();
+    }
+
+    function updateStaticCategories() {
+      state.categories = CATEGORY_TABS.map((cat) => ({
+        code: cat.code,
+        label: cat.label,
+        hotkey_prefix: cat.hotkey_prefix,
+        count: state.allItems.filter((it) => itemMatchesCategory(it, cat.code)).length,
+      }));
+      renderPills();
+    }
+
+    function updateStaticItems() {
+      const filteredCat = state.allItems.filter((it) => itemMatchesCategory(it, state.category));
+      state.items = filterItemsStatic(state.query, filteredCat);
+      state.selected = 0;
+      renderList();
+    }
+
     async function loadCategories() {
+      if (state.isStatic) {
+        updateStaticCategories();
+        return;
+      }
       const res = await api('/api/categories');
       if (res.ok) {
         state.categories = res.data.categories;
@@ -105,6 +727,10 @@
     }
 
     async function loadItems() {
+      if (state.isStatic) {
+        updateStaticItems();
+        return;
+      }
       const q = encodeURIComponent(state.query);
       const c = encodeURIComponent(state.category);
       const res = await api(`/api/items?category=${c}&query=${q}`);
@@ -115,23 +741,77 @@
       }
     }
 
-    async function showHotkeysModal() {
-      const r = await api('/api/hotkeys/check');
-      els.modalTitle.textContent = 'Global Kısayollar ve Çakışma Denetimi';
+    function resetModalControls() {
       els.helpTabs.style.display = 'none';
-      els.hotkeyControls.style.display = 'flex';
-      const lines = Object.entries(r.data.hotkeys).map(([k, v]) => `${k}: ${v}`);
-      const ckeys = Object.keys(r.data.conflicts || {});
+      els.hotkeyControls.style.display = 'none';
+      els.backupControls.style.display = 'none';
+      els.btnDownloadSettings.style.display = state.isStatic ? 'inline-flex' : 'none';
+    }
+
+    function renderHotkeysModalContent(hotkeysMap, conflictsMap) {
+      const lines = Object.entries(hotkeysMap).map(([k, v]) => `${k}: ${v}`);
+      const ckeys = Object.keys(conflictsMap || {});
       if (ckeys.length) {
         lines.push('', 'Uyarılar:');
         for (const ck of ckeys) {
-          lines.push(`! ${ck}: ${r.data.conflicts[ck].join('; ')}`);
+          lines.push(`! ${ck}: ${conflictsMap[ck].join('; ')}`);
         }
       } else {
         lines.push('', 'Çakışma algılanmadı ✔');
       }
       els.modalBody.textContent = lines.join('\n');
+    }
+
+    async function showHotkeysModal() {
+      resetModalControls();
+      els.modalTitle.textContent = 'Global Kısayollar ve Çakışma Denetimi';
+      els.hotkeyControls.style.display = 'flex';
+      if (state.isStatic) {
+        const conflicts = detectHotkeyConflictsStatic(state.hotkeys);
+        renderHotkeysModalContent(state.hotkeys, conflicts);
+        els.modal.style.display = 'flex';
+        return;
+      }
+      const r = await api('/api/hotkeys/check');
+      renderHotkeysModalContent(r.data.hotkeys, r.data.conflicts || {});
       els.modal.style.display = 'flex';
+    }
+
+    async function showIniModal(item, index) {
+      resetModalControls();
+      els.modalTitle.textContent = `INI Kaydı (${item.raw_key || 'text'})`;
+      if (state.isStatic) {
+        els.modalBody.textContent = formatIniPreview(item, index);
+        els.modal.style.display = 'flex';
+        return;
+      }
+      const res = await api(`/api/show-ini?target=${encodeURIComponent(item.raw_key || item.text || '')}`);
+      els.modalBody.textContent = res.ok && res.data ? res.data.preview : (res.error || res.message || 'Gösterilemedi');
+      els.modal.style.display = 'flex';
+    }
+
+    function showStaticBackupModal() {
+      resetModalControls();
+      els.modalTitle.textContent = 'Yedekle & Dışa Aktar (Statik Web)';
+      els.backupControls.style.display = 'flex';
+      els.modalBody.textContent = [
+        `Toplam hazır cevap kaydı: ${state.allItems.length}`,
+        '',
+        'Seçenekler:',
+        '• Tam Yedek İndir (.json v2): Tüm kayıtları, program meta verilerini ve kısayol ayarlarını JSON yedek dosyası olarak indirir.',
+        '• QuickTextPaste.ini İndir (UTF-16 LE BOM): QuickTextPaste ve QTP masaüstü uygulamasıyla %100 uyumlu INI dosyası üretir.',
+      ].join('\n');
+      els.modal.style.display = 'flex';
+    }
+
+    async function fetchTextSafe(relUrl, fallbackMsg) {
+      try {
+        const resp = await fetch(relUrl, { cache: 'no-store' });
+        if (!resp.ok) return fallbackMsg;
+        return await resp.text();
+      } catch (_err) {
+        return fallbackMsg;
+      }
     }
 
     function renderHelpSection(sectionKey) {
@@ -151,16 +831,32 @@
       } else {
         els.modalBody.textContent = state.helpData[sectionKey] || '';
       }
+      els.modalBody.scrollTop = 0;
     }
 
     async function showHelpModal(sectionKey = 'all') {
+      resetModalControls();
       if (!state.helpData) {
-        const r = await api('/api/help?verbose=1');
-        if (r.ok && r.data) {
-          state.helpData = r.data;
+        if (state.isStatic) {
+          const [kullanim, kisayollar, sss] = await Promise.all([
+            fetchTextSafe('./docs/KULLANIM.md', 'Kullanım belgesi çevrimdışı/yerel dosyada okunamadı (./docs/KULLANIM.md).'),
+            fetchTextSafe('./docs/KISAYOLLAR.md', 'Kısayol belgesi okunamadı (./docs/KISAYOLLAR.md).'),
+            fetchTextSafe('./docs/SSS.md', 'SSS belgesi okunamadı (./docs/SSS.md).'),
+          ]);
+          state.helpData = {
+            usage: CLI_HELP_STATIC_TEXT,
+            usage_verbose: CLI_HELP_STATIC_TEXT,
+            kullanim,
+            kisayollar,
+            sss,
+          };
+        } else {
+          const r = await api('/api/help?verbose=1');
+          if (r.ok && r.data) {
+            state.helpData = r.data;
+          }
         }
       }
-      els.hotkeyControls.style.display = 'none';
       els.helpTabs.style.display = 'flex';
       els.modalTitle.textContent = 'QTP Türkçe Yardım (F1)';
       renderHelpSection(sectionKey);
@@ -178,17 +874,78 @@
       }
     }
 
+    function renderHighlightedText(container, fullText, matchedIndices) {
+      const clipped = fullText.length > 140 ? fullText.slice(0, 140) + '…' : fullText;
+      const matchSet = new Set(Array.isArray(matchedIndices) ? matchedIndices : []);
+      if (!matchSet.size) {
+        container.textContent = clipped;
+        return;
+      }
+      let buf = '';
+      let inMark = false;
+      const flush = () => {
+        if (!buf) return;
+        if (inMark) {
+          const mk = document.createElement('mark');
+          mk.className = 'hl';
+          mk.textContent = buf;
+          container.appendChild(mk);
+        } else {
+          container.appendChild(document.createTextNode(buf));
+        }
+        buf = '';
+      };
+      for (let i = 0; i < clipped.length; i++) {
+        const isHit = i < 140 && matchSet.has(i);
+        if (isHit !== inMark) {
+          flush();
+          inMark = isHit;
+        }
+        buf += clipped[i];
+      }
+      flush();
+    }
+
+    async function handleCopyItem(item) {
+      if (state.isStatic) {
+        const ok = await copyTextBrowser(item.text);
+        showToast(ok ? 'Panoya kopyalandı ✔' : 'Pano erişimi engellendi; metni seçip kopyalayın.');
+        return;
+      }
+      const r = await api('/api/copy', 'POST', { target: item.raw_key });
+      showToast(r.message || r.error);
+    }
+
+    async function handlePasteItem(item) {
+      if (state.isStatic) {
+        const ok = await copyTextBrowser(item.text);
+        showToast(ok ? 'Panoya kopyalandı ✔' : 'Pano erişimi engellendi.');
+        return;
+      }
+      const r = await api('/api/paste', 'POST', { target: item.raw_key });
+      showToast(r.message || r.error);
+    }
+
     function renderList() {
       els.list.innerHTML = '';
       const visible = state.items.slice(0, 200);
-      els.count.textContent = `${state.items.length} kayıt`;
+      const totalAll = state.isStatic ? state.allItems.length : null;
+      els.count.textContent = totalAll !== null ? `${state.items.length} / ${totalAll} kayıt` : `${state.items.length} kayıt`;
+      if (!visible.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'Eşleşen hazır cevap bulunamadı.';
+        els.list.appendChild(empty);
+        return;
+      }
       visible.forEach((it, idx) => {
         const row = document.createElement('div');
         row.className = 'snippet-row' + (idx === state.selected ? ' selected' : '');
         const left = document.createElement('div');
+        left.className = 'snippet-main';
         const txt = document.createElement('div');
         txt.className = 'snippet-text';
-        txt.textContent = it.text.slice(0, 140);
+        renderHighlightedText(txt, String(it.text || '').replace(/\r?\n/g, ' '), it.matched_indices);
         const meta = document.createElement('div');
         meta.className = 'snippet-meta';
         meta.textContent = it.label ? `${it.group} · ${it.label}` : it.group;
@@ -196,33 +953,45 @@
         left.appendChild(meta);
 
         const right = document.createElement('div');
-        right.style.display = 'flex';
-        right.style.gap = '6px';
-        right.style.alignItems = 'center';
+        right.className = 'row-actions';
+        const iniBtn = document.createElement('button');
+        iniBtn.className = 'action-btn';
+        iniBtn.textContent = "INI'de Göster";
+        iniBtn.onclick = (ev) => {
+          ev.stopPropagation();
+          showIniModal(it, idx);
+        };
         const copyBtn = document.createElement('button');
         copyBtn.className = 'action-btn';
         copyBtn.textContent = 'Kopyala';
         copyBtn.onclick = async (ev) => {
           ev.stopPropagation();
-          const r = await api('/api/copy', 'POST', { target: it.raw_key });
-          showToast(r.message || r.error);
+          await handleCopyItem(it);
         };
         const badge = document.createElement('span');
         badge.className = 'badge';
-        badge.textContent = (it.keys || '').split('+').pop() || '•';
+        badge.textContent = hotkeyBadge(it.keys || '') || '•';
+        right.appendChild(iniBtn);
         right.appendChild(copyBtn);
         right.appendChild(badge);
 
         row.appendChild(left);
         row.appendChild(right);
+        row.oncontextmenu = (ev) => {
+          ev.preventDefault();
+          showIniModal(it, idx);
+        };
         row.onclick = async () => {
           state.selected = idx;
           renderList();
-          const r = await api('/api/paste', 'POST', { target: it.raw_key });
-          showToast(r.message || r.error);
+          await handlePasteItem(it);
         };
         els.list.appendChild(row);
       });
+      const selEl = els.list.children[state.selected];
+      if (selEl && typeof selEl.scrollIntoView === 'function') {
+        selEl.scrollIntoView({ block: 'nearest' });
+      }
     }
 
     els.search.addEventListener('input', () => {
@@ -230,19 +999,44 @@
       loadItems();
     });
 
+    els.modal.addEventListener('click', (ev) => {
+      if (ev.target === els.modal) els.modal.style.display = 'none';
+    });
+
     document.addEventListener('keydown', async (e) => {
+      const modalOpen = els.modal.style.display === 'flex';
       if (e.key === 'F1') {
         e.preventDefault();
         await showHelpModal('all');
-      } else if (e.key === 'Escape') {
-        if (els.modal.style.display === 'flex') {
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (modalOpen) {
           els.modal.style.display = 'none';
         } else {
           els.search.value = '';
           state.query = '';
           loadItems();
         }
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        return;
+      }
+      if (modalOpen) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          els.modalBody.scrollTop += 48;
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          els.modalBody.scrollTop = Math.max(0, els.modalBody.scrollTop - 48);
+        } else if (e.key === 'PageDown') {
+          e.preventDefault();
+          els.modalBody.scrollTop += 260;
+        } else if (e.key === 'PageUp') {
+          e.preventDefault();
+          els.modalBody.scrollTop = Math.max(0, els.modalBody.scrollTop - 260);
+        }
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         els.search.focus();
       } else if (e.key === '/') {
@@ -252,18 +1046,30 @@
         }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        state.selected = Math.min(Math.max(0, state.items.length - 1), state.selected + 1);
+        const maxVis = Math.min(state.items.length, 200) - 1;
+        state.selected = Math.min(Math.max(0, maxVis), state.selected + 1);
         renderList();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         state.selected = Math.max(0, state.selected - 1);
         renderList();
+      } else if (e.key === 'PageDown') {
+        e.preventDefault();
+        const maxVis = Math.min(state.items.length, 200) - 1;
+        state.selected = Math.min(Math.max(0, maxVis), state.selected + 6);
+        renderList();
+      } else if (e.key === 'PageUp') {
+        e.preventDefault();
+        state.selected = Math.max(0, state.selected - 6);
+        renderList();
       } else if (e.key === 'Enter' && state.items[state.selected]) {
         e.preventDefault();
         const it = state.items[state.selected];
-        const route = (e.ctrlKey || e.metaKey) ? '/api/copy' : '/api/paste';
-        const r = await api(route, 'POST', { target: it.raw_key });
-        showToast(r.message || r.error);
+        if (e.ctrlKey || e.metaKey) {
+          await handleCopyItem(it);
+        } else {
+          await handlePasteItem(it);
+        }
       }
     });
 
@@ -275,57 +1081,148 @@
     document.getElementById('btnHotkeys').onclick = showHotkeysModal;
     document.getElementById('btnApplyPreset').onclick = async () => {
       const preset = document.getElementById('presetSelect').value;
+      if (state.isStatic) {
+        if (HOTKEY_PRESETS[preset]) {
+          state.hotkeys = { ...HOTKEY_PRESETS[preset] };
+          saveHotkeysLocal();
+          showToast(`Kısayol profili uygulandı ✔ (${preset})`);
+          showHotkeysModal();
+        }
+        return;
+      }
       const r = await api('/api/hotkeys/preset', 'POST', { preset });
       showToast(r.message || r.error);
       showHotkeysModal();
     };
     document.getElementById('btnApplyMods').onclick = async () => {
       const modifiers = document.getElementById('modSelect').value;
+      if (state.isStatic) {
+        const updated = {};
+        for (const [slot, val] of Object.entries(state.hotkeys)) {
+          const tail = String(val || '').split('+').pop().trim() || (slot === 'all' ? 'Space' : slot.toUpperCase());
+          updated[slot] = normalizeComboText(`${modifiers}+${tail}`);
+        }
+        state.hotkeys = updated;
+        saveHotkeysLocal();
+        showToast('Değiştirici bileşimi tüm kısayollara uygulandı ✔');
+        showHotkeysModal();
+        return;
+      }
       const r = await api('/api/hotkeys/modifiers', 'POST', { modifiers });
       showToast(r.message || r.error);
       showHotkeysModal();
     };
+    els.btnDownloadSettings.onclick = () => {
+      const payload = {
+        theme: 'dark',
+        hotkeys: state.hotkeys,
+        last_category: state.category,
+        window_size: [720, 520],
+        paste_method: 'auto',
+        enter_after_paste: true,
+        auto_reload: true,
+        auto_reload_interval_ms: 500,
+        language: 'tr',
+      };
+      downloadBytes(JSON.stringify(payload, null, 2) + '\n', 'qtp_settings.json', 'application/json;charset=utf-8');
+      showToast('qtp_settings.json indirildi ✔');
+    };
     document.getElementById('btnReload').onclick = async () => {
+      if (state.isStatic) {
+        await loadStaticData(true);
+        await loadCategories();
+        await loadItems();
+        showToast(`Veriler yenilendi (${state.allItems.length} kayıt) ✔`);
+        return;
+      }
       const r = await api('/api/reload', 'POST', {});
       showToast(r.message || r.error);
-      loadCategories();
-      loadItems();
+      await loadCategories();
+      await loadItems();
     };
     document.getElementById('btnBackup').onclick = async () => {
+      if (state.isStatic) {
+        showStaticBackupModal();
+        return;
+      }
       const r = await api('/api/backup', 'POST', {});
       showToast(r.message || r.error);
     };
+    document.getElementById('btnDownloadBackupJson').onclick = () => {
+      const stamp = new Date().toISOString().slice(0, 10);
+      const cleanItems = state.allItems.map((it) => {
+        const obj = { keys: it.keys, group: it.group };
+        if (it.label) obj.label = it.label;
+        obj.text = it.text;
+        return obj;
+      });
+      const payload = {
+        type: 'qtp-pwa-backup',
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        settings: { hotkeys: state.hotkeys },
+        program: state.program || {},
+        extraSections: state.extraSections || [],
+        items: cleanItems,
+      };
+      downloadBytes(JSON.stringify(payload, null, 2) + '\n', `qtp-tam-yedek-${stamp}.json`, 'application/json;charset=utf-8');
+      showToast(`Tam yedek indirildi: ${cleanItems.length} kayıt ✔`);
+    };
+    document.getElementById('btnDownloadIniUtf16').onclick = () => {
+      const iniTxt = buildQtpIni(state.allItems, state.program, state.extraSections);
+      const bytes = encodeUtf16LeBom(iniTxt);
+      downloadBytes(bytes, 'QuickTextPaste.ini', 'text/plain;charset=utf-16le');
+      showToast(`QuickTextPaste.ini indirildi: ${state.allItems.length} kayıt ✔`);
+    };
 
-    setInterval(async () => {
-      try {
-        const r = await api('/api/revision');
-        if (r.ok && r.data.revision !== state.revision) {
-          const prevRev = state.revision;
-          state.revision = r.data.revision;
-          if (prevRev !== 0) {
-            await loadCategories();
-            await loadItems();
-            showToast('Değişiklikler otomatik yenilendi ✔');
+    function startLivePolling() {
+      if (state.isStatic || state.pollTimer) return;
+      state.pollTimer = setInterval(async () => {
+        try {
+          const r = await api('/api/revision');
+          if (r.ok && r.data.revision !== state.revision) {
+            const prevRev = state.revision;
+            state.revision = r.data.revision;
+            if (prevRev !== 0) {
+              await loadCategories();
+              await loadItems();
+              showToast('Değişiklikler otomatik yenilendi ✔');
+            }
           }
+        } catch (_err) {
         }
-      } catch (_err) {
-      }
-    }, 1000);
+      }, 1000);
+    }
 
     async function initWebUi() {
-      try {
-        const r = await api('/api/revision');
-        if (r.ok && r.data) {
-          state.revision = r.data.revision || 0;
-          if (r.data.initial_category) {
-            state.category = String(r.data.initial_category).toUpperCase();
-          }
-          if (r.data.initial_query) {
-            state.query = String(r.data.initial_query);
-            els.search.value = state.query;
-          }
+      const revPayload = await detectBackendMode();
+      if (revPayload) {
+        state.isStatic = false;
+        state.revision = revPayload.data.revision || 0;
+        if (revPayload.data.initial_category) {
+          state.category = String(revPayload.data.initial_category).toUpperCase();
         }
-      } catch (_err) {
+        if (revPayload.data.initial_query) {
+          state.query = String(revPayload.data.initial_query);
+          els.search.value = state.query;
+        }
+        els.modeBadge.textContent = 'Canlı Mod (--web)';
+        startLivePolling();
+      } else {
+        state.isStatic = true;
+        els.modeBadge.textContent = 'Statik Web (Çevrimdışı / GitHub Pages)';
+        const params = new URLSearchParams(location.search || '');
+        const pCat = params.get('category');
+        const pQuery = params.get('query') || params.get('q');
+        if (pCat) state.category = String(pCat).toUpperCase();
+        if (pQuery) {
+          state.query = String(pQuery);
+          els.search.value = state.query;
+        }
+        await loadStaticData(false);
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        }
       }
       await loadCategories();
       await loadItems();

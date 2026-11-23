@@ -469,11 +469,11 @@ class QTPRequestHandler(BaseHTTPRequestHandler):
         ctype, _ = mimetypes.guess_type(str(target))
         if not ctype:
             ctype = "application/octet-stream"
-        if target.suffix.lower() in (".html", ".json", ".js", ".css", ".webmanifest"):
+        if target.suffix.lower() in (".html", ".json", ".js", ".css", ".webmanifest", ".md"):
             if "charset" not in ctype:
                 ctype += "; charset=utf-8"
 
-        cache_hdr = "no-cache" if target.suffix.lower() in (".html", ".json", ".js", ".ini") else "public, max-age=3600"
+        cache_hdr = "no-cache" if target.suffix.lower() in (".html", ".json", ".js", ".ini", ".css", ".md") else "public, max-age=3600"
         self._send_bytes(target.read_bytes(), ctype, cache_control=cache_hdr)
 
 

@@ -1,10 +1,16 @@
-const CACHE_NAME = 'qtp-pwa-cache-v3.1.0';
+const CACHE_NAME = 'qtp-pwa-cache-v3.2.0';
 const APP_SHELL = [
   './',
   './index.html',
+  './theme.css',
+  './old.html',
   './cevaplar.html',
   './manifest.webmanifest',
   './data.json',
+  './QuickTextPaste.ini',
+  './docs/KULLANIM.md',
+  './docs/KISAYOLLAR.md',
+  './docs/SSS.md',
   './icon.svg',
   './icon-192.png',
   './icon-512.png'
@@ -47,7 +53,10 @@ self.addEventListener('fetch', (event) => {
     const isFreshJsonOrHtml =
       req.mode === 'navigate' ||
       url.pathname.endsWith('/data.json') ||
+      url.pathname.endsWith('/QuickTextPaste.ini') ||
+      url.pathname.endsWith('/theme.css') ||
       url.pathname.endsWith('/index.html') ||
+      url.pathname.endsWith('/old.html') ||
       url.pathname.endsWith('/cevaplar.html') ||
       url.pathname.endsWith('/');
 
