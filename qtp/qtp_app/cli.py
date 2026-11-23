@@ -16,7 +16,7 @@ from qtp_app.core.operations import OPERATIONS
 
 
 def configure_stdio() -> None:
-    for stream in (sys.stdout, sys.stderr):
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
         try:
             if stream is not None and hasattr(stream, "reconfigure"):
                 stream.reconfigure(encoding="utf-8", errors="replace")
@@ -36,6 +36,10 @@ def attach_windows_console_if_needed(mode: str) -> None:
         return
     try:
         k32 = ctypes.windll.kernel32
+        k32.AttachConsole.argtypes = [ctypes.c_int32]
+        k32.AttachConsole.restype = ctypes.c_int
+        k32.AllocConsole.argtypes = []
+        k32.AllocConsole.restype = ctypes.c_int
         attached = bool(k32.AttachConsole(-1))
         if not attached and mode == "tui":
             attached = bool(k32.AllocConsole())
@@ -290,7 +294,10 @@ def run(argv: list[str] | None = None) -> int:
         print(format_help_text())
         return 0
 
-    engine = QtpEngine(work_dir=work_dir)
+    ephemeral = bool(
+        mode == "cli" and (args.show_help or args.version or args.modes or args.selftest)
+    )
+    engine = QtpEngine(work_dir=work_dir, seed_defaults=not ephemeral, ephemeral=ephemeral)
 
     if mode == "cli":
         return execute_cli(engine, args)

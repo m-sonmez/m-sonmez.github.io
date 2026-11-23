@@ -65,8 +65,15 @@ def _copy_windows_ctypes(text: str) -> bool:
     kernel32.GlobalLock.argtypes = [ctypes.c_void_p]
     kernel32.GlobalLock.restype = ctypes.c_void_p
     kernel32.GlobalUnlock.argtypes = [ctypes.c_void_p]
+    kernel32.GlobalUnlock.restype = ctypes.c_int
     kernel32.GlobalFree.argtypes = [ctypes.c_void_p]
+    kernel32.GlobalFree.restype = ctypes.c_void_p
     user32.OpenClipboard.argtypes = [ctypes.c_void_p]
+    user32.OpenClipboard.restype = ctypes.c_int
+    user32.EmptyClipboard.argtypes = []
+    user32.EmptyClipboard.restype = ctypes.c_int
+    user32.CloseClipboard.argtypes = []
+    user32.CloseClipboard.restype = ctypes.c_int
     user32.SetClipboardData.argtypes = [ctypes.c_uint, ctypes.c_void_p]
     user32.SetClipboardData.restype = ctypes.c_void_p
 
@@ -152,11 +159,18 @@ def _copy_linux_x11_ctypes(text: str) -> bool:
                     utf8_atom = x11.XInternAtom(dpy, b"UTF8_STRING", 0)
                     if clip_atom and utf8_atom:
                         x11.XStoreBytes.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
+                        x11.XStoreBytes.restype = ctypes.c_int
+                        x11.XFlush.argtypes = [ctypes.c_void_p]
+                        x11.XFlush.restype = ctypes.c_int
+                        x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+                        x11.XCloseDisplay.restype = ctypes.c_int
                         raw = text.encode("utf-8")
                         x11.XStoreBytes(dpy, raw, len(raw))
                         x11.XFlush(dpy)
                         return True
                 finally:
+                    x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+                    x11.XCloseDisplay.restype = ctypes.c_int
                     x11.XCloseDisplay(dpy)
         except Exception:
             pass
@@ -232,7 +246,9 @@ def capture_previous_app(*, platform_name: str | None = None) -> Any:
     try:
         if plat == "win32":
             user32 = ctypes.windll.user32
-            hwnd = int(user32.GetForegroundWindow())
+            user32.GetForegroundWindow.argtypes = []
+            user32.GetForegroundWindow.restype = ctypes.c_void_p
+            hwnd = int(user32.GetForegroundWindow() or 0)
             return hwnd if hwnd else None
         if plat == "darwin":
             try:
@@ -280,6 +296,12 @@ def restore_previous_app(handle: Any, *, platform_name: str | None = None) -> bo
     try:
         if plat == "win32":
             user32 = ctypes.windll.user32
+            user32.IsIconic.argtypes = [ctypes.c_void_p]
+            user32.IsIconic.restype = ctypes.c_int
+            user32.ShowWindow.argtypes = [ctypes.c_void_p, ctypes.c_int]
+            user32.ShowWindow.restype = ctypes.c_int
+            user32.SetForegroundWindow.argtypes = [ctypes.c_void_p]
+            user32.SetForegroundWindow.restype = ctypes.c_int
             if isinstance(handle, int) and handle > 0:
                 if user32.IsIconic(handle):
                     user32.ShowWindow(handle, 9)  # SW_RESTORE

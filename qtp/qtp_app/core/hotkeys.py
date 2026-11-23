@@ -92,6 +92,7 @@ def check_macos_accessibility(*, prompt: bool = False) -> bool:
             "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices"
         )
         if not prompt:
+            app_services.AXIsProcessTrusted.argtypes = []
             app_services.AXIsProcessTrusted.restype = ctypes.c_bool
             trusted = bool(app_services.AXIsProcessTrusted())
         else:
@@ -108,6 +109,7 @@ def check_macos_accessibility(*, prompt: bool = False) -> bool:
                 ctypes.c_void_p,
             ]
             cf.CFRelease.argtypes = [ctypes.c_void_p]
+            cf.CFRelease.restype = None
             k_true = ctypes.c_void_p.in_dll(cf, "kCFBooleanTrue")
             k_key = cf.CFStringCreateWithCString(None, b"AXTrustedCheckOptionPrompt", 0x08000100)
             keys = (ctypes.c_void_p * 1)(k_key)

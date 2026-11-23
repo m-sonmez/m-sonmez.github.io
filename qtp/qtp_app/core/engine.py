@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import copy
 import importlib.resources
 import json
 import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -38,6 +40,7 @@ from qtp_app.core.json_store import (
 from qtp_app.core.logging_setup import get_logger, setup_logging
 from qtp_app.core.paster import copy_to_clipboard, paste_into_active_app
 from qtp_app.core.settings import (
+    DEFAULT_SETTINGS,
     SETTINGS_FILENAME,
     SettingValidationError,
     get_app_dir,
@@ -137,6 +140,22 @@ def item_matches_category(item: dict[str, Any], category_code: str) -> bool:
     return keys.endswith(f"+{code}") or keys == code
 
 
+def format_ini_preview(item: dict[str, Any], index: int) -> str:
+    """Seçili kaydın [list_text], [list_order] ve [list_label] ham INI önizlemesini oluşturur."""
+    tid = str(item.get("raw_key") or f"text_{index:03d}")
+    keys = str(item.get("keys", ""))
+    term = str(item.get("terminator", DEFAULT_TERMINATOR))
+    text_enc = str(item.get("text", "")).replace("\r\n", "\n").replace("\n", "\\n")
+    grp = str(item.get("group", "Genel"))
+    lbl = str(item.get("label", ""))
+    full_label = f"{grp}/{lbl}" if grp and grp != "Genel" else lbl
+    return (
+        f"[list_text]\n{tid}={keys}={text_enc}{term}\n\n"
+        f"[list_order]\n{tid}={index + 1}\n\n"
+        f"[list_label]\n{tid}={full_label}"
+    )
+
+
 def _get_git_short_sha() -> str | None:
     try:
         root = Path(__file__).resolve().parent.parent.parent
@@ -162,20 +181,32 @@ class QtpEngine:
         work_dir: str | Path | None = None,
         *,
         seed_defaults: bool = True,
+        ephemeral: bool = False,
         clipboard_fn: Callable[[str], bool] | None = None,
         paste_fn: Callable[..., Any] | None = None,
     ):
         requested_dir = Path(work_dir).resolve() if work_dir else get_app_dir()
-        self.config_dir, self.portable = resolve_config_dir(requested_dir)
-        # Veri dosyaları yazılabilir çalışma dizininde yoksa config_dir üzerinde tutulur
-        self.work_dir = requested_dir if is_dir_writable(requested_dir) else self.config_dir
-        self.first_run = not (self.config_dir / SETTINGS_FILENAME).is_file()
+        if ephemeral:
+            # Salt-okunur / bilgi komutları (--selftest, --version, --modes) diskte yan etki bırakmaz
+            self.config_dir = requested_dir
+            self.portable = True
+            self.work_dir = requested_dir
+            self.first_run = False
+            self.logger = get_logger("engine")
+            self.settings = copy.deepcopy(DEFAULT_SETTINGS)
+            self.settings_path = self.config_dir / SETTINGS_FILENAME
+            self.settings_warning = None
+        else:
+            self.config_dir, self.portable = resolve_config_dir(requested_dir)
+            # Veri dosyaları yazılabilir çalışma dizininde yoksa config_dir üzerinde tutulur
+            self.work_dir = requested_dir if is_dir_writable(requested_dir) else self.config_dir
+            self.first_run = not (self.config_dir / SETTINGS_FILENAME).is_file()
 
-        setup_logging(self.config_dir, level="info")
-        self.logger = get_logger("engine")
+            setup_logging(self.config_dir, level="info")
+            self.logger = get_logger("engine")
 
-        self.settings, self.settings_path, self.settings_warning = load_settings(self.config_dir)
-        setup_logging(self.config_dir, level=str(self.settings.get("log_level", "info")))
+            self.settings, self.settings_path, self.settings_warning = load_settings(self.config_dir)
+            setup_logging(self.config_dir, level=str(self.settings.get("log_level", "info")))
 
         self._matcher = FuzzyMatcher()
         self._clipboard_fn = clipboard_fn
@@ -185,7 +216,7 @@ class QtpEngine:
         self.extra_sections: list[dict[str, Any]] = []
         self.ini_path: Path = resolve_data_path(self.settings, self.work_dir)
 
-        self._seed_defaults_if_empty(seed_defaults)
+        self._seed_defaults_if_empty(seed_defaults and not ephemeral)
         self.reload_data()
 
     def _seed_defaults_if_empty(self, seed_defaults: bool) -> None:
@@ -315,6 +346,15 @@ class QtpEngine:
             if len(reparsed.items) != len(doc.items) or len(doc.items) == 0:
                 err = f"HATA: Öğe sayısı uyuşmuyor ({len(reparsed.items)} != {len(doc.items)})."
                 return OperationResult(ok=False, exit_code=1, message=err, error=err)
+
+            # Geçici klasör içinde sıfır yan etkili dosya I/O gidiş-dönüş doğrulaması
+            with tempfile.TemporaryDirectory() as _tmp_dir:
+                tmp_ini = Path(_tmp_dir) / "selftest_roundtrip.ini"
+                write_qtp_ini(tmp_ini, reserialized, encoding="utf-16-le-bom", create_bak=False)
+                disk_doc = parse_qtp_ini(read_text_auto(tmp_ini))
+                if len(disk_doc.items) != len(doc.items):
+                    err = f"HATA: Öğe sayısı uyuşmuyor ({len(disk_doc.items)} != {len(doc.items)})."
+                    return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
             if run_ui_smoke:
                 prev_qpa = os.environ.get("QT_QPA_PLATFORM")
@@ -449,17 +489,7 @@ class QtpEngine:
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
         idx, item = found
         tid = str(item.get("raw_key") or f"text_{idx:03d}")
-        keys = str(item.get("keys", ""))
-        term = str(item.get("terminator", DEFAULT_TERMINATOR))
-        text_enc = str(item.get("text", "")).replace("\r\n", "\n").replace("\n", "\\n")
-        grp = str(item.get("group", "Genel"))
-        lbl = str(item.get("label", ""))
-        full_label = f"{grp}/{lbl}" if grp and grp != "Genel" else lbl
-        preview = (
-            f"[list_text]\n{tid}={keys}={text_enc}{term}\n\n"
-            f"[list_order]\n{tid}={idx + 1}\n\n"
-            f"[list_label]\n{tid}={full_label}"
-        )
+        preview = format_ini_preview(item, idx)
         return OperationResult(
             ok=True,
             exit_code=0,
