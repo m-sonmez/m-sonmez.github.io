@@ -138,13 +138,14 @@ def test_cli_hotkey_check_preset_and_modifiers(capsys, tmp_path: Path):
     assert json.loads(capsys.readouterr().out)["data"]["value"] == "Ctrl+Alt+Shift+W"
 
     assert main(["--work-dir", str(work), "--hotkey-preset", "function_keys", "--json"]) == 0 or True
-    assert main(["--work-dir", str(work), "--hotkey-preset", "legacy_win"]) == 0
-    assert "UYARI:" in capsys.readouterr().err
-    assert main(["--work-dir", str(work), "--check-hotkeys"]) == 0
-    chk_plain = capsys.readouterr().out
-    assert "Uyarılar:" in chk_plain and "Win+A" in chk_plain
-    assert main(["--work-dir", str(work), "--hotkey-modifiers", "Win"]) == 0
-    assert "UYARI:" in capsys.readouterr().err
+    with mock.patch("qtp_app.core.hotkeys.sys.platform", "win32"):
+        assert main(["--work-dir", str(work), "--hotkey-preset", "legacy_win"]) == 0
+        assert "UYARI:" in capsys.readouterr().err
+        assert main(["--work-dir", str(work), "--check-hotkeys"]) == 0
+        chk_plain = capsys.readouterr().out
+        assert "Uyarılar:" in chk_plain and "Win+A" in chk_plain
+        assert main(["--work-dir", str(work), "--hotkey-modifiers", "Win"]) == 0
+        assert "UYARI:" in capsys.readouterr().err
     assert main(["--work-dir", str(work), "--set", "hotkeys.W", ""]) == 0
     assert main(["--work-dir", str(work), "--hotkey-preset", "recommended"]) == 0
     capsys.readouterr()
@@ -305,6 +306,8 @@ def test_windows_ancestor_pid_console_attach_before_argparse(capsys, tmp_path: P
     fake_k32_gui_verb.AttachConsole.assert_called()
     fake_k32_gui_verb.AllocConsole.assert_not_called()
 
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     fake_k32_idle = mock.Mock()
     with mock.patch("qtp_app.cli.sys.platform", "win32"), \
          mock.patch("qtp_app.cli.sys.stdout", None), \

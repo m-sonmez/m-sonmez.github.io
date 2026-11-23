@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import os
 import sys
 from pathlib import Path
 from unittest import mock
@@ -172,6 +173,10 @@ def test_detect_hotkey_conflicts_cross_os_and_presets():
     assert "A" in bad_syntax
 
 
+@pytest.mark.skipif(
+    sys.platform != "win32" and not os.environ.get("DISPLAY"),
+    reason="Başsız POSIX oturumunda X11/pynput sunucusu yok",
+)
 @pytest.mark.parametrize(
     "preset_name",
     ["recommended", "function_keys", "ctrl_shift_alt"] if sys.platform == "win32" else ["recommended"],

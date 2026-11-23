@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import sys
 from types import SimpleNamespace
 from unittest import mock
@@ -280,8 +281,14 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
     ns_app.activateWithOptions_.return_value = True
     assert paster.restore_previous_app(ns_app, platform_name="darwin") is True
 
-    ctrl_real, key_real = paster._get_pynput_controller()
-    assert ctrl_real is not None and hasattr(key_real, "enter")
+    if sys.platform != "win32" and not os.environ.get("DISPLAY"):
+        fake_kb = SimpleNamespace(Controller=lambda: "FAKE_CTRL", Key=_FAKE_KEYS)
+        with mock.patch.dict("sys.modules", {"pynput": SimpleNamespace(keyboard=fake_kb), "pynput.keyboard": fake_kb}):
+            ctrl_real, key_real = paster._get_pynput_controller()
+        assert ctrl_real == "FAKE_CTRL" and hasattr(key_real, "enter")
+    else:
+        ctrl_real, key_real = paster._get_pynput_controller()
+        assert ctrl_real is not None and hasattr(key_real, "enter")
 
     fake_k32 = mock.Mock()
     fake_k32.GlobalAlloc.return_value = 100

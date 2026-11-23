@@ -256,7 +256,7 @@ def test_headless_modes_zero_pyqt6_dependency(tmp_path: Path, capsys):
         assert cli.run(["--work-dir", str(work), "--search", "şifre", "--json"]) == 0
         capsys.readouterr()
 
-        fake_stdin = io.StringIO("c\nq")
+        fake_stdin = io.StringIO("cq")
         fake_stdin.isatty = lambda: False
         with mock.patch.object(sys, "stdin", fake_stdin), \
              mock.patch("qtp_app.core.engine.copy_to_clipboard", return_value=True):

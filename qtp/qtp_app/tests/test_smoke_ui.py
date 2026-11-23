@@ -6,6 +6,7 @@ import copy
 import os
 from collections import Counter
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -127,12 +128,13 @@ def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(q
     assert dlg.hk_edits["A"].text() == "Ctrl+Shift+F2"
     assert "Çakışma algılanmadı" in dlg.conflict_label.text()
 
-    dlg.apply_preset("legacy_win")
-    assert dlg.hk_edits["A"].text() == "Win+A"
-    assert "Hızlı Ayarlar" in dlg.conflict_label.text()
+    with mock.patch("qtp_app.core.hotkeys.sys.platform", "win32"):
+        dlg.apply_preset("legacy_win")
+        assert dlg.hk_edits["A"].text() == "Win+A"
+        assert "Hızlı Ayarlar" in dlg.conflict_label.text()
 
-    dlg.hk_edits["Q"].setText("Ctrl+Alt+Q")
-    assert "AltGr+Q" in dlg.conflict_label.text()
+        dlg.hk_edits["Q"].setText("Ctrl+Alt+Q")
+        assert "AltGr+Q" in dlg.conflict_label.text()
 
     dlg.apply_preset("recommended")
     assert "Çakışma algılanmadı" in dlg.conflict_label.text()
