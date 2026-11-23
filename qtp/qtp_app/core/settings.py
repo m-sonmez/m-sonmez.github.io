@@ -1,4 +1,4 @@
-"""Taşınabilir ayar yönetimi (qtp_settings.json)."""
+"""Taşınabilir ayar yönetimi (qtp_settings.json) — tüm modlar tarafından ortak kullanılır."""
 
 from __future__ import annotations
 
@@ -37,6 +37,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "backup_count": 15,
     "log_level": "info",
     "language": "tr",
+    "web": {"port": 8765},
 }
 
 SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
@@ -88,11 +89,19 @@ SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
         "label": "Arayüz Dili",
         "tooltip": "Uygulama dili (şu an yalnızca 'tr' desteklenmektedir; gelecek sürümler için ayrılmıştır).",
     },
+    "web": {
+        "label": "Yerel Web Sunucusu",
+        "tooltip": "--web modunun dinleyeceği 127.0.0.1 bağlantı noktası yapılandırması (varsayılan port: 8765).",
+    },
 }
 
 VALID_THEMES = ("auto", "dark", "light")
 VALID_PASTE_METHODS = ("auto", "ctrl_v", "shift_insert", "type")
 VALID_LOG_LEVELS = ("debug", "info", "warn", "error")
+
+
+class SettingValidationError(ValueError):
+    """Geçersiz ayar anahtarı veya değeri için Türkçe hata."""
 
 
 def get_app_dir() -> Path:
@@ -106,8 +115,10 @@ def get_os_fallback_dir(platform_name: str | None = None) -> Path:
     """Salt-okunur klasör durumunda işletim sistemine özgü kullanıcı yapılandırma klasörünü döndürür."""
     plat = platform_name or sys.platform
     if plat == "win32":
-        base = os.environ.get("APPDATA") or str(Path.home() / "AppData" / "Roaming")
-        return Path(base) / "QTP"
+        base = os.environ.get("APPDATA") or os.environ.get("USERPROFILE") or str(Path.home() / "AppData" / "Roaming")
+        if os.environ.get("APPDATA"):
+            return Path(base) / "QTP"
+        return Path(base) / "AppData" / "Roaming" / "QTP"
     if plat == "darwin":
         return Path.home() / "Library" / "Application Support" / "QTP"
     xdg = os.environ.get("XDG_CONFIG_HOME")
@@ -128,10 +139,7 @@ def is_dir_writable(path: Path) -> bool:
 
 
 def resolve_config_dir(preferred_dir: str | Path | None = None, *, platform_name: str | None = None) -> tuple[Path, bool]:
-    """
-    Ayarlar ve günlük dosyaları için yazılabilir klasörü çözer.
-    Dönüş: (klasör_yolu, taşınabilir_mi)
-    """
+    """Ayarlar ve günlük dosyaları için yazılabilir klasörü çözer."""
     primary = Path(preferred_dir).resolve() if preferred_dir else get_app_dir()
     if is_dir_writable(primary):
         return primary, True
@@ -195,7 +203,129 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
     lang = str(raw.get("language", "tr")).strip().lower()
     merged["language"] = "tr" if lang in ("", "tr") else "tr"
 
+    raw_web = raw.get("web")
+    if isinstance(raw_web, dict):
+        try:
+            port = int(raw_web.get("port", 8765))
+            if 0 <= port <= 65535:
+                merged["web"] = {"port": port}
+        except (TypeError, ValueError):
+            pass
+
     return merged
+
+
+def _parse_bool(raw_val: Any) -> bool:
+    if isinstance(raw_val, bool):
+        return raw_val
+    s = str(raw_val).strip().lower()
+    if s in ("true", "1", "evet", "yes", "on"):
+        return True
+    if s in ("false", "0", "hayir", "hayır", "no", "off"):
+        return False
+    raise SettingValidationError(f"Geçersiz mantıksal değer: '{raw_val}' (true/false bekleniyor).")
+
+
+def get_setting_value(settings: dict[str, Any], key: str) -> Any:
+    """Noktalı yollar dahil ('web.port', 'hotkeys.A') ayar değerini döndürür."""
+    norm = (key or "").strip()
+    if not norm:
+        raise SettingValidationError("Geçersiz ayar anahtarı: boş anahtar.")
+    if "." in norm:
+        head, sub = norm.split(".", 1)
+        if head in settings and isinstance(settings[head], dict) and sub in settings[head]:
+            return settings[head][sub]
+        raise SettingValidationError(f"Geçersiz ayar anahtarı: '{norm}'.")
+    if norm not in DEFAULT_SETTINGS:
+        raise SettingValidationError(f"Geçersiz ayar anahtarı: '{norm}'.")
+    return settings.get(norm, DEFAULT_SETTINGS[norm])
+
+
+def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[str, Any]:
+    """Belirtilen ayar anahtarını doğrulayarak günceller ve yeni sözlük döndürür."""
+    norm = (key or "").strip()
+    updated = copy.deepcopy(settings)
+
+    if norm == "theme":
+        val = str(value).strip().lower()
+        if val not in VALID_THEMES:
+            raise SettingValidationError(f"Geçersiz ayar değeri ('theme'): '{value}' ({', '.join(VALID_THEMES)}).")
+        updated["theme"] = val
+    elif norm == "paste_method":
+        val = str(value).strip().lower()
+        if val not in VALID_PASTE_METHODS:
+            raise SettingValidationError(
+                f"Geçersiz ayar değeri ('paste_method'): '{value}' ({', '.join(VALID_PASTE_METHODS)})."
+            )
+        updated["paste_method"] = val
+    elif norm == "log_level":
+        val = str(value).strip().lower()
+        if val not in VALID_LOG_LEVELS:
+            raise SettingValidationError(
+                f"Geçersiz ayar değeri ('log_level'): '{value}' ({', '.join(VALID_LOG_LEVELS)})."
+            )
+        updated["log_level"] = val
+    elif norm == "last_category":
+        val = str(value).strip().upper()
+        if val not in ("ALL", "A", "Z", "X", "Q"):
+            raise SettingValidationError(f"Geçersiz ayar değeri ('last_category'): '{value}' (ALL/A/Z/X/Q).")
+        updated["last_category"] = val
+    elif norm in ("enter_after_paste", "start_minimized", "tray_icon"):
+        updated[norm] = _parse_bool(value)
+    elif norm == "backup_count":
+        try:
+            bc = int(value)
+        except (TypeError, ValueError) as exc:
+            raise SettingValidationError(f"Geçersiz ayar değeri ('backup_count'): '{value}'.") from exc
+        if not (1 <= bc <= 100):
+            raise SettingValidationError(f"Geçersiz ayar değeri ('backup_count'): {bc} (1–100 aralığında olmalı).")
+        updated["backup_count"] = bc
+    elif norm == "data_path":
+        dp = str(value).strip()
+        if not dp:
+            raise SettingValidationError("Geçersiz ayar değeri ('data_path'): boş yol olamaz.")
+        updated["data_path"] = dp
+    elif norm == "language":
+        val = str(value).strip().lower()
+        if val != "tr":
+            raise SettingValidationError(f"Geçersiz ayar değeri ('language'): '{value}' (yalnızca 'tr').")
+        updated["language"] = "tr"
+    elif norm == "window_size":
+        if isinstance(value, str):
+            parts = [p.strip() for p in value.replace("x", ",").replace("×", ",").split(",")]
+        elif isinstance(value, (list, tuple)):
+            parts = list(value)
+        else:
+            parts = []
+        if len(parts) != 2:
+            raise SettingValidationError(f"Geçersiz ayar değeri ('window_size'): '{value}' (örn. 720,520).")
+        try:
+            w, h = int(parts[0]), int(parts[1])
+        except (TypeError, ValueError) as exc:
+            raise SettingValidationError(f"Geçersiz ayar değeri ('window_size'): '{value}'.") from exc
+        if not (480 <= w <= 2400 and 360 <= h <= 1600):
+            raise SettingValidationError("Geçersiz ayar değeri ('window_size'): aralık dışı.")
+        updated["window_size"] = [w, h]
+    elif norm == "web.port":
+        try:
+            port = int(value)
+        except (TypeError, ValueError) as exc:
+            raise SettingValidationError(f"Geçersiz ayar değeri ('web.port'): '{value}'.") from exc
+        if not (0 <= port <= 65535):
+            raise SettingValidationError(f"Geçersiz ayar değeri ('web.port'): {port} (0–65535).")
+        updated.setdefault("web", {})["port"] = port
+    elif norm.startswith("hotkeys."):
+        sub = norm.split(".", 1)[1]
+        if sub not in DEFAULT_HOTKEYS:
+            raise SettingValidationError(f"Geçersiz ayar anahtarı: '{norm}'.")
+        val = str(value).strip()
+        if not val:
+            raise SettingValidationError(f"Geçersiz ayar değeri ('{norm}'): boş kısayol.")
+        updated.setdefault("hotkeys", dict(DEFAULT_HOTKEYS))[sub] = val
+    else:
+        raise SettingValidationError(f"Geçersiz ayar anahtarı: '{norm}'.")
+
+    return _sanitize_settings(updated)
 
 
 def load_settings(
@@ -203,24 +333,15 @@ def load_settings(
     *,
     platform_name: str | None = None,
 ) -> tuple[dict[str, Any], Path, str | None]:
-    """
-    qtp_settings.json dosyasını yükler; yoksa varsayılanlarla oluşturur.
-    Bozuk JSON algılanırsa varsayılanları yeniden yazar ve Türkçe uyarı mesajı döndürür.
-    Dönüş: (ayarlar_dict, settings_file_path, uyarı_mesajı_veya_None)
-    """
+    """qtp_settings.json dosyasını yükler; yoksa varsayılanlarla oluşturur."""
     logger = get_logger("settings")
     config_dir, portable = resolve_config_dir(preferred_dir, platform_name=platform_name)
     settings_path = config_dir / SETTINGS_FILENAME
-    warning_msg: str | None = None
 
     if not settings_path.is_file():
         defaults = copy.deepcopy(DEFAULT_SETTINGS)
         save_settings(defaults, settings_path)
-        logger.info(
-            "Varsayılan ayarlar oluşturuldu: %s (taşınabilir=%s)",
-            settings_path,
-            portable,
-        )
+        logger.info("Varsayılan ayarlar oluşturuldu: %s (taşınabilir=%s)", settings_path, portable)
         return defaults, settings_path, None
 
     try:
