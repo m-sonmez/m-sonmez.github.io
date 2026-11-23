@@ -1,9 +1,11 @@
-"""Windows tek dosya yürütülebilir paketleme betiği -> dist/qtp.exe (<= 60 MB)."""
+"""Windows tek dosya yürütülebilir paketleme ve Authenticode imzalama betiği -> dist/qtp.exe (<= 60 MB)."""
 
 from __future__ import annotations
 
 import datetime as _dt
 import hashlib
+import json
+import os
 import platform
 import shutil
 import subprocess
@@ -12,7 +14,10 @@ from pathlib import Path
 
 BUILD_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BUILD_DIR.parent.parent
+QTP_ROOT = ROOT_DIR.parent
 SPEC_PATH = BUILD_DIR / "qtp.spec"
+SIGN_SCRIPT = BUILD_DIR / "sign_windows.ps1"
+CERT_EXPORT_PATH = QTP_ROOT / "certs" / "MuratSonmez-QTP.cer"
 DIST_DIR = ROOT_DIR / "dist"
 MAX_SIZE_BYTES = 60 * 1024 * 1024
 
@@ -25,10 +30,59 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def write_build_info(target: Path, digest: str, *, target_os_note: str = "Windows 10 / 11 (x64)") -> None:
+def sign_windows_binary(target: Path) -> dict[str, str]:
+    """Windows yürütülebilir dosyasını CN=Murat Sönmez sertifikasıyla imzalar ve yalnızca ortak .cer dosyasını dışa aktarır."""
+    shell_exe = shutil.which("pwsh") or shutil.which("powershell") or "powershell"
+    cmd = [
+        shell_exe,
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        str(SIGN_SCRIPT),
+        "-ExePath",
+        str(target),
+        "-ExportCerPath",
+        str(CERT_EXPORT_PATH),
+    ]
+    if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
+        cmd.append("-AllowUntrustedRoot")
+    proc = subprocess.run(
+        cmd,
+        cwd=str(ROOT_DIR),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=True,
+    )
+    lines = [ln.strip() for ln in proc.stdout.splitlines() if ln.strip()]
+    for ln in reversed(lines):
+        if ln.startswith("{") and ln.endswith("}"):
+            parsed = json.loads(ln)
+            if isinstance(parsed, dict):
+                return {str(k): str(v) for k, v in parsed.items()}
+    raise RuntimeError(f"İmzalama çıktısı ayrıştırılamadı: {proc.stdout}\n{proc.stderr}")
+
+
+def write_build_info(
+    target: Path,
+    digest: str,
+    *,
+    target_os_note: str = "Windows 10 / 11 (x64)",
+    sign_info: dict[str, str] | None = None,
+) -> None:
     size_bytes = target.stat().st_size
     size_mb = size_bytes / (1024 * 1024)
     stamp = _dt.datetime.now().isoformat(timespec="seconds")
+    sig_block = ""
+    if sign_info:
+        sig_block = (
+            f"Dijital İmza Durumu: {sign_info.get('Status', '')}\n"
+            f"İmzalayıcı (Publisher): {sign_info.get('Subject', '')}\n"
+            f"Sertifika Parmak İzi: {sign_info.get('Thumbprint', '')}\n"
+            f"Zaman Damgası Sunucusu: {sign_info.get('TimestampServer', '')}\n"
+        )
     info = (
         "QTP Derleme Bilgisi (BUILD_INFO)\n"
         "===================================\n"
@@ -39,6 +93,7 @@ def write_build_info(target: Path, digest: str, *, target_os_note: str = "Window
         f"Üretilen İkili Dosya: dist/{target.name}\n"
         f"Boyut: {size_bytes} bayt ({size_mb:.2f} MB)\n"
         f"SHA-256: {digest}\n"
+        f"{sig_block}"
         f"Derleme Zamanı: {stamp}\n\n"
         "Çapraz Derleme Notu:\n"
         "- Linux, BSD ve macOS için `dist/qtp.bin` ikili dosyası Windows üzerinde derlenmez (Wine kullanılmaz).\n"
@@ -84,13 +139,20 @@ def build_windows() -> Path:
     if not target_exe.is_file():
         raise FileNotFoundError(f"Beklenen Windows çıktısı bulunamadı: {target_exe}")
 
+    print("Authenticode dijital imza uygulanıyor (CN=Murat Sönmez)...")
+    sign_info = sign_windows_binary(target_exe)
+    print(
+        f"İmza doğrulandı: {sign_info.get('Subject')} | Durum={sign_info.get('Status')} | "
+        f"Parmak İzi={sign_info.get('Thumbprint')} | Zaman Damgası={sign_info.get('TimestampServer')}"
+    )
+
     size_bytes = target_exe.stat().st_size
     if size_bytes > MAX_SIZE_BYTES:
         raise RuntimeError(
             f"Boyut sınırı aşıldı: {size_bytes / (1024 * 1024):.2f} MB > 60 MB"
         )
 
-    print("Otomatik doğrulama çalıştırılıyor: qtp.exe --selftest")
+    print("Otomatik doğrulama çalıştırılıyor (imzalı ikili): qtp.exe --selftest")
     for stale in list(DIST_DIR.iterdir()):
         if stale.resolve() != target_exe.resolve():
             if stale.is_dir():
@@ -115,7 +177,7 @@ def build_windows() -> Path:
         raise RuntimeError(f"--selftest sonrası dist/ içinde yan etki dosyası oluştu: {stray}")
 
     digest = sha256_file(target_exe)
-    write_build_info(target_exe, digest)
+    write_build_info(target_exe, digest, sign_info=sign_info)
     size_mb = size_bytes / (1024 * 1024)
     print(f"Derleme tamamlandı: {target_exe}")
     print(f"Boyut: {size_mb:.2f} MB ({size_bytes} bayt)")

@@ -149,4 +149,5 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=icon_path,
+    version=str(SPEC_DIR / "version_info.txt") if sys.platform == "win32" else None,
 )

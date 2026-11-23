@@ -7,7 +7,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-from qtp_app.build.build_windows import DIST_DIR, MAX_SIZE_BYTES, ROOT_DIR, sha256_file, write_build_info
+from qtp_app.build.build_windows import (
+    DIST_DIR,
+    MAX_SIZE_BYTES,
+    ROOT_DIR,
+    sha256_file,
+    sign_windows_binary,
+    write_build_info,
+)
 
 BUILD_DIR = Path(__file__).resolve().parent
 LEGACY_SPEC_PATH = BUILD_DIR / "qtp_win7.spec"
@@ -42,6 +49,8 @@ def build_windows_legacy() -> Path:
     if not target_exe.is_file():
         raise FileNotFoundError(f"Beklenen Windows 7 çıktısı bulunamadı: {target_exe}")
 
+    sign_info = sign_windows_binary(target_exe)
+
     size_bytes = target_exe.stat().st_size
     if size_bytes > MAX_SIZE_BYTES:
         raise RuntimeError(
@@ -72,7 +81,12 @@ def build_windows_legacy() -> Path:
         raise RuntimeError(f"--selftest sonrası dist/ içinde yan etki dosyası oluştu: {stray}")
 
     digest = sha256_file(target_exe)
-    write_build_info(target_exe, digest, target_os_note="Windows 7 / 8 / 8.1 x64 (Python 3.8 hedefi)")
+    write_build_info(
+        target_exe,
+        digest,
+        target_os_note="Windows 7 / 8 / 8.1 x64 (Python 3.8 hedefi)",
+        sign_info=sign_info,
+    )
     print(f"Derleme tamamlandı: {target_exe} ({size_bytes / (1024 * 1024):.2f} MB)")
     return target_exe
 

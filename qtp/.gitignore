@@ -32,6 +32,10 @@ backups/
 *.bin
 !/qtp.bin
 *.zip
+*.pfx
+*.p12
+*.key
+signing/
 .DS_Store
 Thumbs.db
 desktop.ini

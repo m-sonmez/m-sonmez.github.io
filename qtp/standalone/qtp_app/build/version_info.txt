@@ -1,0 +1,32 @@
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(2, 2, 1, 0),
+    prodvers=(2, 2, 1, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+        StringTable(
+          '040904B0',
+          [
+            StringStruct('CompanyName', 'Murat Sönmez'),
+            StringStruct('FileDescription', 'QTP — Hazır Cevaplar (Bağımsız Masaüstü Uygulaması)'),
+            StringStruct('FileVersion', '2.2.1.0'),
+            StringStruct('InternalName', 'QTP'),
+            StringStruct('LegalCopyright', 'Copyright © 2026 Murat Sönmez'),
+            StringStruct('OriginalFilename', 'qtp.exe'),
+            StringStruct('ProductName', 'QTP — Hazır Cevaplar'),
+            StringStruct('ProductVersion', '2.2.1.0')
+          ]
+        )
+      ]
+    ),
+    VarFileInfo([VarStruct('Translation', [0x0409, 1200])])
+  ]
+)
