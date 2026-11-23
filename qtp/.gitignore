@@ -21,7 +21,9 @@ backups/
 .qtp_tmp_*
 *.bak
 *.exe
+!/qtp.exe
 *.bin
+!/qtp.bin
 *.zip
 .DS_Store
 Thumbs.db
