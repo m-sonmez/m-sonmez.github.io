@@ -272,3 +272,100 @@ def test_gui_live_reload_event_handler_updates_overlay_tray_and_hotkeys(qtbot, t
     with mock.patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.Yes):
         ov_crud._confirm_delete_item(first_item)
     assert any(ev[0] == "del" for ev in crud_events)
+
+
+def _sample_image_mean_luminance(image) -> tuple[float, bool]:
+    w = image.width()
+    h = image.height()
+    total_lum = 0.0
+    samples = 0
+    has_pure_black = False
+    step_x = max(1, w // 40)
+    step_y = max(1, h // 40)
+    for y in range(2, max(3, h - 2), step_y):
+        for x in range(2, max(3, w - 2), step_x):
+            c = image.pixelColor(x, y)
+            if c.alpha() == 0:
+                continue
+            r, g, b = c.red(), c.green(), c.blue()
+            if r == 0 and g == 0 and b == 0:
+                has_pure_black = True
+            total_lum += (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+            samples += 1
+    return (total_lum / max(1, samples)), has_pure_black
+
+
+def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot):
+    from PyQt6.QtCore import QRect
+    from PyQt6.QtGui import QImage, QPainter
+    from PyQt6.QtWidgets import QApplication, QStyle, QStyleOptionViewItem
+    from qtp_app.ui.overlay import IniSnippetViewerDialog, SnippetEditorDialog, SnippetItemDelegate
+    from qtp_app.ui.theme import DARK_PALETTE, LIGHT_PALETTE
+
+    sample_items = [
+        {"raw_key": "text_000", "keys": "L-Win+A", "group": "Restoran", "label": "Selam", "text": "Merhaba destek talebiniz alındı", "terminator": "<E<N<D|"},
+        {"raw_key": "text_001", "keys": "L-Win+Z", "group": "Kurye", "label": "Teslim", "text": "Sipariş yola çıktı", "terminator": "<E<N<D|"},
+    ]
+    theme_events: list[str] = []
+    ov = OverlayWindow(sample_items, theme="light", on_theme_change=theme_events.append)
+    qtbot.addWidget(ov)
+    ov.show_overlay(category="ALL", animate=False)
+    QApplication.processEvents()
+
+    light_card_lum, has_black_light = _sample_image_mean_luminance(ov.card.grab().toImage())
+    light_list_lum, has_black_list = _sample_image_mean_luminance(ov.list_view.viewport().grab().toImage())
+    assert light_card_lum > 0.78, f"Açık tema kart parlaklığı düşük: {light_card_lum:.3f}"
+    assert light_list_lum > 0.78, f"Açık tema liste parlaklığı düşük: {light_list_lum:.3f}"
+    assert not has_black_light and not has_black_list, "Açık tema içinde saf siyah (#000000) piksel sızıntısı bulundu"
+
+    ov.toggle_theme()
+    QApplication.processEvents()
+    assert theme_events == ["dark"]
+    dark_card_lum, _ = _sample_image_mean_luminance(ov.card.grab().toImage())
+    dark_list_lum, _ = _sample_image_mean_luminance(ov.list_view.viewport().grab().toImage())
+    assert dark_card_lum < 0.25, f"Koyu tema kart parlaklığı yüksek: {dark_card_lum:.3f}"
+    assert dark_list_lum < 0.25, f"Koyu tema liste parlaklığı yüksek: {dark_list_lum:.3f}"
+
+    ov.toggle_theme()
+    QApplication.processEvents()
+    assert theme_events == ["dark", "light"]
+    relight_card_lum, _ = _sample_image_mean_luminance(ov.card.grab().toImage())
+    relight_list_lum, _ = _sample_image_mean_luminance(ov.list_view.viewport().grab().toImage())
+    assert relight_card_lum > 0.78
+    assert relight_list_lum > 0.78
+
+    for pal, expect_light in ((LIGHT_PALETTE, True), (DARK_PALETTE, False)):
+        delegate = SnippetItemDelegate(pal)
+        for state_flag in (QStyle.StateFlag.State_None, QStyle.StateFlag.State_MouseOver, QStyle.StateFlag.State_Selected):
+            img = QImage(640, delegate.ROW_HEIGHT, QImage.Format.Format_ARGB32)
+            img.fill(0)
+            painter = QPainter(img)
+            opt = QStyleOptionViewItem()
+            opt.rect = QRect(0, 0, 640, delegate.ROW_HEIGHT)
+            opt.state = state_flag
+            delegate.paint(painter, opt, ov.list_model.index(0, 0))
+            painter.end()
+            lum, has_blk = _sample_image_mean_luminance(img)
+            if expect_light:
+                assert lum > 0.70, f"Açık delegate ({state_flag}) çok koyu: {lum:.3f}"
+                assert not has_blk
+            else:
+                assert lum < 0.30, f"Koyu delegate ({state_flag}) çok açık: {lum:.3f}"
+
+        for dlg in (
+            SettingsWindow(DEFAULT_SETTINGS, pal),
+            HelpDialog(pal),
+            SnippetEditorDialog(pal, ["Genel"], item=sample_items[0]),
+            IniSnippetViewerDialog(sample_items[0], 0, "QuickTextPaste.ini", pal),
+        ):
+            qtbot.addWidget(dlg)
+            dlg.show()
+            QApplication.processEvents()
+            dlg_lum, dlg_blk = _sample_image_mean_luminance(dlg.grab().toImage())
+            if expect_light:
+                assert dlg_lum > 0.78, f"Açık {type(dlg).__name__} parlaklığı düşük: {dlg_lum:.3f}"
+                assert not dlg_blk, f"Açık {type(dlg).__name__} içinde saf siyah piksel bulundu"
+            else:
+                assert dlg_lum < 0.25, f"Koyu {type(dlg).__name__} parlaklığı yüksek: {dlg_lum:.3f}"
+            dlg.close()
+

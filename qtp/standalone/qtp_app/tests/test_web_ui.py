@@ -70,6 +70,9 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
 
         assert ACCENT_PURPLE in css
         assert ACCENT_CYAN in css
+        assert "color-scheme: light;" in css
+        assert "color-scheme: dark;" in css
+        assert "select option" in css or "option {" in css
         assert LIGHT_PALETTE.surface in css
         assert LIGHT_PALETTE.window_bg in css
         assert LIGHT_PALETTE.text_primary in css

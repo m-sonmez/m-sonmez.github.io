@@ -365,6 +365,8 @@ def test_no_unnecessary_comments():
         ("Makefile", STANDALONE_DIR / "Makefile"),
         ("make.bat", STANDALONE_DIR / "make.bat"),
         (".github/workflows/qtp-publish-linux.yml", QTP_ROOT_DIR.parent / ".github" / "workflows" / "qtp-publish-linux.yml"),
+        ("sign_windows.ps1", app_dir / "build" / "sign_windows.ps1"),
+        ("version_info.txt", app_dir / "build" / "version_info.txt"),
     ]
     for rel_cfg, cfg_path in cfg_files:
         lines = cfg_path.read_text(encoding="utf-8").splitlines()
@@ -374,4 +376,151 @@ def test_no_unnecessary_comments():
                 continue
             if st.startswith("#") or st.upper().startswith("REM ") or st.startswith("::"):
                 raise AssertionError(f"{rel_cfg}:{ln_no} gereksiz yorum bulundu: {st}")
+
+
+def _parse_css_rgba(color_str: str) -> tuple[int, int, int, float]:
+    raw = str(color_str or "").strip()
+    m = re.match(
+        r"^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9]*\.?[0-9]+))?\s*\)$",
+        raw,
+        re.IGNORECASE,
+    )
+    if m:
+        r, g, b = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        a = float(m.group(4)) if m.group(4) is not None else 1.0
+        return r, g, b, max(0.0, min(1.0, a))
+    hx = raw.lstrip("#")
+    if len(hx) == 3:
+        hx = "".join(c * 2 for c in hx)
+    if len(hx) == 6:
+        return int(hx[0:2], 16), int(hx[2:4], 16), int(hx[4:6], 16), 1.0
+    raise AssertionError(f"Çözümlenemeyen renk: {color_str!r}")
+
+
+def _composite_over(fg_rgba: tuple[int, int, int, float], bg_rgb: tuple[int, int, int]) -> tuple[int, int, int]:
+    r, g, b, a = fg_rgba
+    return (
+        int(round(r * a + bg_rgb[0] * (1.0 - a))),
+        int(round(g * a + bg_rgb[1] * (1.0 - a))),
+        int(round(b * a + bg_rgb[2] * (1.0 - a))),
+    )
+
+
+def _rel_luminance(rgb: tuple[int, int, int]) -> float:
+    def _lin(ch: int) -> float:
+        s = ch / 255.0
+        return s / 12.92 if s <= 0.03928 else ((s + 0.055) / 1.055) ** 2.4
+
+    return 0.2126 * _lin(rgb[0]) + 0.7152 * _lin(rgb[1]) + 0.0722 * _lin(rgb[2])
+
+
+def _contrast_ratio(fg_str: str, bg_str: str, *, base_bg: str = "#FFFFFF") -> float:
+    base_rgb = _parse_css_rgba(base_bg)[:3]
+    bg_rgb = _composite_over(_parse_css_rgba(bg_str), base_rgb)
+    fg_rgb = _composite_over(_parse_css_rgba(fg_str), bg_rgb)
+    l1 = _rel_luminance(fg_rgb)
+    l2 = _rel_luminance(bg_rgb)
+    hi, lo = max(l1, l2), min(l1, l2)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def test_wcag_contrast_across_gui_palettes_and_web_css():
+    from qtp_app.ui.theme import ACCENT_PURPLE, DARK_PALETTE, LIGHT_PALETTE
+
+    for pal in (LIGHT_PALETTE, DARK_PALETTE):
+        base = pal.window_bg
+        text_pairs = [
+            (pal.text_primary, pal.window_bg, base),
+            (pal.text_primary, pal.surface, base),
+            (pal.text_primary, pal.surface_alt, base),
+            (pal.text_primary, pal.input_bg, base),
+            (pal.text_primary, pal.card_bg, base),
+            (pal.text_primary, pal.card_hover, pal.card_bg),
+            (pal.text_primary, pal.card_selected, pal.card_bg),
+            (pal.text_secondary, pal.window_bg, base),
+            (pal.text_secondary, pal.surface, base),
+            (pal.text_secondary, pal.surface_alt, base),
+            (pal.text_muted, pal.window_bg, base),
+            (pal.text_muted, pal.surface, base),
+            (pal.text_muted, pal.surface_alt, base),
+            (pal.text_muted, pal.card_hover, pal.card_bg),
+            (pal.text_muted, pal.card_selected, pal.card_bg),
+            (pal.input_placeholder, pal.input_bg, base),
+            (pal.pill_text, pal.pill_bg, base),
+            (pal.text_primary, pal.pill_hover, base),
+            (pal.pill_active_text, ACCENT_PURPLE, base),
+            (pal.pill_active_text, "#0E7490", base),
+            (pal.btn_text, pal.btn_bg, base),
+            (pal.text_primary, pal.btn_hover, base),
+            (pal.badge_text, pal.badge_bg, pal.card_bg),
+            (pal.highlight_text, pal.highlight_bg, pal.card_bg),
+            (pal.toast_text, pal.toast_bg, base),
+            (pal.menu_text, pal.menu_bg, base),
+            (pal.menu_hover_text, pal.menu_hover_bg, base),
+            (pal.tooltip_text, pal.tooltip_bg, base),
+            (pal.danger_text, pal.danger_bg, pal.surface),
+            (pal.danger_hover_text, pal.danger_hover_bg, base),
+            (pal.heading_color, pal.surface, base),
+            (pal.heading_color, pal.surface_alt, base),
+            (pal.success_text, pal.surface, base),
+            (pal.warning_text, pal.surface, base),
+        ]
+        for fg, bg, parent_bg in text_pairs:
+            cr = _contrast_ratio(fg, bg, base_bg=parent_bg)
+            assert cr >= 4.5, f"{pal.name}: düşük WCAG metin kontrastı {fg} / {bg} -> {cr:.2f}"
+
+        ui_pairs = [
+            (pal.focus_border, pal.input_bg, base),
+            (pal.selected_border, pal.card_selected, pal.card_bg),
+            (pal.scrollbar_handle, pal.scrollbar_bg, base),
+            (pal.scrollbar_handle_hover, pal.scrollbar_bg, base),
+        ]
+        for fg, bg, parent_bg in ui_pairs:
+            cr = _contrast_ratio(fg, bg, base_bg=parent_bg)
+            assert cr >= 3.0, f"{pal.name}: düşük WCAG kontrol kontrastı {fg} / {bg} -> {cr:.2f}"
+
+    css_text = (STANDALONE_DIR / "qtp_app" / "web" / "theme.css").read_text(encoding="utf-8")
+    root_m = re.search(r":root\s*\{([^}]*)\}", css_text)
+    dark_m = re.search(r':root\[data-theme="dark"\]\s*\{([^}]*)\}', css_text)
+    assert root_m and dark_m
+    for label, block in (("light", root_m.group(1)), ("dark", dark_m.group(1))):
+        tokens = dict(re.findall(r"(--[a-z0-9-]+)\s*:\s*([^;]+);", block))
+        assert tokens.get("color-scheme") if "color-scheme" in tokens else f"color-scheme: {label}" in block
+        for fg_k, bg_k, base_k in (
+            ("--text-primary", "--window-bg", "--page-bg"),
+            ("--text-primary", "--surface", "--page-bg"),
+            ("--text-secondary", "--surface", "--page-bg"),
+            ("--text-muted", "--surface", "--page-bg"),
+            ("--input-placeholder", "--input-bg", "--surface"),
+            ("--pill-text", "--pill-bg", "--window-bg"),
+            ("--btn-text", "--btn-bg", "--window-bg"),
+            ("--badge-text", "--badge-bg", "--surface"),
+            ("--highlight-text", "--highlight-bg", "--surface"),
+            ("--toast-text", "--toast-bg", "--page-bg"),
+            ("--danger-text", "--danger-bg", "--surface"),
+            ("--heading-color", "--surface-alt", "--surface"),
+        ):
+            cr = _contrast_ratio(tokens[fg_k], tokens[bg_k], base_bg=tokens[base_k])
+            assert cr >= 4.5, f"theme.css ({label}): düşük kontrast {fg_k}/{bg_k} -> {cr:.2f}"
+        for fg_k, bg_k in (("--focus-border", "--input-bg"), ("--scrollbar-handle", "--scrollbar-bg")):
+            cr = _contrast_ratio(tokens[fg_k], tokens[bg_k], base_bg=tokens["--page-bg"])
+            assert cr >= 3.0, f"theme.css ({label}): düşük kontrol kontrastı {fg_k}/{bg_k} -> {cr:.2f}"
+
+
+def test_zero_hardcoded_colors_outside_theme_definitions():
+    app_dir = STANDALONE_DIR / "qtp_app"
+    hex_re = re.compile(r"#[0-9a-fA-F]{3,8}\b")
+    qcolor_num_re = re.compile(r"QColor\(\s*\d+")
+    rgba_re = re.compile(r"rgba?\(\s*\d+")
+    for rel in ("ui/overlay.py", "ui/settings_window.py", "ui/help_dialog.py", "main.py"):
+        src = (app_dir / rel).read_text(encoding="utf-8")
+        assert not hex_re.findall(src), f"{rel} içinde sabit hex rengi bulundu: {hex_re.findall(src)}"
+        assert not qcolor_num_re.findall(src), f"{rel} içinde sabit QColor(r,g,b) bulundu"
+        assert not rgba_re.findall(src), f"{rel} içinde sabit rgb/rgba bulundu"
+
+    css_text = (app_dir / "web" / "theme.css").read_text(encoding="utf-8")
+    stripped = re.sub(r":root(?:\[data-theme=\"dark\"\])?\s*\{[^}]*\}", "", css_text)
+    assert not hex_re.findall(stripped), f"theme.css bileşenlerinde sabit hex bulundu: {hex_re.findall(stripped)}"
+    assert not rgba_re.findall(stripped), f"theme.css bileşenlerinde sabit rgb/rgba bulundu: {rgba_re.findall(stripped)}"
+
 
