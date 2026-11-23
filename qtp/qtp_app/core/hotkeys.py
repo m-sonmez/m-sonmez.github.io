@@ -1,4 +1,4 @@
-"""Sistem geneli global kısayol kaydı ve platform uyumluluğu (Windows / Linux / macOS)."""
+"""Sistem geneli global kısayol kaydı ve zarif platform geri dönüşü (Windows / Linux / macOS)."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import sys
 from typing import Any, Callable
 
 from qtp_app.core.logging_setup import get_logger
+from qtp_app.core.paster import is_wayland_session
 
 logger = get_logger("hotkeys")
 
@@ -73,7 +74,7 @@ def to_pynput_combo(combo: str) -> str:
 
 
 def to_keyboard_lib_combo(combo: str) -> str:
-    """'Win+A' gibi dizeleri Windows fallback 'keyboard' kütüphanesi biçimine çevirir."""
+    """'Win+A' gibi dizeleri Windows yedek 'keyboard' kütüphanesi biçimine çevirir."""
     tokens = [t.strip() for t in re.split(r"\+", combo or "") if t.strip()]
     mapped = [_MOD_MAP_KEYBOARD.get(t.lower(), t.lower()) for t in tokens]
     return "+".join(mapped)
@@ -81,8 +82,8 @@ def to_keyboard_lib_combo(combo: str) -> str:
 
 def check_macos_accessibility(*, prompt: bool = False) -> bool:
     """
-    macOS üzerinde global kısayollar ve tuş simülasyonu için Erişilebilirlik (Accessibility) iznini denetler.
-    prompt=True ise sistem izin penceresini tetikler.
+    macOS üzerinde Erişilebilirlik iznini bloklamadan denetler.
+    İzin yoksa başlangıcı durdurmaz, SSS.md ile uyumlu uyarı günlüğü yazar.
     """
     if sys.platform != "darwin":
         return True
@@ -133,7 +134,7 @@ def check_macos_accessibility(*, prompt: bool = False) -> bool:
 class HotkeyManager:
     """
     Global kısayol yaşam döngüsü yöneticisi.
-    Ayarlar değiştiğinde eski dinleyicileri tamamen kaldırıp yeniden kaydeder (kopya/çakışma üretmez).
+    Wayland veya macOS izni yokluğunda başlangıcı asla bloklamaz; uyarı günlüğü basar.
     """
 
     def __init__(
@@ -188,6 +189,8 @@ class HotkeyManager:
             import keyboard  # type: ignore
 
             return keyboard
+        except ImportError:
+            return None
         except Exception:
             return None
 
@@ -210,8 +213,8 @@ class HotkeyManager:
         """Verilen kategori→kısayol haritasını global olarak kaydeder."""
         self.unregister()
 
-        if self._platform == "darwin" and request_macos_permission:
-            check_macos_accessibility(prompt=True)
+        if self._platform == "darwin":
+            check_macos_accessibility(prompt=request_macos_permission)
 
         pynput_mapping: dict[str, Callable[[], None]] = {}
         combo_by_category: dict[str, str] = {}
@@ -245,12 +248,17 @@ class HotkeyManager:
                 results[cat] = True
                 logger.info("Global kısayol kaydedildi (pynput): %s -> %s", combo, cat)
         except Exception as exc:
-            logger.warning(
-                "pynput global kısayol kaydı başarısız oldu (%s); alternatif yöntem deneniyor.",
-                exc,
-            )
+            if self._platform == "linux" and is_wayland_session():
+                logger.warning(
+                    "Wayland oturumunda global kısayollar kısıtlıdır (%s); uygulama tepsi/TUI/CLI/Web ile kullanılabilir.",
+                    exc,
+                )
+            else:
+                logger.warning(
+                    "pynput global kısayol kaydı başarısız oldu (%s); alternatif yöntem deneniyor.",
+                    exc,
+                )
 
-        # Windows üzerinde Win+* sistem tarafından kesilirse veya pynput başarısızsa keyboard.add_hotkey geri dönüşü
         if not pynput_ok and self._platform == "win32":
             kb = self._resolve_keyboard_module()
             if kb is not None:
@@ -264,11 +272,11 @@ class HotkeyManager:
                         logger.info("Global kısayol kaydedildi (keyboard fallback): %s -> %s", combo, cat)
                     except Exception as kb_exc:
                         results[cat] = False
-                        logger.error("Kısayol kaydedilemedi (%s=%s): %s", cat, combo, kb_exc)
+                        logger.warning("Global kısayol kaydedilemedi: %s (%s)", cat, kb_exc)
             else:
                 for cat in combo_by_category:
                     results[cat] = False
-                    logger.error("Kısayol kaydedilemedi (%s): fallback modülü yok.", cat)
+                    logger.warning("Global kısayol kaydedilemedi: %s (geri dönüş yok)", cat)
         elif not pynput_ok:
             for cat in combo_by_category:
                 results[cat] = False

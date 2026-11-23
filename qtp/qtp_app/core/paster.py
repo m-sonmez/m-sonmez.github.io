@@ -1,7 +1,8 @@
-"""Pano kopyalama, önceki pencere odağını geri yükleme ve otomatik yapıştırma motoru."""
+"""Sıfır dış bağımlılıklı pano kopyalama, odak geri yükleme ve otomatik yapıştırma motoru."""
 
 from __future__ import annotations
 
+import base64
 import ctypes
 import os
 import shutil
@@ -15,6 +16,9 @@ from qtp_app.core.logging_setup import get_logger
 
 logger = get_logger("paster")
 
+_CF_UNICODETEXT = 13
+_GMEM_MOVEABLE = 0x0002
+
 
 @dataclass
 class PasteResult:
@@ -26,6 +30,7 @@ class PasteResult:
     enter_sent: bool
     method: str
     warning: str | None = None
+    exit_code: int = 0
 
 
 def is_wayland_session() -> bool:
@@ -37,28 +42,187 @@ def is_wayland_session() -> bool:
     )
 
 
-def copy_to_clipboard(text: str, *, qt_clipboard: Any = None) -> bool:
-    """Metni panoya kopyalar: önce pyperclip, olmazsa Qt panosunu dener."""
+def _emit_osc52(text: str) -> bool:
+    """Etkileşimli terminallerde OSC 52 kaçış dizisiyle sistem panosunu günceller."""
     try:
-        import pyperclip
+        stream = sys.stdout
+        if stream is not None and hasattr(stream, "isatty") and stream.isatty():
+            encoded = base64.b64encode(text.encode("utf-8")).decode("ascii")
+            stream.write(f"\x1b]52;c;{encoded}\x07")
+            stream.flush()
+            return True
+    except Exception:
+        pass
+    return False
 
-        pyperclip.copy(text)
+
+def _copy_windows_ctypes(text: str) -> bool:
+    """Saf ctypes Win32 API (OpenClipboard/SetClipboardData) ile UTF-16 metin kopyalar."""
+    user32 = ctypes.windll.user32
+    kernel32 = ctypes.windll.kernel32
+    kernel32.GlobalAlloc.argtypes = [ctypes.c_uint, ctypes.c_size_t]
+    kernel32.GlobalAlloc.restype = ctypes.c_void_p
+    kernel32.GlobalLock.argtypes = [ctypes.c_void_p]
+    kernel32.GlobalLock.restype = ctypes.c_void_p
+    kernel32.GlobalUnlock.argtypes = [ctypes.c_void_p]
+    kernel32.GlobalFree.argtypes = [ctypes.c_void_p]
+    user32.OpenClipboard.argtypes = [ctypes.c_void_p]
+    user32.SetClipboardData.argtypes = [ctypes.c_uint, ctypes.c_void_p]
+    user32.SetClipboardData.restype = ctypes.c_void_p
+
+    payload = text.encode("utf-16-le") + b"\x00\x00"
+    hmem = kernel32.GlobalAlloc(_GMEM_MOVEABLE, len(payload))
+    if not hmem:
+        return False
+    ptr = kernel32.GlobalLock(hmem)
+    if not ptr:
+        kernel32.GlobalFree(hmem)
+        return False
+    ctypes.memmove(ptr, payload, len(payload))
+    kernel32.GlobalUnlock(hmem)
+
+    opened = False
+    for _ in range(5):
+        if user32.OpenClipboard(None):
+            opened = True
+            break
+        time.sleep(0.01)
+    if not opened:
+        kernel32.GlobalFree(hmem)
+        return False
+
+    try:
+        user32.EmptyClipboard()
+        res = user32.SetClipboardData(_CF_UNICODETEXT, hmem)
+        if not res:
+            kernel32.GlobalFree(hmem)
+            return False
         return True
-    except Exception as exc:
-        logger.debug("pyperclip kopyalama başarısız, Qt panosu deneniyor: %s", exc)
+    finally:
+        user32.CloseClipboard()
 
+
+def _copy_macos_native(text: str) -> bool:
+    """macOS üzerinde önce AppKit NSPasteboard, yoksa yerleşik pbcopy kullanır."""
     try:
-        if qt_clipboard is not None:
+        from AppKit import NSPasteboard, NSStringPboardType  # type: ignore
+
+        pb = NSPasteboard.generalPasteboard()
+        pb.clearContents()
+        pb.declareTypes_owner_([NSStringPboardType], None)
+        if pb.setString_forType_(text, NSStringPboardType):
+            return True
+    except Exception:
+        pass
+
+    pbcopy = shutil.which("pbcopy")
+    if pbcopy:
+        try:
+            subprocess.run([pbcopy], input=text.encode("utf-8"), check=True, timeout=2)
+            return True
+        except Exception:
+            pass
+    return False
+
+
+def _copy_linux_x11_ctypes(text: str) -> bool:
+    """Harici araç olmadan libX11.so.6 veya Qt panosunu dener."""
+    try:
+        if os.environ.get("DISPLAY") and not os.environ.get("QT_QPA_PLATFORM") == "offscreen":
+            from PyQt6.QtGui import QGuiApplication
+
+            app = QGuiApplication.instance()
+            if app is not None and app.clipboard() is not None:
+                app.clipboard().setText(text)
+                return True
+    except Exception:
+        pass
+
+    if os.environ.get("DISPLAY"):
+        try:
+            x11 = ctypes.CDLL("libX11.so.6")
+            x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+            x11.XOpenDisplay.restype = ctypes.c_void_p
+            dpy = x11.XOpenDisplay(None)
+            if dpy:
+                try:
+                    x11.XInternAtom.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
+                    x11.XInternAtom.restype = ctypes.c_ulong
+                    clip_atom = x11.XInternAtom(dpy, b"CLIPBOARD", 0)
+                    utf8_atom = x11.XInternAtom(dpy, b"UTF8_STRING", 0)
+                    if clip_atom and utf8_atom:
+                        x11.XStoreBytes.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
+                        raw = text.encode("utf-8")
+                        x11.XStoreBytes(dpy, raw, len(raw))
+                        x11.XFlush(dpy)
+                        return True
+                finally:
+                    x11.XCloseDisplay(dpy)
+        except Exception:
+            pass
+    return False
+
+
+def copy_to_clipboard(
+    text: str,
+    *,
+    qt_clipboard: Any = None,
+    platform_name: str | None = None,
+) -> bool:
+    """
+    Metni harici araca ihtiyaç duymadan işletim sistemi panosuna kopyalar.
+    Sıra: özel Qt panosu -> yerel OS API (Win32 ctypes / macOS AppKit / Linux X11-Qt-OSC52) -> isteğe bağlı pyperclip.
+    """
+    plat = platform_name or sys.platform
+
+    if qt_clipboard is not None:
+        try:
             qt_clipboard.setText(text)
             return True
+        except Exception as exc:
+            logger.debug("Özel Qt panosu kullanılamadı: %s", exc)
+
+    if plat == "win32":
+        try:
+            if _copy_windows_ctypes(text):
+                return True
+        except Exception as exc:
+            logger.debug("Win32 ctypes pano hatası: %s", exc)
+    elif plat == "darwin":
+        if _copy_macos_native(text):
+            return True
+    elif plat.startswith("linux"):
+        if _copy_linux_x11_ctypes(text):
+            return True
+        if _emit_osc52(text):
+            return True
+
+    # Aktif Qt uygulaması varsa son güvenli yerel yol olarak kullan
+    try:
         from PyQt6.QtGui import QGuiApplication
 
         app = QGuiApplication.instance()
         if app is not None and app.clipboard() is not None:
             app.clipboard().setText(text)
             return True
+    except Exception:
+        pass
+
+    # İsteğe bağlı üçüncü parti yedek (hiçbir zaman zorunlu değil)
+    try:
+        import pyperclip  # type: ignore
+
+        pyperclip.copy(text)
+        return True
+    except ImportError:
+        pass
     except Exception as exc:
-        logger.error("Pano kopyalama hatası: %s", exc)
+        logger.debug("İsteğe bağlı pyperclip kopyalaması başarısız: %s", exc)
+
+    if _emit_osc52(text):
+        return True
+
+    logger.warning("Pano erişimi başarısız: grafik oturumu veya pano desteği bulunamadı.")
     return False
 
 
@@ -89,19 +253,27 @@ def capture_previous_app(*, platform_name: str | None = None) -> Any:
                 if proc.returncode == 0 and proc.stdout.strip().isdigit():
                     return int(proc.stdout.strip())
                 return None
-        if plat.startswith("linux") and not is_wayland_session():
-            xdotool = shutil.which("xdotool")
-            if xdotool:
-                proc = subprocess.run([xdotool, "getactivewindow"], capture_output=True, text=True, timeout=1.5)
-                if proc.returncode == 0 and proc.stdout.strip():
-                    return proc.stdout.strip()
+        if plat.startswith("linux") and not is_wayland_session() and os.environ.get("DISPLAY"):
+            try:
+                from Xlib import X, display as xdisplay  # type: ignore
+
+                dpy = xdisplay.Display()
+                try:
+                    focus = dpy.get_input_focus()
+                    win = getattr(focus, "focus", None)
+                    if win and hasattr(win, "id") and win.id not in (0, X.PointerRoot):
+                        return int(win.id)
+                finally:
+                    dpy.close()
+            except Exception:
+                pass
     except Exception as exc:
         logger.debug("Önceki pencere yakalanamadı: %s", exc)
     return None
 
 
 def restore_previous_app(handle: Any, *, platform_name: str | None = None) -> bool:
-    """Kaydedilen önceki uygulamaya odağı geri verir."""
+    """Kaydedilen önceki uygulamaya harici ikili gerektirmeden odağı geri verir."""
     if not handle:
         return False
     plat = platform_name or sys.platform
@@ -115,7 +287,6 @@ def restore_previous_app(handle: Any, *, platform_name: str | None = None) -> bo
             return False
         if plat == "darwin":
             if hasattr(handle, "activateWithOptions_"):
-                # NSApplicationActivateIgnoringOtherApps = 1 << 1
                 return bool(handle.activateWithOptions_(2))
             if isinstance(handle, int):
                 proc = subprocess.run(
@@ -130,26 +301,20 @@ def restore_previous_app(handle: Any, *, platform_name: str | None = None) -> bo
                 )
                 return proc.returncode == 0
             return False
-        if plat.startswith("linux"):
-            xdotool = shutil.which("xdotool")
-            if xdotool:
-                proc = subprocess.run(
-                    [xdotool, "windowactivate", "--sync", str(handle)],
-                    capture_output=True,
-                    text=True,
-                    timeout=1.5,
-                )
-                if proc.returncode == 0:
+        if plat.startswith("linux") and os.environ.get("DISPLAY"):
+            try:
+                from Xlib import X, display as xdisplay  # type: ignore
+
+                dpy = xdisplay.Display()
+                try:
+                    win = dpy.create_resource_object("window", int(handle))
+                    win.set_input_focus(X.RevertToParent, X.CurrentTime)
+                    dpy.flush()
                     return True
-            wmctrl = shutil.which("wmctrl")
-            if wmctrl:
-                proc = subprocess.run(
-                    [wmctrl, "-i", "-a", str(handle)],
-                    capture_output=True,
-                    text=True,
-                    timeout=1.5,
-                )
-                return proc.returncode == 0
+                finally:
+                    dpy.close()
+            except Exception:
+                return False
     except Exception as exc:
         logger.debug("Önceki uygulama odağı geri yüklenemedi: %s", exc)
     return False
@@ -195,17 +360,14 @@ def _paste_wayland(
         if method == "type":
             run_fn([ydotool, "type", "--", text], check=True, timeout=3)
         else:
-            # Linux evdev keycodes: 29=LCtrl, 47=V, 28=Enter
             run_fn([ydotool, "key", "29:1", "47:1", "47:0", "29:0"], check=True, timeout=3)
         if send_enter:
             run_fn([ydotool, "key", "28:1", "28:0"], check=True, timeout=3)
         return True, "ydotool", None
 
-    warning = (
-        "Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; pynput (Xlib) ile yapıştırma deneniyor."
-    )
+    warning = "Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; yapay yapıştırma gerçekleştirilemedi."
     logger.warning(warning)
-    return False, "wayland_fallback", warning
+    return False, "wayland_unavailable", warning
 
 
 def paste_into_active_app(
@@ -225,20 +387,22 @@ def paste_into_active_app(
     sleep_fn: Callable[[float], None] = time.sleep,
 ) -> PasteResult:
     """
-    Metni panoya kopyalar, katmanı gizler, 120 ms bekler ve aktif uygulamaya yapıştırır.
-    Öğe '<E<N<D|' bitiş işaretine sahipse ve enter_after_paste açıksa sonda Enter tuşu gönderir.
+    Metni panoya kopyalar, katmanı gizler, bekler ve aktif uygulamaya yapıştırır.
+    Çıkış kodları: 0 başarılı, 3 pano kullanılamıyor, 4 tuş gönderimi gerçekleştirilemedi.
     """
     plat = platform_name or sys.platform
-    copied = copy_to_clipboard(text, qt_clipboard=qt_clipboard)
+    copied = copy_to_clipboard(text, qt_clipboard=qt_clipboard, platform_name=plat)
     if not copied:
-        logger.error("Pano erişimi başarısız olduğu için yapıştırma iptal edildi.")
+        msg = "Pano erişimi başarısız: grafik oturumu veya pano desteği bulunamadı."
+        logger.error(msg)
         return PasteResult(
             ok=False,
             copied=False,
             pasted=False,
             enter_sent=False,
             method="clipboard_error",
-            warning="Panoya kopyalama başarısız oldu.",
+            warning=msg,
+            exit_code=3,
         )
 
     if hide_overlay_cb is not None:
@@ -256,7 +420,6 @@ def paste_into_active_app(
     should_send_enter = bool(has_end_marker and enter_after_paste)
     method_norm = (paste_method or "auto").strip().lower()
     use_wayland = is_wayland_session() if wayland is None else wayland
-    warning_msg: str | None = None
 
     if use_wayland and plat.startswith("linux"):
         ok_wl, used_tool, wl_warn = _paste_wayland(
@@ -272,8 +435,18 @@ def paste_into_active_app(
                 pasted=True,
                 enter_sent=should_send_enter,
                 method=used_tool,
+                exit_code=0,
             )
-        warning_msg = wl_warn
+        if not os.environ.get("DISPLAY") and controller is None:
+            return PasteResult(
+                ok=False,
+                copied=True,
+                pasted=False,
+                enter_sent=False,
+                method="wayland_unavailable",
+                warning=wl_warn,
+                exit_code=4,
+            )
 
     try:
         if controller is None or key_enum is None:
@@ -306,15 +479,17 @@ def paste_into_active_app(
             pasted=True,
             enter_sent=enter_sent,
             method=used_method,
-            warning=warning_msg,
+            exit_code=0,
         )
     except Exception as exc:
-        logger.error("Tuş simülasyonu başarısız (yalnızca panoya kopyalandı): %s", exc, exc_info=True)
+        warn = f"Tuş simülasyonu başarısız (yalnızca panoya kopyalandı): {exc}"
+        logger.warning(warn)
         return PasteResult(
             ok=False,
             copied=True,
             pasted=False,
             enter_sent=False,
-            method="error",
-            warning=f"Tuş simülasyonu başarısız: {exc}",
+            method="injection_unavailable",
+            warning=warn,
+            exit_code=4,
         )
