@@ -72,9 +72,15 @@ def test_overlay_renders_all_items_focus_pills_and_enter_paste(qtbot):
 
 
 def test_help_settings_and_tray_smoke(qtbot):
+    from qtp_app.core.engine import build_cli_help_text
+
     help_dlg = HelpDialog(DARK_PALETTE)
     qtbot.addWidget(help_dlg)
-    assert help_dlg.tabs.count() == 3
+    assert help_dlg.tabs.count() == 4
+    tab_titles = [help_dlg.tabs.tabText(i) for i in range(help_dlg.tabs.count())]
+    assert tab_titles == ["Kullanım Kılavuzu", "Kısayollar", "Sorun Giderme (SSS)", "CLI & Parametreler"]
+    assert "--hotkey-preset" in help_dlg.browsers[3].toPlainText()
+    assert build_cli_help_text(verbose=True).splitlines()[0] in help_dlg.browsers[3].toPlainText()
 
     settings_dlg = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE)
     qtbot.addWidget(settings_dlg)

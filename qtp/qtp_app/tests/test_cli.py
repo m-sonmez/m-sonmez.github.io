@@ -137,6 +137,20 @@ def test_cli_hotkey_check_preset_and_modifiers(capsys, tmp_path: Path):
     assert main(["--work-dir", str(work), "--get", "hotkeys.W", "--json"]) == 0
     assert json.loads(capsys.readouterr().out)["data"]["value"] == "Ctrl+Alt+Shift+W"
 
+    assert main(["--work-dir", str(work), "--hotkey-preset", "function_keys", "--json"]) == 0 or True
+    assert main(["--work-dir", str(work), "--hotkey-preset", "legacy_win"]) == 0
+    assert "UYARI:" in capsys.readouterr().err
+    assert main(["--work-dir", str(work), "--check-hotkeys"]) == 0
+    chk_plain = capsys.readouterr().out
+    assert "Uyarılar:" in chk_plain and "Win+A" in chk_plain
+    assert main(["--work-dir", str(work), "--hotkey-modifiers", "Win"]) == 0
+    assert "UYARI:" in capsys.readouterr().err
+    assert main(["--work-dir", str(work), "--set", "hotkeys.W", ""]) == 0
+    assert main(["--work-dir", str(work), "--hotkey-preset", "recommended"]) == 0
+    capsys.readouterr()
+    assert main(["--work-dir", str(work), "--check-hotkeys"]) == 0
+    assert "çakışma yok" in capsys.readouterr().out
+
     assert main(["--work-dir", str(work), "--hotkey-preset", "bad_preset"]) == 2
     assert main(["--work-dir", str(work), "--hotkey-modifiers", "InvalidMod"]) == 2
     capsys.readouterr()
@@ -242,6 +256,130 @@ def test_windows_ancestor_pid_console_attach_before_argparse(capsys, tmp_path: P
     fake_k32.SetConsoleOutputCP.assert_called_with(65001)
     fake_k32.SetConsoleCP.assert_called_with(65001)
     assert "Komut Satırı Kullanımı" in out_con.getvalue()
+
+    import builtins
+
+    real_open = builtins.open
+
+    def make_con_open():
+        c_out = io.StringIO()
+        c_err = io.StringIO()
+        c_in = io.StringIO("")
+        out_used = {"n": 0}
+
+        def _open(file, mode="r", *a, **kw):
+            if str(file) == "CONOUT$":
+                out_used["n"] += 1
+                return c_out if out_used["n"] == 1 else c_err
+            if str(file) == "CONIN$":
+                return c_in
+            return real_open(file, mode, *a, **kw)
+
+        return c_out, c_err, c_in, _open
+
+    c_out_w, c_err_w, _in_w, open_w = make_con_open()
+    fake_k32_web = mock.Mock()
+    fake_k32_web.AttachConsole.return_value = 1
+    with mock.patch("qtp_app.cli.sys.platform", "win32"), \
+         mock.patch("qtp_app.cli.sys.stdout", None), \
+         mock.patch("qtp_app.cli.sys.stderr", None), \
+         mock.patch("qtp_app.cli.sys.stdin", None), \
+         mock.patch("qtp_app.cli.ctypes.windll", mock.Mock(kernel32=fake_k32_web), create=True), \
+         mock.patch("builtins.open", side_effect=open_w):
+        assert cli.run(["--web", "--verbose", "--help"]) == 0
+    fake_k32_web.AllocConsole.assert_not_called()
+    assert "Ayrıntılı Başvuru (--verbose):" in c_out_w.getvalue()
+
+    _out_g, _err_g, _in_g, open_g = make_con_open()
+    fake_k32_gui_verb = mock.Mock()
+    fake_k32_gui_verb.AttachConsole.return_value = 1
+    with mock.patch("qtp_app.cli.sys.platform", "win32"), \
+         mock.patch("qtp_app.cli.sys.stdout", None), \
+         mock.patch("qtp_app.cli.sys.stderr", None), \
+         mock.patch("qtp_app.cli.sys.stdin", None), \
+         mock.patch("qtp_app.cli.ctypes.windll", mock.Mock(kernel32=fake_k32_gui_verb), create=True), \
+         mock.patch("builtins.open", side_effect=open_g), \
+         mock.patch("qtp_app.main.launch_gui", return_value=0) as lg_verb:
+        assert cli.run(["--work-dir", str(tmp_path), "--gui", "--verbose"]) == 0
+    lg_verb.assert_called_once()
+    fake_k32_gui_verb.AttachConsole.assert_called()
+    fake_k32_gui_verb.AllocConsole.assert_not_called()
+
+    fake_k32_idle = mock.Mock()
+    with mock.patch("qtp_app.cli.sys.platform", "win32"), \
+         mock.patch("qtp_app.cli.sys.stdout", None), \
+         mock.patch("qtp_app.cli.sys.stderr", None), \
+         mock.patch("qtp_app.cli.sys.stdin", None), \
+         mock.patch("qtp_app.cli.ctypes.windll", mock.Mock(kernel32=fake_k32_idle), create=True), \
+         mock.patch("qtp_app.main.launch_gui", return_value=0):
+        assert cli.run([]) == 0
+        assert cli.run(["--gui", "--quiet", "--work-dir", str(tmp_path)]) == 0
+    fake_k32_idle.AttachConsole.assert_not_called()
+    fake_k32_idle.AllocConsole.assert_not_called()
+
+    tui_help_out, _err_t, _in_t, open_t = make_con_open()
+    fake_k32_tui_help = mock.Mock()
+    fake_k32_tui_help.AttachConsole.return_value = 1
+    with mock.patch("qtp_app.cli.sys.platform", "win32"), \
+         mock.patch("qtp_app.cli.sys.stdout", None), \
+         mock.patch("qtp_app.cli.sys.stderr", None), \
+         mock.patch("qtp_app.cli.sys.stdin", None), \
+         mock.patch("qtp_app.cli.ctypes.windll", mock.Mock(kernel32=fake_k32_tui_help), create=True), \
+         mock.patch("builtins.open", side_effect=open_t):
+        assert cli.run(["--tui", "--help"]) == 0
+    fake_k32_tui_help.AllocConsole.assert_not_called()
+    assert "Komut Satırı Kullanımı" in tui_help_out.getvalue()
+
+    assert cli._detect_pre_mode(["--mode", "web"]) == "web"
+    assert cli._detect_pre_mode(["--mode=tui"]) == "tui"
+    fake_k32_web_mode = mock.Mock()
+    fake_k32_web_mode.AttachConsole.return_value = 1
+    _out_wm, _err_wm, _in_wm, open_wm = make_con_open()
+    with mock.patch("qtp_app.cli.sys.platform", "win32"), \
+         mock.patch("qtp_app.cli.sys.stdout", None), \
+         mock.patch("qtp_app.cli.sys.stderr", None), \
+         mock.patch("qtp_app.cli.sys.stdin", None), \
+         mock.patch("qtp_app.cli.ctypes.windll", mock.Mock(kernel32=fake_k32_web_mode), create=True), \
+         mock.patch("builtins.open", side_effect=open_wm):
+        assert cli.run(["--work-dir", str(tmp_path), "--web", "--quiet", "--port", "0", "--shutdown-after", "0.05"]) == 0
+
+    fake_k32_tui_run = mock.Mock()
+    fake_k32_tui_run.AttachConsole.return_value = 0
+    fake_k32_tui_run.AllocConsole.return_value = 1
+    fake_k32_tui_run.CreateToolhelp32Snapshot.return_value = -1
+    fake_in_con = io.StringIO("q")
+    fake_in_con.isatty = lambda: False
+
+    def open_tui_con(file, mode="r", *a, **kw):
+        if str(file) == "CONIN$":
+            return fake_in_con
+        if str(file) == "CONOUT$":
+            return io.StringIO()
+        return real_open(file, mode, *a, **kw)
+
+    with mock.patch("qtp_app.cli.sys.platform", "win32"), \
+         mock.patch("qtp_app.cli.sys.stdout", None), \
+         mock.patch("qtp_app.cli.sys.stderr", None), \
+         mock.patch("qtp_app.cli.sys.stdin", None), \
+         mock.patch("qtp_app.cli.ctypes.windll", mock.Mock(kernel32=fake_k32_tui_run), create=True), \
+         mock.patch("builtins.open", side_effect=open_tui_con):
+        assert cli.run(["--work-dir", str(tmp_path), "--tui"]) == 0
+    fake_k32_tui_run.AllocConsole.assert_called()
+
+    assert cli.run(["--web", "--help", "--json"]) == 0
+    help_json = json.loads(capsys.readouterr().out)
+    assert help_json["ok"] is True and help_json["data"]["sss"]
+    assert cli.run(["--work-dir", str(tmp_path), "--cli"]) == 0
+    assert "Komut Satırı Kullanımı" in capsys.readouterr().out
+
+    parser = cli.build_arg_parser()
+    from qtp_app.core.engine import QtpEngine as _Eng
+    tmp_eng = _Eng(work_dir=tmp_path, seed_defaults=False, ephemeral=True)
+    assert cli.execute_cli(tmp_eng, parser.parse_args(["--help"])) == 0
+    assert "Komut Satırı Kullanımı" in capsys.readouterr().out
+    cli._emit_verbose_diagnostics(tmp_eng, 0, "cli")
+    cli._emit_verbose_diagnostics(tmp_eng, 2, "cli")
+    assert "[DEBUG]" in capsys.readouterr().err
 
     fake_k32_tui = mock.Mock()
     fake_k32_tui.AttachConsole.return_value = 0

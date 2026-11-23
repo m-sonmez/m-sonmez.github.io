@@ -73,7 +73,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
     if mode == "cli":
         argv_map: dict[str, list[str]] = {
             "version": ["--version", "--json"],
-            "help": ["--help", "--json"],
+            "help": ["--help", "--verbose", "--json"],
             "selftest": ["--selftest", "--json"],
             "modes": ["--modes", "--json"],
             "completion": ["--completion", "bash", "--json"],
@@ -144,7 +144,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
             route_map: dict[str, tuple[str, str, dict | None]] = {
                 "version": ("GET", "/api/version", None),
-                "help": ("GET", "/api/help", None),
+                "help": ("GET", "/api/help?verbose=1", None),
                 "selftest": ("GET", "/api/selftest", None),
                 "modes": ("GET", "/api/modes", None),
                 "completion": ("GET", "/api/completion?shell=bash", None),
@@ -196,7 +196,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
         if op_id == "version":
             res = engine.op_version()
         elif op_id == "help":
-            res = engine.op_help(cli.format_help_text())
+            res = engine.op_help(verbose=True)
         elif op_id == "selftest":
             res = engine.op_selftest(run_ui_smoke=False)
         elif op_id == "modes":
@@ -281,7 +281,7 @@ def test_cross_mode_parity_for_operation(op_id: str, tmp_path: Path, capsys):
     for mode, (_code, msg, _payload) in results.items():
         assert spec.success_msg_tr.split()[0] in msg, f"{mode}/{op_id} mesaj uyumsuz: {msg}"
 
-    if spec.read_only and op_id not in ("help", "selftest"):
+    if spec.read_only and op_id != "selftest":
         hashes = {}
         for mode, (_code, _msg, payload) in results.items():
             data_copy = json.loads(json.dumps(payload["data"], ensure_ascii=False))
@@ -536,5 +536,169 @@ def test_win7_legacy_console_no_vt_and_posix_curses_fallback(tmp_path: Path, mon
          mock.patch.object(sys, "stdin", plain_in2), \
          mock.patch.dict("sys.modules", {"curses": err_curses}):
         assert run_tui(eng, out_stream=io.StringIO()) == 0
+
+
+@pytest.mark.parametrize("mode", ["cli", "web", "tui", "gui"])
+def test_cross_mode_help_flag_and_order_parity(mode: str, tmp_path: Path, capsys, monkeypatch):
+    work_dir = tmp_path / f"help_{mode}"
+    work_dir.mkdir()
+    monkeypatch.setattr("qtp_app.core.engine.get_app_dir", lambda: work_dir)
+    mode_flag = f"--{mode}"
+
+    assert cli.run([mode_flag, "--help"]) == 0
+    std_out = capsys.readouterr().out
+    assert std_out == cli.format_help_text(verbose=False) + "\n"
+    assert list(work_dir.iterdir()) == []
+
+    for argv in (
+        [mode_flag, "--verbose", "--help"],
+        ["--verbose", mode_flag, "--help"],
+        [mode_flag, "-v", "-h"],
+    ):
+        assert cli.run(argv) == 0
+        v_out = capsys.readouterr().out
+        assert v_out == cli.format_help_text(verbose=True) + "\n"
+        assert "Ayrıntılı Başvuru (--verbose):" in v_out
+        assert list(work_dir.iterdir()) == []
+
+
+@pytest.mark.parametrize("mode", ["cli", "web", "tui", "gui"])
+def test_cross_mode_verbose_quiet_and_initial_filters_parity(mode: str, tmp_path: Path, capsys, monkeypatch):
+    import io
+    import sys
+    from unittest import mock
+    from PyQt6.QtCore import QTimer
+    from PyQt6.QtWidgets import QApplication
+    from qtp_app import main as main_mod
+    from qtp_app.core.ini_parser import parse_qtp_ini, read_text_auto
+    from qtp_app.ui.help_dialog import HelpDialog
+    from qtp_app.ui.theme import DARK_PALETTE
+
+    work = tmp_path / f"parity_{mode}"
+    work.mkdir()
+    shutil.copy2(FIXTURES_DIR / "QuickTextPaste.ini", work / "QuickTextPaste.ini")
+    eng_ref = QtpEngine(work_dir=work)
+    expected_items = eng_ref.op_list_items(category="A", query="sipariş").data["items"]
+    expected_keys = [it["raw_key"] for it in expected_items]
+    assert len(expected_keys) > 0
+
+    if mode == "cli":
+        assert cli.run(["--work-dir", str(work), "--cli", "-vv", "--category", "A", "--query", "sipariş", "--json"]) == 0
+        cap = capsys.readouterr()
+        assert "[INFO]" in cap.err and "[DEBUG]" in cap.err
+        parsed = json.loads(cap.out)
+        assert [it["raw_key"] for it in parsed["data"]["items"]] == expected_keys
+
+        assert cli.run(["--work-dir", str(work), "--cli", "-q", "--selftest"]) == 0
+        q_cap = capsys.readouterr()
+        assert q_cap.out == "" and q_cap.err == ""
+
+        assert cli.run(["--work-dir", str(work), "--cli", "-q", "-vv", "--selftest"]) == 0
+        vq_cap = capsys.readouterr()
+        assert "[INFO]" in vq_cap.err and "[DEBUG]" in vq_cap.err and "Otomatik test başarılı" in vq_cap.out
+        return
+
+    if mode == "web":
+        assert cli.run(["--work-dir", str(work), "--web", "-vv", "--port", "0", "--shutdown-after", "0.25", "--category", "A", "--query", "sipariş"]) == 0
+        cap = capsys.readouterr()
+        assert "QTP Web Modu çalışıyor:" in cap.out
+        assert "[INFO]" in cap.err and "[DEBUG]" in cap.err
+        assert "Web sunucusu başlatıldı:" in cap.err and "Web sunucusu kapatıldı." in cap.err
+
+        assert cli.run(["--work-dir", str(work), "--web", "-q", "--port", "0", "--shutdown-after", "0.1"]) == 0
+        q_cap = capsys.readouterr()
+        assert q_cap.out == "" and "[INFO]" not in q_cap.err
+
+        eng_web = QtpEngine(work_dir=work, verbose=2)
+        srv = create_web_server(eng_web, port=0, initial_category="A", initial_query="sipariş")
+        port = srv.server_address[1]
+        th = threading.Thread(target=srv.serve_forever, daemon=True)
+        th.start()
+        try:
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+            conn.request("GET", "/api/revision")
+            rev = json.loads(conn.getresponse().read().decode("utf-8"))
+            assert rev["data"]["initial_category"] == "A"
+            assert rev["data"]["initial_query"] == "sipariş"
+            conn.request("GET", "/api/items?category=A&query=sipari%C5%9F")
+            web_items = json.loads(conn.getresponse().read().decode("utf-8"))["data"]["items"]
+            assert [it["raw_key"] for it in web_items] == expected_keys
+            conn.request("GET", "/api/help?verbose=1")
+            h_data = json.loads(conn.getresponse().read().decode("utf-8"))["data"]
+            assert h_data["usage_verbose"] == cli.format_help_text(verbose=True)
+        finally:
+            srv.shutdown()
+            srv.server_close()
+        http_err = capsys.readouterr().err
+        assert "GET /api/revision -> 200" in http_err
+        return
+
+    if mode == "tui":
+        fake_in = io.StringIO("q")
+        fake_in.isatty = lambda: False
+        with mock.patch.object(sys, "stdin", fake_in):
+            assert cli.run(["--work-dir", str(work), "--tui", "-vv", "--category", "A", "--query", "sipariş"]) == 0
+        cap = capsys.readouterr()
+        assert "[INFO]" in cap.err and "[DEBUG]" in cap.err
+        assert "[INFO]" not in cap.out and "[DEBUG]" not in cap.out
+
+        tui = QtpTui(eng_ref, term_size=(100, 20), initial_category="A", initial_query="sipariş", quiet=True)
+        assert [it.get("raw_key") for it in tui._visible_items] == expected_keys
+        assert "QTP hazır" not in tui.status_message
+        tui.execute_operation("help")
+        assert len(tui.modal_lines) > 200
+        joined = "\n".join(tui.modal_lines)
+        for part in ("Ayrıntılı Başvuru (--verbose):", "QTP Kullanım Kılavuzu", "QTP Klavye Kısayolları Rehberi", "SSS"):
+            assert part in joined
+        before_scroll = tui.modal_scroll
+        tui.handle_key("PGDN")
+        assert tui.modal_scroll > before_scroll
+        tui.handle_key("DOWN")
+        assert tui.modal_scroll > before_scroll + 1
+        tui.handle_key("UP")
+        tui.handle_key("PGUP")
+        tui.handle_key("ESC")
+        assert tui.modal_lines == []
+
+        tui_frames = QtpTui(eng_ref, term_size=(100, 28), initial_category="A", initial_query="sipariş")
+        tui_frames.run_scripted(["F1", "PGDN", "PGDN", "PGDN", "PGDN", "PGDN", "PGDN", "ESC", "q"])
+        all_frames = "\n".join(tui_frames.recorded_frames)
+        assert "Ayrıntılı Başvuru (--verbose):" in all_frames
+        assert "Katmanı (Overlay) Açma" in all_frames
+        return
+
+    app = QApplication.instance() or QApplication([])
+    captured_overlays = []
+    orig_exec = app.exec
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+
+    def fake_exec():
+        QTimer.singleShot(80, app.quit)
+        return orig_exec()
+
+    with mock.patch.object(main_mod, "SingleInstanceGuard") as guard_cls, \
+         mock.patch("qtp_app.main.HotkeyManager.register", return_value={"all": True}), \
+         mock.patch("qtp_app.ui.overlay.OverlayWindow.show_overlay", autospec=True) as mock_show, \
+         mock.patch.object(app, "exec", side_effect=fake_exec):
+        guard_inst = guard_cls.return_value
+        guard_inst.try_notify_existing.return_value = False
+
+        def record_show(self_ov, *a, **kw):
+            captured_overlays.append((self_ov.active_category, self_ov.search_input.text(), self_ov.list_model.rowCount(), [self_ov.list_model.item_at(i)["raw_key"] for i in range(self_ov.list_model.rowCount())]))
+
+        mock_show.side_effect = record_show
+        assert cli.run(["--work-dir", str(work), "--gui", "-vv", "--category", "A", "--query", "sipariş"]) == 0
+    g_cap = capsys.readouterr()
+    assert "[INFO]" in g_cap.err and "[DEBUG]" in g_cap.err
+    assert captured_overlays[-1][0] == "A"
+    assert captured_overlays[-1][1] == "sipariş"
+    assert captured_overlays[-1][3] == expected_keys
+
+    help_dlg = HelpDialog(DARK_PALETTE)
+    assert help_dlg.tabs.count() == 4
+    assert cli.format_help_text(verbose=True).splitlines()[0] in help_dlg.browsers[3].toPlainText()
+    help_dlg.close()
+    help_dlg.deleteLater()
+
 
 

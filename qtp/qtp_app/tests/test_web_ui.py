@@ -82,9 +82,20 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         mr = json.loads(conn.getresponse().read().decode("utf-8"))
         assert mr["ok"] is True and mr["data"]["hotkeys"]["all"] == "Win+Ctrl+F1"
 
+        conn.request("GET", "/api/help?verbose=1")
+        h_resp = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert h_resp["ok"] is True
+        for key in ("usage", "usage_verbose", "kullanim", "kisayollar", "sss"):
+            assert h_resp["data"][key], f"/api/help eksik alan: {key}"
+        assert "Ayrıntılı Başvuru (--verbose):" in h_resp["message"]
+        assert "btnHelp" in html and "showHelpModal" in html and "/api/help?verbose=1" in html
+        assert "helpTabs" in html and "CLI &amp; Parametreler" in html
+
         conn.request("GET", "/api/revision")
         rev = json.loads(conn.getresponse().read().decode("utf-8"))
         assert rev["ok"] is True and rev["data"]["revision"] >= 2
+        assert rev["data"]["initial_category"] == "ALL"
+        assert rev["data"]["initial_query"] == ""
 
         conn.request("GET", "/api/olmayan_rota")
         assert conn.getresponse().status == 404
