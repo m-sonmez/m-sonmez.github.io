@@ -1,54 +1,101 @@
 # QTP Kurulum ve Sistem Gereksinimleri
 
-**QTP (QuickTextPaste / Hazır Cevaplar)**, üçüncü parti `QuickTextPaste.exe` veya herhangi bir sistem kurucusu (installer) gerektirmeyen, tek dosya olarak çalışan taşınabilir bir masaüstü uygulamasıdır. Yönetici yetkisi, kayıt defteri değişikliği veya `PATH` düzenlemesi gerektirmez.
+QTP v2.2.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya statik Web arayüzü içinde sunar.
 
 ---
 
 ## 1. Doğrudan İndirme / Canlı GitHub Pages Bağlantıları ve İkili Matris
 
-- **Canlı Web Arayüzü:** `https://m-sonmez.github.io/qtp/` (`index.html`, `--web` ile birebir, sıfır arka uçla statik çalışır)
-- **Windows (Win 10/11 x64 birincil):** `https://m-sonmez.github.io/qtp/qtp.exe` *(Win 7/8/8.1 x64 için `python -m qtp_app.build.build_windows_legacy` ile `qtp-win7.exe` üretin)*
-- **Linux x64:** `https://m-sonmez.github.io/qtp/qtp.bin`
-- **Eski 3. Parti QuickTextPaste Sayfası:** `https://m-sonmez.github.io/qtp/old.html`
-
-| İşletim Sistemi | Hedef Çıktı | Mimari / Sürüm | Desteklenen Modlar ve Öne Çıkan Özellikler |
+| Platform / Dağıtım | Çıktı / Adres | Mimari / Çalışma Zamanı | Not |
 | :--- | :--- | :--- | :--- |
-| **Windows 10 / 11** | `dist/qtp.exe` | Windows 10/11 (x64), Python 3.12 + PyQt6 | Tüm 4 mod (`--gui`, `--tui`, `--cli`, `--web`), yerel Win32 `RegisterHotKey` (çakışmasız `Win+Alt+*`), ata süreç zincirli UTF-8 konsol eki, canlı `ConfigFileWatcher` |
-| **Windows 7 / 8 / 8.1** | `dist/qtp-win7.exe` | Windows 7 SP1 / 8 / 8.1 (x64), Python 3.8 hedefi | `build_windows_legacy` + `requirements-win7.txt`; `MOD_NOREPEAT` destekli Win32 `RegisterHotKey` + Win32 Console API TUI geri dönüşü |
-| **Linux** | `dist/qtp.bin` | Ubuntu 20.04+/22.04+/24.04, Debian 10+/11/12, Fedora, Arch (x64/arm64) | X11 (`libX11` / Qt / OSC-52) ve Wayland (`wtype` / `ydotool`); Alpine/musl için PyQt6 gerektirmeyen `--cli`/`--tui`/`--web` çalışma zamanı |
-| **macOS** | `dist/qtp.bin` | macOS 10.15 – 15 (x86_64, arm64, `universal2`) | `MACOSX_DEPLOYMENT_TARGET` desteği, bozucu `strip` olmadan ad-hoc `codesign`, `NSPasteboardTypeString` → `NSStringPboardType` → `pbcopy` + `osascript` |
-| **Unix-like / BSD** | Kaynak / `qtp.bin` | FreeBSD, OpenBSD, NetBSD, illumos/SunOS | Genel POSIX algılama, `libX11.so` + `$XDG_CONFIG_HOME` / `~/.config/qtp` geri dönüşü, `curses` yoksa `termios`/düz metin TUI geri dönüşü |
+| **Canlı PWA (Klasik QTP)** | [https://m-sonmez.github.io/qtp/](https://m-sonmez.github.io/qtp/) (`index.html`) | Tüm Modern Tarayıcılar + Çevrimdışı PWA | Klasik QuickTextPaste kılavuzu, kategorize cevaplar (`legacy/cevaplar.html`), **PWA Yükle** ve işletim sistemine özel tek-tık indirme düğmesi. |
+| **Canlı Birleşik Web Arayüzü** | [https://m-sonmez.github.io/qtp/qtp.html](https://m-sonmez.github.io/qtp/qtp.html) | Tarayıcı (Statik `localStorage`) veya `--web` | `--web` sunucusuyla birebir aynı arayüz: Varsayılan **Açık (Light)** tema + Koyu geçişi, tam Cevap CRUD (`+ Yeni Cevap` / `Düzenle` / `Sil`), 6 sekmeli `F1` Yardım, **PWA Yükle** ve OS indirme düğmesi. |
+| **Windows 10 / 11 (x64)** | [https://m-sonmez.github.io/qtp/qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe) (`≤ 50 MB`) | Tek Dosya Taşınabilir PE64 (`console=False`) | Çift tık ile sistem tepsisinde GUI açılır; PowerShell/cmd üzerinden `--help`, `--cli`, `--tui`, `--web` parent-console bağlantısıyla çalışır. |
+| **Windows 7 / 8 / 8.1 (x64)** | `qtp-win7.exe` (kaynaktan `build_windows_legacy`) | Python 3.8 x64 + `requirements-win7.txt` | Eski Windows Console (Win32 API VT fallback) ile tam `--tui`, `--cli` ve `--web` desteği. |
+| **Linux x64 (X11 & Wayland)** | [https://m-sonmez.github.io/qtp/qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin) (`≤ 60 MB`) | Tek Dosya Taşınabilir ELF (Ubuntu 22.04+ / glibc 2.35+) | GitHub Actions Ubuntu derlemesi; harici sistem Python'u gerektirmez. |
+| **macOS 10.15–15 / BSD** | `qtp.bin` (yerel `build_unix`) | Intel/Apple Silicon veya FreeBSD/OpenBSD | Wayland/macOS/BSD üzerinde `standalone/` altından kaynak veya yerel derleme. |
+
+> **Akıllı OS İndirme & PWA:** Hem `qtp/index.html` hem de `qtp/qtp.html`, ziyaretçinin işletim sistemini algılayarak Windows kullanıcılarına doğrudan **`qtp.exe`**, Linux kullanıcılarına **`qtp.bin`**, macOS/BSD kullanıcılarına kaynak/kurulum yönergesi bağlantısını otomatik sunar ve **📲 PWA Yükle** ile masaüstüne kurulabilir.
 
 ---
 
 ## 2. İşletim Sistemine Göre Çalıştırma Adımları
 
 ### 2.1 Windows (`qtp.exe`)
-1. `qtp.exe` dosyasını yazılabilir herhangi bir klasöre kopyalayın (isteğe bağlı olarak mevcut `QuickTextPaste.ini` / `data.json` dosyanızı yanına koyun).
-2. Çift tıklayın (SmartScreen çıkarsa **Ek bilgi** → **Yine de çalıştır**).
-3. Sağ altta *"QTP hazır. Win+Alt+Space / Win+Alt+A / Win+Alt+Z / Win+Alt+X / Win+Alt+Q"* bildirimi görünür; `RegisterHotKey` basılan kısayolları Windows kabuğuna sızdırmadan tüketir.
-4. PowerShell'de sekme tamamlama için:
+1. [qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe) dosyasını boş veya mevcut `QuickTextPaste.ini` dosyanızın bulunduğu bir klasöre indirin (`C:\QTP\qtp.exe` gibi).
+2. Çift tıkladığınızda sistem tepsisinde QTP simgesi ve katmanı varsayılan **Açık (Light)** tema ile açılır. İlk çalıştırmada yanında örnek `QuickTextPaste.ini`, `data.json` ve `qtp_settings.json` yoksa otomatik oluşturulur.
+3. Komut satırı (`PowerShell` veya `cmd`) üzerinden çalıştırma örnekleri:
    ```powershell
-   .\qtp.exe --completion powershell | Out-String | Invoke-Expression
+   .\qtp.exe --version
+   .\qtp.exe --selftest
+   .\qtp.exe --web --open-browser
+   .\qtp.exe --tui
+   .\qtp.exe --cli --list-items --category A --json
    ```
+4. **Windows SmartScreen Uyarısı:** Dijital olarak imzalanmamış taşınabilir tek-dosya yürütülebilirlerde Windows Defender SmartScreen ilk çalıştırmada onay isteyebilir; *Ek bilgi → Yine de çalıştır* adımıyla doğrulayabilirsiniz.
 
 ### 2.2 Linux — X11 ve Wayland (`qtp.bin`)
-1. `chmod +x qtp.bin && ./qtp.bin` komutunu çalıştırın (X11'de harici `xclip`/`xsel`/`xdotool` gerekmez; Wayland'da isteğe bağlı `wtype` veya `ydotool` kullanılabilir).
-2. Bash/Zsh/Fish otomatik tamamlama için `./qtp.bin --completion bash|zsh|fish` çıktısını kabuk profilinize ekleyin.
+1. [qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin) dosyasını indirin ve çalıştırma izni verin:
+   ```bash
+   chmod +x ./qtp.bin
+   ./qtp.bin --selftest
+   ./qtp.bin --gui
+   ```
+2. **Qt6 GUI Çalışma Zamanı Kütüphaneleri (Minimal Sunucu/Masaüstü İçin):** Linux masaüstlerinde GUI (`--gui`) açılışında eksik paylaşılan kütüphane görürseniz:
+   ```bash
+   sudo apt-get update && sudo apt-get install -y \
+     libegl1 libgl1 libglx-mesa0 libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3 \
+     libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+     libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxcb-xfixes0 \
+     libfontconfig1 libfreetype6
+   ```
+   *(Başsız sunucularda `--tui`, `--cli` ve `--web` modları hiçbir X11/Qt6 pencere sunucusu olmadan doğrudan çalışır.)*
+3. **Wayland Notu:** Wayland oturumlarında (`GNOME`/`KDE`/`Sway`/`Hyprland`) global tuş yakalama compositor tarafından sınırlandırılabilir; tepsi simgesi, `--web` veya `--tui` kesintisiz çalışır. Otomatik yapay `Ctrl+V` için isteğe bağlı `wtype` veya `ydotool` kurulabilir (kurulu değilse QTP metni güvenli biçimde panoya kopyalar).
 
 ### 2.3 macOS 10.15–15 ve Unix-benzeri / BSD (`qtp.bin`)
-- **macOS:** `chmod +x qtp.bin && xattr -d com.apple.quarantine qtp.bin`, ardından **Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik** altından `qtp.bin` uygulamasına izin verin. `Win+Shift+Q` yerine önerilen veya `function_keys` (`Ctrl+Shift+F1–F5`) profilini seçebilirsiniz.
-- **BSD:** Python 3.8+ ile tüm başsız modlar (`--cli`, `--tui`, `--web`) doğrudan çalışır.
+1. **macOS Gatekeeper & Erişilebilirlik İzni:**
+   - Karantina özniteliğini kaldırmak ve çalıştırmak için:
+     ```bash
+     chmod +x ./qtp.bin
+     xattr -d com.apple.quarantine ./qtp.bin 2>/dev/null || true
+     ./qtp.bin --gui
+     ```
+   - Global kısayollar ve aktif pencereye otomatik yapıştırma için **Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik** altından `qtp.bin` (veya Terminal) iznini etkinleştirin.
+2. **FreeBSD / OpenBSD / NetBSD:**
+   - Python 3.8+ ortamında `qtp/standalone/` klasöründen standart kütüphaneyle ek bağımlılık olmadan `--tui`, `--cli` ve `--web` kiplerini çalıştırabilirsiniz:
+     ```bash
+     cd qtp/standalone
+     python3 -m qtp_app --tui
+     python3 -m qtp_app --web --open-browser
+     ```
 
 ---
 
 ## 3. Taşınabilir Konumlar, Kaldırma ve Kaynak Koddan Derleme
 
-- İkili yanındaki klasör yazılabilirse `qtp_settings.json`, `qtp.log*`, `qtp.lock`, `QuickTextPaste.ini`, `data.json` ve `backups/` burada tutulur; salt-okunursa Windows'ta `%APPDATA%\QTP\`, Linux/BSD'de `~/.config/qtp/`, macOS'ta `~/Library/Application Support/QTP/` kullanılır.
-- Kaldırmak için tepsi → **Çıkış** sonrası dosyaları silmeniz yeterlidir (kayıt defterine yazılmaz).
-- Derleme:
-  ```bash
-  pip install -r requirements-dev.txt
-  pytest -q --cov=qtp_app.core --cov=qtp_app.ui.search --cov=qtp_app.tui --cov=qtp_app.web --cov=qtp_app.cli --cov-report=term-missing --cov-fail-under=90
-  python -m qtp_app.build.build_windows   # Windows 7 için: build_windows_legacy | Unix için: build_unix
-  ```
+### Dizin Düzeni (`qtp/`)
+- `qtp/qtp.exe` & `qtp/qtp.bin`: Kök taşınabilir yürütülebilir dosyalar.
+- `qtp/qtp.html` & `qtp/theme.css`: Birleşik modern Web UI (Açık/Koyu tema + tam CRUD + 6 sekmeli F1 Yardım).
+- `qtp/index.html`, `qtp/sw.js`, `qtp/manifest.webmanifest`: Klasik QuickTextPaste PWA.
+- `qtp/legacy/`: Klasik Windows HTML/Python/PowerShell betikleri (`cevaplar.html`, `qtp_manager.py`, `qtp_core.py`, `qtp_server.py`, `kurulum.ps1`, `tests/test_qtp.py`).
+- `qtp/standalone/`: Bağımsız QTP çekirdeği (`qtp_app/`), PyInstaller yapılandırmaları (`qtp_app/build/`) ve test takımı.
+
+### Yapılandırma ve Veri Konumları
+- **Taşınabilir Kip (Öncelikli):** Yürütülebilir dosyanın yanında `QuickTextPaste.ini` veya `--work-dir` varsa tüm dosyalar (`qtp_settings.json`, `data.json`, `qtp.log`, `backups/`) o klasörde tutulur. `--version`, `--help`, `--selftest` salt-okunurdur ve **hiçbir dosya oluşturmaz**.
+- **Sistem Profili Yolu (Yedek):**
+  - Windows: `%APPDATA%\QTP\`
+  - Linux / BSD: `$XDG_CONFIG_HOME/qtp/` (varsayılan `~/.config/qtp/`)
+  - macOS: `~/Library/Application Support/QTP/`
+
+### Kaynak Koddan Geliştirme ve Derleme (`qtp/standalone/`)
+```bash
+cd qtp/standalone
+uv venv --python 3.12 .venv
+uv pip install --python .venv -r requirements-dev.txt
+```
+- **Windows Test & Derleme:** `make.bat test` ve `.venv\Scripts\python.exe -m qtp_app.build.build_windows`
+- **Linux / macOS Test & Derleme:** `make test` ve `make build` (`qtp/standalone/dist/qtp.bin` üretir)
+- **Windows 7 Legacy Derleme:** Python 3.8 x64 + `requirements-win7.txt` → `python -m qtp_app.build.build_windows_legacy`
+
+### Tam Kaldırma
+Kayıt defteri girdisi (Registry) tutulmaz. Yalnızca çalışma klasöründeki `qtp.exe` / `qtp.bin` ve isteğe bağlı `qtp_settings.json`, `backups/`, `qtp.log` dosyalarını silmeniz yeterlidir.

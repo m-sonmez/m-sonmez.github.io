@@ -4,6 +4,22 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.2.0] - 2026-11-23
+
+### Mimari Düzenleme (`legacy/` vs `standalone/`), Varsayılan Açık Tema, Tam CRUD & Kapsamlı Türkçe Belgeler
+- **Temiz Dizin Ayrımı:** Klasik PWA betikleri ve eski Windows otomasyonu `qtp/legacy/` altına (`cevaplar.html`, `qtp_manager.py`, `qtp_core.py`, `qtp_server.py`, `kurulum.ps1`, `tests/test_qtp.py`), bağımsız uygulama çekirdeği ise `qtp/standalone/` altına taşındı. Kökte yalnızca yayın/PWA varlıkları (`index.html`, `qtp.html`, `theme.css`, `sw.js`, `manifest.webmanifest`, `data.json`, `QuickTextPaste.ini`, `icon*`, `docs/`, `qtp.exe`, `qtp.bin`) tutuldu.
+- **Klasik PWA Kök URL'de Korundu:** `qtp/index.html` klasik QuickTextPaste PWA olarak geri yüklendi (`old.html` kaldırıldı); yeni tek-dosya Web arayüzü `qtp/qtp.html` olarak yayınlandı (`--web` yerel sunucusu `/`, `/qtp.html` ve `/index.html` rotalarında `qtp.html` sunar).
+- **Varsayılan Açık (Light) Tema + Tek-Tık Koyu Geçişi:** `DEFAULT_SETTINGS["theme"] = "light"` ile `--gui`, `--web`, `qtp.html`, `index.html` ve `legacy/cevaplar.html` varsayılan Açık temaya geçti; GUI ve Web arayüzlerine anlık `🌗` tema değiştirici eklendi.
+- **Tam Hazır Cevap CRUD (`add_item`, `update_item`, `delete_item`):**
+  - **Core / CLI:** Atomik INI + `data.json` kalıcılığı ve yedekleme; `--add-item`, `--update-item`, `--delete-item` ve `--item-{keys,group,label,text}` / `--no-end-marker`.
+  - **Web (`--web` & Statik `qtp.html`):** `POST /api/items/{add,update,delete}` uç noktaları ile tam CRUD modalı ve silme onayı; statik GitHub Pages modunda tarayıcı `localStorage` kalıcılığı.
+  - **GUI & TUI:** GUI `+ Yeni Cevap` / sağ-tık `Düzenle` & `Sil` (`SnippetEditorDialog`); TUI `a`, `E`, `d` komutları.
+- **Akıllı OS İndirme & PWA Yükle:** Hem `qtp.html` hem `index.html` üzerinde işletim sistemini tanıyan tek-tık `qtp.exe` / `qtp.bin` indirme düğmeleri, çapraz sayfa linkleri ve `beforeinstallprompt` destekli **📲 PWA Yükle** düğmesi eklendi.
+- **Kapsamlı Türkçe Yardım & Belgeler:** `docs/{KULLANIM,KURULUM,KISAYOLLAR,SSS,GELISTIRICI}.md` ve `README.md` yenilendi; GUI `HelpDialog` 5 sekmeye (`Kurulum & İndirme` dahil), Web `F1` Yardım modalı 6 sekmeye, TUI `F1` ve `/docs/KURULUM.md` desteğine çıkarıldı.
+- **CI ve Paketleme İyileştirmeleri:** `.github/workflows/qtp-publish-linux.yml` `xvfb-run` + Ubuntu Qt6/X11 bağımlılıkları + `actions/checkout@v6` + `astral-sh/setup-uv@v10.4.0` + `qtp/standalone` çalışma dizini ile güncellendi; `qtp.spec` kullanılmayan ağır PyQt6 alt modüllerini dışlayacak biçimde sadeleştirildi.
+
+---
+
 ## [2.1.0] - 2026-11-23
 
 ### Esnek Kısayollar, Win32 `RegisterHotKey`, Konsol Düzeltmesi ve Canlı Otomatik Yenileme

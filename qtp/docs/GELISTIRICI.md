@@ -1,67 +1,57 @@
 # QTP Geliştirici Rehberi
 
-Bu belge, QTP v2.1.0 tek dosya masaüstü uygulamasının mimarisini, kısayol alt sistemini, canlı dosya izleyiciyi, test altyapısını ve derleme sürecini açıklar.
+Bu rehber `qtp/` alt ağacının dosya yapısını, ortak işlem kayıt defterini, tam CRUD akışını, canlı dosya izleyici mimarisini ve çapraz-platform kalite kapılarını açıklar.
 
 ---
 
 ## 1. Mimari Genel Bakış, Mod Adaptörleri ve İşlem Kayıt Defteri
 
-QTP, tüm iş mantığını Qt'den bağımsız [engine.py](../qtp_app/core/engine.py) ve tek doğruluk kaynağı olan [operations.py](../qtp_app/core/operations.py) içinde toplar (`--gui`, `--tui`, `--cli`, `--web`).
+### Dizin Yapısı (`qtp/`)
+- **Kök (Yayın & PWA Katmanı):** `index.html` (Klasik QuickTextPaste PWA), `qtp.html` & `theme.css` (`standalone/qtp_app/web/` ile bayt-birebir eşit Birleşik Web UI), `sw.js`, `manifest.webmanifest`, `data.json`, `QuickTextPaste.ini`, `icon*.{png,svg}`, `qtp.exe`, `qtp.bin`, `docs/*.md`.
+- **`qtp/legacy/`:** Klasik PWA betikleri ve eski Windows otomasyonu (`cevaplar.html`, `qtp_core.py`, `qtp_manager.py`, `qtp_server.py`, `baslat.bat`, `baslat.sh`, `kurulum.ps1`, `QuickTextPaste_x64_p.exe`, `tests/test_qtp.py`). `qtp/standalone/qtp_app/**` içinden bu modüllere **sıfır çalışma zamanı bağımlılığı** vardır.
+- **`qtp/standalone/`:** Bağımsız QTP masaüstü/CLI/TUI/Web uygulaması (`qtp_app/`) ve `pytest` test takımı (`qtp_app/tests/`).
 
-```text
-qtp_app/
-├── __init__.py               # Sürüm, derleme tarihi ve uygulama adı
-├── cli.py                    # Ata-PID AttachConsole, -v/-q, --completion ve argparse
-├── main.py                   # GUI adaptörü (Overlay + Tray + Kısayollar + Canlı Yenileme + qtp.lock)
-├── web.py & web/             # 127.0.0.1 stdlib HTTP sunucusu + çevrimdışı UI + /api/revision
-├── tui/                      # curses + Windows ANSI/Win32 API (_win_console.py) terminal arayüzü
-├── core/
-│   ├── engine.py             # UI-bağımsız tek motor (QtpEngine, canlı izleyici eşgüdümü)
-│   ├── operations.py         # Kanonsal OperationSpec kayıt defteri (22 işlem)
-│   ├── watcher.py            # Sıfır bağımlılıklı ConfigFileWatcher (debounce + self-write bastırma)
-│   ├── hotkeys.py            # Win32 RegisterHotKey + pynput, 15 değiştirici bileşimi, çakışma algılama
-│   ├── settings.py           # qtp_settings.json (auto_reload, özel yuvalar, güvenli v2.0->v2.1 göçü)
-│   ├── ini_parser.py         # Çoklu kodlama algılama ve kayıpsız INI ayrıştırıcı
-│   ├── json_store.py         # data.json, INI<->JSON dönüşümü, backups/, prefer_source desteği
-│   ├── paster.py             # Sıfır dış bağımlılıklı pano ve tuş simülasyonu
-│   ├── logging_setup.py      # Dönen günlük kurulumu (qtp.log, 1 MB x 3)
-│   └── EXTERNAL_CALLS.md     # Harici çağrı denetim raporu
-├── ui/                       # Overlay, Theme, Search, Tray, HotkeyRow/HotkeyEdit, SettingsWindow, HelpDialog
-├── assets/                   # İkonlar, gömülü Inter TTF yazı tipleri ve defaults/
-├── build/                    # PyInstaller qtp.spec / qtp_win7.spec + Windows/Unix derleme betikleri
-└── tests/                    # Birim, eşleme, taşınabilirlik, UI, izleyici ve altın anlık görüntü testleri
-```
-
-### Yeni Bir İşlemi Dört Moda Birden Ekleme
-1. `qtp_app/core/operations.py` içindeki `OPERATIONS` listesine `OperationSpec` ekleyin.
-2. `qtp_app/core/engine.py` içinde `op_<id>()` yöntemini yazın.
-3. `cli.py`, `tui/app.py`, `web.py`, `main.py` ve `test_mode_parity.py` içine bağlayın.
-4. Tüm hata mesajlarını `docs/SSS.md` içine ve işlemi `docs/KULLANIM.md` matrisine ekleyin.
+### İşlem Kayıt Defteri ve Yeni İşlem Ekleme
+QTP'de tek doğruluk kaynağı [operations.py](../standalone/qtp_app/core/operations.py) (`OPERATIONS`) ve [engine.py](../standalone/qtp_app/core/engine.py) (`QtpEngine`) ikilisidir:
+- Dört adaptör aynı çekirdek katmanına bağlanır:
+  - CLI (`qtp_app/cli.py`)
+  - TUI (`qtp_app/tui/app.py`, `qtp_app/tui/_win_console.py`)
+  - Web (`qtp_app/web.py` + `qtp_app/web/qtp.html`)
+  - GUI (`qtp_app/main.py` + `qtp_app/ui/{overlay,settings_window,help_dialog}.py`)
+- Her yeni işlem (`op_id`, örneğin `add_item`, `update_item`, `delete_item`):
+  1. `OPERATIONS` içine (`cli_flag`, `tui_key`, `web_route`, `gui_binding`, `error_msgs_tr`, `exit_codes`) ile eklenir.
+  2. `QtpEngine` üzerinde `op_<ad>` metodu ve gerekirse `_persist_items_change()` gibi atomik INI+JSON kalıcılık adımı yazılır (UTF-16 LE BOM + otomatik `.bak` yedek).
+  3. CLI bayrağı (`cli.py`), HTTP rotası (`web.py`), TUI tuşu/komutu (`tui/app.py`) ve GUI eylemi (`ui/overlay.py`) bağlanır.
+  4. Birebir hata mesajları [SSS.md](SSS.md) içine, parite satırı ise [KULLANIM.md](KULLANIM.md#12-modlar-arası-eşitlik-matrisi) tablosuna eklenir.
 
 ---
 
 ## 2. Esnek Kısayol Modeli ve Dinamik Özel Yuvalar
 
-- **Ayrıştırıcı (`hotkeys.py`):** `parse_hotkey()` / `normalize_hotkey()` her sıradaki değiştiricileri kanonsal `("Win", "Ctrl", "Alt", "Shift")` sırasına ve büyük harfli tetik tuşuna (`A–Z`, `0–9`, `F1–F24`, `Space`, vb.) çevirir. `apply_modifier_combo()` tüm yuvaların değiştiricilerini korunan tetik tuşlarıyla toplu değiştirir.
-- **Win32 `RegisterHotKey`:** `ctypes` üzerinden 64-bit güvenli `argtypes`/`restype` ile `WM_HOTKEY` döngüsü işletir; `ERROR_HOTKEY_ALREADY_REGISTERED (1409)` durumunda `self.conflicts` sözlüğüne Türkçe uyarı yazar ve `WM_QUIT` ile sızıntısız kapanır.
-- **Özel Yuvalar:** `settings.py` hem yerleşik (`all`, `A`, `Z`, `X`, `Q`) hem de kullanıcı tanımlı (`hotkeys.W`, `hotkeys.1` vb.) yuvaları kabul eder (`SettingsWindow` üzerinde **+ Özel Kısayol Ekle**).
+- Tüm kısayol ayrıştırma, normalleştirme (`Ctrl+Alt+Shift+Win` sırası), 6 hazır profil, 15 değiştirici kümesi, Türkçe-Q `AltGr` tespiti ve OS rezerve kısayol kontrolleri `qtp_app/core/hotkeys.py` içindedir.
+- Windows üzerinde `ctypes` + `user32.dll` (`RegisterHotKey` / `UnregisterHotKey`) 64-bit güvenli `argtypes`/`restype` imzalarıyla çağrılır.
+- `QtpEngine.op_set_setting`, `hotkeys.<özel_ad>` anahtarlarını kabul ederek hem varsayılan `all`, `A`, `Z`, `X`, `Q` hem de dinamik kullanıcı yuvalarını canlı kaydeder ve çakışma denetiminden geçirir.
 
 ---
 
-## 3. Canlı Dosya İzleyici (`core/watcher.py`)
+## 3. Canlı Dosya İzleyici (`core/watcher.py`) ve Web/PWA Çift Modu
 
-`ConfigFileWatcher`, SHA-256 + `mtime_ns` + boyut parmak izleriyle `qtp_settings.json`, etkin `QuickTextPaste.ini` ve `data.json` dosyalarını izler (`auto_reload_interval_ms=500`, `debounce_ms=250`), atomik `os.replace()` yazımlarını kaçırmaz ve `mark_internal_write`/`suppress_write` ile kendi yazımlarını yankılamaz. Geçici yarı-yazılmış dosyalarda 2 × 150 ms yeniden dener; kalıcı bozuk dosyalarda önceki geçerli durumu koruyarak Türkçe uyarı kaydeder. Ephemeral CLI modlarında (`--selftest`, `--version`, `--completion`) kesinlikle başlatılmaz.
+- `ConfigFileWatcher` (`mtime_ns + size` yoklaması + `debounce_ms` yumuşatma) `qtp_settings.json` ile etkin veri dosyasını (`QuickTextPaste.ini` veya `data.json`) izler; dışarıdan bozuk kayıt geldiğinde son geçerli bellek durumunu korur ve `SSS.md` uyarı mesajlarını `qtp.log`'a yazar.
+- `qtp/standalone/qtp_app/web/qtp.html` (ve kökteki kopyası `qtp/qtp.html`), açılışta `GET /api/revision` sorgusu başarısız olursa otomatik olarak **Statik GitHub Pages** moduna geçer: `data.json`, `QuickTextPaste.ini` ve `docs/*.md` varlıklarını göreceli yollardan okur, kullanıcı CRUD işlemlerini ise tarayıcı `localStorage` hafızasında saklar.
 
 ---
 
-## 4. Testler, Kapsam ve Çapraz Platform Kuralları
+## 4. Testler, Kapsam, Derleme ve CI Süreçleri
 
-```bash
-QT_QPA_PLATFORM=offscreen .venv\Scripts\python.exe -m pytest -q --cov=qtp_app.core --cov=qtp_app.ui.search --cov=qtp_app.tui --cov=qtp_app.web --cov=qtp_app.cli --cov-report=term-missing --cov-fail-under=90
-.venv\Scripts\python.exe -m unittest discover -s tests -v
-cmd /c make.bat test
-```
+- **Sıfır Harici Bağımlılık & Yorum Kuralı:** `qtp_app/**` içindeki `.py`, `.html`, `.css` dosyalarında ve `qtp/qtp.html` / `qtp/theme.css` üzerinde gereksiz yorum (`#`, `//`, `/* */`, `<!-- -->`) bulunmamalıdır (`test_no_unnecessary_comments`).
+- **Python 3.8 Sözdizimi & Başsız Güvenlik:** `qtp_app/core/`, `qtp_app/tui/`, `qtp_app/cli.py`, `qtp_app/web.py`, `qtp_app/ui/search.py` modülleri Python 3.8 uyumlu yazılır ve `PyQt6` içe aktarmaz.
+- **Test Komutları:**
+  ```powershell
+  # Bağımsız testler & %90+ kapsama kapısı (qtp/standalone/ içinden)
+  $env:QT_QPA_PLATFORM = "offscreen"
+  .venv\Scripts\python.exe -m pytest -q --cov=qtp_app.core --cov=qtp_app.ui.search --cov=qtp_app.tui --cov=qtp_app.web --cov=qtp_app.cli --cov-report=term-missing --cov-fail-under=90
 
-- `test_no_unnecessary_comments`: Tüm `.py`, `.spec`, `.html`, `.css`, `.yml`, `Makefile`, `make.bat`, `.gitignore` dosyalarında gereksiz yorum (`#`, `//`, `/* */`, `<!-- -->`) olmadığını denetler (ilk satır `#!` hariç).
-- `test_portability.py`: `core/**`, `cli.py`, `tui/**`, `web.py` ve `ui/search.py` üzerinde Python 3.8+ sözdizimi ve sıfır `PyQt6` zorunluluğunu denetler.
-- `test_platform_parity.py`: `ui/theme.py` ve `ui/overlay.py` üzerinde `sys.platform` görsel dallanma yasağını ve dokümantasyon/hata senkronunu denetler.
+  # Klasik / Legacy test takımı (qtp/ içinden)
+  standalone\.venv\Scripts\python.exe -m unittest discover -s legacy/tests -v
+  ```
+- **Otomatik Linux `qtp.bin` CI:** `.github/workflows/qtp-publish-linux.yml`, `main` dalındaki `qtp/**` (`!qtp/qtp.bin`) değişikliklerinde Ubuntu 22.04 üzerinde `xvfb-run` altında tüm testleri geçirip gerçek ELF `qtp/qtp.bin` çıktısını yayımlar.

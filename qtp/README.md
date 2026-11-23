@@ -1,89 +1,55 @@
-# QTP — QuickTextPaste & Hazır Cevaplar (Bağımsız Masaüstü Uygulaması)
+# QTP — QuickTextPaste & Hazır Cevaplar (Bağımsız Uygulama + Klasik PWA)
 
-**QTP v2.1.0**, artık üçüncü parti `QuickTextPaste.exe` dosyasına veya herhangi bir harici çalışma zamanı aracına (`xclip`, `xsel`, `xdotool`, `wmctrl`, `pyperclip`, Python, Qt kurulumu vb.) **hiçbir bağımlılığı olmadan**, Windows, Linux ve macOS üzerinde **dört çalışma modunun (`--gui`, `--tui`, `--cli`, `--web`) tamamında birebir özellik eşitliği** sunan **tek dosya** taşınabilir uygulamadır.
-
----
-
-## Dört Mod (`--gui`, `--tui`, `--cli`, `--web`)
-
-| Mod | Örnek Komut | Açıklama |
-| :--- | :--- | :--- |
-| **GUI** | `qtp --gui` (veya çift tık) | PyQt6 animasyonlu katman penceresi, yerel `RegisterHotKey` kısayolları ve sistem tepsisi |
-| **TUI** | `qtp --tui` | Sıfır bağımlılıklı terminal arayüzü (`curses` / Windows ANSI + Win32 Console katmanı) |
-| **CLI** | `qtp --cli --search "şifre" --json` | Betikler ve CI için başsız alt komutlar, `-v/-q`, `--completion` ve kararlı çıkış kodları |
-| **Web** | `qtp --web --port 8765 --open-browser` | Yalnızca `127.0.0.1` üzerinde çalışan çevrimdışı HTTP/JSON sunucusu |
-
-Tüm modların tam karşılaştırması için: [Modlar Arası Eşitlik Matrisi](docs/KULLANIM.md#12-modlar-arası-eşitlik-matrisi). `--verbose` (`-v`/`-vv`), `--quiet` (`-q`), `--help`, `F1` yardım modalı ve `--category` / `--query` başlangıç filtreleri dört modda da aynı şekilde çalışır.
+**QTP v2.2.0**, ek harici bağımlılık gerektirmeyen, tek taşınabilir yürütülebilir dosya (`qtp.exe` / `qtp.bin`) ve sıfır arka uçlu statik Web arayüzü (`qtp.html` + `index.html`) olarak çalışan gelişmiş hazır cevap, snippet yöneticisi ve otomatik yapıştırma aracıdır.
 
 ---
 
-## 1. Tek Dosya Uygulama ve Canlı Web Dağıtımı (GitHub Pages)
+## Dört Mod (`--gui`, `--tui`, `--cli`, `--web`) & Tam CRUD
 
-- **Canlı Web Arayüzü (GitHub Pages / Çevrimdışı):** [https://m-sonmez.github.io/qtp/](https://m-sonmez.github.io/qtp/) (`index.html` — `--web` arayüzüyle birebir, sıfır arka uçla statik çalışır ve yerel `--web` modunu otomatik algılar)
-- **Taşınabilir Windows Uygulaması (`qtp.exe`):** [https://m-sonmez.github.io/qtp/qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe) (`dist/qtp.exe` ile birebir) — Çift tıklayıp doğrudan çalıştırın; yerel Win32 `RegisterHotKey` ve PowerShell/Terminal konsol eki (`--help`, `--verbose`, `--completion`) yerleşiktir. *(Windows 7 / 8 / 8.1 x64 için Python 3.8 + `requirements-win7.txt` + `python -m qtp_app.build.build_windows_legacy` hedefini kullanın.)*
-- **Taşınabilir Linux x64 Uygulaması (`qtp.bin`):** [https://m-sonmez.github.io/qtp/qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin) — `chmod +x qtp.bin && ./qtp.bin` (`--tui`, `--cli` ve `--web` modları PyQt6 olmadan Alpine/musl ve BSD sistemlerde de çalışır).
-- **Eski QuickTextPaste Web Arayüzü (`old.html`):** [https://m-sonmez.github.io/qtp/old.html](https://m-sonmez.github.io/qtp/old.html) — Önceki 3. parti QuickTextPaste yapılandırma ve hızlı kullanım PWA sayfasının korunan yedeği.
-- **Tamamen Çevrimdışı, Taşınabilir ve Canlı Yenilemeli:** Ayarlar (`qtp_settings.json`), `QuickTextPaste.ini` (`data_path`) ve `data.json` harici düzenlemelerde `ConfigFileWatcher` ile **yeniden başlatma olmadan** otomatik yenilenir (kısayollar ve tema dahil).
+- **`--gui`:** Varsayılan **Açık (Light)** tema (`Ctrl+,` Ayarlar'dan Açık/Koyu seçimi), anlık Türkçe-duyarlı bulanık arama, **`+ Yeni Cevap` / Sağ Tık `Düzenle` & `Sil`**, sistem tepsisi, `F1` (5 sekmeli Yardım) ve çakışmasız global kısayollar (`Win+Alt+*`).
+- **`--tui`:** Renkli VT / eski Windows 7 Console uyumlu tam terminal arayüzü (`a`/`E`/`d` CRUD, `F1` tam Markdown kılavuz, `P`/`O`/`k` kısayol yönetimi).
+- **`--cli`:** PowerShell / bash / zsh / fish otomatik tamamlama (`--completion`), `--json`, `--add-item` / `--update-item` / `--delete-item`, `-v`/`-vv` tanılama ve `-q` sessiz kip.
+- **`--web` ve `qtp.html`:** Yerelde `127.0.0.1` loopback sunucusu; canlı ve statik modda Açık/Koyu tema geçişi, tam Cevap CRUD (`POST /api/items/*` veya tarayıcı `localStorage`), 6 sekmeli `F1` Yardım ve `Ctrl+K` / `/` hızlı arama.
+
+---
+
+## 1. Tek Dosya Uygulama ve Canlı GitHub Pages Dağıtımı
+
+- **Klasik PWA (Ana URL):** [https://m-sonmez.github.io/qtp/](https://m-sonmez.github.io/qtp/) ([index.html](index.html)) — Klasik QuickTextPaste kılavuzu, [legacy/cevaplar.html](legacy/cevaplar.html) görüntüleyici, **📲 PWA Yükle** ve akıllı OS indirme düğmesi.
+- **Birleşik Web Uygulaması:** [https://m-sonmez.github.io/qtp/qtp.html](https://m-sonmez.github.io/qtp/qtp.html) ([qtp.html](qtp.html)) — `--web` ile birebir özdeş çevrimdışı/statik CRUD arayüzü.
+- **Windows x64 Taşınabilir İkili (`≤ 50 MB`):** [https://m-sonmez.github.io/qtp/qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe)
+- **Linux x64 ELF Taşınabilir İkili (`≤ 60 MB`):** [https://m-sonmez.github.io/qtp/qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin)
 
 ---
 
 ## 2. Çakışmasız Kısayollar ve Tam Özelleştirme
 
-Windows 10/11 sistem kısayollarıyla (`Win+A/Z/X/Q`) ve Türkçe-Q `AltGr` (`Ctrl+Alt+Q=@`) ile çakışmaması için varsayılan kısayollar **`Win+Alt+*`** olarak belirlenmiştir; ayrıca **15 değiştirici bileşiminin tamamı**, 6 hazır profil ve özel yuvalar desteklenir:
-
-| Olay | Varsayılan (`recommended`) | Açıklama |
-| :--- | :--- | :--- |
-| Tüm Kategoriler | `Win+Alt+Space` | Katmanı tüm kategorilerle açar |
-| İş Ortağı | `Win+Alt+A` | **A · İş Ortağı** (`L-Win+A` INI önekli) kategorisiyle açar |
-| Kurye | `Win+Alt+Z` | **Z · Kurye** (`L-Win+Z` INI önekli) kategorisiyle açar |
-| Canlı Yardım | `Win+Alt+X` | **X · Canlı Yardım** (`L-Win+X` INI önekli) kategorisiyle açar |
-| Turkcell | `Win+Alt+Q` | **Q · Turkcell** (`L-Win+Q` INI önekli) kategorisiyle açar |
-| Gezinme / Yapıştır / Kopyala | `↑↓` / `⏎` / `Ctrl+⏎` | Listede gezinir, yapıştırır veya katmanı kapatmadan panoya kopyalar |
-| Arama / Ayar / Yardım | `Ctrl+K` / `Ctrl+,` / `F1` | Arama kutusu, Ayarlar ve Türkçe Yardım (`F1`) |
-
-Ayrıntılı tablo, profiller ve Türkçe-Q `AltGr` notları için: [docs/KISAYOLLAR.md](docs/KISAYOLLAR.md)
+- Varsayılan `recommended` profili Windows sistem kısayolları ve Türkçe-Q `AltGr` (`@`) ile çakışmaz: `Win+Alt+Space` (Tümü), `Win+Alt+A`, `Win+Alt+Z`, `Win+Alt+X`, `Win+Alt+Q`.
+- Altı hazır profil (`recommended`, `win_ctrl`, `ctrl_alt`, `ctrl_shift_alt`, `function_keys`, `legacy_win`), tüm 15 değiştirici bileşimi ve `hotkeys.<özel>` dinamik yuvaları.
+- Ayrıntılar için [Klavye Kısayolları Rehberi](docs/KISAYOLLAR.md) belgesine bakın.
 
 ---
 
 ## 3. Kurulum, Kullanım, SSS ve Geliştirici Belgeleri
 
-- Kurulum, sistem gereksinimleri ve Win7/Linux/macOS/BSD notları: ➡️ [docs/KURULUM.md](docs/KURULUM.md)
-- Kullanım, `--verbose`, `--completion`, canlı yenileme ve modlar matrisi: ➡️ [docs/KULLANIM.md](docs/KULLANIM.md)
-- Sıkça sorulan sorular, kısayol çakışma ve hata mesajları: ➡️ [docs/SSS.md](docs/SSS.md)
-- Mimari, geliştirme ve kapsam testi rehberi: ➡️ [docs/GELISTIRICI.md](docs/GELISTIRICI.md)
+| Belge | İçerik |
+| :--- | :--- |
+| [Kurulum ve Sistem Gereksinimleri](docs/KURULUM.md) | Windows 7–11, Linux (X11/Wayland), macOS, BSD ve kaynaktan derleme adımları |
+| [Kullanım Kılavuzu](docs/KULLANIM.md) | 4 kipin kullanımı, tam CRUD rehberi, JSON API örnekleri ve [Modlar Arası Eşitlik Matrisi](docs/KULLANIM.md#12-modlar-arası-eşitlik-matrisi) |
+| [Klavye Kısayolları Rehberi](docs/KISAYOLLAR.md) | Global profiller, 15 değiştirici, `AltGr`, katman/TUI/Web kısayolları |
+| [Sıkça Sorulan Sorular (SSS)](docs/SSS.md) | Birebir Türkçe hata/uyarı kataloğu, tema ve CRUD çözümleri |
+| [Geliştirici Rehberi](docs/GELISTIRICI.md) | `legacy/` ve `standalone/` mimarisi, `OPERATIONS`, canlı izleyici ve CI/test kuralları |
 
 ---
 
-## 4. Ayarlar (`qtp_settings.json`)
+## 4. Dizin Yapısı ve Ayarlar (`qtp_settings.json`)
 
-| Alan | Varsayılan | Açıklama |
-| :--- | :--- | :--- |
-| `theme` | `"dark"` | Renk teması (`auto`, `dark`, `light`) |
-| `hotkeys` | `Win+Alt+Space/A/Z/X/Q` | Esnek global kısayollar (`all`, `A`, `Z`, `X`, `Q` + özel yuvalar) |
-| `last_category` | `"ALL"` | Genel açılışta son seçili kategori |
-| `window_size` | `[720, 520]` | Katman penceresi `[genişlik, yükseklik]` boyutu |
-| `paste_method` | `"auto"` | Yapıştırma yöntemi (`auto`, `ctrl_v`, `shift_insert`, `type`) |
-| `enter_after_paste` | `true` | `<E<N<D|` işaretli kayıtlardan sonra otomatik `Enter` |
-| `start_minimized` | `false` | Başlangıçta katmanı göstermeden sistem tepsisinde bekle |
-| `tray_icon` | `true` | Sistem tepsisi simgesini göster/gizle |
-| `data_path` | `"./QuickTextPaste.ini"` | Etkin `QuickTextPaste.ini` dosya yolu |
-| `backup_count` | `15` | `backups/` dizininde tutulacak yedek sayısı |
-| `auto_reload` | `true` | Harici dosya değişikliklerini yeniden başlatmadan canlı yükle |
-| `auto_reload_interval_ms` | `500` | Disk denetleme aralığı (`100–10000 ms`) |
-| `log_level` | `"info"` | `qtp.log` günlük düzeyi (`debug`, `info`, `warn`, `error`) |
-| `language` | `"tr"` | Arayüz dili (`tr`) |
-| `web.port` | `8765` | `--web` sunucusu yerel `127.0.0.1` bağlantı noktası (`0–65535`) |
+- `qtp/standalone/` → Bağımsız uygulama kaynakları (`qtp_app/`), PyInstaller yapılandırmaları ve `pytest` takımı.
+- `qtp/legacy/` → Klasik HTML/Python/PowerShell betikleri (`cevaplar.html`, `qtp_manager.py`, `qtp_core.py`, `qtp_server.py`, `kurulum.ps1`, `tests/test_qtp.py`).
+- `qtp_settings.json` varsayılan değerleri: `theme: "light"`, `auto_reload: true` (`500 ms`), `paste_method: "auto"`, `enter_after_paste: true`, `backup_count: 15`, `web.port: 8765`.
 
 ---
 
-## 5. Miras / Legacy & Web PWA Notu
+## 5. English Summary
 
-Mevcut `QuickTextPaste.ini` biçimi (`UTF-16 LE BOM`, `UTF-16 BE BOM`, `UTF-8 BOM`, `cp1254`, `[Program]`, `[list_text]`, `[list_order]`, `[list_label]`, `<E<N<D|` ve `L-Win+A/Z/X/Q/W/1` önekleri) **tam ve kayıpsız** korunmuştur. Unified `index.html` (`theme.css` ile) hem GitHub Pages üzerinde statik çevrimdışı olarak hem de yerel `qtp --web` API sunucusuyla otomatik mod algılayarak birebir çalışır; önceki 3. parti QuickTextPaste PWA sayfası [old.html](old.html) olarak, diğer PWA bileşenleri ise `cevaplar.html`, `sw.js` ve `manifest.webmanifest` olarak korunmaktadır.
-
----
-
-## 6. English Summary
-
-**QTP v2.1.0** is a standalone, single-file, offline cross-platform desktop quick-paste app (`dist/qtp.exe` for Windows, `dist/qtp.bin` for Linux/macOS) supporting `--gui`, `--tui`, `--cli`, and `--web` modes with zero external runtime dependencies.
-1. Uses conflict-free default global hotkeys (`Win+Alt+Space`, `Win+Alt+A/Z/X/Q`) via native Win32 `RegisterHotKey` on Windows (keystroke-consuming, zero Windows shell leaks, Turkish-Q `AltGr` safe), supports all 15 modifier combinations, 6 preset profiles, custom slots, and live conflict detection.
-2. Features `ConfigFileWatcher` for live hot-reload of `qtp_settings.json`, `QuickTextPaste.ini`, and `data.json` without restart, plus parent-PID Windows console attachment for `--help`, `--verbose`, and `--completion` (`powershell`, `bash`, `zsh`, `fish`).
+**QTP v2.2.0** is a standalone, zero-runtime-dependency snippet & quick-paste manager shipping portable single-file binaries (`qtp.exe` for Windows, `qtp.bin` for Linux x64) and a unified browser UI (`qtp.html`) alongside the preserved classic PWA (`index.html`, `legacy/`). It features a light-first UI with 1-click dark mode toggle, full snippet CRUD (Add/Edit/Delete) across GUI/TUI/CLI/Live-Web (plus offline `localStorage` CRUD on GitHub Pages), conflict-free `Win+Alt+*` Win32 global hotkeys, lossless UTF-16 LE BOM INI round-tripping, live reload, OS-aware download buttons, and PWA install support.

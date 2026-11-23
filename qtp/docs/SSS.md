@@ -63,6 +63,7 @@ Bu belge, QTP'nin üretebileceği **tüm Türkçe hata/uyarı mesajlarını bire
 | `HATA: Katman beklenen ... yerine ... satır listeledi.` / `HATA: Enter tuşu yapıştırma geri çağrısını tetiklemedi.` | `--selftest` sırasında arayüz modeli beklenen kayıtları veya Enter olayını işleyemedi. | Qt platform eklentisini kontrol edip `--selftest` komutunu tekrar çalıştırın. |
 | `HATA: Arama kutusu otomatik odaklanamadı.` | `--selftest` sırasında arama alanı odak alamadı. | Qt platform eklentisini (`QT_QPA_PLATFORM=offscreen`) kontrol edin. |
 | `Belge dosyası bulunamadı:` | İstenen Markdown yardım dosyası pakette veya `docs/` klasöründe yer almıyor. | İkili dosyanın `docs/*.md` verilerini içerdiğinden emin olun. |
+| `Metin alanı boş olamaz.` | `--add-item`, `--update-item` (`POST /api/items/add`, `POST /api/items/update`, TUI `a`/`E` veya GUI Düzenleyici) işleminde metin alanı boş bırakılmış. | En az bir görünür karakter içeren hazır cevap metni yazıp tekrar kaydedin. |
 
 ---
 
@@ -80,3 +81,20 @@ Windows `qtp.exe` çift tıklandığında siyah komut penceresi açmamak için G
 - **Wayland:** Yapay `Ctrl+V` için isteğe bağlı `wtype` (Sway/Hyprland) veya `ydotool` kurulabilir; kopyalama (`Ctrl+Enter` / `--copy`) yerleşik çalışır.
 - **GNOME Tepsisi:** Tepsi simgesi için `gnome-shell-extension-appindicator` etkinleştirin; gizliyken de global kısayollarla katmanı açabilirsiniz.
 - **`qtp.lock` & Türkçe Kodlama:** Bayat `qtp.lock` sonraki açılışta otomatik temizlenir; `cp1254` ve BOM'suz INI'ler kayıpsız `UTF-16 LE BOM` olarak okunur.
+
+### Açık / Koyu Tema Nasıl Değiştirilir?
+- QTP v2.2.0 sürümünden itibaren tüm arayüzlerde (`--gui`, `--web`, `qtp.html`, `index.html`, `legacy/cevaplar.html`) varsayılan tema **Açık (Light)** olarak başlar.
+- **Tek Tıkla Koyu Moda Geçiş:**
+  - **GUI (`--gui`):** Ayarlar (`Ctrl+,`) penceresindeki Tema (`light` / `dark`) seçeneğini değiştirin; değişiklik anında canlı olarak katmana uygulanır.
+  - **Web / GitHub Pages (`qtp.html` / `index.html`):** Üst sağdaki `🌙 Koyu` / `☀️ Açık` tema düğmesine tıklayın; canlı `--web` modunda `qtp_settings.json` güncellenir, statik GitHub Pages üzerinde ise tarayıcı `localStorage` hafızasına kaydedilir.
+  - **CLI / TUI:** `qtp --set theme dark` veya TUI içinde `s` → `theme` → `dark`.
+
+### Yeni Cevap Ekleme, Düzenleme ve Silme (CRUD) Nasıl Çalışır?
+- **GUI:** Üst çubuktaki `+ Yeni Cevap` düğmesiyle yeni kayıt ekleyin; listede herhangi bir satıra sağ tıklayıp **Düzenle** veya **Sil** seçin. Değişiklikler hem `QuickTextPaste.ini` hem de `data.json` dosyasına eşzamanlı yazılır ve otomatik yedek (`backups/`) alınır.
+- **TUI:** `a` (Yeni Cevap Ekle), `E` (Seçili Kaydı Düzenle), `d` (Seçili Kaydı Sil).
+- **CLI:** `--add-item "<metin>" [--item-keys K] [--item-group G] [--item-label E] [--no-end-marker]`, `--update-item <hedef> ...`, `--delete-item <hedef>`.
+- **Web (`--web` & Statik `qtp.html`):** `+ Yeni Cevap` ve satır içi `Düzenle` / `Sil` düğmeleri yerel `--web` sunucusunda diski günceller (`/api/items/add`, `/api/items/update`, `/api/items/delete`); internet üzerindeki `https://m-sonmez.github.io/qtp/qtp.html` adresinde ise tarayıcı `localStorage` üzerinde kalıcı olarak çalışır ve `Dışa Aktar` ile indirilebilir.
+
+### `index.html`, `qtp.html` ve `legacy/` Arasındaki Fark Nedir?
+- **`index.html` + `legacy/`:** Klasik QuickTextPaste PWA rehberi, kategorize cevap görüntüleyici (`legacy/cevaplar.html`) ve Windows yönetici betikleri (`legacy/qtp_manager.py`, `legacy/kurulum.ps1`).
+- **`qtp.html` + `standalone/`:** QTP'nin harici bağımlılıksız, kendi kendine yeten tek dosya masaüstü uygulaması (`qtp.exe` / `qtp.bin`) ve `--web` arayüzünün statik GitHub Pages karşılığıdır. Her iki HTML sayfası da işletim sistemine özel taşınabilir indirme düğmesi ve **PWA Yükle** desteği sunar.

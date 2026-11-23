@@ -1,75 +1,75 @@
 # QTP Klavye Kısayolları Rehberi
 
-QTP, **çapraz platform UI/UX eşitliği** ilkesiyle tasarlanmıştır. Varsayılan global kısayollar Windows 7–11 sistem kısayolları ve Türkçe-Q `AltGr` tuşu ile çakışmayacak şekilde `Win+Alt+*` olarak seçilmiştir ve **15 değiştirici bileşiminin tamamıyla** esnek biçimde özelleştirilebilir. macOS kullanıcıları için katman içinde ek `⌘` (`Cmd`) eş-kısayolları da **ek seçenek** olarak tanımlanmıştır; ancak standart `Ctrl+*` kısayolları hiçbir zaman kaldırılmaz veya değiştirilmez.
+QTP v2.2.0, Windows 10/11 sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama ve tüm arayüzlerde tam klavye/CRUD kontrolü sunar.
 
 ---
 
 ## 1. Varsayılan Global (Sistem Geneli) Kısayollar
 
-Aşağıdaki kısayollar arka planda sistem genelinde dinlenir (Windows 7–11'de yerel Win32 `RegisterHotKey` ile tuşları aktif uygulamaya sızdırmadan tüketir; Linux/macOS X11 üzerinde `pynput` kullanır) ve `qtp_settings.json` ya da **Ayarlar (`Ctrl+,`)** penceresinden dilediğiniz gibi değiştirilebilir:
+| Yuva / Kategori | Varsayılan (`recommended`) | Açtığı Ekran |
+| :--- | :--- | :--- |
+| **`all`** | `Win+Alt+Space` | Tüm kategoriler katmanı |
+| **`A`** | `Win+Alt+A` | `L-Win+A` önekli hazır cevaplar |
+| **`Z`** | `Win+Alt+Z` | `L-Win+Z` önekli hazır cevaplar |
+| **`X`** | `Win+Alt+X` | `L-Win+X` önekli hazır cevaplar |
+| **`Q`** | `Win+Alt+Q` | `L-Win+Q` önekli hazır cevaplar |
 
-| Olay | Kısayol (Windows) | Kısayol (Linux) | Kısayol (macOS) | Açıklama |
-| :--- | :--- | :--- | :--- | :--- |
-| Tüm Kategorilerle Aç | `Win+Alt+Space` | `Win+Alt+Space` | `Win+Alt+Space` | Katmanı açar ve tüm kategorileri (veya genel son kategoriyi) gösterir. |
-| İş Ortağı Kategorisiyle Aç | `Win+Alt+A` | `Win+Alt+A` | `Win+Alt+A` | Katmanı **A · İş Ortağı** (`L-Win+A`) filtresiyle açar. |
-| Kurye Kategorisiyle Aç | `Win+Alt+Z` | `Win+Alt+Z` | `Win+Alt+Z` | Katmanı **Z · Kurye** (`L-Win+Z`) filtresiyle açar. |
-| Canlı Yardım Kategorisiyle Aç | `Win+Alt+X` | `Win+Alt+X` | `Win+Alt+X` | Katmanı **X · Canlı Yardım** (`L-Win+X`) filtresiyle açar. |
-| Turkcell Kategorisiyle Aç | `Win+Alt+Q` | `Win+Alt+Q` | `Win+Alt+Q` | Katmanı **Q · Turkcell** (`L-Win+Q`) filtresiyle açar. |
-
-### Neden `Win+A/Z/X/Q` ve `Ctrl+Alt+Q` Varsayılan Olarak Kullanılmaz?
-- **Windows 10/11 Sistem Çakışmaları:** `Win+A` (Hızlı Ayarlar), `Win+Z` (Snap Düzenleri), `Win+X` (Hızlı Bağlantı Menüsü) ve `Win+Q` (Windows Arama) doğrudan işletim sistemi tarafından ayrılmıştır.
-- **Türkçe-Q `AltGr` Tuzağı (`Ctrl+Alt+<harf>`):** Windows'ta Türkçe-Q klavyelerde `AltGr` tuşu sistem düzeyinde `Ctrl+Alt` üretir. Bu nedenle `Ctrl+Alt+Q` (`@`), `Ctrl+Alt+A` (`æ`), `Ctrl+Alt+E` (`€`), `Ctrl+Alt+S` (`ß`) ve `Ctrl+Alt+1..9` (`>`, `£`, `#`, `$`, `½`, `{`, `[`, `]`, `}`) atamaları Türkçe karakter ve e-posta adresi yazımını engelleyebilir. QTP ayar penceresinde ve `--check-hotkeys` çıktısında bu bileşimler için canlı uyarı verir.
-- **Klavye Dili ve TTY Çakışmaları:** Yalnız `Alt+Shift` / `Ctrl+Shift` dil değiştirme ve Linux/BSD'de `Ctrl+Alt+F1..F12` sanal konsol geçişleriyle çakışılmaz.
+### Neden `Win+A/Z/X/Q` ve `Ctrl+Alt` Varsayılan Olarak Kullanılmaz?
+- Windows 10/11 sisteminde `Win+A` (*Hızlı Ayarlar*), `Win+Z` (*Pencere Düzenleri*), `Win+X` (*Hızlı Bağlantı Menüsü*) ve `Win+Q` (*Windows Arama*) doğrudan Explorer tarafından yakalanır; arka plan uygulamalarının pasif kancaları bu kısayolları bastıramaz ve çift tetiklemeye yol açar.
+- Türkçe-Q klavyede `Ctrl+Alt+<tuş>`, `AltGr` ile aynı tarama kodunu ürettiğinden `Ctrl+Alt+Q` yazarken `@` işaretini engelleyebilir.
+- QTP, Windows üzerinde yerel `user32.dll` `RegisterHotKey` API'sini `MOD_NOREPEAT` bayrağıyla kullanarak çalışan kısa yolları özel (exclusive) biçimde kaydeder ve çakışma (`ERROR_HOTKEY_ALREADY_REGISTERED / 1409`) oluştuğunda GUI/CLI/TUI/Web üzerinden kullanıcıyı uyarır.
+- **`QuickTextPaste.ini` Uyumluluğu:** INI dosyasındaki `L-Win+A`, `L-Win+Z`, `L-Win+X`, `L-Win+Q`, `L-Win+W`, `L-Win+1` alanları yalnızca kategori sınıflandırma etiketidir; QTP bu satırları asla bozmaz ve bayt-birebir korur.
 
 ---
 
 ## 2. Hazır Kısayol Profilleri, Serbest Değiştiriciler ve Özel Yuvalar
 
-**Ayarlar → Global Kısayollar** veya CLI (`--hotkey-preset`, `--hotkey-modifiers`) üzerinden aşağıdaki 6 hazır profil arasında anında geçiş yapabilir veya her kategori için `Ctrl`, `Alt`, `Shift`, `Win` onay kutularından oluşan **15 farklı değiştirici bileşimini** tek tek seçebilirsiniz (`Ctrl`, `Alt`, `Shift`, `Win`, `Ctrl+Alt`, `Ctrl+Shift`, `Alt+Shift`, `Win+Ctrl`, `Win+Alt`, `Win+Shift`, `Ctrl+Alt+Shift`, `Win+Ctrl+Alt`, `Win+Ctrl+Shift`, `Win+Alt+Shift`, `Win+Ctrl+Alt+Shift`):
+### 6 Hazır Kısayol Profili (`--hotkey-preset`)
 
-| Profil Kimliği (`--hotkey-preset`) | Atanan Kısayollar | Kullanım Önerisi |
-| :--- | :--- | :--- |
-| `recommended` *(Varsayılan)* | `Win+Alt+Space`, `Win+Alt+A/Z/X/Q` | Windows 7–11, Türkçe-Q, tarayıcı ve IDE çakışmasız varsayılan profil. |
-| `win_ctrl` | `Win+Ctrl+Space`, `Win+Ctrl+A/Z/X/Q` | Tek elle hızlı `Win+Ctrl` erişimi (`Win+Ctrl+D/Sol/Sağ` masaüstü tuşlarına dokunmaz). |
-| `ctrl_alt` | `Ctrl+Alt+Space`, `Ctrl+Alt+A/Z/X/Q` | `Win` tuşsuz; Türkçe-Q'da `@` (`AltGr+Q`) kullananlar için uyarı gösterir. |
-| `ctrl_shift_alt` *(takma ad: `triple_mod`)* | `Ctrl+Alt+Shift+Space`, `Ctrl+Alt+Shift+A/Z/X/Q` | RDP/VM ve `Win` tuşsuz ortamlarda A/Z/X/Q harf belleğini korur. |
-| `function_keys` | `Ctrl+Shift+F1` (`all`), `F2` (`A`), `F3` (`Z`), `F4` (`X`), `F5` (`Q`) | Windows, Linux, BSD ve **macOS** dahil tüm işletim sistemlerinde **sıfır çakışmalı** Win-tuşsuz profil. |
-| `legacy_win` | `Ctrl+Shift+Space`, `Win+A`, `Win+Z`, `Win+X`, `Win+Q` | Eski v2.0/v2.1 klasik eşlemesi (Windows 10/11 çakışma uyarısı verir). |
+| Profil Adı | `all` | `A` | `Z` | `X` | `Q` | Kullanım Amacı |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **`recommended`** | `Win+Alt+Space` | `Win+Alt+A` | `Win+Alt+Z` | `Win+Alt+X` | `Win+Alt+Q` | Varsayılan — Sistem & AltGr çakışmasız |
+| **`win_ctrl`** | `Win+Ctrl+Space` | `Win+Ctrl+A` | `Win+Ctrl+Z` | `Win+Ctrl+X` | `Win+Ctrl+Q` | `Win+Ctrl` tercih edenler için |
+| **`ctrl_alt`** | `Ctrl+Alt+Space` | `Ctrl+Alt+A` | `Ctrl+Alt+Z` | `Ctrl+Alt+X` | `Ctrl+Alt+Q` | `Win` tuşsuz `Ctrl+Alt` (TR-Q `AltGr` uyarısı gösterir) |
+| **`ctrl_shift_alt`** | `Ctrl+Alt+Shift+Space` | `Ctrl+Alt+Shift+A` | `Ctrl+Alt+Shift+Z` | `Ctrl+Alt+Shift+X` | `Ctrl+Alt+Shift+Q` | Üçlü değiştirici — tam çakışmasız |
+| **`function_keys`** | `Ctrl+Shift+F1` | `Ctrl+Shift+F2` | `Ctrl+Shift+F3` | `Ctrl+Shift+F4` | `Ctrl+Shift+F5` | `Win` ve harf tuşlarından tamamen bağımsız |
+| **`legacy_win`** | `Ctrl+Shift+Space` | `Win+A` | `Win+Z` | `Win+X` | `Win+Q` | Klasik QuickTextPaste eşlemesi (çakışma riski bildirilir) |
 
-- **Toplu Değiştirici Değiştirme:** Ayarlar penceresindeki **Tümüne Değiştirici Uygula** veya `qtp --hotkey-modifiers "Win+Ctrl"` ile tüm mevcut yuvaların değiştiricilerini tetik tuşlarını koruyarak tek adımda dönüştürebilirsiniz.
-- **Özel Kısayol Yuvaları:** `+ Özel Kısayol Ekle` düğmesiyle veya `qtp --set hotkeys.W "Ctrl+Shift+Alt+W"` komutuyla dilediğiniz ek kategori/önek yuvasını ekleyebilir, boş (`""`) veya `×` ile kaldırabilirsiniz.
-- **Desteklenen Tetik Tuşları:** `A–Z`, `0–9`, `F1–F24`, `Space`, `Tab`, `Enter`, `Esc`, `Backspace`, `Insert`, `Delete`, `Home`, `End`, `PageUp`, `PageDown`, `Up/Down/Left/Right`, `Numpad0–9` ve `- = [ ] ; ' , . / \ \``.
+### 15 Geçerli Değiştirici Bileşimi (`--hotkey-modifiers`)
+`Ctrl`, `Alt`, `Shift`, `Win` temel değiştiricilerinin boş olmayan her `1–4`'lü bileşimi (`Ctrl`, `Alt`, `Shift`, `Win`, `Ctrl+Alt`, `Ctrl+Shift`, `Ctrl+Win`, `Alt+Shift`, `Alt+Win`, `Shift+Win`, `Ctrl+Alt+Shift`, `Ctrl+Alt+Win`, `Ctrl+Shift+Win`, `Alt+Shift+Win`, `Ctrl+Alt+Shift+Win`) tüm yuvalara toplu uygulanabilir; sıra fark etmez ve otomatik standart sıraya normalleştirilir. Türkçe-Q `AltGr` (`RightAlt`) kullanan sistemlerde `Win+Alt` veya `Ctrl+Alt+Shift` önerilir.
+
+### Dinamik Özel Yuvalar (`hotkeys.<ad>`)
+Varsayılan `all`, `A`, `Z`, `X`, `Q` yuvalarına ek olarak `qtp_settings.json` veya `--set hotkeys.destek "Win+Alt+D"` komutuyla dilediğiniz kadar ek yuva tanımlayabilirsiniz. Canlı çakışma taraması (`--check-hotkeys`) bu yuvaları da doğrular:
+- **GUI:** `Ctrl+,` → Ayarlar → Global Kısayollar bölümünde canlı uyarı rozeti (kırmızı: sistem/OS çakışması, kehribar: TR-Q `AltGr` uyarısı, yeşil: çakışma yok).
+- **CLI:** `qtp --cli --check-hotkeys --json`
+- **TUI:** `k` (Çakışma Tara), `P` (Profil Uygula), `O` (Toplu Değiştirici)
+- **Web:** **Kısayollar** modalındaki *Çakışma Tara*, *Profil* ve *Toplu Değiştirici* düğmeleri.
 
 ---
 
 ## 3. Modlar Arası Etkileşim ve Katman Kısayolları (`--gui`, `--tui`, `--web`)
 
-Aşağıdaki tuşların çekirdek gezinme ve işlem mantığı dört modda da aynıdır (`Enter`, `Esc`/`q`, `Ctrl+K`/`/`, `F1`):
-
-| Olay | GUI (`--gui`) | TUI (`--tui`) | Web (`--web`) | Açıklama |
-| :--- | :--- | :--- | :--- | :--- |
-| Sonraki / Önceki Öğe | `↑` / `↓` | `↑` / `↓` | `↑` / `↓` | Listede satır değiştirir (**tüm modlarda aynı**). |
-| Hızlı Kaydır | `PageUp` / `PageDown` | `PageUp` / `PageDown` | Liste kaydırma | 6 satır yukarı/aşağı atlar. |
-| Yapıştır | `Enter` (`⏎`) | `Enter` (`⏎`) | `Enter` (`⏎`) | Önceki pencereye yapıştırır (**tüm modlarda aynı**). |
-| Yalnızca Kopyala | `Ctrl+Enter` (`⌘+Enter`) | `c` | `Ctrl+Enter` (`⌘+Enter`) | Katmanı kapatmadan panoya kopyalar. |
-| Aramaya Odaklan | `Ctrl+K` (`⌘+K`) | `/` | `Ctrl+K` / `/` | Arama kutusuna odaklanır. |
-| Kategori Değiştir | Tıkla (`Tümü`/`A`/`Z`/`X`/`Q`) | `Tab` veya `1–5` | Tıkla (`Tümü`/`A`/`Z`/`X`/`Q`) | Kategori sekmesini değiştirir. |
-| INI'de Göster | Sağ Tık → INI'de Göster | `e` | `GET /api/show-ini` | Ham `[list_text]`/`[list_label]` satırlarını gösterir. |
-| Anlık Yedek / Tam Yedek | Tepsi → Yedekler… | `b` / `B` | Yedekle düğmesi | Dönen yedek veya `qtp-tam-yedek-*.json` oluşturur. |
-| INI Yeniden Yükle | Tepsi → INI Yeniden Yükle | `r` | Yenile düğmesi | Diskteki INI/JSON verisini yeniden yükler. |
-| Ayarları Aç / Kısayol Kontrol | `Ctrl+,` (`⌘+,`) | `s` / `k` / `P` | `/api/settings`, `Kısayollar` | Ayarları, profilleri ve çakışma durumunu açar. |
-| Türkçe Yardım | `F1` | `F1` | `F1` | Dört modda da kanonsal yardımı (`CLI & Parametreler`, `Kullanım`, `Kısayollar`, `SSS`) açar; TUI'de `↑↓`/`PageUp`/`PageDown` ile kaydırılır. |
-| Kapat / Çık | `Esc` | `q` / `Esc` | `Esc` | Katmanı veya modal pencereyi kapatır (**tüm modlarda aynı**). |
+| İşlev | `--gui` (Masaüstü Katmanı) | `--tui` (Terminal) | `--web` / `qtp.html` (Tarayıcı) |
+| :--- | :--- | :--- | :--- |
+| **Satır Seçimi / Gezinti** | `↑` / `↓` / `PgUp` / `PgDn` | `↑` / `↓` / `PgUp` / `PgDn` | `↑` / `↓` / Tıklama |
+| **Kategori Geçişi** | `Tab` / Kategori Hapları | `Tab` / `1`–`5` | Kategori Hapları (`Tümü` / `A` / `Z` / `X` / `Q`) |
+| **Aramaya Odaklanma** | `Ctrl+K` / Doğrudan yazma | `/` | `Ctrl+K` veya `/` |
+| **Aktif Uygulamaya Yapıştır** | `Enter` / Çift veya Sol Tık | `Enter` | Satır `Yapıştır` düğmesi (`--web`) |
+| **Yalnızca Panoya Kopyala** | `Ctrl+Enter` / `Shift+Tık` / `Kopyala` | `c` | `Ctrl+Enter` / Satır `Kopyala` düğmesi |
+| **Yeni Cevap Ekle (`add_item`)** | Üst çubuk `+ Yeni Cevap` düğmesi | `a` | `+ Yeni Cevap` düğmesi |
+| **Seçili Cevabı Düzenle (`update_item`)** | Sağ Tık → `Düzenle` | `E` | Satır içi `Düzenle` düğmesi |
+| **Seçili Cevabı Sil (`delete_item`)** | Sağ Tık → `Sil` | `d` | Satır içi `Sil` düğmesi |
+| **Ham INI Satırını Göster** | Sağ Tık → `INI'de Göster` | `e` | Satır içi `INI` düğmesi |
+| **Açık / Koyu Tema Geçişi** | `Ctrl+,` / `Ayarlar → Tema` | `s` → `theme` | Üst sağ `🌙 Koyu` / `☀️ Açık` düğmesi |
+| **Ayarlar / Yedek / Yenile** | `Ctrl+,` / Tepsi Menüsü | `s` / `b` / `B` / `r` / `x` / `i` / `R` | `Ayarlar`, `Yedek Al`, `Yeniden Yükle`, `İçe/Dışa Aktar` |
+| **Yardım Penceresi** | `F1` (5 sekme) | `F1` (Markdown modal) | `F1` / `Yardım (F1)` (6 sekme) |
+| **Katmanı Gizle / Çık** | `Esc` / `Ctrl+Q` | `Esc` / `q` | `Esc` (Açık modalı kapatır) |
 
 ---
 
 ## 4. Fare Etkileşimleri
 
-| Olay | Windows | Linux | macOS | Açıklama |
-| :--- | :--- | :--- | :--- | :--- |
-| Satıra Sol Tık | Sol Tık | Sol Tık | Sol Tık | Seçili kaydı önceki aktif uygulamaya yapıştırır. |
-| Satıra Shift+Tık | `Shift+Sol Tık` | `Shift+Sol Tık` | `Shift+Sol Tık` | Katmanı kapatmadan yalnızca panoya kopyalar. |
-| Satır İçi "Kopyala" Düğmesi | Sol Tık | Sol Tık | Sol Tık | Satır üzerine gelince sağda çıkan düğme ile panoya kopyalar. |
-| Bağlam Menüsü | Sağ Tık | Sağ Tık | Sağ Tık (`Ctrl+Tık`) | Kaydı panoya alır ve `Yapıştır / Kopyala / INI'de Göster / Yardım` menüsünü açar. |
-| Tepsi Simgesi Çift Tık | Çift Tık | Çift Tık | Çift Tık | Katman penceresini açar. |
-| Pencere Boyutlandırma | Sağ Alt Köşe Sürükle | Sağ Alt Köşe Sürükle | Sağ Alt Köşe Sürükle | Pencere boyutunu değiştirir ve `qtp_settings.json` içine kaydeder. |
+- **Sol Tık (`--gui`):** Öğeyi kopyalar, katmanı gizler ve aktif pencereye `Ctrl+V` (ve istenirse `Enter`) gönderir.
+- **Shift + Sol Tık (`--gui`):** Yapıştırma simülasyonu yapmadan yalnızca panoya kopyalar.
+- **Sağ Tık (`--gui`):** Bağlam menüsünü açar (`Yapıştır`, `Yalnızca Panoya Kopyala`, `Düzenle`, `Sil`, `INI'de Göster`).
+- **Sistem Tepsisi Simgesi:** Sol tık ile katmanı açar/kapatır; sağ tık ile tüm hızlı işlemleri (`Katmanı Aç`, `Ayarlar`, `Yedekler…`, `INI İçe/Dışa Aktar`, `INI Yeniden Yükle`, `Yardım (F1)`, `Çıkış`) açar.

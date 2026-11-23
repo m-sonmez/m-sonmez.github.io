@@ -137,14 +137,36 @@ Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerind
 ## 11. TUI Modu (`--tui`) ve Web Modu (`--web`)
 
 - **`--tui`:** Python standart kütüphanesi dışında bağımlılık gerektirmez; Linux/macOS'ta `curses` (veya `termios`/düz metin), Windows'ta VT100 veya Win32 Console API kullanır. Canlı oturumda dosya değişikliklerini otomatik yansıtır; `F1` yardım modalında eksiksiz dört bölümlü içeriği (`CLI & Parametreler`, `Kullanım`, `Kısayollar`, `SSS`) `↑`/`↓` ve `PageUp`/`PageDown` kaydırmasıyla sunar ve `k` (çakışma denetimi), `P` (önerilen profil), `C` (tamamlama) tuşlarını destekler.
-- **`--web` ve GitHub Pages:** Yerelde `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; **Yardım (F1)** düğmesi / `F1` tuşu (`/api/help?verbose=1`), **INI'de Göster**, **Kısayollar** modalı, canlı `/api/revision` yenilemesi (başlangıç `--category`/`--query` dahil) ve `/api/hotkeys/*`, `/api/completion` uç noktalarını sunar (`POST /api/shutdown` ile zarifçe kapanır). Aynı `index.html` + `theme.css` çifti `https://m-sonmez.github.io/qtp/` adresinde de sıfır arka uçla birebir statik olarak çalışır ve `qtp.exe`, `qtp.bin`, `old.html` bağlantıları içerir.
-- **`--gui` `F1` Yardım Penceresi:** `Kullanım Kılavuzu`, `Kısayollar`, `Sorun Giderme (SSS)` sekmelerine ek olarak **CLI & Parametreler** sekmesinde birebir `--verbose --help` başvurusunu içerir.
+- **`--gui` Ana Katmanı (v2.2.0):** Varsayılan **Açık (Light)** tema ile açılır (`Ctrl+,` **Ayarlar → Tema** üzerinden Açık/Koyu değiştirilebilir). Üst çubuktaki **+ Yeni Cevap** düğmesi veya satır sağ-tık menüsündeki **Düzenle** / **Sil** işlemleriyle hazır cevapları doğrudan güncelleyebilirsiniz (`QuickTextPaste.ini` ve `data.json` otomatik yedeklenerek güncellenir).
+- **`--gui` `F1` Yardım Penceresi (5 Sekme):** `Kullanım (Web/GUI/TUI/CLI)`, `Kurulum & İndirme`, `Kısayollar & Profiller`, `Sorun Giderme (SSS)` ve birebir `--verbose --help` başvurusunu gösteren `CLI & Parametreler` sekmelerini içerir.
+- **`--tui` Etkileşimli Uçbirim:** Liste gezintisi yanında `a` (**Yeni Cevap Ekle**), `E` (**Düzenle**), `d` (**Sil**), `P` / `O` (Kısayol profili/değiştiriciler), `k` (Çakışma tarama) ve `F1` tam Markdown kılavuz (`KURULUM.md` dahil) destekler.
+- **`--web` ve GitHub Pages (`qtp.html`):** Yerelde `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; **Açık (Light) / Koyu Tema** tek-tık düğmesi, **6 sekmeli `F1` Yardım penceresi** (`Genel`, `GUI`, `TUI`, `CLI Referansı`, `Kısayollar`, `Kurulum & SSS`), **+ Yeni Cevap / Düzenle / Sil (CRUD)** formu (`POST /api/items/add`, `POST /api/items/update`, `POST /api/items/delete`), **INI'de Göster**, **Kısayollar** modalı, canlı `/api/revision` yenilemesi (başlangıç `--category`/`--query` dahil) ve `/api/hotkeys/*`, `/api/completion` uç noktalarını sunar (`POST /api/shutdown` ile zarifçe kapanır).
+  - **Statik GitHub Pages Dual-Mode:** Aynı `qtp.html` + `theme.css` çifti `https://m-sonmez.github.io/qtp/qtp.html` adresinde sıfır arka uçla çalışır; eklenen/düzenlenen/silinen kayıtları tarayıcının `localStorage` hafızasında saklar, işletim sistemine göre tek tık **İndir (`qtp.exe` / `qtp.bin`)**, **📲 PWA Yükle** ve klasik `index.html` / `legacy/cevaplar.html` geçiş düğmeleri sunar.
+- **Klasik PWA Rehberi (`index.html` & `legacy/cevaplar.html`):** `https://m-sonmez.github.io/qtp/` kök URL'sinde klasik QuickTextPaste PWA arayüzü korunur ve üst çubukta OS indirme + `🌐 Yeni Web Arayüzü (qtp.html)` bağlantıları yer alır.
+
+### CLI CRUD Komutları ve HTTP API JSON Örnekleri
+- **CLI ile Ekleme / Güncelleme / Silme:**
+  ```bash
+  qtp --cli --add-item "Saygılarımla," --item-keys A --item-group "Kapanış" --item-label "İmza"
+  qtp --cli --update-item text_000 --item-text "Güncellenmiş metin" --item-group "Genel"
+  qtp --cli --delete-item text_000
+  ```
+- **Web API (`POST /api/items/add`, `/api/items/update`, `/api/items/delete`):**
+  ```json
+  {
+    "text": "Merhaba, talebiniz alınmıştır.",
+    "keys": "A",
+    "group": "Müşteri Destek",
+    "label": "Karşılama",
+    "terminator": "<E<N<D|"
+  }
+  ```
 
 ---
 
 ## 12. Modlar Arası Eşitlik Matrisi
 
-Tüm işlemler ortak [operations.py](../qtp_app/core/operations.py) kayıt defteri ve [engine.py](../qtp_app/core/engine.py) üzerinden çalıştırılır:
+Tüm işlemler ortak [operations.py](../standalone/qtp_app/core/operations.py) kayıt defteri ve [engine.py](../standalone/qtp_app/core/engine.py) üzerinden çalıştırılır:
 
 | İşlem (`op_id`) | `--gui` | `--tui` | `--cli` | `--web` |
 | :--- | :--- | :--- | :--- | :--- |
@@ -170,3 +192,6 @@ Tüm işlemler ortak [operations.py](../qtp_app/core/operations.py) kayıt defte
 | `check_hotkeys` | `Ctrl+,` / Ayarlar → Global Kısayollar | `k` | `--check-hotkeys` | `GET /api/hotkeys/check` |
 | `hotkey_preset` | `Ctrl+,` / Ayarlar → Kısayol Profili | `P` | `--hotkey-preset <profil>` | `POST /api/hotkeys/preset` |
 | `hotkey_modifiers` | `Ctrl+,` / Ayarlar → Tümüne Değiştirici Uygula | `O` | `--hotkey-modifiers <değ.>` | `POST /api/hotkeys/modifiers` |
+| `add_item` | `+ Yeni Cevap` | `a` | `--add-item <metin>` | `POST /api/items/add` |
+| `update_item` | Sağ Tık → Düzenle | `E` | `--update-item <hedef>` | `POST /api/items/update` |
+| `delete_item` | Sağ Tık → Sil | `d` | `--delete-item <hedef>` | `POST /api/items/delete` |
