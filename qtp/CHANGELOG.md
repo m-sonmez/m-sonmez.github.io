@@ -13,6 +13,7 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 - **Yerel Çevrimdışı Web Sunucusu (`--web`):** Yalnızca `127.0.0.1` üzerinde çalışan `ThreadingHTTPServer`, `ui/theme.py` renkleriyle uyumlu harici bağlantısız HTML/CSS arayüz ve eksiksiz `/api/*` JSON uç noktaları.
 - **Sıfır Çalışma Zamanı Bağımlılığı (`core/paster.py`, `core/hotkeys.py`):** `pyperclip`, `xclip`, `xsel`, `xdotool`, `wmctrl` kaldırıldı; Windows `ctypes` Win32 pano/odak, macOS `AppKit`/`osascript` ve Linux `libX11`/Qt/OSC-52 desteği getirildi. Wayland ve macOS Erişilebilirlik kısıtları başlangıcı bloklamadan zarif Türkçe uyarılarla ele alındı (`EXTERNAL_CALLS.md`).
 - **Kapsamlı Eşitlik ve Taşınabilirlik Testleri + Çoklu OS CI Matrisi:** `test_mode_parity.py` (altın anlık görüntüler dahil), `test_portability.py` (temiz klasör, sıyrılmış `PATH`/`HOME`, yerel ayar matrisi, statik tarama), `test_web_ui.py`, `test_gui_offscreen_parity.py` ve `.github/workflows/ci.yml` temiz konteyner işleri eklendi.
+- **Doğrulanan Yayın Metrikleri:** `89/89` `pytest` testi (**%93** satır kapsamı, tüm 7 hedef modül grubu ≥ %90), `12/12` `unittest` tam-yığın testi ve `36.31 MB` tek dosya `dist/qtp.exe` boş klasör doğrulamasından geçti.
 
 ---
 
