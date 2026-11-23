@@ -217,7 +217,6 @@ class SnippetItemDelegate(QStyledItemDelegate):
             index.row() == self.hovered_row
         )
 
-        # Arka plan kartı
         path = QPainterPath()
         path.addRoundedRect(
             float(card_rect.x()),
@@ -237,7 +236,6 @@ class SnippetItemDelegate(QStyledItemDelegate):
         else:
             painter.fillPath(path, QColor(self.palette.surface))
 
-        # Sağ rozet (A, Z, X, Q...)
         badge_rect = QRect(
             card_rect.right() - PADDING_ROW_H - self.BADGE_WIDTH,
             card_rect.top() + (card_rect.height() - self.BADGE_HEIGHT) // 2,
@@ -277,7 +275,6 @@ class SnippetItemDelegate(QStyledItemDelegate):
             painter.drawText(copy_rect, Qt.AlignmentFlag.AlignCenter, "Kopyala")
             right_reserved += self.COPY_BTN_WIDTH + 8
 
-        # Sol metin alanı (2 satır + kategori/etiket alt satırı)
         text_left = card_rect.left() + PADDING_ROW_H
         text_width = max(120, card_rect.width() - PADDING_ROW_H - right_reserved)
         main_rect = QRect(
@@ -290,7 +287,6 @@ class SnippetItemDelegate(QStyledItemDelegate):
         raw_text = str(item.get("text", "")).replace("\r\n", " ").replace("\n", " ")
         text_font = create_app_font(self.font_family, FONT_SIZE_TEXT)
         fm = QFontMetrics(text_font)
-        # 2 satıra sığacak şekilde kısalt (ellipsis)
         max_chars = max(40, int((text_width * 1.95) / max(6, fm.averageCharWidth())))
         clipped = raw_text[: max_chars - 1] + "…" if len(raw_text) > max_chars else raw_text
 
@@ -308,7 +304,6 @@ class SnippetItemDelegate(QStyledItemDelegate):
         doc.drawContents(painter)
         painter.restore()
 
-        # Alt satır: kategori & başlık
         meta_rect = QRect(
             text_left,
             card_rect.bottom() - 22,
@@ -455,7 +450,6 @@ class OverlayWindow(QWidget):
         self._font_family = load_bundled_fonts()
         self._palette = resolve_palette(theme, os_is_dark=self._detect_os_dark())
 
-        # Çapraz platform pencere bayrakları: çerçevesiz, görev çubuğu/menü çubuğu yok, üstte
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint
             | Qt.WindowType.Tool
@@ -484,8 +478,9 @@ class OverlayWindow(QWidget):
     def _detect_os_dark(self) -> bool:
         try:
             hints = QGuiApplication.styleHints()
-            if hasattr(hints, "colorScheme"):
-                return hints.colorScheme() != Qt.ColorScheme.Light
+            color_scheme_enum = getattr(Qt, "ColorScheme", None)
+            if hints is not None and hasattr(hints, "colorScheme") and color_scheme_enum is not None:
+                return hints.colorScheme() != color_scheme_enum.Light
         except Exception:
             pass
         return True
@@ -507,7 +502,6 @@ class OverlayWindow(QWidget):
         card_layout.setContentsMargins(PADDING_OUTER, PADDING_OUTER, PADDING_OUTER, 10)
         card_layout.setSpacing(10)
 
-        # 1. Üst satır: Arama kutusu + Ctrl+K çipi + Ayarlar/Yardım
         top_row = QHBoxLayout()
         top_row.setSpacing(8)
 
@@ -524,7 +518,6 @@ class OverlayWindow(QWidget):
         self.search_input.setAccessibleDescription("Metin, kategori veya etiket içinde bulanık arama yapar.")
         self.search_input.textChanged.connect(self._refresh_list)
 
-        # Arama kutusu içinde sağda Ctrl+K ipucu çipi
         chip_layout = QHBoxLayout(self.search_input)
         chip_layout.setContentsMargins(0, 0, 10, 0)
         chip_layout.addStretch()
@@ -549,7 +542,6 @@ class OverlayWindow(QWidget):
 
         card_layout.addLayout(top_row)
 
-        # 2. İkinci satır: Kategori hapları (Tümü, A, Z, X, Q)
         pills_row = QHBoxLayout()
         pills_row.setSpacing(6)
         self.category_buttons: dict[str, QPushButton] = {}
@@ -566,7 +558,6 @@ class OverlayWindow(QWidget):
         pills_row.addStretch()
         card_layout.addLayout(pills_row)
 
-        # 3. Gövde: Sanallaştırılmış liste (QListView + QAbstractListModel)
         self.list_model = SnippetListModel(self)
         self.list_delegate = SnippetItemDelegate(self._palette, self._font_family, self)
         self.list_view = SnippetListView(self.list_delegate, self.card)
@@ -585,7 +576,6 @@ class OverlayWindow(QWidget):
         self.list_view.item_context_requested.connect(self._open_context_menu)
         card_layout.addWidget(self.list_view, 1)
 
-        # 4. Alt bilgi çubuğu + yeniden boyutlandırma tutamacı
         footer = QFrame(self.card)
         footer.setObjectName("FooterBar")
         footer_layout = QHBoxLayout(footer)
@@ -607,7 +597,6 @@ class OverlayWindow(QWidget):
 
         card_layout.addWidget(footer)
 
-        # Sağ alt köşeye sabitlenen kaybolan bildirim (toast)
         self.toast_label = QLabel("", self.card)
         self.toast_label.setObjectName("ToastLabel")
         self.toast_label.hide()
@@ -616,7 +605,6 @@ class OverlayWindow(QWidget):
         self.toast_label.setGraphicsEffect(self._toast_opacity)
 
     def _bind_shortcuts(self) -> None:
-        # Tüm platformlarda Ctrl+K / Ctrl+, / Ctrl+Enter çalışır; macOS üzerinde ek Cmd aliasları da desteklenir
         for seq in ("Ctrl+K", "Meta+K"):
             sc = QShortcut(QKeySequence(seq), self)
             sc.activated.connect(self.focus_search)

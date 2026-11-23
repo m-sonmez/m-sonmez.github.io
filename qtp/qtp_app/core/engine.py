@@ -92,10 +92,12 @@ class OperationResult:
 def get_bundled_default_path(filename: str) -> Path:
     """Paket içi varsayılan varlık (QuickTextPaste.ini / data.json) yolunu döndürür."""
     try:
-        pkg_root = Path(str(importlib.resources.files("qtp_app")))
-        candidate = pkg_root / "assets" / "defaults" / filename
-        if candidate.is_file():
-            return candidate
+        files_fn = getattr(importlib.resources, "files", None)
+        if files_fn is not None:
+            pkg_root = Path(str(files_fn("qtp_app")))
+            candidate = pkg_root / "assets" / "defaults" / filename
+            if candidate.is_file():
+                return candidate
     except Exception:
         pass
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
@@ -111,10 +113,12 @@ def get_bundled_default_path(filename: str) -> Path:
 def get_bundled_docs_dir() -> Path:
     """Gömülü Türkçe dokümantasyon klasörünü döndürür."""
     try:
-        pkg_root = Path(str(importlib.resources.files("qtp_app")))
-        for candidate in (pkg_root / "docs", pkg_root.parent / "docs"):
-            if candidate.is_dir():
-                return candidate
+        files_fn = getattr(importlib.resources, "files", None)
+        if files_fn is not None:
+            pkg_root = Path(str(files_fn("qtp_app")))
+            for candidate in (pkg_root / "docs", pkg_root.parent / "docs"):
+                if candidate.is_dir():
+                    return candidate
     except Exception:
         pass
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
@@ -187,7 +191,6 @@ class QtpEngine:
     ):
         requested_dir = Path(work_dir).resolve() if work_dir else get_app_dir()
         if ephemeral:
-            # Salt-okunur / bilgi komutları (--selftest, --version, --modes) diskte yan etki bırakmaz
             self.config_dir = requested_dir
             self.portable = True
             self.work_dir = requested_dir
@@ -198,7 +201,6 @@ class QtpEngine:
             self.settings_warning = None
         else:
             self.config_dir, self.portable = resolve_config_dir(requested_dir)
-            # Veri dosyaları yazılabilir çalışma dizininde yoksa config_dir üzerinde tutulur
             self.work_dir = requested_dir if is_dir_writable(requested_dir) else self.config_dir
             self.first_run = not (self.config_dir / SETTINGS_FILENAME).is_file()
 
@@ -265,7 +267,11 @@ class QtpEngine:
             if bundled_ini.is_file():
                 doc = parse_qtp_ini(read_text_auto(bundled_ini))
                 self.items = [
-                    it.to_dict(include_meta=False) | {"terminator": it.terminator, "raw_key": it.raw_key}
+                    {
+                        **it.to_dict(include_meta=False),
+                        "terminator": it.terminator,
+                        "raw_key": it.raw_key,
+                    }
                     for it in doc.items
                 ]
                 self.program_meta = dict(doc.program)
@@ -347,7 +353,6 @@ class QtpEngine:
                 err = f"HATA: Öğe sayısı uyuşmuyor ({len(reparsed.items)} != {len(doc.items)})."
                 return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
-            # Geçici klasör içinde sıfır yan etkili dosya I/O gidiş-dönüş doğrulaması
             with tempfile.TemporaryDirectory() as _tmp_dir:
                 tmp_ini = Path(_tmp_dir) / "selftest_roundtrip.ini"
                 write_qtp_ini(tmp_ini, reserialized, encoding="utf-16-le-bom", create_bak=False)
@@ -371,7 +376,11 @@ class QtpEngine:
                         app = QApplication([sys.argv[0]])
 
                     items_dicts = [
-                        it.to_dict(include_meta=False) | {"terminator": it.terminator, "raw_key": it.raw_key}
+                        {
+                            **it.to_dict(include_meta=False),
+                            "terminator": it.terminator,
+                            "raw_key": it.raw_key,
+                        }
                         for it in doc.items
                     ]
                     pasted: list[dict[str, Any]] = []
@@ -398,8 +407,7 @@ class QtpEngine:
                         overlay.deleteLater()
                         app.processEvents()
                 except ImportError:
-                    # Qt olmadan da çekirdek INI testi geçer
-                    pass
+                    self._matcher.filter_items("şifre", [it.to_dict(include_meta=False) for it in doc.items])
                 finally:
                     if prev_qpa is None and os.environ.get("QT_QPA_PLATFORM") == "offscreen":
                         os.environ.pop("QT_QPA_PLATFORM", None)
@@ -615,7 +623,7 @@ class QtpEngine:
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
         incoming = [
-            it.to_dict(include_meta=False) | {"terminator": it.terminator}
+            {**it.to_dict(include_meta=False), "terminator": it.terminator}
             for it in doc.items
         ]
         if mode == "replace":
@@ -701,7 +709,6 @@ class QtpEngine:
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
         as_path = Path(raw_str)
-        # 1. Dosya yolundan geri yükleme (tam yedek veya JSON/INI)
         if as_path.is_file():
             try:
                 parsed = parse_any_content(read_text_auto(as_path), as_path.name)
@@ -746,7 +753,6 @@ class QtpEngine:
             self.logger.info(msg)
             return OperationResult(ok=True, exit_code=0, message=msg, data={"count": len(merged), "mode": mode})
 
-        # 2. backups/ altındaki yedek kimliğinden geri yükleme
         if "/" in raw_str or "\\" in raw_str or raw_str.endswith((".json", ".ini")):
             err = f"Yedek bulunamadı: {raw_str}"
             return OperationResult(ok=False, exit_code=1, message=err, error=err)

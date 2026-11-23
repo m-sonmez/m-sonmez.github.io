@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import os
+import shutil
 import sys
-from typing import Any, Iterable, TextIO
+from typing import Any, Callable, Iterable, TextIO
 
 from qtp_app import __version__
 from qtp_app.core.engine import CATEGORY_DEFINITIONS, FIRST_RUN_TOAST, OperationResult, QtpEngine
@@ -83,13 +84,11 @@ class QtpTui:
         inner_w = max(50, width)
         lines: list[str] = []
 
-        # 1. Üst Arama Çubuğu
         search_state = "[YAZIYOR]" if self.search_mode else "[/ Ara]"
         lines.append(
             f"QTP v{__version__} | Mod: TUI | Ara: \"{self.query}\" {search_state} | Kayıt: {len(self._visible_items)}/{len(self.engine.items)}"
         )
 
-        # 2. Kategori Sekmeleri
         pills: list[str] = []
         for cat in self._categories_cache:
             code = cat["code"]
@@ -327,7 +326,6 @@ class QtpTui:
             prev_modal = bool(self.modal_lines)
             prev_search = self.search_mode
             self.handle_key(k)
-            # Modal açılışı veya işlem sonrası durum değişikliklerini yakala
             if (not prev_modal and self.modal_lines) or (
                 not prev_modal
                 and (not prev_search or k == "ENTER")
@@ -383,6 +381,103 @@ def _parse_stream_keys(raw_text: str) -> list[str]:
     return keys
 
 
+def _decode_posix_key(read_ch: Callable[[int], str], has_more: Callable[[], bool] | None = None) -> str:
+    ch = read_ch(1)
+    if not ch:
+        return "q"
+    if ch in ("\r", "\n"):
+        return "ENTER"
+    if ch == "\t":
+        return "TAB"
+    if ch in ("\x08", "\x7f"):
+        return "BACKSPACE"
+    if ch == "\x03":
+        return "q"
+    if ch == "\x1b":
+        if has_more is not None and not has_more():
+            return "ESC"
+        seq = read_ch(1)
+        if not seq:
+            return "ESC"
+        if seq == "[":
+            code = read_ch(1)
+            if code == "A":
+                return "UP"
+            if code == "B":
+                return "DOWN"
+            if code in ("5", "6"):
+                read_ch(1)
+                return "PGUP" if code == "5" else "PGDN"
+            if code == "1":
+                rest = read_ch(2)
+                if rest.startswith("1"):
+                    return "F1"
+        elif seq == "O":
+            if read_ch(1) == "P":
+                return "F1"
+        return "ESC"
+    return ch
+
+
+def _run_posix_termios_fallback(tui: QtpTui, out: TextIO) -> int:
+    dumb_term = os.environ.get("TERM", "").strip().lower() == "dumb"
+    tui.use_color = not dumb_term
+    try:
+        import termios
+        import tty
+
+        in_stream = sys.stdin
+        if in_stream is None or not hasattr(in_stream, "fileno"):
+            raise OSError("stdin fd yok")
+        fd = in_stream.fileno()
+        old_attrs = termios.tcgetattr(fd)
+
+        def _has_more() -> bool:
+            try:
+                import select
+
+                r, _, _ = select.select([fd], [], [], 0.05)
+                return bool(r)
+            except Exception:
+                return False
+
+        try:
+            tty.setcbreak(fd)
+            while tui.running:
+                ts = shutil.get_terminal_size((100, 30))
+                tui.term_size = (max(40, ts.columns), max(14, ts.lines))
+                lines = tui.render_ansi_lines() if tui.use_color else tui.render_plain_lines()
+                if not dumb_term:
+                    out.write("\x1b[H\x1b[2J")
+                out.write("\n".join(lines) + "\n")
+                out.flush()
+                key = _decode_posix_key(in_stream.read, _has_more)
+                if key:
+                    tui.handle_key(key)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_attrs)
+        return tui.exit_code
+    except Exception:
+        tui.use_color = False
+        while tui.running:
+            ts = shutil.get_terminal_size((100, 30))
+            tui.term_size = (max(40, ts.columns), max(14, ts.lines))
+            out.write("\n".join(tui.render_plain_lines()) + "\n> ")
+            out.flush()
+            if sys.stdin is None:
+                break
+            raw_line = sys.stdin.readline()
+            if not raw_line:
+                break
+            line_clean = raw_line.rstrip("\r\n")
+            keys = _parse_stream_keys(line_clean) if line_clean else ["ENTER"]
+            for k in keys:
+                if not tui.running:
+                    break
+                tui.handle_key(k)
+        return tui.exit_code
+
+
 def run_tui(
     engine: QtpEngine,
     *,
@@ -393,7 +488,6 @@ def run_tui(
     out = out_stream if out_stream is not None else sys.stdout
     tui = QtpTui(engine)
 
-    # Betikli test veya TTY olmayan stdin -> deterministik çıktı
     if scripted_keys is not None:
         tui.run_scripted(scripted_keys)
         out.write("\n---\n".join(tui.recorded_frames) + "\n")
@@ -413,10 +507,12 @@ def run_tui(
 
         backend = WinConsoleBackend(out)
         backend.enter()
+        tui.use_color = backend.supports_ansi
         try:
             while tui.running:
                 tui.term_size = backend.size()
-                backend.render(tui.render_ansi_lines())
+                lines = tui.render_ansi_lines() if backend.supports_ansi else tui.render_plain_lines()
+                backend.render(lines)
                 key = backend.read_key()
                 if key:
                     tui.handle_key(key)
@@ -424,8 +520,10 @@ def run_tui(
             backend.leave()
         return tui.exit_code
 
-    # Linux / macOS: Python stdlib curses
-    import curses
+    try:
+        import curses
+    except ImportError:
+        return _run_posix_termios_fallback(tui, out)
 
     def _curses_loop(stdscr: Any) -> None:
         curses.curs_set(0)
@@ -459,5 +557,8 @@ def run_tui(
             elif isinstance(ch, str):
                 tui.handle_key(ch)
 
-    curses.wrapper(_curses_loop)
+    try:
+        curses.wrapper(_curses_loop)
+    except Exception:
+        return _run_posix_termios_fallback(tui, out)
     return tui.exit_code

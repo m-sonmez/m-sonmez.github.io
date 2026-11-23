@@ -8,7 +8,7 @@ import sys
 from typing import Any, Callable
 
 from qtp_app.core.logging_setup import get_logger
-from qtp_app.core.paster import is_wayland_session
+from qtp_app.core.paster import is_posix_desktop, is_wayland_session
 
 logger = get_logger("hotkeys")
 
@@ -188,7 +188,7 @@ class HotkeyManager:
         if self._keyboard_module is not None:
             return self._keyboard_module
         try:
-            import keyboard  # type: ignore
+            import keyboard
 
             return keyboard
         except ImportError:
@@ -250,7 +250,7 @@ class HotkeyManager:
                 results[cat] = True
                 logger.info("Global kısayol kaydedildi (pynput): %s -> %s", combo, cat)
         except Exception as exc:
-            if self._platform == "linux" and is_wayland_session():
+            if is_posix_desktop(self._platform) and is_wayland_session(self._platform):
                 logger.warning(
                     "Wayland oturumunda global kısayollar kısıtlıdır (%s); uygulama tepsi/TUI/CLI/Web ile kullanılabilir.",
                     exc,

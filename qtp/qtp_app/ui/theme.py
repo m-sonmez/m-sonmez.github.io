@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import importlib.resources
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 from PyQt6.QtGui import QFont, QFontDatabase
 
-# Tüm işletim sistemlerinde birebir aynı kalan boyut, yarıçap, boşluk ve animasyon sabitleri
 WINDOW_WIDTH = 720
 WINDOW_HEIGHT = 520
 WINDOW_MIN_WIDTH = 560
@@ -138,12 +138,18 @@ def resolve_palette(theme_setting: str, *, os_is_dark: bool = True) -> ThemePale
 def get_asset_path(relative_path: str) -> Path:
     """Geliştirme ortamında ve PyInstaller tek dosya paketinde varlık yolunu çözer."""
     try:
-        pkg_root = importlib.resources.files("qtp_app")
-        candidate = Path(str(pkg_root)) / "assets" / relative_path
-        if candidate.exists():
-            return candidate
+        files_fn = getattr(importlib.resources, "files", None)
+        if files_fn is not None:
+            pkg_root = files_fn("qtp_app")
+            candidate = Path(str(pkg_root)) / "assets" / relative_path
+            if candidate.exists():
+                return candidate
     except Exception:
         pass
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        meipass_asset = Path(getattr(sys, "_MEIPASS")) / "qtp_app" / "assets" / relative_path
+        if meipass_asset.exists():
+            return meipass_asset
     return Path(__file__).resolve().parent.parent / "assets" / relative_path
 
 

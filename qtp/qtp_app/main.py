@@ -101,26 +101,35 @@ class SingleInstanceGuard:
 
 def launch_gui(engine: QtpEngine) -> int:
     """GUI adaptörü: Overlay + Tray + Global Kısayollar, tüm işlemleri QtpEngine üzerinden yürütür."""
-    from PyQt6.QtCore import QObject, QUrl, pyqtSignal
-    from PyQt6.QtGui import QDesktopServices
-    from PyQt6.QtWidgets import (
-        QApplication,
-        QDialog,
-        QFileDialog,
-        QHBoxLayout,
-        QLabel,
-        QListWidget,
-        QMessageBox,
-        QPushButton,
-        QVBoxLayout,
-    )
-    from qtp_app.ui.help_dialog import HelpDialog
-    from qtp_app.ui.overlay import OverlayWindow
-    from qtp_app.ui.settings_window import SettingsWindow
-    from qtp_app.ui.theme import build_dialog_stylesheet, resolve_palette
-    from qtp_app.ui.tray import QtpTrayIcon
-
     logger = get_logger("main")
+    try:
+        from PyQt6.QtCore import QObject, QUrl, pyqtSignal
+        from PyQt6.QtGui import QDesktopServices
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QDialog,
+            QFileDialog,
+            QHBoxLayout,
+            QLabel,
+            QListWidget,
+            QMessageBox,
+            QPushButton,
+            QVBoxLayout,
+        )
+        from qtp_app.ui.help_dialog import HelpDialog
+        from qtp_app.ui.overlay import OverlayWindow
+        from qtp_app.ui.settings_window import SettingsWindow
+        from qtp_app.ui.theme import build_dialog_stylesheet, resolve_palette
+        from qtp_app.ui.tray import QtpTrayIcon
+    except ImportError as exc:
+        msg = (
+            "HATA: GUI modu PyQt6 gerektirir; bu sistemde PyQt6 yüklenemedi "
+            f"({exc}). Başsız veya eski sistemlerde '--tui', '--cli' ya da '--web' modunu kullanın."
+        )
+        logger.error(msg)
+        print(msg, file=sys.stderr)
+        return 1
+
     guard = SingleInstanceGuard(engine.config_dir)
     if guard.try_notify_existing():
         logger.info("QTP zaten çalışıyor; mevcut pencere gösterildi ve ikinci örnek kapatıldı.")

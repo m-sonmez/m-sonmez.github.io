@@ -31,10 +31,12 @@ _EXIT_TO_HTTP_STATUS = {
 
 def _read_web_asset(filename: str) -> bytes:
     try:
-        pkg_root = Path(str(importlib.resources.files("qtp_app")))
-        candidate = pkg_root / "web" / filename
-        if candidate.is_file():
-            return candidate.read_bytes()
+        files_fn = getattr(importlib.resources, "files", None)
+        if files_fn is not None:
+            pkg_root = Path(str(files_fn("qtp_app")))
+            candidate = pkg_root / "web" / filename
+            if candidate.is_file():
+                return candidate.read_bytes()
     except Exception:
         pass
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
@@ -65,7 +67,7 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
 
     @property
     def engine(self) -> QtpEngine:
-        return self.server.engine  # type: ignore[attr-defined]
+        return self.server.engine
 
     def log_message(self, format: str, *args: Any) -> None:
         self.engine.logger.debug("Web %s - %s", self.address_string(), format % args)
@@ -208,7 +210,7 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         self._send_result(OperationResult(ok=False, exit_code=2, message=err, error=err))
 
     def _trigger_shutdown(self) -> None:
-        self.server.shutdown_event.set()  # type: ignore[attr-defined]
+        self.server.shutdown_event.set()
         self.server.shutdown()
 
 
@@ -244,7 +246,11 @@ def run_web_server(
     sys.stdout.flush()
     engine.logger.info("Web sunucusu başlatıldı: %s", url)
 
-    if open_browser and (sys.platform == "win32" or os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+    if open_browser and (
+        sys.platform in ("win32", "darwin")
+        or os.environ.get("DISPLAY")
+        or os.environ.get("WAYLAND_DISPLAY")
+    ):
         try:
             webbrowser.open(url)
         except Exception:

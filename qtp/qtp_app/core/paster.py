@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import ctypes
+import ctypes.util
 import os
 import shutil
 import subprocess
@@ -33,9 +34,17 @@ class PasteResult:
     exit_code: int = 0
 
 
-def is_wayland_session() -> bool:
-    """Linux üzerinde Wayland oturumu çalışıp çalışmadığını algılar."""
-    if sys.platform != "linux":
+def is_posix_desktop(platform_name: str | None = None) -> bool:
+    """Linux, FreeBSD, OpenBSD, NetBSD ve benzeri Unix/POSIX masaüstlerini tanır."""
+    plat = (platform_name or sys.platform).strip().lower()
+    if not plat or plat in ("win32", "darwin", "cygwin", "msys") or plat.startswith("win"):
+        return False
+    return True
+
+
+def is_wayland_session(platform_name: str | None = None) -> bool:
+    """Linux / BSD Unix-benzeri üzerinde Wayland oturumu çalışıp çalışmadığını algılar."""
+    if not is_posix_desktop(platform_name):
         return False
     return bool(os.environ.get("WAYLAND_DISPLAY")) or (
         os.environ.get("XDG_SESSION_TYPE", "").strip().lower() == "wayland"
@@ -110,15 +119,19 @@ def _copy_windows_ctypes(text: str) -> bool:
 
 
 def _copy_macos_native(text: str) -> bool:
-    """macOS üzerinde önce AppKit NSPasteboard, yoksa yerleşik pbcopy kullanır."""
+    """macOS üzerinde önce AppKit NSPasteboard (NSPasteboardTypeString -> NSStringPboardType), yoksa yerleşik pbcopy kullanır."""
     try:
-        from AppKit import NSPasteboard, NSStringPboardType  # type: ignore
+        import AppKit
 
-        pb = NSPasteboard.generalPasteboard()
-        pb.clearContents()
-        pb.declareTypes_owner_([NSStringPboardType], None)
-        if pb.setString_forType_(text, NSStringPboardType):
-            return True
+        pb = AppKit.NSPasteboard.generalPasteboard()
+        for type_attr in ("NSPasteboardTypeString", "NSStringPboardType"):
+            pb_type = getattr(AppKit, type_attr, None)
+            if pb_type is None:
+                continue
+            pb.clearContents()
+            pb.declareTypes_owner_([pb_type], None)
+            if pb.setString_forType_(text, pb_type):
+                return True
     except Exception:
         pass
 
@@ -132,8 +145,24 @@ def _copy_macos_native(text: str) -> bool:
     return False
 
 
-def _copy_linux_x11_ctypes(text: str) -> bool:
-    """Harici araç olmadan libX11.so.6 veya Qt panosunu dener."""
+def _load_x11_library() -> Any:
+    candidates: list[str] = ["libX11.so.6", "libX11.so"]
+    found = ctypes.util.find_library("X11")
+    if found and found not in candidates:
+        candidates.append(found)
+    last_exc: Exception | None = None
+    for lib_name in candidates:
+        try:
+            return ctypes.CDLL(lib_name)
+        except OSError as exc:
+            last_exc = exc
+    if last_exc is not None:
+        raise last_exc
+    raise OSError("libX11 bulunamadı")
+
+
+def _copy_unix_x11_ctypes(text: str) -> bool:
+    """Harici araç olmadan libX11 (libX11.so.6 / libX11.so) veya Qt panosunu dener."""
     try:
         if os.environ.get("DISPLAY") and not os.environ.get("QT_QPA_PLATFORM") == "offscreen":
             from PyQt6.QtGui import QGuiApplication
@@ -147,7 +176,7 @@ def _copy_linux_x11_ctypes(text: str) -> bool:
 
     if os.environ.get("DISPLAY"):
         try:
-            x11 = ctypes.CDLL("libX11.so.6")
+            x11 = _load_x11_library()
             x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
             x11.XOpenDisplay.restype = ctypes.c_void_p
             dpy = x11.XOpenDisplay(None)
@@ -175,6 +204,9 @@ def _copy_linux_x11_ctypes(text: str) -> bool:
         except Exception:
             pass
     return False
+
+
+_copy_linux_x11_ctypes = _copy_unix_x11_ctypes
 
 
 def copy_to_clipboard(
@@ -205,13 +237,12 @@ def copy_to_clipboard(
     elif plat == "darwin":
         if _copy_macos_native(text):
             return True
-    elif plat.startswith("linux"):
-        if _copy_linux_x11_ctypes(text):
+    elif is_posix_desktop(plat):
+        if _copy_unix_x11_ctypes(text):
             return True
         if _emit_osc52(text):
             return True
 
-    # Aktif Qt uygulaması varsa son güvenli yerel yol olarak kullan
     try:
         from PyQt6.QtGui import QGuiApplication
 
@@ -222,9 +253,8 @@ def copy_to_clipboard(
     except Exception:
         pass
 
-    # İsteğe bağlı üçüncü parti yedek (hiçbir zaman zorunlu değil)
     try:
-        import pyperclip  # type: ignore
+        import pyperclip
 
         pyperclip.copy(text)
         return True
@@ -252,7 +282,7 @@ def capture_previous_app(*, platform_name: str | None = None) -> Any:
             return hwnd if hwnd else None
         if plat == "darwin":
             try:
-                from AppKit import NSWorkspace  # type: ignore
+                from AppKit import NSWorkspace
 
                 return NSWorkspace.sharedWorkspace().frontmostApplication()
             except Exception:
@@ -269,9 +299,9 @@ def capture_previous_app(*, platform_name: str | None = None) -> Any:
                 if proc.returncode == 0 and proc.stdout.strip().isdigit():
                     return int(proc.stdout.strip())
                 return None
-        if plat.startswith("linux") and not is_wayland_session() and os.environ.get("DISPLAY"):
+        if is_posix_desktop(plat) and not is_wayland_session(plat) and os.environ.get("DISPLAY"):
             try:
-                from Xlib import X, display as xdisplay  # type: ignore
+                from Xlib import X, display as xdisplay
 
                 dpy = xdisplay.Display()
                 try:
@@ -304,7 +334,7 @@ def restore_previous_app(handle: Any, *, platform_name: str | None = None) -> bo
             user32.SetForegroundWindow.restype = ctypes.c_int
             if isinstance(handle, int) and handle > 0:
                 if user32.IsIconic(handle):
-                    user32.ShowWindow(handle, 9)  # SW_RESTORE
+                    user32.ShowWindow(handle, 9)
                 return bool(user32.SetForegroundWindow(handle))
             return False
         if plat == "darwin":
@@ -323,9 +353,9 @@ def restore_previous_app(handle: Any, *, platform_name: str | None = None) -> bo
                 )
                 return proc.returncode == 0
             return False
-        if plat.startswith("linux") and os.environ.get("DISPLAY"):
+        if is_posix_desktop(plat) and os.environ.get("DISPLAY"):
             try:
-                from Xlib import X, display as xdisplay  # type: ignore
+                from Xlib import X, display as xdisplay
 
                 dpy = xdisplay.Display()
                 try:
@@ -441,9 +471,9 @@ def paste_into_active_app(
 
     should_send_enter = bool(has_end_marker and enter_after_paste)
     method_norm = (paste_method or "auto").strip().lower()
-    use_wayland = is_wayland_session() if wayland is None else wayland
+    use_wayland = is_wayland_session(plat) if wayland is None else wayland
 
-    if use_wayland and plat.startswith("linux"):
+    if use_wayland and is_posix_desktop(plat):
         ok_wl, used_tool, wl_warn = _paste_wayland(
             text,
             method=method_norm,
