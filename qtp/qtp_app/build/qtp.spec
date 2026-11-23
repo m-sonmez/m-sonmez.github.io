@@ -70,6 +70,29 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+if sys.platform != "win32":
+    _skip_bins = (
+        "libqt6pdf",
+        "libqpdf",
+        "libqtiff",
+        "libqwebp",
+        "libqicns",
+        "libqtga",
+        "libqwbmp",
+        "libqvnc",
+        "libqvkkhrdisplay",
+    )
+    a.binaries = [
+        item for item in a.binaries
+        if not any(tok in item[0].lower().replace("\\", "/") for tok in _skip_bins)
+    ]
+    a.datas = [
+        item for item in a.datas
+        if "/translations/" not in item[0].lower().replace("\\", "/")
+        or item[0].lower().endswith(("_tr.qm", "_en.qm"))
+    ]
+
 pyz = PYZ(a.pure)
 
 exe = EXE(

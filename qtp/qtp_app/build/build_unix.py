@@ -102,10 +102,6 @@ def build_unix(
     mode = target_bin.stat().st_mode
     target_bin.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-    strip_tool = shutil.which("strip")
-    if strip_tool and sys.platform != "darwin":
-        subprocess.run([strip_tool, str(target_bin)], check=False)
-
     if sys.platform == "darwin":
         print("macOS ad-hoc kod imzalama uygulanıyor...")
         subprocess.run(["codesign", "--force", "--deep", "--sign", "-", str(target_bin)], check=True)
