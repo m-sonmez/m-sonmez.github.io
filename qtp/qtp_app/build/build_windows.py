@@ -1,8 +1,10 @@
-"""Windows tek dosya yürütülebilir paketleme betiği -> dist/qtp.exe."""
+"""Windows tek dosya yürütülebilir paketleme betiği -> dist/qtp.exe (<= 60 MB)."""
 
 from __future__ import annotations
 
+import datetime as _dt
 import hashlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -12,6 +14,7 @@ BUILD_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BUILD_DIR.parent.parent
 SPEC_PATH = BUILD_DIR / "qtp.spec"
 DIST_DIR = ROOT_DIR / "dist"
+MAX_SIZE_BYTES = 60 * 1024 * 1024
 
 
 def sha256_file(path: Path) -> str:
@@ -20,6 +23,27 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: fh.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def write_build_info(target: Path, digest: str) -> None:
+    size_bytes = target.stat().st_size
+    size_mb = size_bytes / (1024 * 1024)
+    stamp = _dt.datetime.now().isoformat(timespec="seconds")
+    info = (
+        "QTP Derleme Bilgisi (BUILD_INFO)\n"
+        "===================================\n"
+        f"Ana Bilgisayar (Host OS): {platform.system()} {platform.release()} ({sys.platform})\n"
+        f"Mimari: {platform.machine()}\n"
+        f"Python: {platform.python_version()}\n"
+        f"Üretilen İkili Dosya: dist/{target.name}\n"
+        f"Boyut: {size_bytes} bayt ({size_mb:.2f} MB)\n"
+        f"SHA-256: {digest}\n"
+        f"Derleme Zamanı: {stamp}\n\n"
+        "Çapraz Derleme Notu:\n"
+        "- Linux ve macOS için `dist/qtp.bin` ikili dosyası Windows üzerinde derlenmez (Wine kullanılmaz).\n"
+        "- `qtp.bin` üretimi için ilgili yerel işletim sisteminde `python -m qtp_app.build.build_unix` veya `make build` çalıştırılmalıdır.\n"
+    )
+    (DIST_DIR / "BUILD_INFO.txt").write_text(info, encoding="utf-8")
 
 
 def build_windows() -> Path:
@@ -45,7 +69,6 @@ def build_windows() -> Path:
     target_exe = DIST_DIR / "qtp.exe"
     if built_exe.is_file() and built_exe.name != target_exe.name:
         if built_exe.resolve() == target_exe.resolve():
-            # Büyük/küçük harf duyarsız NTFS üzerinde aynı dosya: geçici ad üzerinden yeniden adlandır
             tmp_exe = DIST_DIR / "_qtp_tmp_rename.exe"
             if tmp_exe.exists():
                 tmp_exe.unlink()
@@ -59,6 +82,12 @@ def build_windows() -> Path:
     if not target_exe.is_file():
         raise FileNotFoundError(f"Beklenen Windows çıktısı bulunamadı: {target_exe}")
 
+    size_bytes = target_exe.stat().st_size
+    if size_bytes > MAX_SIZE_BYTES:
+        raise RuntimeError(
+            f"Boyut sınırı aşıldı: {size_bytes / (1024 * 1024):.2f} MB > 60 MB"
+        )
+
     print("Otomatik doğrulama çalıştırılıyor: qtp.exe --selftest")
     proc = subprocess.run(
         [str(target_exe), "--selftest"],
@@ -70,10 +99,11 @@ def build_windows() -> Path:
     )
     print(proc.stdout.strip())
 
-    size_mb = target_exe.stat().st_size / (1024 * 1024)
     digest = sha256_file(target_exe)
+    write_build_info(target_exe, digest)
+    size_mb = size_bytes / (1024 * 1024)
     print(f"Derleme tamamlandı: {target_exe}")
-    print(f"Boyut: {size_mb:.2f} MB ({target_exe.stat().st_size} bayt)")
+    print(f"Boyut: {size_mb:.2f} MB ({size_bytes} bayt)")
     print(f"SHA-256: {digest}")
     return target_exe
 

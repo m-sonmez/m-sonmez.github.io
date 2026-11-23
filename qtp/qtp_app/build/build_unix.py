@@ -1,9 +1,11 @@
-"""Linux ve macOS tek dosya taşınabilir paketleme betiği -> dist/qtp.bin."""
+"""Linux ve macOS tek dosya taşınabilir paketleme betiği -> dist/qtp.bin (<= 60 MB)."""
 
 from __future__ import annotations
 
+import datetime as _dt
 import hashlib
 import os
+import platform
 import shutil
 import stat
 import subprocess
@@ -14,6 +16,7 @@ BUILD_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BUILD_DIR.parent.parent
 SPEC_PATH = BUILD_DIR / "qtp.spec"
 DIST_DIR = ROOT_DIR / "dist"
+MAX_SIZE_BYTES = 60 * 1024 * 1024
 
 
 def sha256_file(path: Path) -> str:
@@ -22,6 +25,27 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: fh.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def write_build_info(target: Path, digest: str) -> None:
+    size_bytes = target.stat().st_size
+    size_mb = size_bytes / (1024 * 1024)
+    stamp = _dt.datetime.now().isoformat(timespec="seconds")
+    info = (
+        "QTP Derleme Bilgisi (BUILD_INFO)\n"
+        "===================================\n"
+        f"Ana Bilgisayar (Host OS): {platform.system()} {platform.release()} ({sys.platform})\n"
+        f"Mimari: {platform.machine()}\n"
+        f"Python: {platform.python_version()}\n"
+        f"Üretilen İkili Dosya: dist/{target.name}\n"
+        f"Boyut: {size_bytes} bayt ({size_mb:.2f} MB)\n"
+        f"SHA-256: {digest}\n"
+        f"Derleme Zamanı: {stamp}\n\n"
+        "Çapraz Derleme Notu:\n"
+        "- Windows için `dist/qtp.exe` yalnızca Windows üzerinde derlenir.\n"
+        "- Linux ikilisi maksimum uyumluluk için Ubuntu 22.04 (glibc 2.35) tabanında derlenmelidir.\n"
+    )
+    (DIST_DIR / "BUILD_INFO.txt").write_text(info, encoding="utf-8")
 
 
 def build_unix() -> Path:
@@ -73,6 +97,12 @@ def build_unix() -> Path:
         print("macOS ad-hoc kod imzalama uygulanıyor...")
         subprocess.run(["codesign", "--force", "--deep", "--sign", "-", str(target_bin)], check=True)
 
+    size_bytes = target_bin.stat().st_size
+    if size_bytes > MAX_SIZE_BYTES:
+        raise RuntimeError(
+            f"Boyut sınırı aşıldı: {size_bytes / (1024 * 1024):.2f} MB > 60 MB"
+        )
+
     env = dict(os.environ)
     if sys.platform.startswith("linux") and not env.get("DISPLAY") and not env.get("WAYLAND_DISPLAY"):
         env["QT_QPA_PLATFORM"] = "offscreen"
@@ -89,10 +119,11 @@ def build_unix() -> Path:
     )
     print(proc.stdout.strip())
 
-    size_mb = target_bin.stat().st_size / (1024 * 1024)
     digest = sha256_file(target_bin)
+    write_build_info(target_bin, digest)
+    size_mb = size_bytes / (1024 * 1024)
     print(f"Derleme tamamlandı: {target_bin}")
-    print(f"Boyut: {size_mb:.2f} MB ({target_bin.stat().st_size} bayt)")
+    print(f"Boyut: {size_mb:.2f} MB ({size_bytes} bayt)")
     print(f"SHA-256: {digest}")
     return target_bin
 
