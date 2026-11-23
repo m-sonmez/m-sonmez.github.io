@@ -1,12 +1,12 @@
 # QTP Geliştirici Rehberi
 
-Bu belge, QTP v2.0.0 tek dosya masaüstü uygulamasının mimarisini, test altyapısını, çapraz platform UI/UX eşitlik denetimlerini ve derleme sürecini açıklar.
+Bu belge, QTP v2.1.0 tek dosya masaüstü uygulamasının mimarisini, test altyapısını, çapraz platform UI/UX eşitlik denetimlerini ve derleme sürecini açıklar.
 
 ---
 
 ## 1. Mimari Genel Bakış, Mod Adaptörleri ve İşlem Kayıt Defteri
 
-QTP v2.1.0, tüm iş mantığını Qt'den bağımsız [engine.py](file:///C:/Users/User/Projects/m-sonmez.github.io/qtp/qtp_app/core/engine.py) ve tek doğruluk kaynağı olan [operations.py](file:///C:/Users/User/Projects/m-sonmez.github.io/qtp/qtp_app/core/operations.py) içinde toplar. Dört çalışma modu (`--gui`, `--tui`, `--cli`, `--web`) aynı `QtpEngine` sınıfını kullanan ince adaptörlerdir.
+QTP v2.1.0, tüm iş mantığını Qt'den bağımsız [engine.py](../qtp_app/core/engine.py) ve tek doğruluk kaynağı olan [operations.py](../qtp_app/core/operations.py) içinde toplar. Dört çalışma modu (`--gui`, `--tui`, `--cli`, `--web`) aynı `QtpEngine` sınıfını kullanan ince adaptörlerdir.
 
 ```text
 qtp_app/

@@ -75,6 +75,7 @@ Kategori filtreleme, Türkçe bulanık arama (`İ/i`, `I/ı`), sağ tık menüs�
 | `backup_count` | `15` | `backups/` dizininde tutulacak yedek sayısı |
 | `log_level` | `"info"` | `qtp.log` günlük düzeyi (`debug`, `info`, `warn`, `error`) |
 | `language` | `"tr"` | Arayüz dili (`tr`) |
+| `web.port` | `8765` | `--web` sunucusu yerel `127.0.0.1` bağlantı noktası (`0–65535`) |
 
 ---
 
@@ -106,7 +107,7 @@ Depodaki mevcut `index.html`, `cevaplar.html`, `sw.js` ve `manifest.webmanifest`
 
 ## 10. English Summary
 
-**QTP v2.0.0** is a standalone, single-file, offline cross-platform desktop quick-paste app (`dist/qtp.exe` for Windows, `dist/qtp.bin` for Linux/macOS) with zero dependency on `QuickTextPaste.exe`.
+**QTP v2.1.0** is a standalone, single-file, offline cross-platform desktop quick-paste app (`dist/qtp.exe` for Windows, `dist/qtp.bin` for Linux/macOS) supporting `--gui`, `--tui`, `--cli`, and `--web` modes with zero dependency on `QuickTextPaste.exe` or external clipboard/hotkey binaries.
 1. Download or build the portable binary (`make build` / `make.bat`), and optionally place your `QuickTextPaste.ini` next to it.
 2. Run `qtp.exe` (or `chmod +x qtp.bin && ./qtp.bin`) — press `Win+A/Z/X/Q` or `Ctrl+Shift+Space` to open the animated overlay.
 3. Type to fuzzy-search (Turkish-locale aware), press `Enter` to paste into your previous active app (or `Ctrl+Enter` to copy only), and press `F1` for built-in documentation.

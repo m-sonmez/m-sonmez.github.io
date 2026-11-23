@@ -32,13 +32,7 @@
    chmod +x qtp.bin
    ./qtp.bin
    ```
-3. **Önerilen yardımcı paketler:** Pano ve odak geri yükleme desteği için sistem paket yöneticinizden `xclip` (veya `xsel`) ile `xdotool` (veya `wmctrl`) araçlarının kurulu olduğundan emin olun:
-   ```bash
-   # Debian / Ubuntu
-   sudo apt install xclip xdotool
-   # Arch Linux
-   sudo pacman -S xclip xdotool
-   ```
+3. **Sıfır Harici Paket (X11):** QTP; X11 oturumunda `libX11`, Qt panosu veya etkileşimli terminalde OSC 52 kullanarak pano ve odak geri yüklemeyi harici `xclip`, `xsel`, `xdotool` veya `wmctrl` paketlerine ihtiyaç duymadan yerel olarak gerçekleştirir.
 4. **GNOME Sistem Tepsisi Notu:** GNOME masaüstü ortamında sistem tepsisi simgesini görmek için `AppIndicator and KStatusNotifierItem Support` uzantısının etkin olması gerekir.
 
 ### 2.3 Linux — Wayland (`qtp.bin`)
@@ -116,7 +110,7 @@ python -m venv .venv
 
 # 2. Bağımlılıkları yükleyin
 pip install --upgrade pip
-pip install "PyQt6==6.7.*" "pyinstaller==6.10.*" "pynput==1.7.*" "pyperclip==1.9.*" "pillow==10.*" "pytest==8.*" "pytest-qt==4.*" pytest-cov keyboard
+pip install -r requirements-dev.txt
 
 # 3. Testleri çalıştırın
 pytest -q --cov=qtp_app/core --cov=qtp_app/ui/search --cov-report=term-missing

@@ -111,6 +111,7 @@ Ayarlar penceresine katmandaki **Ayarlar** düğmesinden, `Ctrl+,` kısayolundan
 | `backup_count` | `15` | `backups/` dizininde saklanacak en fazla otomatik/manuel yedek sayısı (`1–100`). |
 | `log_level` | `"info"` | `qtp.log` günlük dosyası ayrıntı düzeyi (`debug`, `info`, `warn`, `error`). |
 | `language` | `"tr"` | Arayüz dili (yalnızca `"tr"`; gelecek sürümler için ayrılmıştır). |
+| `web.port` | `{"port": 8765}` | `--web` modunun yalnızca `127.0.0.1` üzerinde dinleyeceği yerel bağlantı noktası (`0–65535`). |
 
 Pencere altındaki **Kaydet**, **İptal**, **Varsayılana Sıfırla** ve **Yardım** düğmeleri ile ayarları güvenle yönetebilirsiniz.
 
