@@ -1,0 +1,117 @@
+"""PyQt6 offscreen duman testi: Overlay (527 öğe), odak, kategori sayacı, Enter/Ctrl+Enter, Ayarlar, Yardım ve Tepsi."""
+
+from __future__ import annotations
+
+import os
+from collections import Counter
+from pathlib import Path
+
+import pytest
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+from PyQt6.QtCore import Qt
+from PyQt6.QtTest import QTest
+
+from qtp_app.core.ini_parser import parse_qtp_ini, read_text_auto
+from qtp_app.core.settings import DEFAULT_SETTINGS
+from qtp_app.ui.help_dialog import HelpDialog
+from qtp_app.ui.overlay import OverlayWindow
+from qtp_app.ui.settings_window import SettingsWindow
+from qtp_app.ui.theme import DARK_PALETTE, FOOTER_HINTS_TEXT
+from qtp_app.ui.tray import QtpTrayIcon
+
+FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
+
+
+def test_overlay_renders_all_items_focus_pills_and_enter_paste(qtbot):
+    doc = parse_qtp_ini(read_text_auto(FIXTURES_DIR / "QuickTextPaste.ini"))
+    items = [it.to_dict(include_meta=False) | {"terminator": it.terminator} for it in doc.items]
+    total = len(items)
+    counts_by_key = Counter(it["keys"] for it in items)
+
+    pasted: list[dict] = []
+    copied: list[dict] = []
+    overlay = OverlayWindow(
+        items,
+        theme="dark",
+        on_paste=lambda item, _prev: pasted.append(item),
+        on_copy=lambda item: copied.append(item),
+    )
+    qtbot.addWidget(overlay)
+
+    overlay.show_overlay(category="ALL", animate=False, previous_app=None)
+    qtbot.waitUntil(lambda: overlay.isVisible() and overlay.search_input.hasFocus(), timeout=1500)
+
+    # 1. Tüm kayıtlar listelenmiş olmalı
+    assert overlay.list_model.rowCount() == total
+
+    # 2. Arama kutusu otomatik odaklanmış olmalı
+    assert overlay.search_input.hasFocus()
+
+    # 3. Kategori haplarındaki sayılar gerçek INI sayılarıyla eşleşmeli
+    assert overlay.category_buttons["ALL"].property("item_count") == total
+    assert f"({total})" in overlay.category_buttons["ALL"].text()
+    for code in ("A", "Z", "X", "Q"):
+        expected = counts_by_key[f"L-Win+{code}"]
+        assert overlay.category_buttons[code].property("item_count") == expected
+        assert f"({expected})" in overlay.category_buttons[code].text()
+
+    # 4. Alt bilgi metni beklenen ipucunu içermeli
+    assert overlay.footer_hints.text() == FOOTER_HINTS_TEXT
+
+    # 5. Kategori filtreleme ve bulanık arama
+    overlay.set_category("Z")
+    assert overlay.list_model.rowCount() == counts_by_key["L-Win+Z"]
+    overlay.set_category("ALL")
+    overlay.search_input.setText("şifre")
+    assert 0 < overlay.list_model.rowCount() < total
+    overlay.search_input.clear()
+    assert overlay.list_model.rowCount() == total
+
+    # 6. Ctrl+Enter yalnızca kopyalar ve katmanı açık bırakır
+    QTest.keyClick(overlay.search_input, Qt.Key.Key_Return, Qt.KeyboardModifier.ControlModifier)
+    assert len(copied) == 1
+    assert copied[0] == items[0]
+    assert overlay.isVisible()
+    assert "Panoya kopyalandı" in overlay.toast_label.text()
+
+    # 7. Enter ilk öğeyi yapıştırır
+    QTest.keyClick(overlay.search_input, Qt.Key.Key_Return)
+    assert len(pasted) == 1
+    assert pasted[0] == items[0]
+
+
+def test_help_settings_and_tray_smoke(qtbot):
+    help_dlg = HelpDialog(DARK_PALETTE)
+    qtbot.addWidget(help_dlg)
+    assert help_dlg.tabs.count() == 3
+    html_text = help_dlg.browsers[0].toPlainText()
+    assert "Kullanım Kılavuzu" in html_text or "Kategori" in html_text
+
+    settings_dlg = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE)
+    qtbot.addWidget(settings_dlg)
+    collected = settings_dlg.collect_settings()
+    assert collected["theme"] == DEFAULT_SETTINGS["theme"]
+    assert collected["hotkeys"] == DEFAULT_SETTINGS["hotkeys"]
+    assert collected["backup_count"] == DEFAULT_SETTINGS["backup_count"]
+
+    tray = QtpTrayIcon(
+        on_open=lambda: None,
+        on_settings=lambda: None,
+        on_reload_ini=lambda: None,
+        on_open_json=lambda: None,
+        on_backups=lambda: None,
+        on_help=lambda: None,
+        on_quit=lambda: None,
+    )
+    labels = [act.text() for act in tray.menu.actions() if not act.isSeparator()]
+    assert labels == [
+        "Aç (Ctrl+Shift+Space)",
+        "Ayarlar…",
+        "INI Yeniden Yükle",
+        "data.json Aç",
+        "Yedekler…",
+        "Yardım (F1)",
+        "Çıkış",
+    ]
