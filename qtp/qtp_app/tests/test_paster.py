@@ -228,6 +228,7 @@ def test_wayland_ydotool_and_clipboard_failure(caplog):
 
 
 def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
+    orig_display = os.environ.get("DISPLAY")
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     with mock.patch("qtp_app.core.paster.sys.platform", "linux"):
         assert paster.is_wayland_session() is True
@@ -281,7 +282,12 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
     ns_app.activateWithOptions_.return_value = True
     assert paster.restore_previous_app(ns_app, platform_name="darwin") is True
 
-    if sys.platform != "win32" and not os.environ.get("DISPLAY"):
+    if orig_display:
+        monkeypatch.setenv("DISPLAY", orig_display)
+    else:
+        monkeypatch.delenv("DISPLAY", raising=False)
+
+    if sys.platform != "win32" and not orig_display:
         fake_kb = SimpleNamespace(Controller=lambda: "FAKE_CTRL", Key=_FAKE_KEYS)
         with mock.patch.dict("sys.modules", {"pynput": SimpleNamespace(keyboard=fake_kb), "pynput.keyboard": fake_kb}):
             ctrl_real, key_real = paster._get_pynput_controller()
