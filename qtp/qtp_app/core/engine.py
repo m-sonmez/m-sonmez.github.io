@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import importlib.resources
 import json
@@ -10,11 +11,19 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
 from qtp_app import __build_date__, __display_name__, __version__
+from qtp_app.core.hotkeys import (
+    HOTKEY_PRESETS,
+    apply_modifier_combo,
+    detect_hotkey_conflicts,
+    resolve_preset_name,
+)
 from qtp_app.core.ini_parser import (
     DEFAULT_TERMINATOR,
     IniParseError,
@@ -40,9 +49,11 @@ from qtp_app.core.json_store import (
 from qtp_app.core.logging_setup import get_logger, setup_logging
 from qtp_app.core.paster import copy_to_clipboard, paste_into_active_app
 from qtp_app.core.settings import (
+    DEFAULT_HOTKEYS,
     DEFAULT_SETTINGS,
     SETTINGS_FILENAME,
     SettingValidationError,
+    _sanitize_settings,
     get_app_dir,
     get_setting_value,
     is_dir_writable,
@@ -52,6 +63,7 @@ from qtp_app.core.settings import (
     save_settings,
     set_setting_value,
 )
+from qtp_app.core.watcher import ConfigFileWatcher, FileChange, ReloadEvent
 from qtp_app.ui.search import FuzzyMatcher
 
 CATEGORY_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
@@ -62,7 +74,68 @@ CATEGORY_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
     ("Q", "Q · Turkcell", "L-Win+Q"),
 )
 
-FIRST_RUN_TOAST = "QTP hazır. Win+Z / Win+A / Win+X / Win+Q"
+
+def format_hotkeys_toast(hotkeys: dict[str, str] | None = None) -> str:
+    hk = hotkeys or DEFAULT_HOTKEYS
+    ordered = []
+    for k in ("all", "A", "Z", "X", "Q"):
+        val = str(hk.get(k, "")).strip()
+        if val:
+            ordered.append(val)
+    for k, val in hk.items():
+        if k not in ("all", "A", "Z", "X", "Q") and str(val or "").strip():
+            ordered.append(str(val).strip())
+    return "QTP hazır. " + (" / ".join(ordered) if ordered else "Tepsi veya Ctrl+, ile kısayol atayın")
+
+
+FIRST_RUN_TOAST = format_hotkeys_toast(DEFAULT_HOTKEYS)
+
+_DEFAULT_CLI_FLAGS: tuple[str, ...] = (
+    "--mode",
+    "--gui",
+    "--tui",
+    "--cli",
+    "--web",
+    "-h",
+    "--help",
+    "-v",
+    "--verbose",
+    "-q",
+    "--quiet",
+    "--version",
+    "--selftest",
+    "--modes",
+    "--completion",
+    "--list-categories",
+    "--list-items",
+    "--search",
+    "--show-ini",
+    "--copy",
+    "--paste",
+    "--export-ini",
+    "--import-ini",
+    "--export-backup",
+    "--restore",
+    "--backup",
+    "--reload",
+    "--get",
+    "--set",
+    "--check-hotkeys",
+    "--hotkey-preset",
+    "--hotkey-modifiers",
+    "--category",
+    "--query",
+    "--json",
+    "--work-dir",
+    "--keep",
+    "--merge",
+    "--replace",
+    "--port",
+    "--open-browser",
+    "--shutdown-after",
+)
+
+SUPPORTED_SHELLS = ("powershell", "bash", "zsh", "fish")
 
 
 @dataclass
@@ -87,6 +160,139 @@ class OperationResult:
         if self.warning:
             payload["warning"] = self.warning
         return payload
+
+
+def _all_setting_keys() -> list[str]:
+    keys: list[str] = []
+    for k, v in DEFAULT_SETTINGS.items():
+        if isinstance(v, dict):
+            for sub in v:
+                keys.append(f"{k}.{sub}")
+        else:
+            keys.append(k)
+    return keys
+
+
+def detect_target_shell(requested: str | None = None, *, platform_name: str | None = None, env: dict[str, str] | None = None) -> str:
+    """Hedef kabuğu ('powershell', 'bash', 'zsh', 'fish') algılar veya doğrular."""
+    raw = (requested or "auto").strip().lower()
+    if raw and raw != "auto":
+        return raw
+    environ = env if env is not None else os.environ
+    plat = platform_name or sys.platform
+    shell_env = str(environ.get("SHELL", "")).lower()
+    if "zsh" in shell_env:
+        return "zsh"
+    if "fish" in shell_env:
+        return "fish"
+    if "pwsh" in shell_env or "powershell" in shell_env:
+        return "powershell"
+    if "bash" in shell_env and plat != "win32":
+        return "bash"
+    if plat == "win32" or "PSModulePath" in environ:
+        return "powershell"
+    return "bash"
+
+
+def build_completion_script(shell: str, option_strings: list[str] | tuple[str, ...] | None = None) -> str:
+    """Canlı seçenekler, kategoriler, ayar anahtarları ve profillerden kabuk tamamlama betiği üretir."""
+    flags = list(option_strings) if option_strings else list(_DEFAULT_CLI_FLAGS)
+    modes = ["gui", "tui", "cli", "web"]
+    cats = [c for c, _lbl, _p in CATEGORY_DEFINITIONS]
+    presets = list(HOTKEY_PRESETS.keys())
+    shells = ["powershell", "bash", "zsh", "fish", "auto"]
+    skeys = _all_setting_keys()
+
+    if shell == "powershell":
+        flags_ps = ", ".join(f"'{f}'" for f in flags)
+        modes_ps = ", ".join(f"'{m}'" for m in modes)
+        cats_ps = ", ".join(f"'{c}'" for c in cats)
+        presets_ps = ", ".join(f"'{p}'" for p in presets)
+        shells_ps = ", ".join(f"'{s}'" for s in shells)
+        skeys_ps = ", ".join(f"'{k}'" for k in skeys)
+        return (
+            "Register-ArgumentCompleter -Native -CommandName qtp, qtp.exe, qtp.bin -ScriptBlock {\n"
+            "    param($wordToComplete, $commandAst, $cursorPosition)\n"
+            "    $tokens = $commandAst.CommandElements | ForEach-Object { $_.Extent.Text }\n"
+            "    $prev = if ($tokens.Count -ge 2 -and $wordToComplete -ne '') { $tokens[$tokens.Count - 2] } elseif ($tokens.Count -ge 1 -and $wordToComplete -eq '') { $tokens[$tokens.Count - 1] } else { '' }\n"
+            "    $map = @{\n"
+            f"        '--mode' = @({modes_ps})\n"
+            f"        '--category' = @({cats_ps})\n"
+            f"        '--completion' = @({shells_ps})\n"
+            f"        '--hotkey-preset' = @({presets_ps})\n"
+            f"        '--get' = @({skeys_ps})\n"
+            f"        '--set' = @({skeys_ps})\n"
+            "    }\n"
+            "    $candidates = if ($map.ContainsKey($prev)) { $map[$prev] } else { @("
+            + flags_ps
+            + ") }\n"
+            "    $candidates | Where-Object { $_ -like \"$wordToComplete*\" } | ForEach-Object {\n"
+            "        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)\n"
+            "    }\n"
+            "}\n"
+        )
+
+    if shell == "bash":
+        return (
+            "_qtp_completions() {\n"
+            "    local cur prev\n"
+            "    COMPREPLY=()\n"
+            "    cur=\"${COMP_WORDS[COMP_CWORD]}\"\n"
+            "    prev=\"${COMP_WORDS[COMP_CWORD-1]}\"\n"
+            "    case \"${prev}\" in\n"
+            f"        --mode) COMPREPLY=( $(compgen -W \"{' '.join(modes)}\" -- \"${{cur}}\") ); return 0 ;;\n"
+            f"        --category) COMPREPLY=( $(compgen -W \"{' '.join(cats)}\" -- \"${{cur}}\") ); return 0 ;;\n"
+            f"        --completion) COMPREPLY=( $(compgen -W \"{' '.join(shells)}\" -- \"${{cur}}\") ); return 0 ;;\n"
+            f"        --hotkey-preset) COMPREPLY=( $(compgen -W \"{' '.join(presets)}\" -- \"${{cur}}\") ); return 0 ;;\n"
+            f"        --get|--set) COMPREPLY=( $(compgen -W \"{' '.join(skeys)}\" -- \"${{cur}}\") ); return 0 ;;\n"
+            "    esac\n"
+            f"    COMPREPLY=( $(compgen -W \"{' '.join(flags)}\" -- \"${{cur}}\") )\n"
+            "    return 0\n"
+            "}\n"
+            "complete -F _qtp_completions qtp qtp.bin qtp.exe\n"
+        )
+
+    if shell == "zsh":
+        specs = [
+            f"  '{f}[QTP seçeneği]'"
+            if f not in ("--mode", "--category", "--completion", "--hotkey-preset", "--get", "--set")
+            else (
+                f"  '--mode[Çalışma modu]:mod:({' '.join(modes)})'"
+                if f == "--mode"
+                else f"  '--category[Kategori filtresi]:kategori:({' '.join(cats)})'"
+                if f == "--category"
+                else f"  '--completion[Kabuk tamamlama betiği]:kabuk:({' '.join(shells)})'"
+                if f == "--completion"
+                else f"  '--hotkey-preset[Kısayol profili]:profil:({' '.join(presets)})'"
+                if f == "--hotkey-preset"
+                else f"  '{f}[Ayar anahtarı]:anahtar:({' '.join(skeys)})'"
+            )
+            for f in flags
+        ]
+        return "#compdef qtp qtp.bin\n_qtp() {\n  _arguments -s \\\n" + " \\\n".join(specs) + "\n}\n_qtp \"$@\"\n"
+
+    fish_lines = []
+    for f in flags:
+        if f.startswith("--"):
+            long_name = f[2:]
+            extra = ""
+            if f == "--mode":
+                extra = f" -xa \"{' '.join(modes)}\""
+            elif f == "--category":
+                extra = f" -xa \"{' '.join(cats)}\""
+            elif f == "--completion":
+                extra = f" -xa \"{' '.join(shells)}\""
+            elif f == "--hotkey-preset":
+                extra = f" -xa \"{' '.join(presets)}\""
+            elif f in ("--get", "--set"):
+                extra = f" -xa \"{' '.join(skeys)}\""
+            fish_lines.append(f"complete -c qtp -l {long_name}{extra} -d 'QTP'")
+            fish_lines.append(f"complete -c qtp.bin -l {long_name}{extra} -d 'QTP'")
+        elif len(f) == 2 and f.startswith("-"):
+            short_name = f[1:]
+            fish_lines.append(f"complete -c qtp -s {short_name} -d 'QTP'")
+            fish_lines.append(f"complete -c qtp.bin -s {short_name} -d 'QTP'")
+    return "\n".join(fish_lines) + "\n"
 
 
 def get_bundled_default_path(filename: str) -> Path:
@@ -190,7 +396,8 @@ class QtpEngine:
         paste_fn: Callable[..., Any] | None = None,
     ):
         requested_dir = Path(work_dir).resolve() if work_dir else get_app_dir()
-        if ephemeral:
+        self.ephemeral = bool(ephemeral)
+        if self.ephemeral:
             self.config_dir = requested_dir
             self.portable = True
             self.work_dir = requested_dir
@@ -198,6 +405,13 @@ class QtpEngine:
             self.logger = get_logger("engine")
             self.settings = copy.deepcopy(DEFAULT_SETTINGS)
             self.settings_path = self.config_dir / SETTINGS_FILENAME
+            if self.settings_path.is_file():
+                try:
+                    raw = json.loads(self.settings_path.read_text(encoding="utf-8"))
+                    if isinstance(raw, dict):
+                        self.settings = _sanitize_settings(raw)
+                except Exception:
+                    pass
             self.settings_warning = None
         else:
             self.config_dir, self.portable = resolve_config_dir(requested_dir)
@@ -217,9 +431,176 @@ class QtpEngine:
         self.program_meta: dict[str, str] = {}
         self.extra_sections: list[dict[str, Any]] = []
         self.ini_path: Path = resolve_data_path(self.settings, self.work_dir)
+        self._watcher: ConfigFileWatcher | None = None
+        self._on_reload_cb: Callable[[ReloadEvent], None] | None = None
+        self._reload_lock = threading.RLock()
+        self.revision: int = 0
+        self.last_reload_event: ReloadEvent | None = None
 
-        self._seed_defaults_if_empty(seed_defaults and not ephemeral)
+        self._seed_defaults_if_empty(seed_defaults and not self.ephemeral)
         self.reload_data()
+
+    @contextlib.contextmanager
+    def _suppress_write(self, *paths: str | Path) -> Iterator[None]:
+        if self._watcher is None:
+            yield
+            return
+        with contextlib.ExitStack() as stack:
+            for p in paths:
+                stack.enter_context(self._watcher.suppress_write(p))
+            yield
+
+    def mark_internal_write(self, *paths: str | Path) -> None:
+        if self._watcher is not None:
+            for p in paths:
+                self._watcher.mark_internal_write(p)
+
+    def _watcher_targets(self) -> dict[str, Path]:
+        return {
+            "settings": self.settings_path,
+            "ini": self.ini_path,
+            "json": self.work_dir / "data.json",
+        }
+
+    def start_watcher(
+        self,
+        on_reload: Callable[[ReloadEvent], None] | None = None,
+        *,
+        debounce_ms: int = 250,
+    ) -> ConfigFileWatcher | None:
+        """Harici dosya değişiklikleri için canlı izleyici iş parçacığını başlatır."""
+        if self.ephemeral:
+            return None
+        self._on_reload_cb = on_reload
+        if not bool(self.settings.get("auto_reload", True)):
+            return None
+        interval_ms = int(self.settings.get("auto_reload_interval_ms", 500))
+        if self._watcher is None:
+            self._watcher = ConfigFileWatcher(
+                self._watcher_targets(),
+                self._handle_watched_changes,
+                interval_ms=interval_ms,
+                debounce_ms=debounce_ms,
+            )
+        else:
+            self._watcher.update_paths(self._watcher_targets())
+            self._watcher.set_interval(interval_ms)
+        self._watcher.start()
+        return self._watcher
+
+    def stop_watcher(self) -> None:
+        if self._watcher is not None:
+            self._watcher.stop()
+            self._watcher = None
+
+    def _read_json_with_retry(self, path: Path) -> dict[str, Any]:
+        last_exc: Exception | None = None
+        for attempt in range(3):
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(raw, dict):
+                    raise ValueError("Kök JSON nesnesi sözlük değil.")
+                return raw
+            except (OSError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
+                last_exc = exc
+                if attempt < 2:
+                    time.sleep(0.15)
+        raise ValueError(str(last_exc))
+
+    def _validate_data_source_with_retry(self, source_kind: str) -> None:
+        last_exc: Exception | None = None
+        for attempt in range(3):
+            try:
+                if source_kind == "ini" and self.ini_path.is_file():
+                    parse_qtp_ini(read_text_auto(self.ini_path))
+                elif source_kind == "json" and (self.work_dir / "data.json").is_file():
+                    load_data_json(self.work_dir / "data.json")
+                return
+            except (OSError, IniParseError, JsonStoreError, UnicodeDecodeError, ValueError) as exc:
+                last_exc = exc
+                if attempt < 2:
+                    time.sleep(0.15)
+        raise ValueError(str(last_exc))
+
+    def _handle_watched_changes(self, changes: list[FileChange]) -> None:
+        with self._reload_lock:
+            kinds = {c.kind: c for c in changes}
+            ev = ReloadEvent(item_count=len(self.items))
+            reload_data_kind: str | None = None
+
+            if "settings" in kinds and kinds["settings"].exists:
+                try:
+                    raw = self._read_json_with_retry(self.settings_path)
+                    new_settings = _sanitize_settings(raw)
+                    old = self.settings
+                    if new_settings != old:
+                        ev.settings_changed = True
+                        ev.hotkeys_changed = new_settings.get("hotkeys") != old.get("hotkeys")
+                        ev.theme_changed = new_settings.get("theme") != old.get("theme")
+                        ev.window_size_changed = new_settings.get("window_size") != old.get("window_size")
+                        ev.data_path_changed = new_settings.get("data_path") != old.get("data_path")
+                        ev.log_level_changed = new_settings.get("log_level") != old.get("log_level")
+                        ev.tray_changed = new_settings.get("tray_icon") != old.get("tray_icon")
+                        ev.auto_reload_changed = (
+                            new_settings.get("auto_reload") != old.get("auto_reload")
+                            or new_settings.get("auto_reload_interval_ms") != old.get("auto_reload_interval_ms")
+                        )
+                        self.settings = new_settings
+                        if ev.log_level_changed:
+                            setup_logging(self.config_dir, level=str(new_settings.get("log_level", "info")))
+                        if ev.data_path_changed:
+                            self.ini_path = resolve_data_path(self.settings, self.work_dir)
+                            if self._watcher is not None:
+                                self._watcher.update_paths(self._watcher_targets())
+                            reload_data_kind = "ini"
+                        if ev.auto_reload_changed and self._watcher is not None:
+                            if not bool(new_settings.get("auto_reload", True)):
+                                self._watcher.stop()
+                            else:
+                                self._watcher.set_interval(int(new_settings.get("auto_reload_interval_ms", 500)))
+                        self.logger.info("Ayarlar dosya değişikliğinden otomatik yenilendi.")
+                except Exception as exc:
+                    warn = f"Otomatik ayar yenileme başarısız (mevcut ayarlar korundu): {exc}"
+                    self.logger.warning("%s", warn)
+                    ev.warning = warn
+
+            if "ini" in kinds:
+                reload_data_kind = "ini"
+            elif "json" in kinds and reload_data_kind is None:
+                reload_data_kind = "json"
+
+            if reload_data_kind is not None:
+                try:
+                    self._validate_data_source_with_retry(reload_data_kind)
+                    res = self.reload_data(prefer_source=reload_data_kind)
+                    if res.ok:
+                        ev.items_changed = True
+                        ev.item_count = len(self.items)
+                        ev.source = str((res.data or {}).get("source", reload_data_kind))
+                    else:
+                        warn = f"Otomatik veri yenileme başarısız (önceki geçerli kayıtlar korundu): {res.error or res.message}"
+                        self.logger.warning("%s", warn)
+                        ev.warning = warn
+                except Exception as exc:
+                    warn = f"Otomatik veri yenileme başarısız (önceki geçerli kayıtlar korundu): {exc}"
+                    self.logger.warning("%s", warn)
+                    ev.warning = warn
+
+            if (
+                ev.settings_changed
+                or ev.items_changed
+                or ev.hotkeys_changed
+                or ev.theme_changed
+                or ev.window_size_changed
+                or ev.warning is not None
+            ):
+                self.revision += 1
+                self.last_reload_event = ev
+                if self._on_reload_cb is not None:
+                    try:
+                        self._on_reload_cb(ev)
+                    except Exception:
+                        pass
 
     def _seed_defaults_if_empty(self, seed_defaults: bool) -> None:
         if not seed_defaults:
@@ -242,12 +623,32 @@ class QtpEngine:
         except OSError as exc:
             self.logger.warning("Varsayılan veri dosyaları kopyalanamadı: %s", exc)
 
-    def reload_data(self) -> OperationResult:
+    def save_current_settings(self, new_settings: dict[str, Any]) -> Path:
+        """Ayarları diske yazar ve kendi yazımını izleyici yankısından hariç tutar."""
+        old_auto = bool(self.settings.get("auto_reload", True))
+        old_data = self.settings.get("data_path")
+        with self._suppress_write(self.settings_path):
+            saved = save_settings(new_settings, self.settings_path)
+        self.settings = _sanitize_settings(new_settings)
+        setup_logging(self.config_dir, level=str(self.settings.get("log_level", "info")))
+        if self.settings.get("data_path") != old_data:
+            self.ini_path = resolve_data_path(self.settings, self.work_dir)
+        if self._watcher is not None:
+            self._watcher.update_paths(self._watcher_targets())
+            self._watcher.set_interval(int(self.settings.get("auto_reload_interval_ms", 500)))
+            if not bool(self.settings.get("auto_reload", True)):
+                self._watcher.stop()
+        elif not old_auto and bool(self.settings.get("auto_reload", True)) and self._on_reload_cb is not None:
+            self.start_watcher(self._on_reload_cb)
+        self.revision += 1
+        return saved
+
+    def reload_data(self, *, prefer_source: str | None = None) -> OperationResult:
         """Diskten QuickTextPaste.ini / data.json verisini yeniden yükler."""
         self.ini_path = resolve_data_path(self.settings, self.work_dir)
         try:
             if self.ini_path.is_file() or (self.work_dir / "data.json").is_file():
-                state = load_state(self.work_dir, ini_path=self.ini_path)
+                state = load_state(self.work_dir, ini_path=self.ini_path, prefer_source=prefer_source)
                 if state["items"]:
                     self.items = state["items"]
                     self.program_meta = state.get("program") or {}
@@ -319,6 +720,26 @@ class QtpEngine:
             exit_code=0,
             message="Desteklenen çalışma modları: gui, tui, cli, web.",
             data={"modes": modes},
+        )
+
+    def op_completion(
+        self,
+        shell: str = "auto",
+        *,
+        option_strings: list[str] | tuple[str, ...] | None = None,
+    ) -> OperationResult:
+        target = detect_target_shell(shell)
+        if target not in SUPPORTED_SHELLS:
+            err = (
+                f"Desteklenmeyen kabuk türü: '{shell}' (desteklenenler: {', '.join(SUPPORTED_SHELLS)})."
+            )
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+        script = build_completion_script(target, option_strings=option_strings)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message="Otomatik tamamlama betiği üretildi.",
+            data={"shell": target, "script": script},
         )
 
     def op_help(self, help_text: str = "") -> OperationResult:
@@ -599,7 +1020,8 @@ class QtpEngine:
                 extra_sections=self.extra_sections,
                 preserve_test_ini=True,
             )
-            write_qtp_ini(dest, ini_text, encoding="utf-16-le-bom", create_bak=True)
+            with self._suppress_write(dest):
+                write_qtp_ini(dest, ini_text, encoding="utf-16-le-bom", create_bak=True)
             msg = f"INI dışa aktarıldı: {dest} ({len(self.items)} kayıt)."
             self.logger.info(msg)
             return OperationResult(ok=True, exit_code=0, message=msg, data={"path": str(dest), "count": len(self.items)})
@@ -651,16 +1073,18 @@ class QtpEngine:
         for idx, it in enumerate(merged):
             it["raw_key"] = f"text_{idx:03d}"
 
-        save_state(
-            self.work_dir,
-            merged,
-            program=self.program_meta,
-            extra_sections=self.extra_sections,
-            backup_reason=f"import_{mode}",
-            max_backups=int(self.settings.get("backup_count", 15)),
-            ini_path=self.ini_path,
-        )
+        with self._suppress_write(self.ini_path, self.work_dir / "data.json"):
+            save_state(
+                self.work_dir,
+                merged,
+                program=self.program_meta,
+                extra_sections=self.extra_sections,
+                backup_reason=f"import_{mode}",
+                max_backups=int(self.settings.get("backup_count", 15)),
+                ini_path=self.ini_path,
+            )
         self.items = merged
+        self.revision += 1
         msg = f"INI içe aktarıldı: {added} yeni kayıt eklendi (toplam {len(merged)} kayıt korundu)."
         self.logger.info(msg)
         return OperationResult(
@@ -673,7 +1097,8 @@ class QtpEngine:
     def op_backup(self, *, keep: int | None = None) -> OperationResult:
         try:
             if not (self.work_dir / "data.json").is_file() and self.items:
-                save_data_json(self.work_dir / "data.json", self.items)
+                with self._suppress_write(self.work_dir / "data.json"):
+                    save_data_json(self.work_dir / "data.json", self.items)
             max_keep = int(keep if keep is not None else self.settings.get("backup_count", 15))
             meta = create_backup(self.work_dir, reason="cli_backup", max_keep=max_keep)
             if not meta:
@@ -739,16 +1164,18 @@ class QtpEngine:
                 it["raw_key"] = f"text_{idx:03d}"
                 it.setdefault("terminator", DEFAULT_TERMINATOR)
 
-            save_state(
-                self.work_dir,
-                merged,
-                program=self.program_meta,
-                extra_sections=self.extra_sections,
-                backup_reason="pre_restore",
-                max_backups=int(self.settings.get("backup_count", 15)),
-                ini_path=self.ini_path,
-            )
+            with self._suppress_write(self.ini_path, self.work_dir / "data.json"):
+                save_state(
+                    self.work_dir,
+                    merged,
+                    program=self.program_meta,
+                    extra_sections=self.extra_sections,
+                    backup_reason="pre_restore",
+                    max_backups=int(self.settings.get("backup_count", 15)),
+                    ini_path=self.ini_path,
+                )
             self.items = merged
+            self.revision += 1
             msg = f"Yedek geri yüklendi ✔ ({len(merged)} kayıt, mod={mode})"
             self.logger.info(msg)
             return OperationResult(ok=True, exit_code=0, message=msg, data={"count": len(merged), "mode": mode})
@@ -758,13 +1185,15 @@ class QtpEngine:
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
         try:
-            res = restore_backup(self.work_dir, raw_str)
+            with self._suppress_write(self.ini_path, self.work_dir / "data.json"):
+                res = restore_backup(self.work_dir, raw_str)
             st = res["state"]
             self.items = st["items"]
             self.program_meta = st.get("program") or {}
             self.extra_sections = st.get("extraSections") or []
             for idx, it in enumerate(self.items):
                 it.setdefault("raw_key", f"text_{idx:03d}")
+            self.revision += 1
             msg = f"Yedek geri yüklendi ✔ ({res['restored']}, {len(self.items)} kayıt)"
             self.logger.info(msg)
             return OperationResult(
@@ -801,15 +1230,80 @@ class QtpEngine:
     def op_set_setting(self, key: str, value: Any) -> OperationResult:
         try:
             updated = set_setting_value(self.settings, key, value)
-            save_settings(updated, self.settings_path)
-            self.settings = updated
-            setup_logging(self.config_dir, level=str(self.settings.get("log_level", "info")))
+            self.save_current_settings(updated)
+            stored = self.settings.get("hotkeys", {}) if key.startswith("hotkeys.") else None
+            if stored is not None:
+                sub = key.split(".", 1)[1].strip()
+                val_out = stored.get(sub, "")
+            else:
+                val_out = get_setting_value(self.settings, key)
             return OperationResult(
                 ok=True,
                 exit_code=0,
                 message="Ayarlar kaydedildi ✔",
-                data={"key": key, "value": get_setting_value(self.settings, key)},
+                data={"key": key, "value": val_out},
             )
         except SettingValidationError as exc:
             err = str(exc)
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+    def op_check_hotkeys(self) -> OperationResult:
+        hk = dict(self.settings.get("hotkeys") or DEFAULT_HOTKEYS)
+        conflicts = detect_hotkey_conflicts(hk)
+        count = sum(len(v) for v in conflicts.values())
+        msg = (
+            "Kısayol çakışma denetimi tamamlandı: çakışma yok ✔"
+            if count == 0
+            else f"Kısayol çakışma denetimi tamamlandı: {count} uyarı bulundu."
+        )
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={"hotkeys": hk, "conflicts": conflicts, "conflict_count": count, "clean": count == 0},
+        )
+
+    def op_apply_hotkey_preset(self, preset_name: str = "recommended") -> OperationResult:
+        try:
+            canon = resolve_preset_name(preset_name)
+        except ValueError as exc:
+            err = str(exc)
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        updated = copy.deepcopy(self.settings)
+        merged_hk = dict(updated.get("hotkeys") or DEFAULT_HOTKEYS)
+        merged_hk.update(HOTKEY_PRESETS[canon])
+        updated["hotkeys"] = merged_hk
+        self.save_current_settings(updated)
+
+        conflicts = detect_hotkey_conflicts(self.settings["hotkeys"])
+        warn = None
+        if conflicts:
+            warn = "; ".join(f"{k}: {v[0]}" for k, v in conflicts.items())
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=f"Kısayol profili uygulandı ✔ ({canon})",
+            data={"preset": canon, "hotkeys": dict(self.settings["hotkeys"]), "conflicts": conflicts},
+            warning=warn,
+        )
+
+    def op_apply_hotkey_modifiers(self, modifiers: str = "Win+Alt") -> OperationResult:
+        try:
+            new_hk = apply_modifier_combo(self.settings.get("hotkeys") or DEFAULT_HOTKEYS, modifiers)
+        except ValueError as exc:
+            err = str(exc)
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        updated = copy.deepcopy(self.settings)
+        updated["hotkeys"] = new_hk
+        self.save_current_settings(updated)
+        conflicts = detect_hotkey_conflicts(self.settings["hotkeys"])
+        warn = "; ".join(f"{k}: {v[0]}" for k, v in conflicts.items()) if conflicts else None
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message="Değiştirici bileşimi tüm kısayollara uygulandı ✔",
+            data={"modifiers": modifiers, "hotkeys": dict(self.settings["hotkeys"]), "conflicts": conflicts},
+            warning=warn,
+        )

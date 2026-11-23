@@ -241,7 +241,12 @@ def _items_digest(items: list[dict[str, Any]]) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def load_state(work_dir: str | Path, ini_path: Path | None = None) -> dict[str, Any]:
+def load_state(
+    work_dir: str | Path,
+    ini_path: Path | None = None,
+    *,
+    prefer_source: str | None = None,
+) -> dict[str, Any]:
     """Çalışma dizinindeki QuickTextPaste.ini + data.json + .qtp_state.json durumunu yükler."""
     wd = Path(work_dir).resolve()
     data_json_path = wd / "data.json"
@@ -285,7 +290,11 @@ def load_state(work_dir: str | Path, ini_path: Path | None = None) -> dict[str, 
             parsed_doc = None
 
     use_ini = False
-    if parsed_doc is not None and not json_valid:
+    if prefer_source == "ini" and parsed_doc is not None:
+        use_ini = True
+    elif prefer_source == "json" and json_valid:
+        use_ini = False
+    elif parsed_doc is not None and not json_valid:
         use_ini = True
     elif parsed_doc is not None and json_valid:
         if ini_mtime > json_mtime + 2.0:
