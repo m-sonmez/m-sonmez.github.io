@@ -19,8 +19,9 @@ Tüm modların tam karşılaştırması için: [Modlar Arası Eşitlik Matrisi](
 
 ## 1. Tek Dosya Uygulama (Önerilen)
 
-- **Windows (x64):** `dist/qtp.exe` — Çift tıklayıp doğrudan çalıştırın; kurulum veya yönetici izni gerekmez.
-- **Linux & macOS:** `dist/qtp.bin` — Çalıştırma izni verin (`chmod +x qtp.bin`) ve doğrudan çalıştırın.
+- **Windows 10/11 (x64):** `dist/qtp.exe` — Çift tıklayıp doğrudan çalıştırın; kurulum veya yönetici izni gerekmez.
+- **Windows 7 / 8 / 8.1 (x64):** `dist/qtp-win7.exe` — Python 3.8 x64 + `requirements-win7.txt` + `python -m qtp_app.build.build_windows_legacy` hedefi; Win32 Console API TUI geri dönüşü (`SetConsoleMode` VT100 olmadığında sıfır kaçış bozulması).
+- **Linux, macOS 10.15–15 ve BSD / Unix-like:** `dist/qtp.bin` — Çalıştırma izni verin (`chmod +x qtp.bin`) ve doğrudan çalıştırın (`--tui`, `--cli` ve `--web` modları PyQt6 veya Python 3.9+ olmadan Alpine/musl, BSD ve başsız sunucularda da çalışır).
 - **Tamamen Çevrimdışı ve Taşınabilir:** Tüm ayarlar (`qtp_settings.json`), günlükler (`qtp.log`), yedekler (`backups/`) ve veri dosyaları (`QuickTextPaste.ini` / `data.json`) ikili dosyanın hemen yanında saklanır.
 - **Modern Katman (Overlay) Arayüzü:** `720×520` px, yuvarlatılmış koyu/açık tema, gömülü Inter yazı tipi, 180 ms akıcı animasyonlar, kategori sekmeleri, Türkçe uyumlu bulanık arama (`FuzzyMatcher`) ve tek tuşla önceki uygulamaya yapıştırma (`<E<N<D|` işaretinde otomatik `Enter`).
 

@@ -90,9 +90,12 @@ python -m unittest discover -s tests -v
 
 ---
 
-## 6. Tek Dosya İkili Derleme
+## 6. Tek Dosya İkili Derleme ve Geriye Dönük Uyumluluk Hedefleri
 
-- **Windows:** `make build` veya `make.bat` → `dist/qtp.exe` (PyInstaller + Pillow PNG→ICO dönüşümü, UPX kapalı).
-- **Linux / macOS:** `make build` → `dist/qtp.bin` (`chmod +x`, Linux'ta `strip`, macOS'ta `codesign --force --deep --sign -`).
+- **Windows 10/11 (x64):** `make build` veya `make.bat` → `dist/qtp.exe` (PyInstaller + Pillow PNG→ICO dönüşümü, UPX kapalı).
+- **Windows 7 / 8 / 8.1 (x64):** Python 3.8 x64 + `requirements-win7.txt` → `python -m qtp_app.build.build_windows_legacy` (`qtp_win7.spec` → `dist/qtp-win7.exe`). Üst akış Python 3.9+ ve Qt6 Win7 çekirdek ABI'sini sonlandırdığı için `--tui`/`--cli`/`--web` hedefli ve Win32 Console API fallback'li olarak paketlenir.
+- **Linux / BSD (`qtp.bin`):** `python -m qtp_app.build.build_unix` → Ubuntu 22.04+ / Debian 12+ / FreeBSD / OpenBSD / NetBSD (`chmod +x`, Linux/BSD'de `strip`, başsız ortamda `QT_QPA_PLATFORM=offscreen`). Alpine/musl konteynerlerinde PyQt6 gerektirmeyen CLI/TUI/Web yürütmesi CI tarafından doğrulanır.
+- **macOS 10.15–15 (`qtp.bin`):** `python -m qtp_app.build.build_unix [--target-arch x86_64|arm64|universal2] [--macosx-deployment-target 11.0]`. Mach-O PKG bozulmasını önlemek için `qtp.spec` ve `build_unix.py` üzerinde `darwin` için `strip` kesin olarak devre dışıdır; yalnızca ad-hoc `codesign --force --deep --sign -` uygulanır.
+- **Python 3.8+ Çekirdek Kısıtı:** `core/**`, `cli.py`, `tui/**`, `web.py` ve `ui/search.py` tümüyle `from __future__ import annotations` kullanır, çalışma zamanında Python 3.9+/3.10+ yapıları (`|`, `match/case`, `removeprefix`, zorunlu `importlib.resources.files`) ve PyQt6 bağımlılığı içermez (`test_portability.py` tarafından AST ve `sys.modules` engeliyle doğrulanır).
 - Hedef dosya boyutu 60 MB altı tutulur; testler (`tests/`), `tkinter`, `matplotlib` ve `numpy` `excludes` listesindedir.
 - Çapraz derleme (örneğin Windows üzerinde Wine ile Linux ikilisi derleme) kullanılmaz; her platform ikilisi kendi hedef işletim sisteminde derlenir.

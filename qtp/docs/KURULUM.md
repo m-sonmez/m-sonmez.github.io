@@ -4,13 +4,26 @@
 
 ---
 
-## 1. İkili Dosyalar ve Desteklenen Sistemler
+## 1. İkili Dosyalar ve İşletim Sistemi Geriye Dönük Uyumluluk Matrisi
 
-| İşletim Sistemi | Dosya Adı | Mimari / Sürüm | Kurulum Türü |
+| İşletim Sistemi | Hedef Çıktı | Mimari / Sürüm | Desteklenen Modlar ve Öne Çıkan Özellikler |
 | :--- | :--- | :--- | :--- |
-| **Windows** | `qtp.exe` | Windows 10 / 11 (x64) | Taşınabilir tek dosya (kurulum gerektirmez) |
-| **Linux** | `qtp.bin` | x86_64 (X11 veya Wayland) | Taşınabilir tek dosya (`chmod +x`) |
-| **macOS** | `qtp.bin` | macOS 12 Monterey ve üzeri | Taşınabilir tek dosya (`chmod +x` + Erişilebilirlik izni) |
+| **Windows 10 / 11** | `dist/qtp.exe` | Windows 10/11 (x64), Python 3.12 + PyQt6 | Tüm 4 mod (`--gui`, `--tui`, `--cli`, `--web`), VT100/Win32 konsol, çift tık taşınabilir tek dosya |
+| **Windows 7 / 8 / 8.1** | `dist/qtp-win7.exe` | Windows 7 SP1 / 8 / 8.1 (x64), Python 3.8 hedefi | `build_windows_legacy` + `requirements-win7.txt`; TUI'de raw ANSI yerine otomatik Win32 Console API geri dönüşü (`SetConsoleMode` başarısızlığında bozuk kaçış karakteri basılmaz); Python 3.9+ ve Qt6 üst akışta Win7 çekirdek ABI desteğini kaldırdığı için `--tui`/`--cli`/`--web` odaklıdır (isteğe bağlı `PyQt5==5.15.10`) |
+| **Linux** | `dist/qtp.bin` | Ubuntu 20.04+/22.04+/24.04, Debian 10+/11/12, Fedora, Arch (x64/arm64) | X11 (`libX11` / Qt / OSC-52) ve Wayland (`wtype` / `ydotool`); Alpine/musl için PyQt6 gerektirmeyen `--cli`/`--tui`/`--web` çalışma zamanı |
+| **macOS** | `dist/qtp.bin` | macOS 10.15 – 15 (x86_64, arm64, `universal2`) | `MACOSX_DEPLOYMENT_TARGET` desteği, bozucu `strip` olmadan ad-hoc `codesign`, `NSPasteboardTypeString` → `NSStringPboardType` → `pbcopy` + `osascript` |
+| **Unix-like / BSD** | Kaynak / `qtp.bin` | FreeBSD, OpenBSD, NetBSD, illumos/SunOS | Genel POSIX algılama, `libX11.so` + `$XDG_CONFIG_HOME` / `~/.config/qtp` geri dönüşü, `curses` yoksa veya `TERM=dumb` ise `termios`/düz metin TUI geri dönüşü |
+
+> **Önemli Windows 7 / 8 / 8.1 ABI Notu:** Üst akış Python 3.9+ ve Qt6/PyQt6, Windows 7/8/8.1 sistem API'lerini resmi olarak sonlandırmıştır. Bu nedenle birincil `dist/qtp.exe` Windows 10/11 (x64) hedefler; Windows 7 SP1 / 8 / 8.1 (x64) makineler için `requirements-win7.txt` ve `python -m qtp_app.build.build_windows_legacy` komutuyla **Python 3.8 x64** üzerinde `dist/qtp-win7.exe` üretilir.
+
+### 1.1 Windows 7 / 8 / 8.1 (`qtp-win7.exe`) Özel Derleme
+
+```cmd
+py -3.8 -m venv .venv_win7
+.venv_win7\Scripts\activate
+pip install -r requirements-win7.txt
+python -m qtp_app.build.build_windows_legacy
+```
 
 ---
 
@@ -53,9 +66,9 @@ Wayland güvenlik modeli nedeniyle uygulamalar arası yapay tuş basımı (`Ctrl
    ```
 3. `wtype` veya `ydotool` yoksa QTP günlüğe uyarı yazar ve `pynput` (XWayland/Xlib) geri dönüşünü dener; XWayland dışındaki pencerelere yapıştırma için metin panoya kopyalanmış olarak hazır tutulur.
 
-### 2.4 macOS 12+ (`qtp.bin`)
+### 2.4 macOS 10.15–15 (`qtp.bin`)
 
-1. `qtp.bin` dosyasını `/Applications` veya `~/Applications/QTP/` gibi bir klasöre koyun.
+1. `qtp.bin` dosyasını `/Applications` veya `~/Applications/QTP/` gibi bir klasöre koyun (`MACOSX_DEPLOYMENT_TARGET` varsayılan `11.0`, `x86_64` / `arm64` / `universal2` derleme bayrağıyla özelleştirilebilir).
 2. Terminal üzerinden çalıştırma izni verin:
    ```bash
    chmod +x qtp.bin
@@ -70,6 +83,11 @@ Wayland güvenlik modeli nedeniyle uygulamalar arası yapay tuş basımı (`Ctrl
    - **Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik** menüsünü açın.
    - Kilidi açın ve `+` düğmesiyle `qtp.bin` (veya Terminal üzerinden çalıştırıyorsanız Terminal/iTerm) uygulamasını listeye ekleyip anahtarı **Açık** konuma getirin.
    - Uygulamayı yeniden başlatın.
+
+### 2.5 Unix-benzeri / BSD (FreeBSD, OpenBSD, NetBSD)
+
+1. Python 3.8+ ile (PyQt6 kurulu değilse `--cli`, `--tui`, `--web` modları tam çalışır) doğrudan çalıştırın veya `python3 -m qtp_app.build.build_unix` ile tek dosya ikili oluşturun.
+2. X11 panosu için `libX11.so` / `libX11.so.6`, Wayland için `wtype`/`ydotool`, yapılandırma için `$XDG_CONFIG_HOME/qtp` (`~/.config/qtp`) otomatik kullanılır; `curses` modülü veya `terminfo` yoksa `--tui` otomatik `termios`/düz metin moduna geçer.
 
 ---
 
@@ -100,7 +118,7 @@ QTP sisteminize hiçbir servis, sürücü veya kayıt defteri girdisi kurmaz:
 
 ## 5. Kaynak Koddan Derleme
 
-Python **3.10 veya üzeri** (önerilen 3.12) gereklidir:
+Python **3.10 veya üzeri** (tam GUI ve birincil `qtp.exe`/`qtp.bin` için `3.12` önerilir; başsız `--cli`/`--tui`/`--web` ve Windows 7 `qtp-win7.exe` derlemesi **Python 3.8+** destekler) gereklidir:
 
 ```bash
 # 1. Sanal ortam oluşturun ve etkinleştirin
