@@ -406,3 +406,86 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
     ov.toggle_strip_emoji()
     assert ov._strip_emoji is True
 
+
+def test_overlay_copy_before_hide_wayland_opacity_svg_icons_and_8edge_resize(qtbot):
+    from PyQt6.QtCore import QPoint
+    from PyQt6.QtWidgets import QApplication
+    from qtp_app.ui.icons import make_svg_icon, render_svg_pixmap
+    from qtp_app.ui.theme import LIGHT_PALETTE
+    from qtp_app.ui.tray import load_tray_icon
+
+    tray_ic = load_tray_icon()
+    assert not tray_ic.isNull()
+    assert len(tray_ic.availableSizes()) >= 4
+
+    for pal in (LIGHT_PALETTE, DARK_PALETTE):
+        for icon_name in ("plus", "sun", "moon", "help", "settings", "copy", "edit", "trash", "save", "close", "maximize", "restore"):
+            px = render_svg_pixmap(icon_name, pal.text_primary, size=18)
+            assert not px.isNull() and px.width() == 18 and px.height() == 18
+            ic = make_svg_icon(icon_name, pal.text_primary)
+            assert not ic.isNull()
+
+    items = [
+        {"raw_key": "text_000", "keys": "L-Win+A", "group": "Restoran", "label": "Selam", "text": "Kopya önce gelmeli", "terminator": "<E<N<D|"},
+    ]
+    events: list[str] = []
+    ov = OverlayWindow(
+        items,
+        theme="light",
+        on_paste=lambda _it, _prev: events.append(f"paste:{int(ov.consume_pre_copied())}"),
+    )
+    qtbot.addWidget(ov)
+    ov.show_overlay(category="ALL", animate=False)
+    QApplication.processEvents()
+
+    orig_hide = ov.hide_overlay
+
+    def _spy_hide(*, animate: bool = True):
+        events.append("hide")
+        return orig_hide(animate=animate)
+
+    def _spy_copy(txt: str, **_kw):
+        events.append(f"copy:{txt}")
+        return True
+
+    with mock.patch("qtp_app.ui.overlay.copy_to_clipboard", side_effect=_spy_copy), \
+         mock.patch.object(ov, "hide_overlay", side_effect=_spy_hide):
+        ov.paste_row(0)
+
+    assert events == ["copy:Kopya önce gelmeli", "hide", "paste:1"]
+
+    with mock.patch("qtp_app.ui.overlay.QGuiApplication.platformName", return_value="wayland"):
+        assert ov._supports_window_opacity() is False
+        with mock.patch.object(ov, "setWindowOpacity") as op_mock:
+            ov.show_overlay(category="ALL", animate=True)
+            QApplication.processEvents()
+            ov.hide_overlay(animate=True)
+            QApplication.processEvents()
+        op_mock.assert_not_called()
+
+    ov.show_overlay(category="ALL", animate=False)
+    ov.resize(740, 540)
+    QApplication.processEvents()
+    w, h = ov.width(), ov.height()
+    assert ov._hit_test_edges(QPoint(2, h // 2)) == Qt.Edge.LeftEdge
+    assert ov._hit_test_edges(QPoint(w - 2, h // 2)) == Qt.Edge.RightEdge
+    assert ov._hit_test_edges(QPoint(w // 2, 2)) == Qt.Edge.TopEdge
+    assert ov._hit_test_edges(QPoint(w // 2, h - 2)) == Qt.Edge.BottomEdge
+    assert ov._cursor_for_edges(Qt.Edge.LeftEdge | Qt.Edge.TopEdge) == Qt.CursorShape.SizeFDiagCursor
+    assert ov._cursor_for_edges(Qt.Edge.RightEdge | Qt.Edge.TopEdge) == Qt.CursorShape.SizeBDiagCursor
+    assert ov._cursor_for_edges(Qt.Edge.LeftEdge) == Qt.CursorShape.SizeHorCursor
+    assert ov._cursor_for_edges(Qt.Edge.BottomEdge) == Qt.CursorShape.SizeVerCursor
+
+    resized_signals: list[tuple[int, int]] = []
+    ov.window_resized.connect(lambda rw, rh: resized_signals.append((rw, rh)))
+    with mock.patch.object(ov, "windowHandle", return_value=None):
+        ov._begin_resize(Qt.Edge.RightEdge | Qt.Edge.BottomEdge, QPoint(100, 100))
+        ov._handle_drag_move(QPoint(160, 150))
+    QApplication.processEvents()
+    assert ov.width() >= w + 50 and ov.height() >= h + 40
+    assert resized_signals
+
+    ov.toggle_maximize()
+    assert ov.isMaximized() is True
+    ov.toggle_maximize()
+    assert ov.isMaximized() is False

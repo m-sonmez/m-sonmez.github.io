@@ -524,3 +524,22 @@ def test_zero_hardcoded_colors_outside_theme_definitions():
     assert not rgba_re.findall(stripped), f"theme.css bileşenlerinde sabit rgb/rgba bulundu: {rgba_re.findall(stripped)}"
 
 
+def test_linux_pyinstaller_spec_excludes_host_config_libs():
+    spec_src = (STANDALONE_DIR / "qtp_app" / "build" / "qtp.spec").read_text(encoding="utf-8")
+    for lib_prefix in (
+        "libfontconfig.so",
+        "libfreetype.so",
+        "libxkbcommon.so",
+        "libxkbcommon-x11.so",
+        "libegl.so",
+        "libgl.so",
+        "libwayland-client.so",
+        "libx11",
+        "libxcb",
+        "libglib-2.0.so",
+        "libdbus-1.so",
+        "libstdc++.so",
+    ):
+        assert lib_prefix in spec_src, f"qtp.spec Linux dışlama listesinde eksik: {lib_prefix}"
+    assert "libqsvgicon" not in spec_src
+    assert "libqt6core" not in spec_src

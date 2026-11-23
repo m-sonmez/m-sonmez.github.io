@@ -167,6 +167,7 @@ OPERATIONS: tuple[OperationSpec, ...] = (
             "Öğe bulunamadı:",
             "Pano erişimi başarısız: grafik oturumu veya pano desteği bulunamadı.",
             "Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; yapay yapıştırma gerçekleştirilemedi.",
+            "Panoya kopyalandı ✔ (Wayland oturumunda yapıştırmak için Ctrl+V / Ctrl+Shift+V kullanın)",
             "Tuş simülasyonu başarısız (yalnızca panoya kopyalandı):",
         ),
         exit_codes=(0, 2, 3, 4),

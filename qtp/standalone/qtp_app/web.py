@@ -78,7 +78,7 @@ class QtpWebServer(ThreadingHTTPServer):
 
 
 class QtpWebRequestHandler(BaseHTTPRequestHandler):
-    server_version = "QTPWeb/2.3.0"
+    server_version = "QTPWeb/2.3.1"
 
     @staticmethod
     def _parse_qs_bool(val: str) -> bool:

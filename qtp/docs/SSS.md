@@ -37,7 +37,7 @@ Bu belge, QTP'nin üretebileceği **tüm Türkçe hata/uyarı mesajlarını bire
 
 | Birebir Mesaj | Olası Neden | Çözüm |
 | :--- | :--- | :--- |
-| `Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; yapay yapıştırma gerçekleştirilemedi.` | Linux Wayland üzerinde yapay tuş basımı için isteğe bağlı `wtype` veya `ydotool` kurulu değil. | Metin yine de panoya kopyalanır; otomatik `Ctrl+V` için `wtype`/`ydotool` kurun. |
+| `Panoya kopyalandı ✔ (Wayland oturumunda yapıştırmak için Ctrl+V / Ctrl+Shift+V kullanın)` / `Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; yapay yapıştırma gerçekleştirilemedi.` | Linux Wayland üzerinde yapay tuş basımı için isteğe bağlı `wtype` veya `ydotool` kurulu değil ya da compositor reddetti (XWayland üzerinden güvensiz `v` karakteri gönderimi bilerek engellenir). | Metin önce pencere gizlenmeden panoya kopyalanır (`Ctrl+V` veya uçbirimde `Ctrl+Shift+V` ile yapıştırabilirsiniz); otomatik tuş gönderimi için `wtype`/`ydotool` (`pacman -S wtype`, `apt install wtype`, `dnf install wtype`, `zypper install wtype`, `apk add wtype`) kurabilirsiniz. |
 | `Wayland oturumunda global kısayollar kısıtlıdır (...); uygulama tepsi/TUI/CLI/Web ile kullanılabilir.` | Wayland güvenlik modeli arka plan X11 global tuş dinlemeyi engelledi. | Başlangıç bloklanmaz; sistem tepsisinden veya `--tui`/`--cli`/`--web` ile kullanın. |
 | `macOS Erişilebilirlik izni verilmemiş! Sistem Ayarları -> Gizlilik ve Güvenlik -> Erişilebilirlik altından QTP'ye izin verin.` | macOS `qtp.bin` için klavye iznini henüz onaylamamış. | Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik altından izin verip yeniden başlatın. |
 | `Global kısayol kaydedilemedi: ... (ERROR_HOTKEY_ALREADY_REGISTERED / 1409)` / `Global kısayol kaydedilemedi: ...` | Başka bir uygulama, ikinci bir QTP örneği veya Windows sistem kısayolu (`Win+A`, `Win+X` vb.) bu tuş bileşimini zaten kilitlemiş. | Çakışan programı kapatın veya **Ayarlar → Global Kısayollar** üzerinden `recommended` (`Win+Alt+*`) veya `function_keys` (`Ctrl+Shift+F1–F5`) seçin. |
@@ -83,12 +83,12 @@ QTP varsayılan olarak çakışmasız **`Win+Alt+Space / A / Z / X / Q`** kısay
 Windows `qtp.exe` çift tıklandığında siyah komut penceresi açmamak için GUI alt sisteminde (`console=False`) paketlenir. `--help`, `-v --help`, `--completion`, `--cli` veya `--tui` gibi bir bayrakla çalıştırıldığında QTP üst süreç zincirini (`AttachConsole` ile PowerShell/cmd/Terminal) yürüyüp `UTF-8 (65001)` kod sayfasıyla `argparse` öncesinde bağlanır.
 
 ### Wayland / GNOME / `qtp.lock` / Türkçe INI Kodlamaları
-- **Wayland:** Yapay `Ctrl+V` için isteğe bağlı `wtype` (Sway/Hyprland) veya `ydotool` kurulabilir; kopyalama (`Ctrl+Enter` / `--copy`) yerleşik çalışır.
+- **Wayland (`KDE Plasma` / `GNOME` / `Sway` / `Hyprland`):** Pencere yeniden boyutlandırma (8 kenar/köşe + tutamaç) ve taşıma yerel Wayland compositor (`startSystemResize`/`startSystemMove`) ile desteklenir; kopyalama (`Ctrl+Enter` / `--copy` ve yapıştırma öncesi `Qt QClipboard` / `wl-copy`) yerleşik çalışır. Otomatik yapay `Ctrl+V` / `Ctrl+Shift+V` için isteğe bağlı `wtype` veya `ydotool` (`pacman`/`apt`/`dnf`/`zypper`/`apk`) kurulabilir.
 - **GNOME Tepsisi:** Tepsi simgesi için `gnome-shell-extension-appindicator` etkinleştirin; gizliyken de global kısayollarla katmanı açabilirsiniz.
 - **`qtp.lock` & Türkçe Kodlama:** Bayat `qtp.lock` sonraki açılışta otomatik temizlenir; `cp1254` ve BOM'suz INI'ler kayıpsız `UTF-16 LE BOM` olarak okunur.
 
 ### Açık / Koyu Tema Nasıl Değiştirilir?
-- QTP v2.3.0 sürümünden itibaren tüm arayüzlerde (`--gui`, `--web`, `qtp.html`, `index.html`, `legacy/cevaplar.html`) varsayılan tema **Açık (Light)** olarak başlar ve tüm bileşenler (kartlar, bağlam menüleri, tablolar, açılır listeler, kaydırma çubukları, bildirim balonları, yardım sekmeleri) WCAG 2.1 kontrast standartlarına göre tam yalıtılmıştır.
+- QTP v2.3.0+ sürümlerinden itibaren tüm arayüzlerde (`--gui`, `--web`, `qtp.html`, `index.html`, `legacy/cevaplar.html`) varsayılan tema **Açık (Light)** olarak başlar ve tüm bileşenler (kartlar, bağlam menüleri, tablolar, açılır listeler, kaydırma çubukları, bildirim balonları, yardım sekmeleri) WCAG 2.1 kontrast standartlarına göre tam yalıtılmıştır.
 - **Tek Tıkla Açık / Koyu Moda Geçiş:**
   - **GUI (`--gui`):** Üst çubuktaki `🌙 Koyu` / `☀️ Açık` düğmesine tıklayın veya Ayarlar (`Ctrl+,`) penceresindeki Tema (`light` / `dark` / `auto`) seçeneğini değiştirin; değişiklik anında canlı olarak katmana, tepsi menüsüne ve tüm açılır pencerelere uygulanır.
   - **Web / GitHub Pages (`qtp.html` / `index.html`):** Üst sağdaki `🌙 Koyu` / `☀️ Açık` tema düğmesine tıklayın; canlı `--web` modunda `qtp_settings.json` güncellenir, statik GitHub Pages üzerinde ise tarayıcı `localStorage` hafızasına kaydedilir.

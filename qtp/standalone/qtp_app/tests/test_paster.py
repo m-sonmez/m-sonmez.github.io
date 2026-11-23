@@ -134,7 +134,7 @@ def test_paste_methods_shift_insert_and_type():
     assert ("press", "ENTER") in ctrl_tp.events
 
 
-def test_wayland_uses_wtype_when_available_and_warns_otherwise(caplog, monkeypatch):
+def test_wayland_uses_wtype_when_available_and_warns_otherwise(capsys, monkeypatch):
     with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True), \
          mock.patch("shutil.which", side_effect=lambda name: "/usr/bin/wtype" if name == "wtype" else None), \
          mock.patch("subprocess.run") as run_mock:
@@ -151,13 +151,14 @@ def test_wayland_uses_wtype_when_available_and_warns_otherwise(caplog, monkeypat
     assert res.method == "wtype"
     assert res.enter_sent is True
     assert run_mock.call_count == 2
-    assert run_mock.call_args_list[0][0][0] == ["/usr/bin/wtype", "-M", "ctrl", "v", "-m", "ctrl"]
+    assert run_mock.call_args_list[0][0][0] == ["/usr/bin/wtype", "-M", "ctrl", "-k", "v", "-m", "ctrl"]
     assert run_mock.call_args_list[1][0][0] == ["/usr/bin/wtype", "-k", "Return"]
 
-    monkeypatch.delenv("DISPLAY", raising=False)
-    caplog.set_level(logging.WARNING)
+    monkeypatch.setenv("DISPLAY", ":0")
+    capsys.readouterr()
     with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True), \
-         mock.patch("shutil.which", return_value=None):
+         mock.patch("shutil.which", return_value=None), \
+         mock.patch("qtp_app.core.paster._get_pynput_controller") as pynput_mock:
         res_fb = paster.paste_into_active_app(
             "Fallback metin",
             has_end_marker=False,
@@ -166,9 +167,13 @@ def test_wayland_uses_wtype_when_available_and_warns_otherwise(caplog, monkeypat
             wayland=True,
             sleep_fn=lambda _s: None,
         )
+    err_out = capsys.readouterr().err
     assert res_fb.ok is False
     assert res_fb.exit_code == 4
-    assert res_fb.warning is not None and "wtype" in res_fb.warning
+    assert res_fb.method == "wayland_unavailable"
+    assert res_fb.warning == paster.WAYLAND_COPY_ONLY_MSG
+    assert paster.WAYLAND_UNAVAILABLE_LOG in err_out
+    pynput_mock.assert_not_called()
 
 
 def test_wayland_ydotool_and_clipboard_failure(caplog):
@@ -207,8 +212,48 @@ def test_wayland_ydotool_and_clipboard_failure(caplog):
         paster.paste_into_active_app(
             "B", paste_method="shift_insert", delay_ms=0, platform_name="linux", wayland=True, sleep_fn=lambda _s: None
         )
+        paster.paste_into_active_app(
+            "C", paste_method="ctrl_shift_v", delay_ms=0, platform_name="linux", wayland=True, sleep_fn=lambda _s: None
+        )
+        paster.paste_into_active_app(
+            "D", paste_method="auto", previous_app="org.kde.konsole", delay_ms=0, platform_name="linux", wayland=True, sleep_fn=lambda _s: None
+        )
     assert run_mock2.call_args_list[0][0][0] == ["/usr/bin/wtype", "--", "A"]
     assert run_mock2.call_args_list[1][0][0] == ["/usr/bin/wtype", "-M", "shift", "-k", "Insert", "-m", "shift"]
+    assert run_mock2.call_args_list[2][0][0] == ["/usr/bin/wtype", "-M", "ctrl", "-M", "shift", "-k", "v", "-m", "shift", "-m", "ctrl"]
+    assert run_mock2.call_args_list[3][0][0] == ["/usr/bin/wtype", "-M", "ctrl", "-M", "shift", "-k", "v", "-m", "shift", "-m", "ctrl"]
+
+    ctrl_term = _FakeController()
+    with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True) as pre_copy_mock:
+        res_term = paster.paste_into_active_app(
+            "Uçbirim",
+            previous_app={"app_id": "com.mitchellh.ghostty"},
+            paste_method="auto",
+            already_copied=True,
+            delay_ms=0,
+            controller=ctrl_term,
+            key_enum=_FAKE_KEYS,
+            platform_name="linux",
+            wayland=False,
+            sleep_fn=lambda _s: None,
+        )
+    pre_copy_mock.assert_not_called()
+    assert res_term.ok is True and res_term.method == "ctrl_shift_v"
+    assert ctrl_term.events[:4] == [("press", "CTRL"), ("press", "SHIFT"), ("press", "v"), ("release", "v")]
+
+    with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True), \
+         mock.patch("shutil.which", side_effect=lambda name: f"/usr/bin/{name}" if name in ("wtype", "ydotool") else None), \
+         mock.patch("subprocess.run", side_effect=[SimpleNamespace(returncode=1), SimpleNamespace(returncode=0)]) as fb_run:
+        res_wfail = paster.paste_into_active_app(
+            "FallbackYdo",
+            paste_method="auto",
+            delay_ms=0,
+            platform_name="linux",
+            wayland=True,
+            sleep_fn=lambda _s: None,
+        )
+    assert res_wfail.ok is True and res_wfail.method == "ydotool"
+    assert fb_run.call_count == 2
 
     bad_ctrl = mock.Mock()
     bad_ctrl.press.side_effect = RuntimeError("input denied")
@@ -312,12 +357,21 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
     with mock.patch.dict("sys.modules", {"AppKit": fake_appkit}):
         assert paster._copy_macos_native("TestMac") is True
 
-    fake_x11 = mock.Mock()
-    fake_x11.XOpenDisplay.return_value = 1
-    fake_x11.XInternAtom.return_value = 2
+    monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
+    monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    with mock.patch("shutil.which", side_effect=lambda name: "/usr/bin/wl-copy" if name == "wl-copy" else None), \
+         mock.patch("subprocess.run", return_value=SimpleNamespace(returncode=0)) as wl_copy_run:
+        assert paster._copy_linux_x11_ctypes("TestWaylandCopy", platform_name="linux") is True
+    assert wl_copy_run.call_args[0][0] == ["/usr/bin/wl-copy"]
+    assert wl_copy_run.call_args.kwargs.get("start_new_session") is True
+
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    monkeypatch.setenv("XDG_SESSION_TYPE", "x11")
     monkeypatch.setenv("DISPLAY", ":0")
-    with mock.patch("qtp_app.core.paster.ctypes.CDLL", return_value=fake_x11):
-        assert paster._copy_linux_x11_ctypes("TestX11") is True
+    with mock.patch("shutil.which", side_effect=lambda name: "/usr/bin/xclip" if name == "xclip" else None), \
+         mock.patch("subprocess.run", return_value=SimpleNamespace(returncode=0)) as xclip_run:
+        assert paster._copy_linux_x11_ctypes("TestX11Clip", platform_name="linux") is True
+    assert xclip_run.call_args[0][0] == ["/usr/bin/xclip", "-selection", "clipboard"]
 
     fake_k32_fail = mock.Mock()
     fake_k32_fail.GlobalAlloc.return_value = 0
@@ -387,20 +441,12 @@ def test_bsd_unix_posix_and_macos_pasteboard_fallback(monkeypatch):
 
         monkeypatch.setenv("DISPLAY", ":0")
         monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
-        fake_x11 = mock.Mock()
-        fake_x11.XOpenDisplay.return_value = 77
-        fake_x11.XInternAtom.return_value = 9
-        calls = []
-
-        def fake_cdll(name: str):
-            calls.append(name)
-            if name == "libX11.so.6":
-                raise OSError("not found")
-            return fake_x11
-
-        with mock.patch("qtp_app.core.paster.ctypes.CDLL", side_effect=fake_cdll):
+        with mock.patch("shutil.which", side_effect=lambda name: "/usr/local/bin/xsel" if name == "xsel" else None), \
+             mock.patch("subprocess.run", return_value=SimpleNamespace(returncode=0)) as bsd_clip_run:
             assert paster.copy_to_clipboard("BSD Test", platform_name=bsd_plat) is True
-        assert calls == ["libX11.so.6", "libX11.so"]
+        assert bsd_clip_run.call_args[0][0] == ["/usr/local/bin/xsel", "--clipboard", "--input"]
+        assert paster.is_terminal_window("konsole", platform_name=bsd_plat) is True
+        assert paster.is_terminal_window("firefox", platform_name=bsd_plat) is False
 
         with mock.patch("shutil.which", side_effect=lambda name: "/usr/local/bin/wtype" if name == "wtype" else None), \
              mock.patch("subprocess.run") as wl_run, \
@@ -431,3 +477,95 @@ def test_bsd_unix_posix_and_macos_pasteboard_fallback(monkeypatch):
     ]
 
 
+def test_paster_terminal_detection_ydotool_and_qt_selection_coverage(monkeypatch):
+    assert paster.is_wayland_session("win32") is False
+    assert paster.is_terminal_window(None, platform_name="linux") is False
+    assert paster.is_terminal_window("konsole", platform_name="win32") is False
+    assert paster.is_terminal_window("st", platform_name="linux") is True
+    assert paster.is_terminal_window("firefox", platform_name="linux") is False
+    assert paster.is_terminal_window({"app_id": "org.wezfurlong.wezterm"}, platform_name="linux") is True
+    assert paster.is_terminal_window({"wm_class": "chromium"}, platform_name="linux") is False
+    assert paster.is_terminal_window(SimpleNamespace(wm_class="kitty"), platform_name="linux") is True
+    assert paster.is_terminal_window(SimpleNamespace(wm_class="gedit"), platform_name="linux") is False
+
+    root_win = mock.Mock()
+    root_win.id = 1
+    parent_win = mock.Mock()
+    parent_win.get_wm_class.return_value = ("Alacritty", "Alacritty")
+    parent_win.get_wm_name.return_value = "Alacritty"
+    child_win = mock.Mock()
+    child_win.get_wm_class.return_value = None
+    child_win.get_wm_name.return_value = None
+    child_win.query_tree.return_value = SimpleNamespace(parent=parent_win, root=root_win)
+    fake_dpy = mock.Mock()
+    fake_dpy.create_resource_object.return_value = child_win
+    fake_xlib = SimpleNamespace(display=SimpleNamespace(Display=lambda: fake_dpy))
+    monkeypatch.setenv("DISPLAY", ":0")
+    with mock.patch.dict("sys.modules", {"Xlib": fake_xlib, "Xlib.display": fake_xlib.display}):
+        assert paster.is_terminal_window(555, platform_name="linux") is True
+    fake_dpy.close.assert_called_once()
+
+    sel_cb = mock.Mock()
+    sel_cb.supportsSelection.return_value = True
+    fake_app = mock.Mock()
+    fake_app.platformName.return_value = "wayland"
+    fake_app.clipboard.return_value = sel_cb
+    with mock.patch("PyQt6.QtGui.QGuiApplication.instance", return_value=fake_app):
+        assert paster._copy_posix_clipboard("LiveQt", platform_name="linux") is True
+    assert sel_cb.setText.call_count == 2
+    fake_app.processEvents.assert_called_once()
+
+    with mock.patch("subprocess.run", return_value=SimpleNamespace(returncode=1)):
+        assert paster._run_clipboard_daemon_cmd(["wl-copy"], "x") is False
+    with mock.patch("subprocess.run", side_effect=OSError("boom")):
+        assert paster._run_clipboard_daemon_cmd(["wl-copy"], "x") is False
+
+    bad_stream = SimpleNamespace(isatty=lambda: (_ for _ in ()).throw(RuntimeError("tty err")))
+    with mock.patch.object(sys, "stdout", bad_stream):
+        assert paster._emit_osc52("fail") is False
+
+    with mock.patch("shutil.which", side_effect=lambda name: "/usr/bin/ydotool" if name == "ydotool" else None), \
+         mock.patch("subprocess.run", return_value=SimpleNamespace(returncode=0)) as ydo_run:
+        assert paster._paste_wayland("T", method="type", send_enter=False)[0] is True
+        assert paster._paste_wayland("T", method="ctrl_shift_v", send_enter=False)[0] is True
+        assert paster._paste_wayland("T", method="shift_insert", send_enter=False)[0] is True
+    assert ydo_run.call_args_list[0][0][0] == ["/usr/bin/ydotool", "type", "--", "T"]
+    assert ydo_run.call_args_list[1][0][0][1] == "key"
+    assert ydo_run.call_args_list[2][0][0][1] == "key"
+
+    with mock.patch("shutil.which", side_effect=lambda name: "/usr/bin/ydotool" if name == "ydotool" else None), \
+         mock.patch("subprocess.run", return_value=SimpleNamespace(returncode=2)):
+        ok_fail, meth_fail, _ = paster._paste_wayland("T", method="ctrl_v", send_enter=False)
+    assert ok_fail is False and meth_fail == "wayland_unavailable"
+
+    with mock.patch("qtp_app.core.paster._copy_posix_clipboard", return_value=True), \
+         mock.patch("qtp_app.core.paster.restore_previous_app", return_value=True) as rest_mock, \
+         mock.patch("qtp_app.core.paster.shutil.which", side_effect=lambda name: "/usr/bin/ydotool" if name == "ydotool" else None), \
+         mock.patch("qtp_app.core.paster.subprocess.run", return_value=SimpleNamespace(returncode=0)):
+        slept: list[float] = []
+        res_ok = paster.paste_into_active_app(
+            "OK",
+            has_end_marker=True,
+            enter_after_paste=True,
+            hide_overlay_cb=lambda: (_ for _ in ()).throw(RuntimeError("hide err")),
+            previous_app="konsole",
+            delay_ms=10,
+            platform_name="linux",
+            wayland=True,
+            sleep_fn=slept.append,
+        )
+    assert res_ok.ok is True and res_ok.method == "ydotool"
+    rest_mock.assert_called_once()
+    assert 0.01 in slept
+
+    ctrl_auto = _FakeController()
+    with mock.patch("qtp_app.core.paster._get_pynput_controller", return_value=(ctrl_auto, _FAKE_KEYS)):
+        res_auto = paster.paste_into_active_app(
+            "Pre",
+            already_copied=True,
+            delay_ms=0,
+            platform_name="linux",
+            wayland=False,
+            sleep_fn=lambda _s: None,
+        )
+    assert res_auto.ok is True and res_auto.copied is True and res_auto.method == "ctrl_v"

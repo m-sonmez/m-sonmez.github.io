@@ -5,6 +5,7 @@ from __future__ import annotations
 import atexit
 import json
 import os
+import signal
 import socket
 import sys
 import threading
@@ -175,7 +176,7 @@ def launch_gui(
 
     logger = get_logger("main")
     try:
-        from PyQt6.QtCore import QObject, Qt, QUrl, pyqtSignal
+        from PyQt6.QtCore import QObject, Qt, QTimer, QUrl, pyqtSignal
         from PyQt6.QtGui import QDesktopServices
         from PyQt6.QtWidgets import (
             QApplication,
@@ -229,7 +230,8 @@ def launch_gui(
 
     def handle_paste(item: dict[str, Any], prev_app: Any) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
-        return engine.op_paste(target, previous_app=prev_app)
+        pre_copied = overlay.consume_pre_copied()
+        return engine.op_paste(target, previous_app=prev_app, already_copied=pre_copied)
 
     def handle_copy(item: dict[str, Any]) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
@@ -377,6 +379,8 @@ def launch_gui(
     )
 
     def persist_window_size(w: int, h: int) -> None:
+        if overlay.isMaximized():
+            return
         if engine.settings.get("window_size") != [w, h]:
             engine.settings["window_size"] = [w, h]
             try:
@@ -551,16 +555,27 @@ def launch_gui(
         lay.addLayout(btns)
         dlg.exec()
 
-    def quit_app() -> None:
+    lifecycle_state = {"quitting": False, "cleaned": False}
+
+    def _cleanup() -> None:
+        if lifecycle_state["cleaned"]:
+            return
+        lifecycle_state["cleaned"] = True
         engine.stop_watcher()
+        hotkey_mgr.unregister()
+        guard.release()
+
+    def quit_app() -> None:
+        if lifecycle_state["quitting"]:
+            return
+        lifecycle_state["quitting"] = True
         engine.settings["last_category"] = overlay.active_category
         engine.settings["last_category_by_hotkey"] = overlay.last_category_by_hotkey
         try:
             engine.save_current_settings(engine.settings)
         except Exception:
             pass
-        hotkey_mgr.unregister()
-        guard.release()
+        _cleanup()
         logger.info("QTP kapatıldı.")
         app.quit()
 
@@ -591,11 +606,6 @@ def launch_gui(
     guard.acquire(lambda: bridge.show_ipc.emit())
     conflicts = register_all_hotkeys()
 
-    def _cleanup() -> None:
-        engine.stop_watcher()
-        hotkey_mgr.unregister()
-        guard.release()
-
     app.aboutToQuit.connect(_cleanup)
 
     toast_msg = format_hotkeys_toast(engine.settings.get("hotkeys"))
@@ -620,9 +630,35 @@ def launch_gui(
             duration_ms=3400,
         )
 
+    wakeup_timer = QTimer()
+    wakeup_timer.setInterval(250)
+    wakeup_timer.timeout.connect(lambda: None)
+    prev_sigint = None
+    prev_sigterm = None
+    on_main_thread = threading.current_thread() is threading.main_thread()
+    if on_main_thread:
+        def _on_os_signal(_signum: int, _frame: Any) -> None:
+            QTimer.singleShot(0, quit_app)
+
+        prev_sigint = signal.getsignal(signal.SIGINT)
+        signal.signal(signal.SIGINT, _on_os_signal)
+        if hasattr(signal, "SIGTERM"):
+            prev_sigterm = signal.getsignal(signal.SIGTERM)
+            signal.signal(signal.SIGTERM, _on_os_signal)
+        wakeup_timer.start()
+
     try:
         return app.exec()
+    except KeyboardInterrupt:
+        quit_app()
+        return 0
     finally:
+        wakeup_timer.stop()
+        if on_main_thread:
+            if prev_sigint is not None:
+                signal.signal(signal.SIGINT, prev_sigint)
+            if hasattr(signal, "SIGTERM") and prev_sigterm is not None:
+                signal.signal(signal.SIGTERM, prev_sigterm)
         _cleanup()
 
 

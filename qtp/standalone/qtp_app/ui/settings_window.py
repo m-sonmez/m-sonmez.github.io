@@ -46,6 +46,7 @@ from qtp_app.core.settings import (
     _sanitize_settings,
 )
 from qtp_app.ui.help_dialog import HelpDialog
+from qtp_app.ui.icons import make_svg_icon
 from qtp_app.ui.theme import (
     ThemePalette,
     build_dialog_stylesheet,
@@ -537,12 +538,15 @@ class SettingsWindow(QDialog):
 
         btn_row = QHBoxLayout()
         help_btn = QPushButton("Yardım")
+        help_btn.setIcon(make_svg_icon("help", self._palette.btn_text, size=14))
         help_btn.clicked.connect(self._open_help)
         reset_btn = QPushButton("Varsayılana Sıfırla")
+        reset_btn.setIcon(make_svg_icon("reload", self._palette.btn_text, size=14))
         reset_btn.clicked.connect(self._reset_defaults)
         cancel_btn = QPushButton("İptal")
         cancel_btn.clicked.connect(self.reject)
         save_btn = QPushButton("Kaydet")
+        save_btn.setIcon(make_svg_icon("save", self._palette.pill_active_text, size=14))
         save_btn.setObjectName("PrimaryBtn")
         save_btn.clicked.connect(self._save_and_accept)
 

@@ -82,6 +82,15 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
 
         assert FOOTER_HINTS_TEXT in html
         assert "ArrowDown" in html and "ArrowUp" in html and "F1" in html and "Escape" in html
+        assert "table-wrap" in html
+        assert "table-wrap" in css and "overflow-x: auto" in css
+        assert "@media (max-width: 768px)" in css
+        assert "@media (max-width: 520px)" in css
+        assert "flex-direction: column;" in css
+        qtp_root = Path(__file__).resolve().parent.parent.parent.parent
+        assert qtp_root.is_dir()
+        assert (qtp_root / "qtp.html").read_text(encoding="utf-8") == html
+        assert (qtp_root / "theme.css").read_text(encoding="utf-8") == css
 
         conn.request("GET", "/api")
         api_idx = json.loads(conn.getresponse().read().decode("utf-8"))

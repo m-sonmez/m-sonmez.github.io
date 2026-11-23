@@ -121,6 +121,91 @@ if sys.platform != "win32":
         item for item in a.binaries
         if not any(tok in item[0].lower().replace("\\", "/") for tok in _skip_bins)
     ]
+    if sys.platform not in ("win32", "darwin"):
+        _linux_sys_prefixes = (
+            "libfontconfig.so",
+            "libfreetype.so",
+            "libharfbuzz.so",
+            "libexpat.so",
+            "libxkbcommon.so",
+            "libxkbcommon-x11.so",
+            "libegl.so",
+            "libgl.so",
+            "libgldispatch.so",
+            "libglx.so",
+            "libdrm.so",
+            "libgbm.so",
+            "libmesa",
+            "libwayland-client.so",
+            "libwayland-cursor.so",
+            "libwayland-egl.so",
+            "libwayland-server.so",
+            "libx11",
+            "libxcb",
+            "libxau",
+            "libxdmcp",
+            "libxext",
+            "libxfixes",
+            "libxi.so",
+            "libxrender",
+            "libxcursor",
+            "libxrandr",
+            "libxcomposite",
+            "libxdamage",
+            "libxinerama",
+            "libice.so",
+            "libsm.so",
+            "libglib-2.0.so",
+            "libgobject-2.0.so",
+            "libgio-2.0.so",
+            "libgmodule-2.0.so",
+            "libgthread-2.0.so",
+            "libdbus-1.so",
+            "libsystemd.so",
+            "libudev.so",
+            "libcap.so",
+            "libz.so",
+            "libstdc++.so",
+            "libgcc_s.so",
+            "libgpg-error.so",
+            "libgcrypt.so",
+            "liblz4.so",
+            "liblzma.so",
+            "libzstd.so",
+            "libpcre2",
+            "libffi.so",
+            "libmount.so",
+            "libblkid.so",
+            "libselinux.so",
+            "libqgtk3.so",
+            "libgtk-",
+            "libgdk-",
+            "libgdk_pixbuf",
+            "libcairo",
+            "libpango",
+            "libpixman",
+            "libglycin",
+            "libatk",
+            "libatspi",
+            "libepoxy",
+            "libtinysparql",
+            "libxml2.so",
+            "libgraphite2.so",
+            "libthai.so",
+            "libdatrie.so",
+            "libfribidi.so",
+            "libseccomp.so",
+            "libcloudproviders.so",
+            "libjson-glib",
+        )
+        a.binaries = [
+            item for item in a.binaries
+            if not Path(item[0].replace("\\", "/")).name.lower().startswith(_linux_sys_prefixes)
+            and not (
+                Path(item[0].replace("\\", "/")).name.lower().startswith("libicu")
+                and not item[0].replace("\\", "/").startswith("PyQt6/")
+            )
+        ]
     a.datas = [
         item for item in a.datas
         if "/translations/" not in item[0].lower().replace("\\", "/")

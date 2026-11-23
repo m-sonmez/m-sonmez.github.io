@@ -17,9 +17,9 @@ QTP'de tek doğruluk kaynağı [operations.py](../standalone/qtp_app/core/operat
   - CLI (`qtp_app/cli.py`)
   - TUI (`qtp_app/tui/app.py`, `qtp_app/tui/_win_console.py`)
   - Web (`qtp_app/web.py` + `qtp_app/web/qtp.html`)
-  - GUI (`qtp_app/main.py` + `qtp_app/ui/{overlay,settings_window,help_dialog}.py`)
+  - GUI (`qtp_app/main.py` + `qtp_app/ui/{overlay,settings_window,help_dialog,icons}.py`)
 - Her yeni işlem (`op_id`, örneğin `add_item`, `bulk_edit`, `rename_group`, `undo`):
-  1. `OPERATIONS` içine (`cli_flag`, `tui_key`, `web_route`, `gui_binding`, `error_msgs_tr`, `exit_codes`) ile eklenir (v2.3.0 ile toplam 35 kanonsal işlem).
+  1. `OPERATIONS` içine (`cli_flag`, `tui_key`, `web_route`, `gui_binding`, `error_msgs_tr`, `exit_codes`) ile eklenir (v2.3.1 ile toplam 35 kanonsal işlem).
   2. `QtpEngine` üzerinde `op_<ad>` metodu ve gerekirse `_persist_items_change()` gibi atomik INI+JSON kalıcılık adımı yazılır (UTF-16 LE BOM + otomatik `.bak` yedek + 30 adımlı `_undo_stack`/`_redo_stack`).
   3. CLI bayrağı (`cli.py`), HTTP rotası (`web.py`), TUI tuşu/komutu (`tui/app.py`) ve GUI eylemi (`ui/overlay.py`) bağlanır.
   4. Birebir hata mesajları [SSS.md](SSS.md) içine, parite satırı ise [KULLANIM.md](KULLANIM.md#12-modlar-arası-eşitlik-matrisi) tablosuna eklenir.
@@ -54,4 +54,4 @@ QTP'de tek doğruluk kaynağı [operations.py](../standalone/qtp_app/core/operat
   # Klasik / Legacy test takımı (qtp/ içinden)
   standalone\.venv\Scripts\python.exe -m unittest discover -s legacy/tests -v
   ```
-- **Otomatik Linux `qtp.bin` CI:** `.github/workflows/qtp-publish-linux.yml`, `main` dalındaki `qtp/**` (`!qtp/qtp.bin`) değişikliklerinde Ubuntu 22.04 üzerinde `xvfb-run` altında tüm testleri geçirip gerçek ELF `qtp/qtp.bin` çıktısını yayımlar.
+- **Otomatik Linux `qtp.bin` CI & Çapraz Dağıtım Politikası:** `.github/workflows/qtp-publish-linux.yml`, `main` dalındaki `qtp/**` (`!qtp/qtp.bin`) değişikliklerinde Ubuntu 22.04 üzerinde `xvfb-run` altında tüm testleri geçirip ELF `qtp/qtp.bin` çıktısını yayımlar; `build/qtp.spec` üzerinde konak yapılandırmasına bağlı `libfontconfig`/`libxkbcommon`/`Mesa`/`Wayland`/`X11` kitaplıkları dışlanarak Arch/CachyOS/Fedora/Ubuntu/openSUSE arasında uyumluluk korunur.

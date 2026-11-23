@@ -79,7 +79,7 @@ SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
     },
     "paste_method": {
         "label": "Yapıştırma Yöntemi",
-        "tooltip": "'auto' platforma göre Ctrl+V/Cmd+V veya Wayland'da wtype kullanır; gerekirse 'ctrl_v', 'shift_insert' veya 'type' seçilebilir.",
+        "tooltip": "'auto' platforma ve hedef pencereye (Linux uçbirimlerde Ctrl+Shift+V) göre seçim yapar; gerekirse 'ctrl_v', 'ctrl_shift_v', 'shift_insert' veya 'type' seçilebilir.",
     },
     "enter_after_paste": {
         "label": "Yapıştırma Sonrası Enter (<E<N<D|)",
@@ -126,7 +126,7 @@ SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
 VALID_THEMES = ("auto", "dark", "light")
 VALID_VIEW_MODES = ("list", "grid", "table")
 VALID_SORT_BY = ("order", "usage", "alpha", "keys", "favorites")
-VALID_PASTE_METHODS = ("auto", "ctrl_v", "shift_insert", "type")
+VALID_PASTE_METHODS = ("auto", "ctrl_v", "ctrl_shift_v", "shift_insert", "type")
 VALID_LOG_LEVELS = ("debug", "info", "warn", "error")
 
 

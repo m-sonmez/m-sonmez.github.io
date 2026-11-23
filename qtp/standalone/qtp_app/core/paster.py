@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import base64
 import ctypes
-import ctypes.util
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -19,6 +19,39 @@ logger = get_logger("paster")
 
 _CF_UNICODETEXT = 13
 _GMEM_MOVEABLE = 0x0002
+
+TERMINAL_APP_TOKENS: tuple[str, ...] = (
+    "konsole",
+    "alacritty",
+    "kitty",
+    "ghostty",
+    "wezterm",
+    "foot",
+    "gnome-terminal",
+    "kgx",
+    "tilix",
+    "terminator",
+    "xterm",
+    "urxvt",
+    "st",
+    "rio",
+    "warp",
+    "tabby",
+    "hyper",
+    "xfce4-terminal",
+    "mate-terminal",
+    "lxterminal",
+)
+
+_TERMINAL_MULTI_TOKENS: tuple[str, ...] = tuple(t for t in TERMINAL_APP_TOKENS if t != "st")
+_ST_TERM_RE = re.compile(r"(?:^|[^a-z0-9])st(?:-\d+color)?(?:[^a-z0-9]|$)")
+
+WAYLAND_COPY_ONLY_MSG = (
+    "Panoya kopyalandı ✔ (Wayland oturumunda yapıştırmak için Ctrl+V / Ctrl+Shift+V kullanın)"
+)
+WAYLAND_UNAVAILABLE_LOG = (
+    "Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; yapay yapıştırma gerçekleştirilemedi."
+)
 
 
 @dataclass
@@ -49,6 +82,80 @@ def is_wayland_session(platform_name: str | None = None) -> bool:
     return bool(os.environ.get("WAYLAND_DISPLAY")) or (
         os.environ.get("XDG_SESSION_TYPE", "").strip().lower() == "wayland"
     )
+
+
+def _is_terminal_identifier(raw_name: str | None) -> bool:
+    low = str(raw_name or "").strip().lower()
+    if not low:
+        return False
+    if any(tok in low for tok in _TERMINAL_MULTI_TOKENS):
+        return True
+    return bool(_ST_TERM_RE.search(low))
+
+
+def _query_x11_window_hint(win_id: int) -> str:
+    if not os.environ.get("DISPLAY") or win_id <= 0:
+        return ""
+    try:
+        from Xlib import display as xdisplay
+
+        dpy = xdisplay.Display()
+        try:
+            cur = dpy.create_resource_object("window", int(win_id))
+            parts: list[str] = []
+            for _ in range(8):
+                if cur is None:
+                    break
+                try:
+                    wm_cls = cur.get_wm_class()
+                    if wm_cls:
+                        parts.extend(str(x) for x in wm_cls if x)
+                except Exception:
+                    pass
+                try:
+                    wm_name = cur.get_wm_name()
+                    if wm_name:
+                        parts.append(str(wm_name))
+                except Exception:
+                    pass
+                if parts:
+                    break
+                try:
+                    tree = cur.query_tree()
+                    parent = getattr(tree, "parent", None)
+                    root = getattr(tree, "root", None)
+                    if parent is None or (root is not None and getattr(parent, "id", 0) == getattr(root, "id", -1)):
+                        break
+                    cur = parent
+                except Exception:
+                    break
+            return " ".join(parts)
+        finally:
+            dpy.close()
+    except Exception:
+        return ""
+
+
+def is_terminal_window(previous_app: Any = None, *, platform_name: str | None = None) -> bool:
+    """Hedef uygulamanın Linux/POSIX uçbirim (terminal) penceresi olup olmadığını belirler."""
+    plat = platform_name or sys.platform
+    if not is_posix_desktop(plat) or previous_app is None:
+        return False
+    if isinstance(previous_app, str):
+        return _is_terminal_identifier(previous_app)
+    if isinstance(previous_app, dict):
+        for key in ("wm_class", "app_id", "title", "name", "class"):
+            if _is_terminal_identifier(previous_app.get(key)):
+                return True
+        return False
+    if isinstance(previous_app, int):
+        hint = _query_x11_window_hint(previous_app)
+        return _is_terminal_identifier(hint)
+    for attr in ("wm_class", "app_id", "title", "name"):
+        val = getattr(previous_app, attr, None)
+        if val and _is_terminal_identifier(str(val)):
+            return True
+    return False
 
 
 def _emit_osc52(text: str) -> bool:
@@ -145,68 +252,70 @@ def _copy_macos_native(text: str) -> bool:
     return False
 
 
-def _load_x11_library() -> Any:
-    candidates: list[str] = ["libX11.so.6", "libX11.so"]
-    found = ctypes.util.find_library("X11")
-    if found and found not in candidates:
-        candidates.append(found)
-    last_exc: Exception | None = None
-    for lib_name in candidates:
-        try:
-            return ctypes.CDLL(lib_name)
-        except OSError as exc:
-            last_exc = exc
-    if last_exc is not None:
-        raise last_exc
-    raise OSError("libX11 bulunamadı")
-
-
-def _copy_unix_x11_ctypes(text: str) -> bool:
-    """Harici araç olmadan libX11 (libX11.so.6 / libX11.so) veya Qt panosunu dener."""
+def _write_qt_clipboard(cb: Any, text: str, app: Any = None) -> None:
+    cb.setText(text)
     try:
-        if os.environ.get("DISPLAY") and not os.environ.get("QT_QPA_PLATFORM") == "offscreen":
-            from PyQt6.QtGui import QGuiApplication
+        supports_sel = getattr(cb, "supportsSelection", None)
+        if callable(supports_sel) and supports_sel() is True:
+            from PyQt6.QtGui import QClipboard
 
-            app = QGuiApplication.instance()
-            if app is not None and app.clipboard() is not None:
-                app.clipboard().setText(text)
-                return True
+            cb.setText(text, QClipboard.Mode.Selection)
+    except Exception:
+        pass
+    if app is not None and hasattr(app, "processEvents"):
+        try:
+            app.processEvents()
+        except Exception:
+            pass
+
+
+def _run_clipboard_daemon_cmd(cmd: list[str], text: str) -> bool:
+    try:
+        proc = subprocess.run(
+            cmd,
+            input=text.encode("utf-8"),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+            timeout=2,
+            check=False,
+        )
+        return getattr(proc, "returncode", 1) == 0
+    except Exception:
+        return False
+
+
+def _copy_posix_clipboard(text: str, *, platform_name: str | None = None) -> bool:
+    """Linux/BSD pano sırası: canlı Qt QGuiApplication panosu -> wl-copy -> xclip/xsel."""
+    try:
+        from PyQt6.QtGui import QGuiApplication
+
+        app = QGuiApplication.instance()
+        pname = (app.platformName() or "").strip().lower() if app is not None and hasattr(app, "platformName") else ""
+        if app is not None and pname != "offscreen" and app.clipboard() is not None:
+            _write_qt_clipboard(app.clipboard(), text, app=app)
+            return True
     except Exception:
         pass
 
+    if is_wayland_session(platform_name):
+        wl_copy = shutil.which("wl-copy")
+        if wl_copy and _run_clipboard_daemon_cmd([wl_copy], text):
+            return True
+
     if os.environ.get("DISPLAY"):
-        try:
-            x11 = _load_x11_library()
-            x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
-            x11.XOpenDisplay.restype = ctypes.c_void_p
-            dpy = x11.XOpenDisplay(None)
-            if dpy:
-                try:
-                    x11.XInternAtom.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
-                    x11.XInternAtom.restype = ctypes.c_ulong
-                    clip_atom = x11.XInternAtom(dpy, b"CLIPBOARD", 0)
-                    utf8_atom = x11.XInternAtom(dpy, b"UTF8_STRING", 0)
-                    if clip_atom and utf8_atom:
-                        x11.XStoreBytes.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_int]
-                        x11.XStoreBytes.restype = ctypes.c_int
-                        x11.XFlush.argtypes = [ctypes.c_void_p]
-                        x11.XFlush.restype = ctypes.c_int
-                        x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
-                        x11.XCloseDisplay.restype = ctypes.c_int
-                        raw = text.encode("utf-8")
-                        x11.XStoreBytes(dpy, raw, len(raw))
-                        x11.XFlush(dpy)
-                        return True
-                finally:
-                    x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
-                    x11.XCloseDisplay.restype = ctypes.c_int
-                    x11.XCloseDisplay(dpy)
-        except Exception:
-            pass
+        xclip_bin = shutil.which("xclip")
+        if xclip_bin and _run_clipboard_daemon_cmd([xclip_bin, "-selection", "clipboard"], text):
+            return True
+        xsel_bin = shutil.which("xsel")
+        if xsel_bin and _run_clipboard_daemon_cmd([xsel_bin, "--clipboard", "--input"], text):
+            return True
+
     return False
 
 
-_copy_linux_x11_ctypes = _copy_unix_x11_ctypes
+_copy_unix_x11_ctypes = _copy_posix_clipboard
+_copy_linux_x11_ctypes = _copy_posix_clipboard
 
 
 def copy_to_clipboard(
@@ -216,14 +325,14 @@ def copy_to_clipboard(
     platform_name: str | None = None,
 ) -> bool:
     """
-    Metni harici araca ihtiyaç duymadan işletim sistemi panosuna kopyalar.
-    Sıra: özel Qt panosu -> yerel OS API (Win32 ctypes / macOS AppKit / Linux X11-Qt-OSC52) -> isteğe bağlı pyperclip.
+    Metni işletim sistemi panosuna kopyalar.
+    Sıra: özel Qt panosu -> yerel OS API / Wayland wl-copy / X11 xclip-xsel -> OSC 52 -> Qt fallback -> pyperclip.
     """
     plat = platform_name or sys.platform
 
     if qt_clipboard is not None:
         try:
-            qt_clipboard.setText(text)
+            _write_qt_clipboard(qt_clipboard, text)
             return True
         except Exception as exc:
             logger.debug("Özel Qt panosu kullanılamadı: %s", exc)
@@ -238,7 +347,7 @@ def copy_to_clipboard(
         if _copy_macos_native(text):
             return True
     elif is_posix_desktop(plat):
-        if _copy_unix_x11_ctypes(text):
+        if _copy_posix_clipboard(text, platform_name=plat):
             return True
         if _emit_osc52(text):
             return True
@@ -248,7 +357,7 @@ def copy_to_clipboard(
 
         app = QGuiApplication.instance()
         if app is not None and app.clipboard() is not None:
-            app.clipboard().setText(text)
+            _write_qt_clipboard(app.clipboard(), text, app=app)
             return True
     except Exception:
         pass
@@ -353,7 +462,7 @@ def restore_previous_app(handle: Any, *, platform_name: str | None = None) -> bo
                 )
                 return proc.returncode == 0
             return False
-        if is_posix_desktop(plat) and os.environ.get("DISPLAY"):
+        if is_posix_desktop(plat) and os.environ.get("DISPLAY") and isinstance(handle, int):
             try:
                 from Xlib import X, display as xdisplay
 
@@ -378,13 +487,30 @@ def _get_pynput_controller() -> tuple[Any, Any]:
     return Controller(), Key
 
 
-def _send_combo(controller: Any, mod_key: Any, char_or_key: Any) -> None:
-    controller.press(mod_key)
+def _send_combo(
+    controller: Any,
+    mod_keys: Any,
+    char_or_key: Any,
+    sleep_fn: Callable[[float], None] = time.sleep,
+) -> None:
+    mods = list(mod_keys) if isinstance(mod_keys, (list, tuple)) else [mod_keys]
+    for mod_key in mods:
+        controller.press(mod_key)
+    sleep_fn(0.02)
     try:
         controller.press(char_or_key)
+        sleep_fn(0.01)
         controller.release(char_or_key)
     finally:
-        controller.release(mod_key)
+        sleep_fn(0.01)
+        for mod_key in reversed(mods):
+            controller.release(mod_key)
+
+
+def _check_proc_rc(res: Any, tool_name: str) -> None:
+    rc = getattr(res, "returncode", 0)
+    if isinstance(rc, int) and rc != 0:
+        raise RuntimeError(f"{tool_name} çıkış kodu={rc}")
 
 
 def _paste_wayland(
@@ -395,31 +521,47 @@ def _paste_wayland(
     runner: Any = None,
 ) -> tuple[bool, str, str | None]:
     run_fn = runner or subprocess.run
+
     wtype = shutil.which("wtype")
     if wtype:
-        if method == "type":
-            run_fn([wtype, "--", text], check=True, timeout=3)
-        elif method == "shift_insert":
-            run_fn([wtype, "-M", "shift", "-k", "Insert", "-m", "shift"], check=True, timeout=3)
-        else:
-            run_fn([wtype, "-M", "ctrl", "v", "-m", "ctrl"], check=True, timeout=3)
-        if send_enter:
-            run_fn([wtype, "-k", "Return"], check=True, timeout=3)
-        return True, "wtype", None
+        try:
+            if method == "type":
+                res = run_fn([wtype, "--", text], check=True, timeout=3)
+            elif method == "ctrl_shift_v":
+                res = run_fn([wtype, "-M", "ctrl", "-M", "shift", "-k", "v", "-m", "shift", "-m", "ctrl"], check=True, timeout=3)
+            elif method == "shift_insert":
+                res = run_fn([wtype, "-M", "shift", "-k", "Insert", "-m", "shift"], check=True, timeout=3)
+            else:
+                res = run_fn([wtype, "-M", "ctrl", "-k", "v", "-m", "ctrl"], check=True, timeout=3)
+            _check_proc_rc(res, "wtype")
+            if send_enter:
+                res_ret = run_fn([wtype, "-k", "Return"], check=True, timeout=3)
+                _check_proc_rc(res_ret, "wtype Return")
+            return True, "wtype", None
+        except Exception as exc:
+            logger.debug("Wayland 'wtype' çalıştırılamadı veya compositor tarafından reddedildi: %s", exc)
 
     ydotool = shutil.which("ydotool")
     if ydotool:
-        if method == "type":
-            run_fn([ydotool, "type", "--", text], check=True, timeout=3)
-        else:
-            run_fn([ydotool, "key", "29:1", "47:1", "47:0", "29:0"], check=True, timeout=3)
-        if send_enter:
-            run_fn([ydotool, "key", "28:1", "28:0"], check=True, timeout=3)
-        return True, "ydotool", None
+        try:
+            if method == "type":
+                res = run_fn([ydotool, "type", "--", text], check=True, timeout=3)
+            elif method == "ctrl_shift_v":
+                res = run_fn([ydotool, "key", "29:1", "42:1", "47:1", "47:0", "42:0", "29:0"], check=True, timeout=3)
+            elif method == "shift_insert":
+                res = run_fn([ydotool, "key", "42:1", "110:1", "110:0", "42:0"], check=True, timeout=3)
+            else:
+                res = run_fn([ydotool, "key", "29:1", "47:1", "47:0", "29:0"], check=True, timeout=3)
+            _check_proc_rc(res, "ydotool")
+            if send_enter:
+                res_ret = run_fn([ydotool, "key", "28:1", "28:0"], check=True, timeout=3)
+                _check_proc_rc(res_ret, "ydotool Return")
+            return True, "ydotool", None
+        except Exception as exc:
+            logger.debug("Wayland 'ydotool' çalıştırılamadı: %s", exc)
 
-    warning = "Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; yapay yapıştırma gerçekleştirilemedi."
-    logger.warning(warning)
-    return False, "wayland_unavailable", warning
+    logger.warning(WAYLAND_UNAVAILABLE_LOG)
+    return False, "wayland_unavailable", WAYLAND_COPY_ONLY_MSG
 
 
 def paste_into_active_app(
@@ -436,14 +578,18 @@ def paste_into_active_app(
     platform_name: str | None = None,
     wayland: bool | None = None,
     qt_clipboard: Any = None,
+    already_copied: bool = False,
     sleep_fn: Callable[[float], None] = time.sleep,
 ) -> PasteResult:
     """
-    Metni panoya kopyalar, katmanı gizler, bekler ve aktif uygulamaya yapıştırır.
+    Metni panoya kopyalar (veya already_copied=True ise korur), katmanı gizler, bekler ve aktif uygulamaya yapıştırır.
     Çıkış kodları: 0 başarılı, 3 pano kullanılamıyor, 4 tuş gönderimi gerçekleştirilemedi.
     """
     plat = platform_name or sys.platform
-    copied = copy_to_clipboard(text, qt_clipboard=qt_clipboard, platform_name=plat)
+    if already_copied:
+        copied = True
+    else:
+        copied = copy_to_clipboard(text, qt_clipboard=qt_clipboard, platform_name=plat)
     if not copied:
         msg = "Pano erişimi başarısız: grafik oturumu veya pano desteği bulunamadı."
         logger.error(msg)
@@ -471,16 +617,29 @@ def paste_into_active_app(
 
     should_send_enter = bool(has_end_marker and enter_after_paste)
     method_norm = (paste_method or "auto").strip().lower()
+    if method_norm == "auto":
+        if is_posix_desktop(plat) and is_terminal_window(previous_app, platform_name=plat):
+            effective_method = "ctrl_shift_v"
+        else:
+            effective_method = "ctrl_v"
+    else:
+        effective_method = method_norm
+
     use_wayland = is_wayland_session(plat) if wayland is None else wayland
 
     if use_wayland and is_posix_desktop(plat):
         ok_wl, used_tool, wl_warn = _paste_wayland(
             text,
-            method=method_norm,
+            method=effective_method,
             send_enter=should_send_enter,
         )
         if ok_wl:
-            logger.info("Wayland üzerinde '%s' ile yapıştırıldı (enter=%s).", used_tool, should_send_enter)
+            logger.info(
+                "Wayland üzerinde '%s' (%s) ile yapıştırıldı (enter=%s).",
+                used_tool,
+                effective_method,
+                should_send_enter,
+            )
             return PasteResult(
                 ok=True,
                 copied=True,
@@ -489,7 +648,7 @@ def paste_into_active_app(
                 method=used_tool,
                 exit_code=0,
             )
-        if not os.environ.get("DISPLAY") and controller is None:
+        if controller is None:
             return PasteResult(
                 ok=False,
                 copied=True,
@@ -506,15 +665,18 @@ def paste_into_active_app(
         else:
             ctrl, k_enum = controller, key_enum
 
-        if method_norm == "type":
+        if effective_method == "type":
             ctrl.type(text)
             used_method = "type"
-        elif method_norm == "shift_insert":
-            _send_combo(ctrl, k_enum.shift, k_enum.insert)
+        elif effective_method == "ctrl_shift_v":
+            _send_combo(ctrl, [k_enum.ctrl, k_enum.shift], "v", sleep_fn=sleep_fn)
+            used_method = "ctrl_shift_v"
+        elif effective_method == "shift_insert":
+            _send_combo(ctrl, k_enum.shift, k_enum.insert, sleep_fn=sleep_fn)
             used_method = "shift_insert"
         else:
             mod_key = k_enum.cmd if plat == "darwin" else k_enum.ctrl
-            _send_combo(ctrl, mod_key, "v")
+            _send_combo(ctrl, mod_key, "v", sleep_fn=sleep_fn)
             used_method = "cmd_v" if plat == "darwin" else "ctrl_v"
 
         enter_sent = False

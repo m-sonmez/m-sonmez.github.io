@@ -446,6 +446,29 @@ def build_overlay_stylesheet(palette: ThemePalette, *, translucent: bool = False
         border: 1px solid {palette.border};
         border-radius: {WINDOW_CORNER_RADIUS}px;
     }}
+    QFrame#DragHeader {{
+        background-color: transparent;
+        border: none;
+    }}
+    QLabel#WindowTitleLabel {{
+        color: {palette.text_muted};
+        background-color: transparent;
+        font-size: {FONT_SIZE_META}px;
+        font-weight: 600;
+    }}
+    QPushButton#WindowChromeBtn {{
+        background-color: transparent;
+        color: {palette.btn_text};
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 2px;
+        min-width: 24px;
+        min-height: 22px;
+    }}
+    QPushButton#WindowChromeBtn:hover {{
+        background-color: {palette.btn_hover};
+        border: 1px solid {palette.border};
+    }}
     QLineEdit#SearchInput {{
         background-color: {palette.input_bg};
         color: {palette.text_primary};

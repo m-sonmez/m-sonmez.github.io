@@ -357,3 +357,27 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
     with mock.patch("qtp_app.core.hotkeys.sys.platform", "darwin"), \
          mock.patch("qtp_app.core.hotkeys.ctypes.CDLL", side_effect=OSError("no framework")):
         assert check_macos_accessibility(prompt=False) is False
+
+    from qtp_app.core.hotkeys import _configure_win32_prototypes
+
+    u32_proto = mock.Mock()
+    k32_proto = mock.Mock()
+    _configure_win32_prototypes(u32_proto, k32_proto)
+    assert u32_proto.RegisterHotKey.restype is not None
+
+    u32_fail = mock.Mock()
+    u32_fail.RegisterHotKey.return_value = 0
+    k32_fail = mock.Mock()
+    k32_fail.GetCurrentThreadId.return_value = 777
+    k32_fail.GetLastError.side_effect = [ERROR_HOTKEY_ALREADY_REGISTERED, 5]
+    mgr_w32_fail = HotkeyManager(
+        platform_name="win32",
+        win32_user32=u32_fail,
+        win32_kernel32=k32_fail,
+        keyboard_module=None,
+    )
+    res_w32 = mgr_w32_fail.register({"all": "Win+Alt+Space", "A": "Win+Alt+A"}, lambda _c: None)
+    assert res_w32 == {"all": False, "A": False}
+    assert "1409" in mgr_w32_fail.conflicts["all"]
+    assert "hata kodu=5" in mgr_w32_fail.conflicts["A"]
+    mgr_w32_fail.unregister()

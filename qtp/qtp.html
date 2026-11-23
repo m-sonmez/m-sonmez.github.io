@@ -136,7 +136,7 @@
   </div>
 
   <div class="modal" id="crudModalBackdrop">
-    <div class="modal-card" style="width:640px;">
+    <div class="modal-card modal-card-lg">
       <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
         <strong id="crudModalTitle">Yeni Hazır Cevap Ekle</strong>
         <button class="action-btn" id="crudClose">İptal (Esc)</button>
@@ -194,7 +194,7 @@
   </div>
 
   <div class="modal" id="bulkModalBackdrop">
-    <div class="modal-card" style="width:620px;">
+    <div class="modal-card modal-card-lg">
       <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
         <strong id="bulkModalTitle">Toplu Düzenleme</strong>
         <button class="action-btn" id="bulkClose">İptal (Esc)</button>
@@ -277,7 +277,7 @@
   </div>
 
   <div class="modal" id="groupsModalBackdrop">
-    <div class="modal-card" style="width:660px;">
+    <div class="modal-card modal-card-lg">
       <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
         <strong>📁 Grup Yöneticisi</strong>
         <button class="action-btn" id="groupsClose">Kapat (Esc)</button>
@@ -287,7 +287,7 @@
   </div>
 
   <div class="modal" id="importModalBackdrop">
-    <div class="modal-card" style="width:580px;">
+    <div class="modal-card modal-card-md">
       <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
         <strong>📥 İçe Aktar (.ini / .json / .txt)</strong>
         <button class="action-btn" id="importClose">Kapat (Esc)</button>
@@ -322,7 +322,7 @@
   </div>
 
   <div class="modal" id="exportModalBackdrop">
-    <div class="modal-card" style="width:580px;">
+    <div class="modal-card modal-card-md">
       <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
         <strong>📤 Dışa Aktar ve Yazdır</strong>
         <button class="action-btn" id="exportClose">Kapat (Esc)</button>
@@ -354,7 +354,7 @@
   </div>
 
   <div class="modal" id="snapshotsModalBackdrop">
-    <div class="modal-card" style="width:660px;">
+    <div class="modal-card modal-card-lg">
       <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
         <strong>🕒 Anlık Kayıtlar &amp; Yedek Geçmişi</strong>
         <div class="toolbar-group">
@@ -367,7 +367,7 @@
   </div>
 
   <div class="modal" id="deleteConfirmBackdrop">
-    <div class="modal-card" style="width:460px;">
+    <div class="modal-card modal-card-sm">
       <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
         <strong>Kaydı Sil</strong>
         <button class="action-btn" id="delCancelTop">Kapat</button>
@@ -432,7 +432,7 @@
     };
 
     const CLI_HELP_STATIC_TEXT = [
-      'QTP v2.3.0 — Komut Satırı Kullanımı',
+      'QTP v2.3.1 — Komut Satırı Kullanımı',
       '',
       'Kullanım:',
       '  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]',
@@ -2354,7 +2354,10 @@
           tbody.appendChild(tr);
         });
         table.appendChild(tbody);
-        els.list.appendChild(table);
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'table-wrap';
+        tableWrap.appendChild(table);
+        els.list.appendChild(tableWrap);
         return;
       }
 

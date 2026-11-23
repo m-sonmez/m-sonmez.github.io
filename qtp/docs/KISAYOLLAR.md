@@ -1,6 +1,6 @@
 # QTP Klavye Kısayolları Rehberi
 
-QTP v2.3.0, Windows 10/11 sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama ve tüm arayüzlerde çoklu seçim / toplu işlem / geri al-yinele destekli tam klavye kontrolü sunar.
+QTP v2.3.1, Windows 10/11 sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama ve tüm arayüzlerde çoklu seçim / toplu işlem / geri al-yinele destekli tam klavye kontrolü sunar.
 
 ---
 

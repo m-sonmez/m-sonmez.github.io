@@ -4,6 +4,20 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.3.1] - 2026-11-23
+
+### Linux (Arch/CachyOS/Wayland/X11) Düzeltmeleri, Gömülü SVG Simgeler, 8-Kenar Boyutlandırma & Mobil Web Uyumluluğu
+- **Çapraz Dağıtım Linux `qtp.bin` Kütüphane Uyumluluğu (`build/qtp.spec`):** Ubuntu 22.04 CI ortamından Arch/CachyOS, Fedora ve openSUSE üzerine taşınabilirliği bozan konak yapılandırmasına bağlı paylaşılan kütüphaneler (`libfontconfig.so`, `libfreetype.so`, `libharfbuzz.so`, `libexpat.so`, `libxkbcommon*.so`, `Mesa`/`EGL`/`GL`, `libwayland-*`, `libX11`/`libxcb*`, `libglib`/`libdbus`/`libstdc++` vb.) PyInstaller paketinden dışlanarak `Fontconfig error` (`48-guessfamily.conf`) ve `xkbcommon: ERROR` hataları kökten giderildi (`libQt6*`, `PyQt6`, platform/SVG eklentileri gömülü kalır).
+- **Wayland Pencere Opaklık Uyarısı Giderildi (`ui/overlay.py`):** Wayland ve `offscreen` arka uçlarında `windowOpacity` animasyonu/çağrısı kapatılarak konsola yüzlerce kez basılan `"This plugin does not support setting window opacity"` uyarısı sıfırlandı; tüm platformlarda `180 ms` / `8 px` kaydırma animasyonu korundu.
+- **8-Kenar Çerçevesiz Yeniden Boyutlandırma, Başlık Sürükleme & Büyüt/Küçült (`ui/overlay.py`, `main.py`):** Linux/POSIX masaüstlerinde pencere türü `Tool` yerine yeniden boyutlandırılabilir `Window` (`FramelessWindowHint | WindowStaysOnTopHint`) yapıldı; üst sürükleme başlığı (`startSystemMove`), 8 kenar/köşeden dinamik boyutlandırma (`startSystemResize` + geometri yedeği + `QSizeGrip`) ve tam ekran/geri yükle düğmesi eklenip `window_size` ayar kalıcılığı bağlandı.
+- **Wayland Odak-Öncesi Pano & Terminal Farkındalıklı Yapıştırma (`core/paster.py`, `core/engine.py`, `ui/overlay.py`):** `OverlayWindow.paste_row()` içinde gizleme (`hide_overlay`) öncesi kopyalama (`pre_copied` → `already_copied`) uygulanarak Wayland `wl_data_device.set_selection` yüzey odağı reddi giderildi; eskimiş X10 `XStoreBytes` kaldırılıp Qt `QClipboard` + X11 `Selection` → `wl-copy` → `xclip`/`xsel` → `pyperclip` → `OSC 52` zincirine geçildi. `wtype -M ctrl -k v -m ctrl` anahtar bayrağı düzeltildi, XWayland `pynput` geçişinde çıplak `v` sızıntısı önlendi ve Linux uçbirimlerinde (`Konsole`, `Alacritty`, `Kitty`, `Ghostty` vb.) otomatik/elle `ctrl_shift_v` yapıştırma desteği eklendi.
+- **Temiz `Ctrl+C` (`SIGINT`) / `SIGTERM` Çıkışı (`main.py`):** Yinelenmeye karşı koruyucu idempotent `quit_app()`, `SIGINT`/`SIGTERM` sinyal işleyicisi ve `250 ms` Python uyandırma zamanlayıcısı eklenerek uçbirimden `Ctrl+C` ile çekirdek dökümü (`Aborted`) yerine temiz `0` çıkışı sağlandı.
+- **Gömülü Tema-Renkli SVG Arayüz Simgeleri (`ui/icons.py`, `ui/tray.py`, `ui/settings_window.py`, `ui/overlay.py`):** Eksik sistem emoji yazıtiplerinden etkilenmeyen satır içi SVG `QIcon` üreticisi eklendi (Açık/Koyu temaya göre canlı renklenir); tepsi simgesi `16..64 px` çoklu çözünürlüklü duruma getirildi.
+- **Mobil / Android Duyarlı Web Arayüzü (`web/theme.css`, `web/qtp.html`, `qtp.html`, `theme.css`, `sw.js`):** Dar ekranlarda `.snippet-row` öğelerini tek karaktere sıkıştıran masaüstü esnek satır yapısı `flex-wrap`, `@media (max-width: 768px)` / `@media (max-width: 520px)` sütun dizilimi, yatay kaydırılabilir kategori hapları ve `.table-wrap` ile düzeltildi (`sw.js` `v3.4.1`).
+- **Çoklu Dağıtım Linux/BSD/macOS Belgeleri (`docs/KURULUM.md`, `docs/SSS.md`, `README.md`):** Yalnızca `apt-get` gösteren yönergeler yerine `pacman`, `apt`, `dnf`, `zypper`, `apk`, `pkg` ve `brew` komutları sıfır zorunlu bağımlılık vurgusuyla belgelendi.
+
+---
+
 ## [2.3.0] - 2026-11-23
 
 ### Tam Güçlü Yönetim Paritesi (`legacy/` → GUI/Web/TUI/CLI) & `qtp_manager.py` Sözdizimi Düzeltmesi

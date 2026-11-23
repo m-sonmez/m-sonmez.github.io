@@ -1346,6 +1346,7 @@ class QtpEngine:
         *,
         previous_app: Any = None,
         strip_emoji: bool | None = None,
+        already_copied: bool = False,
     ) -> OperationResult:
         found = self.resolve_item(target)
         if found is None:
@@ -1359,13 +1360,15 @@ class QtpEngine:
         has_end = str(item.get("terminator", DEFAULT_TERMINATOR)) == DEFAULT_TERMINATOR
 
         if self._paste_fn is not None:
-            res = self._paste_fn(
-                text,
-                has_end_marker=has_end,
-                enter_after_paste=bool(self.settings.get("enter_after_paste", True)),
-                paste_method=str(self.settings.get("paste_method", "auto")),
-                previous_app=previous_app,
-            )
+            fn_kwargs: dict[str, Any] = {
+                "has_end_marker": has_end,
+                "enter_after_paste": bool(self.settings.get("enter_after_paste", True)),
+                "paste_method": str(self.settings.get("paste_method", "auto")),
+                "previous_app": previous_app,
+            }
+            if already_copied:
+                fn_kwargs["already_copied"] = True
+            res = self._paste_fn(text, **fn_kwargs)
         else:
             res = paste_into_active_app(
                 text,
@@ -1373,6 +1376,7 @@ class QtpEngine:
                 enter_after_paste=bool(self.settings.get("enter_after_paste", True)),
                 paste_method=str(self.settings.get("paste_method", "auto")),
                 previous_app=previous_app,
+                already_copied=already_copied,
             )
 
         if not res.ok:

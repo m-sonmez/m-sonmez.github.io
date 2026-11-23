@@ -56,7 +56,7 @@ def test_static_zero_dep_scan():
                         allowed = True
                     elif sym == "pbcopy" and rel in ("core/paster.py", "tests/test_paster.py"):
                         allowed = True
-                    elif sym in ("wtype", "ydotool") and rel in (
+                    elif sym in ("wtype", "ydotool", "xclip", "xsel") and rel in (
                         "core/paster.py",
                         "core/operations.py",
                         "core/settings.py",

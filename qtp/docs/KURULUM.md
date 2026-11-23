@@ -1,6 +1,6 @@
 # QTP Kurulum ve Sistem Gereksinimleri
 
-QTP v2.3.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya statik Web arayüzü içinde sunar.
+QTP v2.3.1 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya statik Web arayüzü içinde sunar.
 
 ---
 
@@ -49,16 +49,42 @@ QTP v2.3.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satır�
    ./qtp.bin --selftest
    ./qtp.bin --gui
    ```
-2. **Qt6 GUI Çalışma Zamanı Kütüphaneleri (Minimal Sunucu/Masaüstü İçin):** Linux masaüstlerinde GUI (`--gui`) açılışında eksik paylaşılan kütüphane görürseniz:
-   ```bash
-   sudo apt-get update && sudo apt-get install -y \
-     libegl1 libgl1 libglx-mesa0 libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3 \
-     libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
-     libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxcb-xfixes0 \
-     libfontconfig1 libfreetype6
-   ```
-   *(Başsız sunucularda `--tui`, `--cli` ve `--web` modları hiçbir X11/Qt6 pencere sunucusu olmadan doğrudan çalışır.)*
-3. **Wayland Notu:** Wayland oturumlarında (`GNOME`/`KDE`/`Sway`/`Hyprland`) global tuş yakalama compositor tarafından sınırlandırılabilir; tepsi simgesi, `--web` veya `--tui` kesintisiz çalışır. Otomatik yapay `Ctrl+V` için isteğe bağlı `wtype` veya `ydotool` kurulabilir (kurulu değilse QTP metni güvenli biçimde panoya kopyalar).
+2. **Sıfır Zorunlu Bağımlılık & Çoklu Dağıtım İsteğe Bağlı Yardımcılar:** `qtp.bin` ek sistem paketi olmadan doğrudan çalışır; PyInstaller ikilisi `fontconfig`, `xkbcommon`, `Mesa/EGL/GL`, `Wayland` ve `X11` gibi dağıtım yapılandırmasına bağlı kütüphaneleri bilgisayarınızdaki yerel sistemden kullandığı için **Arch/CachyOS, Ubuntu/Debian, Fedora, openSUSE** gibi modern Linux dağıtımlarında sürüm çakışması oluşturmaz (`--tui`, `--cli` ve `--web` modları ise hiçbir masaüstü kütüphanesi gerektirmeden başsız sunucularda bile çalışır).
+   Çok minimal kurulumlarda `--gui` için eksik Qt/pencere kütüphanesi görürseniz veya Wayland oturumunda isteğe bağlı otomatik yapıştırma / pano yardımcıları (`wl-clipboard`, `wtype`, `ydotool`) kurmak isterseniz kendi dağıtımınızın yerel paket yöneticisini kullanın:
+   - **Arch Linux / CachyOS / Manjaro (`pacman`):**
+     ```bash
+     # Minimal GUI kütüphaneleri (zaten çoğunlukla kurulu):
+     sudo pacman -S --needed mesa libxkbcommon libxkbcommon-x11 xcb-util-cursor fontconfig dbus
+     # İsteğe bağlı Wayland pano & otomatik yapıştırma yardımcıları:
+     sudo pacman -S --needed wl-clipboard wtype ydotool
+     ```
+   - **Debian / Ubuntu / Linux Mint (`apt`):**
+     ```bash
+     sudo apt update && sudo apt install -y \
+       libegl1 libgl1 libglx-mesa0 libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3 \
+       libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+       libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxcb-xfixes0 \
+       libfontconfig1 libfreetype6
+     # İsteğe bağlı Wayland yardımcıları:
+     sudo apt install -y wl-clipboard wtype ydotool
+     ```
+   - **Fedora / RHEL (`dnf`):**
+     ```bash
+     sudo dnf install -y mesa-libEGL mesa-libGL libxkbcommon libxkbcommon-x11 xcb-util-cursor dbus-libs fontconfig
+     # İsteğe bağlı Wayland yardımcıları:
+     sudo dnf install -y wl-clipboard wtype ydotool
+     ```
+   - **openSUSE (`zypper`):**
+     ```bash
+     sudo zypper install -y libEGL1 libGL1 libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 dbus-1 fontconfig
+     # İsteğe bağlı Wayland yardımcıları:
+     sudo zypper install -y wl-clipboard wtype ydotool
+     ```
+   - **Alpine Linux (`apk`) & FreeBSD (`pkg`) & macOS (`brew`):**
+     - Alpine Linux (`apk` — `--tui`/`--cli`/`--web` kaynak çalıştırma): `apk add python3 py3-pip` (Wayland masaüstü için isteğe bağlı: `apk add wl-clipboard wtype`)
+     - FreeBSD (`pkg`): `pkg install python3 py311-qt6 xcb-util-cursor libxkbcommon` (veya sıfır bağımlılıkla `python3 -m qtp_app --tui`)
+     - macOS (`brew`): `qtp.bin` sıfır bağımlılıkla çalışır; kaynaktan geliştirme için `brew install python uv` yeterlidir.
+3. **Wayland Notu:** Wayland oturumlarında (`KDE Plasma`/`GNOME`/`Sway`/`Hyprland`) global tuş yakalama compositor tarafından sınırlandırılabilir; tepsi simgesi, pencere kenarından yeniden boyutlandırma/sürükleme, `--web` ve `--tui` kesintisiz çalışır. QTP önce seçili metni pencere gizlenmeden önce güvenli biçimde panoya yazar; aktif hedefe göre `Ctrl+V` veya Linux uçbirimlerinde (`Konsole`, `Alacritty`, `Kitty`, `Ghostty`, `GNOME Terminal` vb.) otomatik olarak `Ctrl+Shift+V` gönderir (`wtype`/`ydotool` yoksa da panoya kopyalama daima çalışır).
 
 ### 2.3 macOS 10.15–15 ve Unix-benzeri / BSD (`qtp.bin`)
 1. **macOS Gatekeeper & Erişilebilirlik İzni:**

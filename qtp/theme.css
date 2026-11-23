@@ -233,6 +233,7 @@ option {
   border-radius: var(--radius-row);
   padding: 10px 14px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
@@ -243,10 +244,10 @@ option {
   background: var(--selected-bg);
   border-color: var(--selected-border);
 }
-.snippet-main { min-width: 0; flex: 1; }
-.snippet-text { font-size: 14px; line-height: 1.35; word-break: break-word; color: var(--text-primary); }
+.snippet-main { min-width: 0; flex: 1 1 220px; }
+.snippet-text { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; word-break: normal; white-space: normal; color: var(--text-primary); }
 .snippet-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
-.row-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; flex: 0 1 auto; }
 .hl {
   background: var(--highlight-bg);
   color: var(--highlight-text);
@@ -363,6 +364,9 @@ option {
   padding: 16px;
   box-shadow: var(--shadow-overlay);
 }
+.modal-card-sm { width: 460px; }
+.modal-card-md { width: 580px; }
+.modal-card-lg { width: 660px; }
 .modal-body-scroll {
   background: var(--surface-alt);
   color: var(--text-primary);
@@ -371,6 +375,7 @@ option {
   border-radius: 8px;
   font-size: 13px;
   line-height: 1.55;
+  overflow-x: auto;
   overflow-y: auto;
   flex: 1;
 }
@@ -609,6 +614,11 @@ option {
   font-size: 11px;
   font-weight: 700;
 }
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .snippet-table {
   width: 100%;
   border-collapse: collapse;
@@ -647,6 +657,9 @@ option {
   padding: 7px 10px;
   vertical-align: middle;
   color: var(--text-primary);
+}
+.snippet-table td:nth-child(6) {
+  min-width: 220px;
 }
 .emoji-chips {
   display: flex;
@@ -707,6 +720,133 @@ option {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+@media (max-width: 768px) {
+  body {
+    padding: 8px;
+    align-items: flex-start;
+  }
+  .overlay-card {
+    width: 100%;
+    min-height: calc(100vh - 16px);
+    padding: 12px;
+    gap: 8px;
+  }
+  .top-row {
+    gap: 6px;
+  }
+  .search-input {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .pills-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .pill {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .toolbar-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .snippet-list,
+  .snippet-list.view-list,
+  .snippet-list.view-grid {
+    max-height: none;
+  }
+  .snippet-list.view-grid {
+    grid-template-columns: 1fr;
+  }
+  .snippet-row {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .row-leading {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .snippet-main {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+  }
+  .snippet-text {
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .row-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+  }
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal {
+    padding: 8px;
+  }
+  .modal-card,
+  .modal-card-sm,
+  .modal-card-md,
+  .modal-card-lg {
+    width: 100%;
+    max-width: 96vw;
+    max-height: 92vh;
+    padding: 12px;
+  }
+  .footer-bar,
+  .links-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+@media (max-width: 520px) {
+  body {
+    padding: 4px;
+  }
+  .overlay-card {
+    padding: 10px;
+    border-radius: 10px;
+  }
+  .action-btn {
+    padding: 6px 8px;
+    font-size: 11.5px;
+  }
+  .row-actions {
+    justify-content: flex-start;
+  }
+  .row-actions .action-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-width: 64px;
+  }
+  .snippet-table th,
+  .snippet-table td {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  .toast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    text-align: center;
+  }
 }
 @media print {
   body {

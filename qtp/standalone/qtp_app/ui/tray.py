@@ -4,36 +4,53 @@ from __future__ import annotations
 
 from typing import Callable
 
+from PyQt6.QtCore import QRectF, Qt
 from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QMenu, QSystemTrayIcon, QWidget
 
-from qtp_app.ui.theme import ThemePalette, build_overlay_stylesheet, build_qpalette, get_asset_path
+from qtp_app.ui.icons import make_svg_icon
+from qtp_app.ui.theme import DARK_PALETTE, ThemePalette, build_overlay_stylesheet, build_qpalette, get_asset_path
+
+_TRAY_ICON_SIZES = (16, 22, 24, 32, 48, 64)
 
 
 def load_tray_icon() -> QIcon:
-    """icon.svg dosyasını 22/32 px boyutlarında yüksek netlikle QIcon olarak yükler."""
+    """icon.svg dosyasını çoklu çözünürlüklerde (16–64 px) yüksek netlikle QIcon olarak yükler."""
     svg_path = get_asset_path("icon.svg")
     if svg_path.is_file():
         icon = QIcon()
         renderer = QSvgRenderer(str(svg_path))
         if renderer.isValid():
-            for size in (22, 32, 48):
+            for size in _TRAY_ICON_SIZES:
                 pixmap = QPixmap(size, size)
-                pixmap.fill(0)
+                pixmap.fill(Qt.GlobalColor.transparent)
                 painter = QPainter(pixmap)
-                renderer.render(painter)
+                renderer.render(painter, QRectF(0.0, 0.0, float(size), float(size)))
                 painter.end()
                 icon.addPixmap(pixmap)
             return icon
     png_path = get_asset_path("icon-192.png")
     if png_path.is_file():
+        base_pm = QPixmap(str(png_path))
+        if not base_pm.isNull():
+            icon = QIcon()
+            for size in _TRAY_ICON_SIZES:
+                icon.addPixmap(
+                    base_pm.scaled(
+                        size,
+                        size,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation,
+                    )
+                )
+            return icon
         return QIcon(str(png_path))
     return QIcon()
 
 
 class QtpTrayIcon(QSystemTrayIcon):
-    """Tüm platformlarda aynı Türkçe menü etiketlerini sunan sistem tepsisi yöneticisi."""
+    """Tüm platformlarda aynı Türkçe menü etiketlerini ve tema uyumlu simgeleri sunan tepsi yöneticisi."""
 
     def __init__(
         self,
@@ -81,14 +98,21 @@ class QtpTrayIcon(QSystemTrayIcon):
         self.menu.addAction(self.act_quit)
 
         self.update_hotkeys_label(open_hotkey)
-        if palette is not None:
-            self.apply_palette(palette)
+        self.apply_palette(palette if palette is not None else DARK_PALETTE)
         self.setContextMenu(self.menu)
         self.activated.connect(self._handle_activated)
 
     def apply_palette(self, palette: ThemePalette) -> None:
         self.menu.setPalette(build_qpalette(palette))
         self.menu.setStyleSheet(build_overlay_stylesheet(palette))
+        icon_color = palette.menu_text
+        self.act_open.setIcon(make_svg_icon("paste", icon_color))
+        self.act_settings.setIcon(make_svg_icon("settings", icon_color))
+        self.act_reload.setIcon(make_svg_icon("reload", icon_color))
+        self.act_open_json.setIcon(make_svg_icon("code", icon_color))
+        self.act_backups.setIcon(make_svg_icon("backup", icon_color))
+        self.act_help.setIcon(make_svg_icon("help", icon_color))
+        self.act_quit.setIcon(make_svg_icon("quit", icon_color))
 
     def update_hotkeys_label(self, open_hotkey: str) -> None:
         hk = (open_hotkey or "").strip()
