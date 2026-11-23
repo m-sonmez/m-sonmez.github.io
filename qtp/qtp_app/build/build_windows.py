@@ -89,8 +89,18 @@ def build_windows() -> Path:
         )
 
     print("Otomatik doğrulama çalıştırılıyor: qtp.exe --selftest")
+    # dist/ içinde eski kalıntı çalışma dosyaları varsa temizle (yalnızca qtp.exe bırakılır)
+    for stale in list(DIST_DIR.iterdir()):
+        if stale.resolve() != target_exe.resolve():
+            if stale.is_dir():
+                shutil.rmtree(stale)
+            else:
+                stale.unlink()
+
+    dist_before = {p.name for p in DIST_DIR.iterdir()}
     proc = subprocess.run(
         [str(target_exe), "--selftest"],
+        cwd=str(DIST_DIR),
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -98,6 +108,10 @@ def build_windows() -> Path:
         check=True,
     )
     print(proc.stdout.strip())
+    dist_after = {p.name for p in DIST_DIR.iterdir()}
+    stray = sorted(dist_after - dist_before)
+    if stray:
+        raise RuntimeError(f"--selftest sonrası dist/ içinde yan etki dosyası oluştu: {stray}")
 
     digest = sha256_file(target_exe)
     write_build_info(target_exe, digest)

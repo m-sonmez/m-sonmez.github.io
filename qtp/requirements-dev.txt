@@ -5,4 +5,4 @@ pillow==10.4.0
 pytest==8.4.2
 pytest-qt==4.5.0
 pytest-cov==7.1.0
-keyboard==0.13.5
+keyboard==0.13.5; sys_platform == "win32"
