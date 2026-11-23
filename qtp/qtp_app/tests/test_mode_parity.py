@@ -76,6 +76,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "help": ["--help", "--json"],
             "selftest": ["--selftest", "--json"],
             "modes": ["--modes", "--json"],
+            "completion": ["--completion", "bash", "--json"],
             "list_categories": ["--list-categories", "--json"],
             "list_items": ["--list-items", "--json"],
             "search": ["--search", "Merhaba", "--json"],
@@ -90,10 +91,13 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "reload": ["--reload", "--json"],
             "get_setting": ["--get", "theme", "--json"],
             "set_setting": ["--set", "theme", "light", "--json"],
+            "check_hotkeys": ["--check-hotkeys", "--json"],
+            "hotkey_preset": ["--hotkey-preset", "recommended", "--json"],
+            "hotkey_modifiers": ["--hotkey-modifiers", "Win+Alt", "--json"],
         }
         parser = cli.build_arg_parser()
         args = parser.parse_args(argv_map[op_id])
-        code = cli.execute_cli(engine, args)
+        code = cli.execute_cli(engine, args, option_strings=cli.collect_option_strings(parser))
         out = capsys.readouterr().out
         parsed = json.loads(out)
         return code, parsed["message"], parsed
@@ -105,6 +109,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "help": ("", ""),
             "selftest": ("", ""),
             "modes": ("", ""),
+            "completion": ("bash", ""),
             "list_categories": ("", ""),
             "list_items": ("", ""),
             "search": ("Merhaba", ""),
@@ -119,6 +124,9 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "reload": ("", ""),
             "get_setting": ("theme", ""),
             "set_setting": ("theme", "light"),
+            "check_hotkeys": ("", ""),
+            "hotkey_preset": ("recommended", ""),
+            "hotkey_modifiers": ("Win+Alt", ""),
         }
         a1, a2 = arg_map[op_id]
         res = tui.execute_operation(op_id, a1, a2)
@@ -139,6 +147,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
                 "help": ("GET", "/api/help", None),
                 "selftest": ("GET", "/api/selftest", None),
                 "modes": ("GET", "/api/modes", None),
+                "completion": ("GET", "/api/completion?shell=bash", None),
                 "list_categories": ("GET", "/api/categories", None),
                 "list_items": ("GET", "/api/items", None),
                 "search": ("GET", "/api/search?q=Merhaba", None),
@@ -153,6 +162,9 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
                 "reload": ("POST", "/api/reload", {}),
                 "get_setting": ("GET", "/api/settings?key=theme", None),
                 "set_setting": ("POST", "/api/settings", {"key": "theme", "value": "light"}),
+                "check_hotkeys": ("GET", "/api/hotkeys/check", None),
+                "hotkey_preset": ("POST", "/api/hotkeys/preset", {"preset": "recommended"}),
+                "hotkey_modifiers": ("POST", "/api/hotkeys/modifiers", {"modifiers": "Win+Alt"}),
             }
             method, url, body = route_map[op_id]
             headers = {"Content-Type": "application/json"} if body is not None else {}
@@ -189,6 +201,8 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             res = engine.op_selftest(run_ui_smoke=False)
         elif op_id == "modes":
             res = engine.op_modes()
+        elif op_id == "completion":
+            res = engine.op_completion("bash")
         elif op_id == "list_categories":
             res = engine.op_list_categories()
         elif op_id == "list_items":
@@ -220,6 +234,12 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             res = engine.op_get_setting("theme")
         elif op_id == "set_setting":
             res = engine.op_set_setting("theme", "light")
+        elif op_id == "check_hotkeys":
+            res = engine.op_check_hotkeys()
+        elif op_id == "hotkey_preset":
+            res = engine.op_apply_hotkey_preset("recommended")
+        elif op_id == "hotkey_modifiers":
+            res = engine.op_apply_hotkey_modifiers("Win+Alt")
         else:
             raise AssertionError(f"Bilinmeyen GUI işlemi: {op_id}")
         return res.exit_code, res.message, res.to_api_dict()

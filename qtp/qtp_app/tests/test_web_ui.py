@@ -1,18 +1,21 @@
-"""Yerel Web sunucusu (--web), çevrimdışı HTML/CSS denetimi ve tema sabitleri eşitliği testi."""
+"""Yerel Web sunucusu (--web), çevrimdışı HTML/CSS, kısayol API ve canlı revizyon yenileme testi."""
 
 from __future__ import annotations
 
 import http.client
 import json
-import re
+import shutil
 import threading
+import time
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
 from qtp_app.core.engine import QtpEngine
+from qtp_app.core.ini_parser import build_qtp_ini, write_qtp_ini
 from qtp_app.ui.theme import ACCENT_CYAN, ACCENT_PURPLE, DARK_PALETTE, FOOTER_HINTS_TEXT
-from qtp_app.web import create_web_server
+from qtp_app.web import create_web_server, run_web_server
 
 
 def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
@@ -53,10 +56,74 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         assert api_idx["ok"] is True
         assert len(api_idx["data"]["routes"]) >= 18
 
+        conn.request("GET", "/api/completion?shell=powershell")
+        comp = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert comp["ok"] is True and "Register-ArgumentCompleter" in comp["data"]["script"]
+
+        conn.request("GET", "/api/hotkeys/check")
+        chk = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert chk["ok"] is True and chk["data"]["clean"] is True
+
+        conn.request(
+            "POST",
+            "/api/hotkeys/preset",
+            body=json.dumps({"preset": "function_keys"}),
+            headers={"Content-Type": "application/json"},
+        )
+        pr = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert pr["ok"] is True and pr["data"]["hotkeys"]["all"] == "Ctrl+Shift+F1"
+
+        conn.request(
+            "POST",
+            "/api/hotkeys/modifiers",
+            body=json.dumps({"modifiers": "Win+Ctrl"}),
+            headers={"Content-Type": "application/json"},
+        )
+        mr = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert mr["ok"] is True and mr["data"]["hotkeys"]["all"] == "Win+Ctrl+F1"
+
+        conn.request("GET", "/api/revision")
+        rev = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert rev["ok"] is True and rev["data"]["revision"] >= 2
+
         conn.request("GET", "/api/olmayan_rota")
-        r404 = conn.getresponse()
-        assert r404.status == 404
+        assert conn.getresponse().status == 404
     finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_web_live_hot_reload_from_external_file_changes(tmp_path: Path):
+    eng = QtpEngine(work_dir=tmp_path)
+    eng.settings["auto_reload_interval_ms"] = 100
+    srv = create_web_server(eng, host="127.0.0.1", port=0)
+    port = srv.server_address[1]
+    eng.start_watcher(debounce_ms=80)
+    th = threading.Thread(target=srv.serve_forever, daemon=True)
+    th.start()
+    try:
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        conn.request("GET", "/api/items")
+        before = json.loads(conn.getresponse().read().decode("utf-8"))["data"]["count"]
+        assert before >= 500
+
+        new_items = [
+            {"keys": "L-Win+A", "group": "Test", "label": f"L{i}", "text": f"Öğe {i}"}
+            for i in range(before + 1)
+        ]
+        write_qtp_ini(tmp_path / "QuickTextPaste.ini", build_qtp_ini(new_items), create_bak=False)
+
+        deadline = time.monotonic() + 3.0
+        after = before
+        while time.monotonic() < deadline:
+            conn.request("GET", "/api/items")
+            after = json.loads(conn.getresponse().read().decode("utf-8"))["data"]["count"]
+            if after == before + 1:
+                break
+            time.sleep(0.05)
+        assert after == before + 1
+    finally:
+        eng.stop_watcher()
         srv.shutdown()
         srv.server_close()
 
@@ -69,9 +136,6 @@ def test_web_server_refuses_non_loopback_host(tmp_path: Path):
 
 
 def test_web_server_backups_shutdown_and_error_status(tmp_path: Path):
-    from unittest import mock
-    from qtp_app.web import run_web_server
-
     eng = QtpEngine(work_dir=tmp_path)
     srv = create_web_server(eng, host="127.0.0.1", port=0)
     port = srv.server_address[1]
@@ -90,13 +154,12 @@ def test_web_server_backups_shutdown_and_error_status(tmp_path: Path):
         assert conn.getresponse().status == 400
 
         conn.request("POST", "/api/shutdown", body="{}")
-        r_shut = conn.getresponse()
-        assert r_shut.status == 200
+        assert conn.getresponse().status == 200
         th.join(timeout=3)
     finally:
         srv.server_close()
 
-    assert run_web_server(eng, port=0, open_browser=False, shutdown_after=0.1) == 0
+    assert run_web_server(eng, port=0, open_browser=False, shutdown_after=0.1, quiet=True) == 0
     with mock.patch("qtp_app.web.create_web_server", side_effect=OSError("Address already in use")):
         assert run_web_server(eng, port=8765) == 1
 
@@ -112,4 +175,3 @@ def test_web_server_backups_shutdown_and_error_status(tmp_path: Path):
          mock.patch("qtp_app.web.importlib.resources.files", side_effect=RuntimeError("frozen")):
         assert _read_web_asset("index.html") == b"<h1>frozen</h1>"
         assert _read_web_asset("theme.css") == b":root{}"
-

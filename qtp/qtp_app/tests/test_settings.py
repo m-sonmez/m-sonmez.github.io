@@ -1,21 +1,29 @@
-"""Taşınabilir ayar yönetimi (qtp_settings.json), salt-okunur geri dönüş ve dönen günlük testleri."""
+"""Taşınabilir ayar yönetimi (qtp_settings.json), göç, özel kısayollar, salt-okunur geri dönüş ve günlük testleri."""
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 from qtp_app.core.logging_setup import LOG_FILENAME, setup_logging
 from qtp_app.core.settings import (
+    DEFAULT_HOTKEYS,
     DEFAULT_SETTINGS,
+    LEGACY_DEFAULT_HOTKEYS,
     SETTINGS_FILENAME,
+    SettingValidationError,
     get_os_fallback_dir,
+    get_setting_value,
     load_settings,
     resolve_config_dir,
     resolve_data_path,
     save_settings,
+    set_setting_value,
 )
 
 
@@ -25,10 +33,55 @@ def test_first_run_creates_default_settings_in_portable_dir(tmp_path: Path):
     assert settings_path == tmp_path / SETTINGS_FILENAME
     assert settings_path.is_file()
     assert settings == DEFAULT_SETTINGS
+    assert settings["hotkeys"] == {
+        "all": "Win+Alt+Space",
+        "A": "Win+Alt+A",
+        "Z": "Win+Alt+Z",
+        "X": "Win+Alt+X",
+        "Q": "Win+Alt+Q",
+    }
+    assert settings["auto_reload"] is True
+    assert settings["auto_reload_interval_ms"] == 500
 
     loaded_raw = json.loads(settings_path.read_text(encoding="utf-8"))
     assert loaded_raw["theme"] == "dark"
     assert loaded_raw["backup_count"] == 15
+
+
+def test_legacy_default_hotkeys_migrated_safely_without_touching_custom(tmp_path: Path):
+    legacy_dir = tmp_path / "legacy"
+    legacy_dir.mkdir()
+    setup_logging(legacy_dir, level="info")
+    cfg_path = legacy_dir / SETTINGS_FILENAME
+    legacy_payload = copy.deepcopy(DEFAULT_SETTINGS)
+    legacy_payload["hotkeys"] = dict(LEGACY_DEFAULT_HOTKEYS)
+    cfg_path.write_text(json.dumps(legacy_payload, ensure_ascii=False), encoding="utf-8")
+
+    migrated, _, warn = load_settings(legacy_dir)
+    assert warn is None
+    assert migrated["hotkeys"] == DEFAULT_HOTKEYS
+    reloaded_disk = json.loads(cfg_path.read_text(encoding="utf-8"))
+    assert reloaded_disk["hotkeys"] == DEFAULT_HOTKEYS
+    assert "Win+Alt+*" in (legacy_dir / LOG_FILENAME).read_text(encoding="utf-8")
+
+    custom_dir = tmp_path / "custom"
+    custom_dir.mkdir()
+    custom_payload = copy.deepcopy(DEFAULT_SETTINGS)
+    custom_payload["hotkeys"] = {
+        "all": "Ctrl+Shift+Space",
+        "A": "Ctrl+Alt+A",
+        "Z": "Win+Z",
+        "X": "Win+X",
+        "Q": "Win+Q",
+        "W": "Ctrl+Shift+W",
+    }
+    custom_path = custom_dir / SETTINGS_FILENAME
+    custom_path.write_text(json.dumps(custom_payload, ensure_ascii=False), encoding="utf-8")
+
+    kept, _, _ = load_settings(custom_dir)
+    assert kept["hotkeys"]["A"] == "Ctrl+Alt+A"
+    assert kept["hotkeys"]["Z"] == "Win+Z"
+    assert kept["hotkeys"]["W"] == "Ctrl+Shift+W"
 
 
 def test_corrupt_settings_regenerates_defaults_and_logs_turkish_warning(tmp_path: Path):
@@ -77,10 +130,12 @@ def test_readonly_folder_selects_os_fallback_dir(tmp_path: Path, monkeypatch):
 
 
 def test_save_settings_and_logging_levels(tmp_path: Path):
-    custom = dict(DEFAULT_SETTINGS)
+    custom = copy.deepcopy(DEFAULT_SETTINGS)
     custom["theme"] = "light"
     custom["log_level"] = "debug"
     custom["backup_count"] = 25
+    custom["auto_reload"] = False
+    custom["auto_reload_interval_ms"] = 1200
     settings_path = tmp_path / SETTINGS_FILENAME
     save_settings(custom, settings_path)
 
@@ -89,6 +144,8 @@ def test_save_settings_and_logging_levels(tmp_path: Path):
     assert loaded["theme"] == "light"
     assert loaded["log_level"] == "debug"
     assert loaded["backup_count"] == 25
+    assert loaded["auto_reload"] is False
+    assert loaded["auto_reload_interval_ms"] == 1200
     assert resolve_data_path(loaded, tmp_path) == (tmp_path / "QuickTextPaste.ini").resolve()
 
     logger = setup_logging(tmp_path, level="warn")
@@ -105,15 +162,12 @@ def test_save_settings_and_logging_levels(tmp_path: Path):
     assert fallback_logger is not None
 
 
-def test_get_and_set_setting_value_validation():
-    import copy
-    import pytest
-    from qtp_app.core.settings import SettingValidationError, get_setting_value, set_setting_value
-
+def test_get_and_set_setting_value_validation_and_custom_slots():
     cfg = copy.deepcopy(DEFAULT_SETTINGS)
     assert get_setting_value(cfg, "theme") == "dark"
     assert get_setting_value(cfg, "web.port") == 8765
-    assert get_setting_value(cfg, "hotkeys.A") == "Win+A"
+    assert get_setting_value(cfg, "hotkeys.A") == "Win+Alt+A"
+    assert get_setting_value(cfg, "auto_reload") is True
 
     cfg = set_setting_value(cfg, "theme", "auto")
     cfg = set_setting_value(cfg, "paste_method", "shift_insert")
@@ -126,7 +180,10 @@ def test_get_and_set_setting_value_validation():
     cfg = set_setting_value(cfg, "language", "tr")
     cfg = set_setting_value(cfg, "window_size", "800x600")
     cfg = set_setting_value(cfg, "web.port", "9090")
-    cfg = set_setting_value(cfg, "hotkeys.A", "Ctrl+Alt+A")
+    cfg = set_setting_value(cfg, "auto_reload", "false")
+    cfg = set_setting_value(cfg, "auto_reload_interval_ms", "750")
+    cfg = set_setting_value(cfg, "hotkeys.A", "alt+ctrl+a")
+    cfg = set_setting_value(cfg, "hotkeys.W", "shift+ctrl+w")
 
     assert cfg["theme"] == "auto"
     assert cfg["paste_method"] == "shift_insert"
@@ -137,7 +194,15 @@ def test_get_and_set_setting_value_validation():
     assert cfg["backup_count"] == 20
     assert cfg["window_size"] == [800, 600]
     assert cfg["web"]["port"] == 9090
+    assert cfg["auto_reload"] is False
+    assert cfg["auto_reload_interval_ms"] == 750
     assert cfg["hotkeys"]["A"] == "Ctrl+Alt+A"
+    assert cfg["hotkeys"]["W"] == "Ctrl+Shift+W"
+
+    cfg = set_setting_value(cfg, "hotkeys.A", "")
+    assert cfg["hotkeys"]["A"] == ""
+    cfg = set_setting_value(cfg, "hotkeys.W", "")
+    assert "W" not in cfg["hotkeys"]
 
     for bad_key in ("", "olmayan", "web.olmayan", "hotkeys.olmayan"):
         with pytest.raises(SettingValidationError):
@@ -149,6 +214,10 @@ def test_get_and_set_setting_value_validation():
         ("log_level", "verbose"),
         ("last_category", "B"),
         ("enter_after_paste", "belki"),
+        ("auto_reload", "belki"),
+        ("auto_reload_interval_ms", "abc"),
+        ("auto_reload_interval_ms", "50"),
+        ("auto_reload_interval_ms", "20000"),
         ("backup_count", "abc"),
         ("backup_count", "999"),
         ("data_path", "   "),
@@ -158,11 +227,11 @@ def test_get_and_set_setting_value_validation():
         ("window_size", "100,100"),
         ("web.port", "abc"),
         ("web.port", "70000"),
-        ("hotkeys.A", ""),
-        ("hotkeys.BAD", "Win+B"),
+        ("hotkeys.A", "Ctrl+Alt"),
+        ("hotkeys.A", "BilinmeyenTus+A"),
+        ("hotkeys.", "Ctrl+A"),
+        ("hotkeys.bad.slot", "Ctrl+A"),
         ("bilinmeyen", "1"),
     ):
         with pytest.raises(SettingValidationError):
             set_setting_value(cfg, k, v)
-
-
