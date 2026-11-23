@@ -20,10 +20,12 @@ from typing import Any, Callable, Iterator
 from qtp_app import __build_date__, __display_name__, __version__
 from qtp_app.core.hotkeys import (
     HOTKEY_PRESETS,
+    HOTKEY_PRESET_LABELS,
     apply_modifier_combo,
     detect_hotkey_conflicts,
     resolve_preset_name,
 )
+from qtp_app.core.operations import OPERATIONS
 from qtp_app.core.ini_parser import (
     DEFAULT_TERMINATOR,
     IniParseError,
@@ -46,7 +48,12 @@ from qtp_app.core.json_store import (
     save_state,
     write_full_backup_file,
 )
-from qtp_app.core.logging_setup import get_logger, setup_logging
+from qtp_app.core.logging_setup import (
+    attach_stderr_handler,
+    get_logger,
+    setup_ephemeral_logging,
+    setup_logging,
+)
 from qtp_app.core.paster import copy_to_clipboard, paste_into_active_app
 from qtp_app.core.settings import (
     DEFAULT_HOTKEYS,
@@ -366,6 +373,74 @@ def format_ini_preview(item: dict[str, Any], index: int) -> str:
     )
 
 
+def build_cli_help_text(*, verbose: bool = False) -> str:
+    """Tüm modlar (--cli, --web, --tui, --gui) ve Yardım pencereleri için kanonsal Türkçe yardım metni."""
+    op_lines = []
+    for op in OPERATIONS:
+        flag_disp = f"{op.cli_flag} {op.args_spec}".strip()
+        op_lines.append(f"  {flag_disp:<38} {op.label_tr}")
+    base = (
+        f"{__display_name__} v{__version__} — Komut Satırı Kullanımı\n\n"
+        "Kullanım:\n"
+        "  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]\n\n"
+        "Çalışma Modları:\n"
+        "  --mode {gui,tui,cli,web}               Çalışma modunu seçer (kısayol: --gui, --tui, --cli, --web).\n"
+        "  --work-dir DIZIN                       Veri ve ayarlar için çalışma dizini belirler.\n"
+        "  --json                                 Salt-okunur CLI çıktılarını UTF-8 JSON biçiminde basar.\n"
+        "  -v, --verbose / -vv                    Ayrıntılı yardım ve stderr tanılama günlüğü (-vv hata ayıklama).\n"
+        "  -q, --quiet                            Yalnızca veri veya hata çıktılarını basar; bilgi başlıklarını gizler.\n\n"
+        "İşlemler (Operation Registry):\n"
+        + "\n".join(op_lines)
+        + "\n\nEk Seçenekler:\n"
+        "  --category KOD                         --gui/--tui/--web ve --list-items/--search kategori filtresi (ALL/A/Z/X/Q)\n"
+        "  --query METIN                          --gui/--tui/--web ve --list-items için arama süzgeci\n"
+        "  --merge / --replace                    --import-ini ve --restore için birleştir/değiştir modu\n"
+        "  --keep N                               --backup için tutulacak maksimum yedek sayısı\n"
+        "  --port N                               --web için 127.0.0.1 bağlantı noktası (varsayılan: 8765)\n"
+        "  --open-browser                         --web başlatıldığında tarayıcıyı açar\n"
+        "  --shutdown-after SN                    --web sunucusunu belirtilen saniye sonra zarifçe kapatır\n"
+    )
+    if not verbose:
+        return base
+
+    preset_lines = [
+        f"  {pid:<16} {', '.join(f'{k}={v}' for k, v in pmap.items())}  [{HOTKEY_PRESET_LABELS.get(pid, pid)}]"
+        for pid, pmap in HOTKEY_PRESETS.items()
+    ]
+    setting_keys = []
+    for k, v in DEFAULT_SETTINGS.items():
+        if isinstance(v, dict):
+            for sub in v:
+                setting_keys.append(f"{k}.{sub}")
+        else:
+            setting_keys.append(k)
+    setting_keys.extend(["hotkeys.all", "hotkeys.A", "hotkeys.Z", "hotkeys.X", "hotkeys.Q", "hotkeys.<özel>"])
+    return (
+        base
+        + "\nAyrıntılı Başvuru (--verbose):\n"
+        + "\nKısayol Profilleri (--hotkey-preset):\n"
+        + "\n".join(preset_lines)
+        + "\n\nGeçerli Ayar Anahtarları (--get / --set):\n  "
+        + ", ".join(setting_keys)
+        + "\n\nÇıkış Kodları:\n"
+        "  0  Başarılı\n"
+        "  1  Genel G/Ç, derleme veya Web port hatası\n"
+        "  2  Geçersiz CLI argümanı, ayar anahtarı/değeri veya bulunamayan kayıt/kabuk\n"
+        "  3  Pano erişimi başarısız (başsız grafik oturumu yok)\n"
+        "  4  Tuş simülasyonu başarısız (pano kopyalandı, Wayland/pencere odak kısıtı)\n"
+        + "\nTaşınabilir ve Salt-Okunur Yapılandırma Yolları:\n"
+        "  Taşınabilir : <ikili_klasörü>/{qtp_settings.json, qtp.log, backups/, QuickTextPaste.ini, data.json}\n"
+        "  Windows     : %APPDATA%\\QTP\\\n"
+        "  Linux/BSD   : $XDG_CONFIG_HOME/qtp/ (varsayılan ~/.config/qtp/)\n"
+        "  macOS       : ~/Library/Application Support/QTP/\n"
+        + "\nKabuk Otomatik Tamamlama (--completion) Kurulumu:\n"
+        "  PowerShell  : qtp.exe --completion powershell | Out-String | Invoke-Expression\n"
+        "  Bash        : eval \"$(./qtp.bin --completion bash)\"\n"
+        "  Zsh         : eval \"$(./qtp.bin --completion zsh)\"\n"
+        "  Fish        : ./qtp.bin --completion fish | source\n"
+    )
+
+
 def _get_git_short_sha() -> str | None:
     try:
         root = Path(__file__).resolve().parent.parent.parent
@@ -392,16 +467,22 @@ class QtpEngine:
         *,
         seed_defaults: bool = True,
         ephemeral: bool = False,
+        verbose: int = 0,
+        quiet: bool = False,
         clipboard_fn: Callable[[str], bool] | None = None,
         paste_fn: Callable[..., Any] | None = None,
     ):
         requested_dir = Path(work_dir).resolve() if work_dir else get_app_dir()
         self.ephemeral = bool(ephemeral)
+        self.verbose: int = max(0, int(verbose))
+        self.quiet: bool = bool(quiet) and self.verbose <= 0
+        self._diag_emitted: bool = False
         if self.ephemeral:
             self.config_dir = requested_dir
             self.portable = True
             self.work_dir = requested_dir
             self.first_run = False
+            setup_ephemeral_logging(verbose=self.verbose)
             self.logger = get_logger("engine")
             self.settings = copy.deepcopy(DEFAULT_SETTINGS)
             self.settings_path = self.config_dir / SETTINGS_FILENAME
@@ -418,11 +499,15 @@ class QtpEngine:
             self.work_dir = requested_dir if is_dir_writable(requested_dir) else self.config_dir
             self.first_run = not (self.config_dir / SETTINGS_FILENAME).is_file()
 
-            setup_logging(self.config_dir, level="info")
+            setup_logging(self.config_dir, level="info", verbose=self.verbose)
             self.logger = get_logger("engine")
 
             self.settings, self.settings_path, self.settings_warning = load_settings(self.config_dir)
-            setup_logging(self.config_dir, level=str(self.settings.get("log_level", "info")))
+            setup_logging(
+                self.config_dir,
+                level=str(self.settings.get("log_level", "info")),
+                verbose=self.verbose,
+            )
 
         self._matcher = FuzzyMatcher()
         self._clipboard_fn = clipboard_fn
@@ -439,6 +524,43 @@ class QtpEngine:
 
         self._seed_defaults_if_empty(seed_defaults and not self.ephemeral)
         self.reload_data()
+
+    def configure_verbosity(self, verbose: int = 0, quiet: bool = False) -> None:
+        """Çalışma zamanında ayrıntı (-v/-vv) ve sessiz (-q) akışlarını birleştirir."""
+        self.verbose = max(self.verbose, max(0, int(verbose)))
+        self.quiet = bool(quiet) and self.verbose <= 0
+        if self.verbose >= 1:
+            if self.ephemeral:
+                setup_ephemeral_logging(verbose=self.verbose)
+            else:
+                attach_stderr_handler(verbose=self.verbose)
+
+    def emit_startup_diagnostics(self, mode: str, started_at: float | None = None) -> None:
+        """Tüm 4 mod için tek tip [INFO] / [DEBUG] başlangıç tanılama satırlarını stderr ve günlüğe yazar."""
+        if self.verbose <= 0 or self._diag_emitted:
+            return
+        self._diag_emitted = True
+        self.logger.info(
+            "mod=%s çalışma_dizini=%s yapılandırma=%s taşınabilir=%s kayıt=%d",
+            mode,
+            self.work_dir,
+            self.config_dir,
+            self.portable,
+            len(self.items),
+        )
+        if self.verbose >= 2:
+            conflicts = self.op_check_hotkeys().data["conflicts"]
+            dur_ms = int((time.monotonic() - started_at) * 1000) if started_at is not None else 0
+            self.logger.debug(
+                "ini_yolu=%s ayarlar_yolu=%s tema=%s otomatik_yenileme=%s aralik_ms=%s kısayol_uyarısı=%d süre_ms=%d",
+                self.ini_path,
+                self.settings_path,
+                self.settings.get("theme"),
+                self.settings.get("auto_reload"),
+                self.settings.get("auto_reload_interval_ms"),
+                len(conflicts),
+                dur_ms,
+            )
 
     @contextlib.contextmanager
     def _suppress_write(self, *paths: str | Path) -> Iterator[None]:
@@ -486,12 +608,15 @@ class QtpEngine:
             self._watcher.update_paths(self._watcher_targets())
             self._watcher.set_interval(interval_ms)
         self._watcher.start()
+        self.logger.info("Canlı dosya izleyici başlatıldı (aralık=%d ms).", interval_ms)
+        self.logger.debug("İzlenen yollar: %s", {k: str(v) for k, v in self._watcher_targets().items()})
         return self._watcher
 
     def stop_watcher(self) -> None:
         if self._watcher is not None:
             self._watcher.stop()
             self._watcher = None
+            self.logger.info("Canlı dosya izleyici durduruldu.")
 
     def _read_json_with_retry(self, path: Path) -> dict[str, Any]:
         last_exc: Exception | None = None
@@ -524,6 +649,7 @@ class QtpEngine:
 
     def _handle_watched_changes(self, changes: list[FileChange]) -> None:
         with self._reload_lock:
+            self.logger.debug("Dosya değişikliği algılandı: %s", [c.kind for c in changes])
             kinds = {c.kind: c for c in changes}
             ev = ReloadEvent(item_count=len(self.items))
             reload_data_kind: str | None = None
@@ -547,7 +673,11 @@ class QtpEngine:
                         )
                         self.settings = new_settings
                         if ev.log_level_changed:
-                            setup_logging(self.config_dir, level=str(new_settings.get("log_level", "info")))
+                            setup_logging(
+                                self.config_dir,
+                                level=str(new_settings.get("log_level", "info")),
+                                verbose=self.verbose,
+                            )
                         if ev.data_path_changed:
                             self.ini_path = resolve_data_path(self.settings, self.work_dir)
                             if self._watcher is not None:
@@ -630,7 +760,11 @@ class QtpEngine:
         with self._suppress_write(self.settings_path):
             saved = save_settings(new_settings, self.settings_path)
         self.settings = _sanitize_settings(new_settings)
-        setup_logging(self.config_dir, level=str(self.settings.get("log_level", "info")))
+        setup_logging(
+            self.config_dir,
+            level=str(self.settings.get("log_level", "info")),
+            verbose=self.verbose,
+        )
         if self.settings.get("data_path") != old_data:
             self.ini_path = resolve_data_path(self.settings, self.work_dir)
         if self._watcher is not None:
@@ -742,15 +876,21 @@ class QtpEngine:
             data={"shell": target, "script": script},
         )
 
-    def op_help(self, help_text: str = "") -> OperationResult:
+    def op_help(self, help_text: str = "", *, verbose: bool = False) -> OperationResult:
+        usage = build_cli_help_text(verbose=False)
+        usage_verbose = build_cli_help_text(verbose=True)
+        chosen_usage = help_text or (usage_verbose if verbose else usage)
         return OperationResult(
             ok=True,
             exit_code=0,
-            message=help_text or read_doc_text("KULLANIM.md"),
+            message=chosen_usage,
             data={
-                "usage": help_text,
+                "usage": usage,
+                "usage_verbose": usage_verbose,
                 "kullanim": read_doc_text("KULLANIM.md"),
                 "kisayollar": read_doc_text("KISAYOLLAR.md"),
+                "sss": read_doc_text("SSS.md"),
+                "verbose": bool(verbose),
             },
         )
 

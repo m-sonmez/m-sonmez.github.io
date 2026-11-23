@@ -15,9 +15,11 @@ from pathlib import Path
 from typing import Any
 
 from qtp_app.core.engine import OperationResult, QtpEngine
+from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.operations import OPERATIONS
 
 ALLOWED_LOOPBACK_HOSTS = ("127.0.0.1", "localhost")
+web_logger = get_logger("web")
 
 _EXIT_TO_HTTP_STATUS = {
     0: HTTPStatus.OK,
@@ -55,8 +57,17 @@ class QtpWebServer(ThreadingHTTPServer):
 
     allow_reuse_address = True
 
-    def __init__(self, server_address: tuple[str, int], engine: QtpEngine):
+    def __init__(
+        self,
+        server_address: tuple[str, int],
+        engine: QtpEngine,
+        *,
+        initial_category: str = "ALL",
+        initial_query: str = "",
+    ):
         self.engine = engine
+        self.initial_category = (initial_category or "ALL").strip().upper() or "ALL"
+        self.initial_query = str(initial_query or "")
         self.shutdown_event = threading.Event()
         super().__init__(server_address, QtpWebRequestHandler)
 
@@ -68,8 +79,13 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
     def engine(self) -> QtpEngine:
         return self.server.engine
 
+    def log_request(self, code: int | str = "-", size: int | str = "-") -> None:
+        method = getattr(self, "command", "-")
+        req_path = getattr(self, "path", "-")
+        web_logger.info("%s %s -> %s", method, req_path, code)
+
     def log_message(self, format: str, *args: Any) -> None:
-        self.engine.logger.debug("Web %s - %s", self.address_string(), format % args)
+        web_logger.debug("Web %s - %s", self.address_string(), format % args)
 
     def _send_bytes(self, content: bytes, content_type: str, status: int = 200) -> None:
         self.send_response(status)
@@ -118,7 +134,8 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             self._send_result(self.engine.op_version())
             return
         if path == "/api/help":
-            self._send_result(self.engine.op_help())
+            v_param = qs.get("verbose", ["0"])[0].strip().lower()
+            self._send_result(self.engine.op_help(verbose=v_param in ("1", "true", "yes", "evet")))
             return
         if path == "/api/selftest":
             self._send_result(self.engine.op_selftest(run_ui_smoke=False))
@@ -167,6 +184,8 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
                     "theme": self.engine.settings.get("theme"),
                     "hotkeys": self.engine.settings.get("hotkeys"),
                     "item_count": len(self.engine.items),
+                    "initial_category": self.server.initial_category,
+                    "initial_query": self.server.initial_query,
                 },
             )
             self._send_result(res)
@@ -242,14 +261,26 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         self.server.shutdown()
 
 
-def create_web_server(engine: QtpEngine, *, host: str = "127.0.0.1", port: int | None = None) -> QtpWebServer:
+def create_web_server(
+    engine: QtpEngine,
+    *,
+    host: str = "127.0.0.1",
+    port: int | None = None,
+    initial_category: str = "ALL",
+    initial_query: str = "",
+) -> QtpWebServer:
     """Yalnızca 127.0.0.1/localhost üzerine bağlanan yerel web sunucusu oluşturur."""
     if host not in ALLOWED_LOOPBACK_HOSTS:
         raise ValueError(
             f"Güvenlik kuralı: Web sunucusu yalnızca 127.0.0.1 üzerinde çalışabilir ('{host}' reddedildi)."
         )
     chosen_port = int(port if port is not None else engine.settings.get("web", {}).get("port", 8765))
-    return QtpWebServer((host, chosen_port), engine)
+    return QtpWebServer(
+        (host, chosen_port),
+        engine,
+        initial_category=initial_category,
+        initial_query=initial_query,
+    )
 
 
 def run_web_server(
@@ -259,24 +290,44 @@ def run_web_server(
     open_browser: bool = False,
     shutdown_after: float | None = None,
     quiet: bool = False,
+    verbose: int = 0,
+    initial_category: str = "ALL",
+    initial_query: str = "",
 ) -> int:
-    """Yerel web sunucusunu başlatır; canlı dosya izleyici ve zarif kapanış sağlar."""
+    """Yerel web sunucusunu başlatır; canlı dosya izleyici, ayrıntı günlüğü ve zarif kapanış sağlar."""
+    eff_verbose = max(int(verbose or 0), int(getattr(engine, "verbose", 0) or 0))
+    eff_quiet = bool(quiet) and eff_verbose <= 0
+    if eff_verbose > 0:
+        engine.configure_verbosity(eff_verbose, eff_quiet)
+        engine.emit_startup_diagnostics("web")
+
     try:
-        srv = create_web_server(engine, host="127.0.0.1", port=port)
+        srv = create_web_server(
+            engine,
+            host="127.0.0.1",
+            port=port,
+            initial_category=initial_category,
+            initial_query=initial_query,
+        )
     except OSError as exc:
         err = f"HATA: Web sunucusu başlatılamadı (port kullanımda olabilir): {exc}"
         print(err, file=sys.stderr)
-        engine.logger.error(err)
+        web_logger.error(err)
         return 1
 
     actual_port = srv.server_address[1]
     url = f"http://127.0.0.1:{actual_port}/"
-    if not quiet:
+    if not eff_quiet:
         print(f"QTP Web Modu çalışıyor: {url} (Kapatmak için Ctrl+C veya POST /api/shutdown)")
         sys.stdout.flush()
-    engine.logger.info("Web sunucusu başlatıldı: %s", url)
+    web_logger.info(
+        "Web sunucusu başlatıldı: %s (kategori=%s, sorgu=%r)",
+        url,
+        srv.initial_category,
+        srv.initial_query,
+    )
 
-    engine.start_watcher()
+    engine.start_watcher(on_reload=lambda ev: web_logger.info("Web canlı yenileme: rev=%d kayıt=%d", engine.revision, ev.item_count))
 
     if open_browser and (
         sys.platform in ("win32", "darwin")
@@ -300,5 +351,5 @@ def run_web_server(
     finally:
         engine.stop_watcher()
         srv.server_close()
-        engine.logger.info("Web sunucusu kapatıldı.")
+        web_logger.info("Web sunucusu kapatıldı.")
     return 0

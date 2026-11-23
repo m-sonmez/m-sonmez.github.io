@@ -431,6 +431,7 @@ class OverlayWindow(QWidget):
         window_size: tuple[int, int] = (WINDOW_WIDTH, WINDOW_HEIGHT),
         last_category: str = "ALL",
         last_category_by_hotkey: dict[str, str] | None = None,
+        initial_query: str = "",
         ini_path: str = "QuickTextPaste.ini",
         on_paste: Callable[[dict[str, Any], Any], None] | None = None,
         on_copy: Callable[[dict[str, Any]], None] | None = None,
@@ -473,6 +474,8 @@ class OverlayWindow(QWidget):
         self._build_ui()
         self._apply_theme()
         self._bind_shortcuts()
+        if initial_query:
+            self.search_input.setText(str(initial_query))
         self.set_items(self._items)
 
     def _detect_os_dark(self) -> bool:
@@ -795,6 +798,8 @@ class OverlayWindow(QWidget):
         *,
         category: str | None = None,
         hotkey_key: str | None = None,
+        query: str | None = None,
+        force_category: bool = False,
         animate: bool = True,
         previous_app: Any = None,
     ) -> None:
@@ -804,13 +809,16 @@ class OverlayWindow(QWidget):
         trig = (hotkey_key or category or "all").strip()
         self._active_hotkey_trigger = trig
         if category is not None:
-            chosen = self._last_cat_by_hotkey.get(trig, category)
+            chosen = category if force_category else self._last_cat_by_hotkey.get(trig, category)
             self.set_category(chosen, remember=False)
         else:
             self.set_category(self._last_cat_by_hotkey.get(trig, self._active_category), remember=False)
 
         target_pos = self.center_on_active_screen()
-        self.search_input.clear()
+        if query is not None:
+            self.search_input.setText(str(query))
+        else:
+            self.search_input.clear()
 
         if self._anim_group is not None:
             self._anim_group.stop()
@@ -857,6 +865,7 @@ class OverlayWindow(QWidget):
             self._anim_group.stop()
         if not self.isVisible():
             return
+        logger.debug("Katman gizlendi.")
         if not animate:
             self.hide()
             return

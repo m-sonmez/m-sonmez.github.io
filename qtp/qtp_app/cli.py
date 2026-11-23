@@ -11,14 +11,37 @@ import time
 from pathlib import Path
 from typing import Any
 
-from qtp_app import __display_name__, __version__
-from qtp_app.core.engine import QtpEngine
-from qtp_app.core.hotkeys import HOTKEY_PRESETS, HOTKEY_PRESET_LABELS
+from qtp_app.core.engine import QtpEngine, build_cli_help_text
 from qtp_app.core.operations import OPERATIONS
-from qtp_app.core.settings import DEFAULT_SETTINGS
 
 TH32CS_SNAPPROCESS = 0x00000002
 _CONSOLE_ATTACHED_EXISTING = False
+
+_CLI_ACTION_FLAGS = frozenset(
+    {
+        "--version",
+        "--selftest",
+        "--modes",
+        "--completion",
+        "--list-categories",
+        "--list-items",
+        "--search",
+        "--show-ini",
+        "--copy",
+        "--paste",
+        "--export-ini",
+        "--import-ini",
+        "--export-backup",
+        "--restore",
+        "--backup",
+        "--reload",
+        "--get",
+        "--set",
+        "--check-hotkeys",
+        "--hotkey-preset",
+        "--hotkey-modifiers",
+    }
+)
 
 
 class PROCESSENTRY32W(ctypes.Structure):
@@ -98,16 +121,19 @@ def _iter_windows_ancestor_pids(kernel32: Any, max_depth: int = 6) -> list[int]:
     return ancestors
 
 
-def attach_windows_console_if_needed(mode: str) -> bool:
+def attach_windows_console_if_needed(mode: str, *, allow_gui_console: bool = False) -> bool:
     """
     Windows tek-dosya (console=False) ikilisinde konsol akışları None ise ata süreç zincirini
     yürüyerek PowerShell/cmd/Terminal konsoluna (AttachConsole) veya TUI için yeni konsola bağlanır.
-    Boru hatlarını (pipe) kesinlikle bozmaz.
+    Sessiz/çift-tık GUI açılışında konsol penceresi açmaz ve boru hatlarını bozmaz.
     """
     global _CONSOLE_ATTACHED_EXISTING
     _CONSOLE_ATTACHED_EXISTING = False
 
-    if sys.platform != "win32" or mode not in ("cli", "tui"):
+    if sys.platform != "win32":
+        return False
+    allowed = mode in ("cli", "tui", "web") or (mode == "gui" and allow_gui_console)
+    if not allowed:
         return False
     if sys.stdout is not None and sys.stderr is not None:
         return False
@@ -159,71 +185,65 @@ def attach_windows_console_if_needed(mode: str) -> bool:
         return False
 
 
-def format_help_text(*, verbose: bool = False) -> str:
-    op_lines = []
-    for op in OPERATIONS:
-        flag_disp = f"{op.cli_flag} {op.args_spec}".strip()
-        op_lines.append(f"  {flag_disp:<38} {op.label_tr}")
-    base = (
-        f"{__display_name__} v{__version__} — Komut Satırı Kullanımı\n\n"
-        "Kullanım:\n"
-        "  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]\n\n"
-        "Çalışma Modları:\n"
-        "  --mode {gui,tui,cli,web}               Çalışma modunu seçer (kısayol: --gui, --tui, --cli, --web).\n"
-        "  --work-dir DIZIN                       Veri ve ayarlar için çalışma dizini belirler.\n"
-        "  --json                                 Salt-okunur CLI çıktılarını UTF-8 JSON biçiminde basar.\n"
-        "  -v, --verbose / -vv                    Ayrıntılı yardım ve stderr tanılama günlüğü (-vv hata ayıklama).\n"
-        "  -q, --quiet                            Yalnızca veri veya hata çıktılarını basar; bilgi başlıklarını gizler.\n\n"
-        "İşlemler (Operation Registry):\n"
-        + "\n".join(op_lines)
-        + "\n\nEk Seçenekler:\n"
-        "  --category KOD                         --list-items / --search için kategori filtresi (ALL/A/Z/X/Q)\n"
-        "  --query METIN                          --list-items için arama süzgeci\n"
-        "  --merge / --replace                    --import-ini ve --restore için birleştir/değiştir modu\n"
-        "  --keep N                               --backup için tutulacak maksimum yedek sayısı\n"
-        "  --port N                               --web için 127.0.0.1 bağlantı noktası (varsayılan: 8765)\n"
-        "  --open-browser                         --web başlatıldığında tarayıcıyı açar\n"
-        "  --shutdown-after SN                    --web sunucusunu belirtilen saniye sonra zarifçe kapatır\n"
-    )
-    if not verbose:
-        return base
+def _detect_pre_mode(raw_args: list[str]) -> str | None:
+    mode: str | None = None
+    i = 0
+    while i < len(raw_args):
+        tok = raw_args[i]
+        if tok in ("--gui", "--tui", "--cli", "--web"):
+            mode = tok[2:]
+        elif tok == "--mode" and i + 1 < len(raw_args):
+            cand = raw_args[i + 1].strip().lower()
+            if cand in ("gui", "tui", "cli", "web"):
+                mode = cand
+            i += 1
+        elif tok.startswith("--mode="):
+            cand = tok.split("=", 1)[1].strip().lower()
+            if cand in ("gui", "tui", "cli", "web"):
+                mode = cand
+        i += 1
+    return mode
 
-    preset_lines = [
-        f"  {pid:<16} {', '.join(f'{k}={v}' for k, v in pmap.items())}  [{HOTKEY_PRESET_LABELS.get(pid, pid)}]"
-        for pid, pmap in HOTKEY_PRESETS.items()
-    ]
-    setting_keys = []
-    for k, v in DEFAULT_SETTINGS.items():
-        if isinstance(v, dict):
-            for sub in v:
-                setting_keys.append(f"{k}.{sub}")
-        else:
-            setting_keys.append(k)
-    setting_keys.extend(["hotkeys.all", "hotkeys.A", "hotkeys.Z", "hotkeys.X", "hotkeys.Q", "hotkeys.<özel>"])
-    return (
-        base
-        + "\nAyrıntılı Başvuru (--verbose):\n"
-        + "\nKısayol Profilleri (--hotkey-preset):\n"
-        + "\n".join(preset_lines)
-        + "\n\nGeçerli Ayar Anahtarları (--get / --set):\n  "
-        + ", ".join(setting_keys)
-        + "\n\nÇıkış Kodları:\n"
-        "  0  Başarılı\n"
-        "  1  Genel G/Ç, derleme veya Web port hatası\n"
-        "  2  Geçersiz CLI argümanı, ayar anahtarı/değeri veya bulunamayan kayıt/kabuk\n"
-        "  3  Pano erişimi başarısız (başsız grafik oturumu yok)\n"
-        "  4  Tuş simülasyonu başarısız (pano kopyalandı, Wayland/pencere odak kısıtı)\n"
-        + "\nTaşınabilir ve Salt-Okunur Yapılandırma Yolları:\n"
-        "  Taşınabilir : <ikili_klasörü>/{qtp_settings.json, qtp.log, backups/, QuickTextPaste.ini, data.json}\n"
-        "  Windows     : %APPDATA%\\QTP\\\n"
-        "  Linux/BSD   : $XDG_CONFIG_HOME/qtp/ (varsayılan ~/.config/qtp/)\n"
-        "  macOS       : ~/Library/Application Support/QTP/\n"
-        + "\nKabuk Otomatik Tamamlama (--completion) Kurulumu:\n"
-        "  PowerShell  : qtp.exe --completion powershell | Out-String | Invoke-Expression\n"
-        "  Bash        : eval \"$(./qtp.bin --completion bash)\"\n"
-        "  Zsh         : eval \"$(./qtp.bin --completion zsh)\"\n"
-        "  Fish        : ./qtp.bin --completion fish | source\n"
+
+def _has_explicit_flag(raw_args: list[str], flag_name: str) -> bool:
+    prefix = flag_name + "="
+    return any(tok == flag_name or tok.startswith(prefix) for tok in raw_args)
+
+
+def _attach_windows_console_before_argparse(raw_args: list[str]) -> bool:
+    """
+    argparse öncesinde Windows üst konsolunu bağlar:
+    --help, --verbose, --cli, --tui, --web için ebeveyn konsoluna bağlanır;
+    boş argümanlı çift tık veya sessiz/düz --gui açılışında konsol bağlamaz veya açmaz.
+    """
+    if not raw_args or (sys.stdout is not None and sys.stderr is not None):
+        return False
+
+    wants_help = any(tok in ("-h", "--help") for tok in raw_args)
+    wants_verbose = any(
+        tok == "--verbose" or (tok.startswith("-") and not tok.startswith("--") and "v" in tok[1:])
+        for tok in raw_args
     )
+    wants_cli_action = any(tok.split("=", 1)[0] in _CLI_ACTION_FLAGS for tok in raw_args)
+    pre_mode = _detect_pre_mode(raw_args)
+
+    if wants_help:
+        return attach_windows_console_if_needed("cli")
+    if pre_mode == "tui":
+        return attach_windows_console_if_needed("tui")
+    if pre_mode == "web":
+        return attach_windows_console_if_needed("web")
+    if pre_mode == "gui":
+        if wants_verbose or wants_cli_action:
+            return attach_windows_console_if_needed("gui", allow_gui_console=True)
+        return False
+    if pre_mode == "cli" or wants_verbose or wants_cli_action:
+        return attach_windows_console_if_needed("cli")
+    return False
+
+
+def format_help_text(*, verbose: bool = False) -> str:
+    return build_cli_help_text(verbose=verbose)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -360,37 +380,23 @@ def _emit_verbose_diagnostics(
 ) -> None:
     if verbose_level <= 0:
         return
-    print(
-        f"[INFO] mod={mode} çalışma_dizini={engine.work_dir} yapılandırma={engine.config_dir} taşınabilir={engine.portable} kayıt={len(engine.items)}",
-        file=sys.stderr,
-    )
-    if verbose_level >= 2:
-        conflicts = engine.op_check_hotkeys().data["conflicts"]
-        dur_ms = int((time.monotonic() - started_at) * 1000) if started_at is not None else 0
-        print(
-            f"[DEBUG] ini_yolu={engine.ini_path} ayarlar_yolu={engine.settings_path} tema={engine.settings.get('theme')} otomatik_yenileme={engine.settings.get('auto_reload')} aralik_ms={engine.settings.get('auto_reload_interval_ms')} kısayol_uyarısı={len(conflicts)} süre_ms={dur_ms}",
-            file=sys.stderr,
-        )
+    engine.configure_verbosity(verbose_level, False)
+    engine.emit_startup_diagnostics(mode, started_at)
 
 
-def execute_cli(
+def _dispatch_cli_action(
     engine: QtpEngine,
     args: argparse.Namespace,
     *,
-    option_strings: list[str] | None = None,
+    as_json: bool,
+    verbose: int,
+    quiet: bool,
+    option_strings: list[str] | None,
 ) -> int:
-    as_json = bool(args.as_json)
-    verbose = int(getattr(args, "verbose", 0) or 0)
-    quiet = bool(getattr(args, "quiet", False))
-    started_at = time.monotonic()
-
-    if verbose > 0 and not quiet:
-        _emit_verbose_diagnostics(engine, verbose, "cli", started_at)
-
     if args.show_help:
         txt = format_help_text(verbose=verbose > 0)
         if as_json:
-            return _print_result(engine.op_help(txt), as_json=True)
+            return _print_result(engine.op_help(txt, verbose=verbose > 0), as_json=True)
         print(txt)
         return 0
 
@@ -398,7 +404,12 @@ def execute_cli(
         return _print_result(engine.op_version(), as_json=as_json)
 
     if args.selftest:
-        return _print_result(engine.op_selftest(run_ui_smoke=True), as_json=as_json, quiet=quiet)
+        return _print_result(
+            engine.op_selftest(run_ui_smoke=True),
+            as_json=as_json,
+            quiet=quiet,
+            suppress_ok_if_quiet=True,
+        )
 
     if args.modes:
         return _print_result(engine.op_modes(), as_json=as_json)
@@ -503,64 +514,147 @@ def execute_cli(
             print(f"UYARI: {res.warning}", file=sys.stderr)
         return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
 
+    if str(getattr(args, "category", "ALL")).strip().upper() != "ALL" or str(getattr(args, "query", "")):
+        return _print_result(
+            engine.op_list_items(category=args.category, query=args.query),
+            as_json=as_json,
+            raw_formatter=lambda r: "\n".join(
+                f"{it['raw_key']} [{it['keys']}] {it['text']}" for it in r.data["items"]
+            ),
+        )
+
     print(format_help_text(verbose=verbose > 0))
     return 0
+
+
+def execute_cli(
+    engine: QtpEngine,
+    args: argparse.Namespace,
+    *,
+    option_strings: list[str] | None = None,
+    verbose: int | None = None,
+    quiet: bool | None = None,
+) -> int:
+    as_json = bool(args.as_json)
+    eff_verbose = int(verbose if verbose is not None else (getattr(args, "verbose", 0) or 0))
+    raw_quiet = bool(quiet if quiet is not None else getattr(args, "quiet", False))
+    eff_quiet = raw_quiet and eff_verbose <= 0
+    started_at = time.monotonic()
+
+    if eff_verbose > 0:
+        engine.configure_verbosity(eff_verbose, eff_quiet)
+        engine.emit_startup_diagnostics("cli", started_at)
+
+    rc = _dispatch_cli_action(
+        engine,
+        args,
+        as_json=as_json,
+        verbose=eff_verbose,
+        quiet=eff_quiet,
+        option_strings=option_strings,
+    )
+    if eff_verbose > 0:
+        dur_ms = int((time.monotonic() - started_at) * 1000)
+        engine.logger.info("CLI işlemi tamamlandı (çıkış=%d, süre_ms=%d).", rc, dur_ms)
+    return rc
 
 
 def run(argv: list[str] | None = None) -> int:
     started_at = time.monotonic()
     raw_args = list(sys.argv[1:] if argv is None else argv)
-    if raw_args and (sys.stdout is None or sys.stderr is None):
-        pre_mode = "tui" if "--tui" in raw_args else "cli"
-        attach_windows_console_if_needed(pre_mode)
+    _attach_windows_console_before_argparse(raw_args)
     configure_stdio()
 
     try:
         parser = build_arg_parser()
         args, unknown = parser.parse_known_args(argv)
-        mode, mode_err = determine_mode(args)
-        attach_windows_console_if_needed(mode or "cli")
-        configure_stdio()
+        verbose = int(getattr(args, "verbose", 0) or 0)
+        raw_quiet = bool(getattr(args, "quiet", False))
+        effective_quiet = raw_quiet and verbose <= 0
+
+        if unknown or args.show_help or verbose > 0:
+            attach_windows_console_if_needed("cli")
+            configure_stdio()
 
         if unknown:
             print(f"HATA: Bilinmeyen komut satırı seçeneği: {' '.join(unknown)}", file=sys.stderr)
-            print(format_help_text(verbose=bool(args.verbose)), file=sys.stderr)
+            print(format_help_text(verbose=verbose > 0), file=sys.stderr)
             return 2
 
+        mode, mode_err = determine_mode(args)
         if mode_err:
+            attach_windows_console_if_needed("cli")
+            configure_stdio()
             print(mode_err, file=sys.stderr)
             return 2
 
+        if mode in ("cli", "tui", "web") or (mode == "gui" and verbose > 0):
+            attach_mode = "cli" if args.show_help else (mode or "cli")
+            attach_windows_console_if_needed(attach_mode, allow_gui_console=verbose > 0)
+            configure_stdio()
+
         work_dir = Path(args.work_dir).resolve() if args.work_dir else None
 
-        if mode == "cli" and args.show_help and not args.as_json:
-            print(format_help_text(verbose=bool(args.verbose)))
+        if args.show_help and not args.as_json:
+            print(format_help_text(verbose=verbose > 0))
             return 0
 
         ephemeral = bool(
-            mode == "cli"
-            and (
-                args.show_help
-                or args.version
-                or args.modes
-                or args.selftest
-                or args.completion is not None
-                or args.check_hotkeys
+            args.show_help
+            or (
+                mode == "cli"
+                and (
+                    args.version
+                    or args.modes
+                    or args.selftest
+                    or args.completion is not None
+                    or args.check_hotkeys
+                )
             )
         )
-        engine = QtpEngine(work_dir=work_dir, seed_defaults=not ephemeral, ephemeral=ephemeral)
+        engine = QtpEngine(
+            work_dir=work_dir,
+            seed_defaults=not ephemeral,
+            ephemeral=ephemeral,
+            verbose=verbose,
+            quiet=effective_quiet,
+        )
         opt_strings = collect_option_strings(parser)
 
-        if mode == "cli":
-            return execute_cli(engine, args, option_strings=opt_strings)
+        if args.show_help:
+            return execute_cli(
+                engine,
+                args,
+                option_strings=opt_strings,
+                verbose=verbose,
+                quiet=effective_quiet,
+            )
 
-        if int(args.verbose or 0) > 0 and not bool(args.quiet):
-            _emit_verbose_diagnostics(engine, int(args.verbose), mode or "gui", started_at)
+        if mode == "cli":
+            return execute_cli(
+                engine,
+                args,
+                option_strings=opt_strings,
+                verbose=verbose,
+                quiet=effective_quiet,
+            )
+
+        if verbose > 0:
+            engine.emit_startup_diagnostics(mode or "gui", started_at)
+
+        explicit_category = str(args.category).strip().upper() if _has_explicit_flag(raw_args, "--category") else None
+        initial_query = str(getattr(args, "query", "") or "")
 
         if mode == "tui":
             from qtp_app.tui import run_tui
 
-            return run_tui(engine)
+            return run_tui(
+                engine,
+                verbose=verbose,
+                quiet=effective_quiet,
+                initial_category=explicit_category,
+                initial_query=initial_query,
+            )
 
         if mode == "web":
             from qtp_app.web import run_web_server
@@ -570,12 +664,21 @@ def run(argv: list[str] | None = None) -> int:
                 port=args.port,
                 open_browser=bool(args.open_browser),
                 shutdown_after=args.shutdown_after,
-                quiet=bool(args.quiet),
+                quiet=effective_quiet,
+                verbose=verbose,
+                initial_category=explicit_category or "ALL",
+                initial_query=initial_query,
             )
 
         from qtp_app.main import launch_gui
 
-        return launch_gui(engine)
+        return launch_gui(
+            engine,
+            verbose=verbose,
+            quiet=effective_quiet,
+            initial_category=explicit_category,
+            initial_query=initial_query,
+        )
     finally:
         for stream in (sys.stdout, sys.stderr):
             try:

@@ -33,6 +33,13 @@
         <strong id="modalTitle">Bilgi</strong>
         <button class="action-btn" id="modalClose">Kapat (Esc)</button>
       </div>
+      <div id="helpTabs" class="pills-row" style="display:none;margin-bottom:10px;">
+        <button class="pill active" data-section="all">Tümü</button>
+        <button class="pill" data-section="usage_verbose">CLI &amp; Parametreler</button>
+        <button class="pill" data-section="kullanim">Kullanım</button>
+        <button class="pill" data-section="kisayollar">Kısayollar</button>
+        <button class="pill" data-section="sss">SSS</button>
+      </div>
       <div id="hotkeyControls" style="display:none;margin-bottom:10px;gap:6px;flex-wrap:wrap;align-items:center;">
         <select id="presetSelect" class="action-btn">
           <option value="recommended">Önerilen (Win+Alt)</option>
@@ -59,7 +66,7 @@
   </div>
 
   <script>
-    const state = { category: 'ALL', query: '', items: [], categories: [], selected: 0, revision: 0 };
+    const state = { category: 'ALL', query: '', items: [], categories: [], selected: 0, revision: 0, helpData: null, helpSection: 'all' };
     const els = {
       search: document.getElementById('searchInput'),
       pills: document.getElementById('categoryPills'),
@@ -70,6 +77,7 @@
       modalTitle: document.getElementById('modalTitle'),
       modalBody: document.getElementById('modalBody'),
       hotkeyControls: document.getElementById('hotkeyControls'),
+      helpTabs: document.getElementById('helpTabs'),
     };
 
     function showToast(msg) {
@@ -110,6 +118,7 @@
     async function showHotkeysModal() {
       const r = await api('/api/hotkeys/check');
       els.modalTitle.textContent = 'Global Kısayollar ve Çakışma Denetimi';
+      els.helpTabs.style.display = 'none';
       els.hotkeyControls.style.display = 'flex';
       const lines = Object.entries(r.data.hotkeys).map(([k, v]) => `${k}: ${v}`);
       const ckeys = Object.keys(r.data.conflicts || {});
@@ -122,6 +131,39 @@
         lines.push('', 'Çakışma algılanmadı ✔');
       }
       els.modalBody.textContent = lines.join('\n');
+      els.modal.style.display = 'flex';
+    }
+
+    function renderHelpSection(sectionKey) {
+      if (!state.helpData) return;
+      state.helpSection = sectionKey;
+      for (const btn of els.helpTabs.querySelectorAll('[data-section]')) {
+        btn.classList.toggle('active', btn.dataset.section === sectionKey);
+      }
+      if (sectionKey === 'all') {
+        const sep = '\n\n' + '='.repeat(60) + '\n\n';
+        els.modalBody.textContent = [
+          '=== CLI & Parametreler ===\n\n' + (state.helpData.usage_verbose || state.helpData.usage || ''),
+          '=== Kullanım ===\n\n' + (state.helpData.kullanim || ''),
+          '=== Kısayollar ===\n\n' + (state.helpData.kisayollar || ''),
+          '=== Sorun Giderme (SSS) ===\n\n' + (state.helpData.sss || ''),
+        ].join(sep);
+      } else {
+        els.modalBody.textContent = state.helpData[sectionKey] || '';
+      }
+    }
+
+    async function showHelpModal(sectionKey = 'all') {
+      if (!state.helpData) {
+        const r = await api('/api/help?verbose=1');
+        if (r.ok && r.data) {
+          state.helpData = r.data;
+        }
+      }
+      els.hotkeyControls.style.display = 'none';
+      els.helpTabs.style.display = 'flex';
+      els.modalTitle.textContent = 'QTP Türkçe Yardım (F1)';
+      renderHelpSection(sectionKey);
       els.modal.style.display = 'flex';
     }
 
@@ -191,11 +233,7 @@
     document.addEventListener('keydown', async (e) => {
       if (e.key === 'F1') {
         e.preventDefault();
-        const r = await api('/api/help');
-        els.hotkeyControls.style.display = 'none';
-        els.modalTitle.textContent = 'Türkçe Yardım (F1)';
-        els.modalBody.textContent = r.data.kullanim;
-        els.modal.style.display = 'flex';
+        await showHelpModal('all');
       } else if (e.key === 'Escape') {
         if (els.modal.style.display === 'flex') {
           els.modal.style.display = 'none';
@@ -230,7 +268,10 @@
     });
 
     document.getElementById('modalClose').onclick = () => { els.modal.style.display = 'none'; };
-    document.getElementById('btnHelp').onclick = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1' }));
+    document.getElementById('btnHelp').onclick = () => showHelpModal('all');
+    for (const btn of els.helpTabs.querySelectorAll('[data-section]')) {
+      btn.onclick = () => renderHelpSection(btn.dataset.section);
+    }
     document.getElementById('btnHotkeys').onclick = showHotkeysModal;
     document.getElementById('btnApplyPreset').onclick = async () => {
       const preset = document.getElementById('presetSelect').value;
@@ -271,8 +312,26 @@
       }
     }, 1000);
 
-    loadCategories();
-    loadItems();
+    async function initWebUi() {
+      try {
+        const r = await api('/api/revision');
+        if (r.ok && r.data) {
+          state.revision = r.data.revision || 0;
+          if (r.data.initial_category) {
+            state.category = String(r.data.initial_category).toUpperCase();
+          }
+          if (r.data.initial_query) {
+            state.query = String(r.data.initial_query);
+            els.search.value = state.query;
+          }
+        }
+      } catch (_err) {
+      }
+      await loadCategories();
+      await loadItems();
+    }
+
+    initWebUi();
   </script>
 </body>
 </html>

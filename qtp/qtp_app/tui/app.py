@@ -10,8 +10,11 @@ from typing import Any, Callable, Iterable, TextIO
 
 from qtp_app import __version__
 from qtp_app.core.engine import CATEGORY_DEFINITIONS, OperationResult, QtpEngine, format_hotkeys_toast
+from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.operations import OPERATIONS
 from qtp_app.core.watcher import ReloadEvent
+
+tui_logger = get_logger("tui")
 
 TUI_FOOTER_HINTS = (
     "↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış"
@@ -32,24 +35,33 @@ class QtpTui:
         *,
         term_size: tuple[int, int] = (100, 28),
         use_color: bool = True,
+        initial_category: str | None = None,
+        initial_query: str = "",
+        quiet: bool = False,
     ):
         self.engine = engine
         self.term_size = term_size
         self.use_color = use_color
-        self.category: str = str(engine.settings.get("last_category", "ALL")).upper()
+        self.quiet = bool(quiet) and int(getattr(engine, "verbose", 0) or 0) <= 0
+        raw_cat = initial_category if initial_category is not None else engine.settings.get("last_category", "ALL")
+        self.category: str = str(raw_cat).strip().upper()
         if self.category not in _CATEGORY_CODES:
             self.category = "ALL"
-        self.query: str = ""
+        self.query: str = str(initial_query or "")
         self.search_mode: bool = False
         self.selected_idx: int = 0
         self.scroll_offset: int = 0
         self.modal_title: str = ""
         self.modal_lines: list[str] = []
-        self.status_message: str = (
-            format_hotkeys_toast(engine.settings.get("hotkeys"))
-            if engine.first_run
-            else f"QTP hazır ({len(engine.items)} kayıt)"
-        )
+        self.modal_scroll: int = 0
+        if self.quiet:
+            self.status_message = f"{len(engine.items)} kayıt"
+        else:
+            self.status_message = (
+                format_hotkeys_toast(engine.settings.get("hotkeys"))
+                if engine.first_run
+                else f"QTP hazır ({len(engine.items)} kayıt)"
+            )
         self.last_result: OperationResult = OperationResult(
             ok=True,
             exit_code=0,
@@ -73,6 +85,11 @@ class QtpTui:
                 self.status_message = f"Hazır cevaplar otomatik yenilendi ({len(self.engine.items)} kayıt) ✔"
             elif event.settings_changed:
                 self.status_message = "Ayarlar ve kısayollar otomatik güncellendi ✔"
+            tui_logger.info(
+                "TUI canlı yenileme: öğe=%d uyarı=%s",
+                len(self.engine.items),
+                event.warning or "yok",
+            )
 
     def _refresh_view_data(self) -> None:
         cat_res = self.engine.op_list_categories()
@@ -120,8 +137,16 @@ class QtpTui:
 
             body_rows = max(5, height - 6)
             if self.modal_lines:
-                lines.append(f"=== {self.modal_title} (Kapatmak için Esc/q) ===")
-                for mline in self.modal_lines[: body_rows - 1]:
+                vis_rows = max(1, body_rows - 1)
+                max_scroll = max(0, len(self.modal_lines) - vis_rows)
+                self.modal_scroll = max(0, min(self.modal_scroll, max_scroll))
+                if max_scroll > 0:
+                    lines.append(
+                        f"=== {self.modal_title} [{self.modal_scroll + 1}/{len(self.modal_lines)}] (↑↓ Kaydır · Kapatmak için Esc/q) ==="
+                    )
+                else:
+                    lines.append(f"=== {self.modal_title} (Kapatmak için Esc/q) ===")
+                for mline in self.modal_lines[self.modal_scroll : self.modal_scroll + vis_rows]:
                     lines.append(mline[:inner_w])
                 while len(lines) < 3 + body_rows:
                     lines.append("")
@@ -180,21 +205,33 @@ class QtpTui:
         self.status_message = " ".join(str(raw_msg).splitlines()).strip()
         if not res.ok:
             self.exit_code = res.exit_code
+        tui_logger.debug("TUI işlem sonucu: ok=%s exit=%d mesaj=%s", res.ok, res.exit_code, self.status_message)
         return res
 
     def execute_operation(self, op_id: str, arg: str = "", extra: str = "") -> OperationResult:
         """Belirtilen operations.py kimliğini engine üzerinden doğrudan çalıştırır."""
         target = arg or self.current_raw_key()
+        tui_logger.info("TUI işlemi yürütülüyor: op=%s hedef=%r", op_id, target)
         if op_id == "version":
             res = self.engine.op_version()
             self.modal_title = "Sürüm Bilgisi"
             self.modal_lines = [res.message]
+            self.modal_scroll = 0
             return self._record_result(res)
         if op_id == "help":
-            res = self.engine.op_help()
+            res = self.engine.op_help(verbose=True)
             self.modal_title = "QTP Türkçe Yardım (F1)"
-            docs = (res.data["kullanim"] + "\n\n" + res.data["kisayollar"]).splitlines()
-            self.modal_lines = docs[:200]
+            sep = "\n\n" + ("=" * 60) + "\n\n"
+            docs_txt = sep.join(
+                (
+                    "=== CLI & Parametreler (--verbose --help) ===\n\n" + res.data["usage_verbose"],
+                    "=== Kullanım Kılavuzu ===\n\n" + res.data["kullanim"],
+                    "=== Kısayollar ===\n\n" + res.data["kisayollar"],
+                    "=== Sorun Giderme (SSS) ===\n\n" + res.data["sss"],
+                )
+            )
+            self.modal_lines = docs_txt.splitlines()
+            self.modal_scroll = 0
             return self._record_result(res, status_override="Kullanım yardımı görüntülendi.")
         if op_id == "selftest":
             return self._record_result(self.engine.op_selftest(run_ui_smoke=False))
@@ -202,12 +239,14 @@ class QtpTui:
             res = self.engine.op_modes()
             self.modal_title = "Desteklenen Modlar"
             self.modal_lines = [res.message]
+            self.modal_scroll = 0
             return self._record_result(res)
         if op_id == "completion":
             res = self.engine.op_completion(arg or "auto")
             if res.ok:
                 self.modal_title = f"Kabuk Tamamlama ({res.data['shell']})"
                 self.modal_lines = str(res.data["script"]).splitlines()
+                self.modal_scroll = 0
             return self._record_result(res)
         if op_id == "list_categories":
             return self._record_result(self.engine.op_list_categories())
@@ -278,9 +317,22 @@ class QtpTui:
     def handle_key(self, key: str) -> None:
         """Tek tuş basımını işler; ESC/q modalı kapatır veya uygulamadan çıkar."""
         if self.modal_lines:
-            if key in ("ESC", "q", "ENTER"):
+            body_rows = max(5, self.term_size[1] - 6)
+            vis_rows = max(1, body_rows - 1)
+            page_step = max(1, vis_rows - 1)
+            max_scroll = max(0, len(self.modal_lines) - vis_rows)
+            if key == "UP":
+                self.modal_scroll = max(0, self.modal_scroll - 1)
+            elif key == "DOWN":
+                self.modal_scroll = min(max_scroll, self.modal_scroll + 1)
+            elif key == "PGUP":
+                self.modal_scroll = max(0, self.modal_scroll - page_step)
+            elif key == "PGDN":
+                self.modal_scroll = min(max_scroll, self.modal_scroll + page_step)
+            elif key in ("ESC", "q", "ENTER"):
                 self.modal_lines = []
                 self.modal_title = ""
+                self.modal_scroll = 0
             return
 
         if self.search_mode:
@@ -369,10 +421,14 @@ class QtpTui:
             prev_modal = bool(self.modal_lines)
             prev_search = self.search_mode
             self.handle_key(k)
-            if (not prev_modal and self.modal_lines) or (
-                not prev_modal
-                and (not prev_search or k == "ENTER")
-                and k in ("c", "ENTER", "F1", "e", "b", "B", "x", "r", "s", "k", "C", "P", "V", "T", "M")
+            if (
+                (not prev_modal and self.modal_lines)
+                or (prev_modal and self.modal_lines and k in ("UP", "DOWN", "PGUP", "PGDN"))
+                or (
+                    not prev_modal
+                    and (not prev_search or k == "ENTER")
+                    and k in ("c", "ENTER", "F1", "e", "b", "B", "x", "r", "s", "k", "C", "P", "V", "T", "M")
+                )
             ):
                 self._capture_script_frame()
         self._capture_script_frame()
@@ -526,23 +582,42 @@ def run_tui(
     *,
     scripted_keys: Iterable[str] | None = None,
     out_stream: TextIO | None = None,
+    verbose: int = 0,
+    quiet: bool = False,
+    initial_category: str | None = None,
+    initial_query: str = "",
 ) -> int:
     """Etkileşimli veya betikli TUI döngüsünü çalıştırıp çıkış kodunu döndürür."""
+    eff_verbose = max(int(verbose or 0), int(getattr(engine, "verbose", 0) or 0))
+    eff_quiet = bool(quiet) and eff_verbose <= 0
+    if eff_verbose > 0:
+        engine.configure_verbosity(eff_verbose, eff_quiet)
+        engine.emit_startup_diagnostics("tui")
+
     out = out_stream if out_stream is not None else sys.stdout
-    tui = QtpTui(engine)
+    tui = QtpTui(
+        engine,
+        initial_category=initial_category,
+        initial_query=initial_query,
+        quiet=eff_quiet,
+    )
 
     if scripted_keys is not None:
+        tui_logger.info("TUI başlatıldı (arka_uç=scripted, kategori=%s, sorgu=%r).", tui.category, tui.query)
         tui.run_scripted(scripted_keys)
         out.write("\n---\n".join(tui.recorded_frames) + "\n")
         out.flush()
+        tui_logger.info("TUI sonlandırıldı (arka_uç=scripted, çıkış=%d).", tui.exit_code)
         return tui.exit_code
 
     if sys.stdin is not None and not sys.stdin.isatty():
+        tui_logger.info("TUI başlatıldı (arka_uç=pipe, kategori=%s, sorgu=%r).", tui.category, tui.query)
         raw_in = sys.stdin.read()
         keys = _parse_stream_keys(raw_in) if raw_in else ["ESC"]
         tui.run_scripted(keys)
         out.write("\n---\n".join(tui.recorded_frames) + "\n")
         out.flush()
+        tui_logger.info("TUI sonlandırıldı (arka_uç=pipe, çıkış=%d).", tui.exit_code)
         return tui.exit_code
 
     engine.start_watcher(on_reload=tui.apply_reload_event)
@@ -550,6 +625,7 @@ def run_tui(
         if sys.platform == "win32":
             from qtp_app.tui._win_console import WinConsoleBackend
 
+            tui_logger.info("TUI başlatıldı (arka_uç=WinConsoleBackend, kategori=%s, sorgu=%r).", tui.category, tui.query)
             backend = WinConsoleBackend(out)
             backend.enter()
             tui.use_color = backend.supports_ansi
@@ -563,11 +639,13 @@ def run_tui(
                         tui.handle_key(key)
             finally:
                 backend.leave()
+            tui_logger.info("TUI sonlandırıldı (arka_uç=WinConsoleBackend, çıkış=%d).", tui.exit_code)
             return tui.exit_code
 
         try:
             import curses
         except ImportError:
+            tui_logger.info("TUI başlatıldı (arka_uç=termios, kategori=%s, sorgu=%r).", tui.category, tui.query)
             return _run_posix_termios_fallback(tui, out)
 
         def _curses_loop(stdscr: Any) -> None:
@@ -603,9 +681,12 @@ def run_tui(
                     tui.handle_key(ch)
 
         try:
+            tui_logger.info("TUI başlatıldı (arka_uç=curses, kategori=%s, sorgu=%r).", tui.category, tui.query)
             curses.wrapper(_curses_loop)
         except Exception:
+            tui_logger.info("TUI curses geri dönüşü -> arka_uç=termios.")
             return _run_posix_termios_fallback(tui, out)
+        tui_logger.info("TUI sonlandırıldı (arka_uç=curses, çıkış=%d).", tui.exit_code)
         return tui.exit_code
     finally:
         engine.stop_watcher()

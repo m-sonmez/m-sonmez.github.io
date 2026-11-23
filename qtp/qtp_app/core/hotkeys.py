@@ -838,4 +838,9 @@ class HotkeyManager:
                 self._conflicts.setdefault(cat, f"Global kısayol kaydedilemedi: {cat}")
 
         self._status = results
+        logger.debug(
+            "Global kısayol kaydı tamamlandı: %d etkin, %d uyarı.",
+            sum(1 for ok in results.values() if ok),
+            len(self._conflicts),
+        )
         return results

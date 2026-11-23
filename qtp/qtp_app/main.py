@@ -107,6 +107,12 @@ def apply_reload_event_gui(
     register_hotkeys_fn: Callable[[], dict[str, str]],
 ) -> None:
     """Canlı dosya değişikliği olayını GUI katmanı, tepsi ve global kısayollara uygular."""
+    get_logger("main").info(
+        "GUI canlı yenileme: öğe_değişti=%s ayar_değişti=%s kısayol_değişti=%s",
+        event.items_changed,
+        event.settings_changed,
+        event.hotkeys_changed,
+    )
     if event.warning:
         overlay.show_toast(event.warning, duration_ms=3200)
         return
@@ -144,8 +150,21 @@ def apply_reload_event_gui(
         overlay.show_toast("Ayarlar otomatik yenilendi ✔", duration_ms=2000)
 
 
-def launch_gui(engine: QtpEngine) -> int:
+def launch_gui(
+    engine: QtpEngine,
+    *,
+    verbose: int = 0,
+    quiet: bool = False,
+    initial_category: str | None = None,
+    initial_query: str = "",
+) -> int:
     """GUI adaptörü: Overlay + Tray + Global Kısayollar, tüm işlemleri QtpEngine üzerinden yürütür."""
+    eff_verbose = max(int(verbose or 0), int(getattr(engine, "verbose", 0) or 0))
+    eff_quiet = bool(quiet) and eff_verbose <= 0
+    if eff_verbose > 0:
+        engine.configure_verbosity(eff_verbose, eff_quiet)
+        engine.emit_startup_diagnostics("gui")
+
     logger = get_logger("main")
     try:
         from PyQt6.QtCore import QObject, Qt, QUrl, pyqtSignal
@@ -202,16 +221,26 @@ def launch_gui(engine: QtpEngine) -> int:
         target = str(item.get("raw_key") or item.get("text") or "")
         return engine.op_copy(target)
 
+    effective_cat = (initial_category or str(engine.settings.get("last_category", "ALL"))).strip().upper() or "ALL"
     ws = engine.settings.get("window_size") or [720, 520]
     overlay = OverlayWindow(
         engine.items,
         theme=str(engine.settings.get("theme", "dark")),
         window_size=(int(ws[0]), int(ws[1])),
-        last_category=str(engine.settings.get("last_category", "ALL")),
+        last_category=effective_cat,
         last_category_by_hotkey=engine.settings.get("last_category_by_hotkey") or {},
+        initial_query=initial_query,
         ini_path=str(engine.ini_path),
         on_paste=handle_paste,
         on_copy=handle_copy,
+    )
+    logger.info(
+        "GUI başlatılıyor (platform=%s, tema=%s, yazı_tipi=%s, ilk_kategori=%s, ilk_sorgu=%r).",
+        app.platformName(),
+        engine.settings.get("theme", "dark"),
+        overlay._font_family,
+        overlay.active_category,
+        initial_query,
     )
 
     def persist_window_size(w: int, h: int) -> None:
@@ -426,9 +455,15 @@ def launch_gui(engine: QtpEngine) -> int:
 
     toast_msg = format_hotkeys_toast(engine.settings.get("hotkeys"))
     if not engine.settings.get("start_minimized", False):
-        overlay.show_overlay(category="ALL", hotkey_key="all")
-        overlay.show_toast(toast_msg, duration_ms=2600)
-    elif engine.first_run and tray.isVisible():
+        overlay.show_overlay(
+            category=initial_category or "ALL",
+            hotkey_key="all",
+            query=initial_query if initial_query else "",
+            force_category=bool(initial_category),
+        )
+        if not eff_quiet:
+            overlay.show_toast(toast_msg, duration_ms=2600)
+    elif engine.first_run and tray.isVisible() and not eff_quiet:
         tray.showMessage("QTP", toast_msg)
 
     if engine.settings_warning:

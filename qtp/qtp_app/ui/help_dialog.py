@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from qtp_app.core.engine import get_bundled_docs_dir, read_doc_text
+from qtp_app.core.engine import build_cli_help_text, get_bundled_docs_dir, read_doc_text
 from qtp_app.ui.theme import (
     ACCENT_CYAN,
     ThemePalette,
@@ -180,6 +180,16 @@ class HelpDialog(QDialog):
             browser.verticalScrollBar().setValue(0)
             self.tabs.addTab(browser, title)
             self.browsers.append(browser)
+
+        cli_help_text = build_cli_help_text(verbose=True)
+        cli_browser = QTextBrowser(self)
+        cli_browser.setOpenExternalLinks(False)
+        cli_browser.setFont(create_app_font(self._font_family, 13))
+        cli_md = f"# QTP CLI & Parametreler (--verbose --help)\n\n```\n{cli_help_text}\n```\n"
+        cli_browser.setHtml(markdown_to_html(cli_md, palette))
+        cli_browser.verticalScrollBar().setValue(0)
+        self.tabs.addTab(cli_browser, "CLI & Parametreler")
+        self.browsers.append(cli_browser)
 
         if 0 <= initial_tab < self.tabs.count():
             self.tabs.setCurrentIndex(initial_tab)
