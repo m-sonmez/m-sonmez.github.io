@@ -25,7 +25,7 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def write_build_info(target: Path, digest: str) -> None:
+def write_build_info(target: Path, digest: str, *, target_os_note: str = "Windows 10 / 11 (x64)") -> None:
     size_bytes = target.stat().st_size
     size_mb = size_bytes / (1024 * 1024)
     stamp = _dt.datetime.now().isoformat(timespec="seconds")
@@ -33,6 +33,7 @@ def write_build_info(target: Path, digest: str) -> None:
         "QTP Derleme Bilgisi (BUILD_INFO)\n"
         "===================================\n"
         f"Ana Bilgisayar (Host OS): {platform.system()} {platform.release()} ({sys.platform})\n"
+        f"Hedef Sistem: {target_os_note}\n"
         f"Mimari: {platform.machine()}\n"
         f"Python: {platform.python_version()}\n"
         f"Üretilen İkili Dosya: dist/{target.name}\n"
@@ -40,7 +41,8 @@ def write_build_info(target: Path, digest: str) -> None:
         f"SHA-256: {digest}\n"
         f"Derleme Zamanı: {stamp}\n\n"
         "Çapraz Derleme Notu:\n"
-        "- Linux ve macOS için `dist/qtp.bin` ikili dosyası Windows üzerinde derlenmez (Wine kullanılmaz).\n"
+        "- Linux, BSD ve macOS için `dist/qtp.bin` ikili dosyası Windows üzerinde derlenmez (Wine kullanılmaz).\n"
+        "- Windows 7 / 8 / 8.1 x64 için `python -m qtp_app.build.build_windows_legacy` (Python 3.8 x64 + `requirements-win7.txt`) kullanılmalıdır.\n"
         "- `qtp.bin` üretimi için ilgili yerel işletim sisteminde `python -m qtp_app.build.build_unix` veya `make build` çalıştırılmalıdır.\n"
     )
     (DIST_DIR / "BUILD_INFO.txt").write_text(info, encoding="utf-8")
@@ -89,7 +91,6 @@ def build_windows() -> Path:
         )
 
     print("Otomatik doğrulama çalıştırılıyor: qtp.exe --selftest")
-    # dist/ içinde eski kalıntı çalışma dosyaları varsa temizle (yalnızca qtp.exe bırakılır)
     for stale in list(DIST_DIR.iterdir()):
         if stale.resolve() != target_exe.resolve():
             if stale.is_dir():

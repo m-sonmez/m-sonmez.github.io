@@ -89,6 +89,9 @@ jobs:
           - alpine:3.20
 
     steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
       - name: Linux ikilisini indir
         uses: actions/download-artifact@v4
         with:
@@ -98,7 +101,7 @@ jobs:
       - name: Temiz konteynerde PATH sıyırılmış taşınabilirlik testi
         run: |
           chmod +x downloaded/qtp.bin
-          docker run --rm -v "$PWD/downloaded/qtp.bin:/tmp/qtp.bin:ro" "${{ matrix.image }}" sh -c '
+          docker run --rm -v "$PWD/downloaded/qtp.bin:/tmp/qtp.bin:ro" -v "$PWD/qtp:/src_qtp:ro" "${{ matrix.image }}" sh -c '
             set -e
             mkdir -p /tmp/clean
             cp /tmp/qtp.bin /tmp/clean/qtp.bin
@@ -107,8 +110,15 @@ jobs:
             export PATH="/usr/bin:/bin" HOME="/tmp/clean_home" LANG="C" LC_ALL="C"
             mkdir -p "$HOME"
             if echo "${{ matrix.image }}" | grep -q alpine; then
-              # Alpine musl notu: glibc ikilisi yerine yalnızca musl uyumluluk denetimi belgelenir
-              echo "Alpine/musl notu doğrulandı (TUI/CLI/Web için musl derlemesi gerekir)."
+              apk add --no-cache python3 >/dev/null
+              mkdir -p /tmp/alpine_work
+              cd /tmp/alpine_work
+              PYTHONPATH=/src_qtp python3 -m qtp_app.cli --version
+              PYTHONPATH=/src_qtp python3 -m qtp_app.cli --selftest
+              PYTHONPATH=/src_qtp python3 -m qtp_app.cli --work-dir /tmp/alpine_work --list-categories --json
+              PYTHONPATH=/src_qtp python3 -m qtp_app.cli --work-dir /tmp/alpine_work --search "şifre" --json
+              printf "c\nq\n" | PYTHONPATH=/src_qtp python3 -m qtp_app.cli --work-dir /tmp/alpine_work --tui
+              PYTHONPATH=/src_qtp python3 -m qtp_app.cli --work-dir /tmp/alpine_work --web --port 0 --shutdown-after 0.5
               exit 0
             fi
             ./qtp.bin --version

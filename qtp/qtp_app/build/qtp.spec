@@ -1,7 +1,7 @@
-# -*- mode: python ; coding: utf-8 -*-
 """PyInstaller tek dosya (onefile) QTP yapılandırması — Windows, Linux & macOS."""
 
 from pathlib import Path
+import os
 import sys
 
 SPEC_DIR = Path(SPECPATH).resolve()
@@ -79,14 +79,14 @@ exe = EXE(
     name="QTP",
     debug=False,
     bootloader_ignore_signals=False,
-    strip=(sys.platform != "win32"),
+    strip=(sys.platform not in ("win32", "darwin")),
     upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
+    target_arch=os.environ.get("QTP_TARGET_ARCH") or None,
     codesign_identity=None,
     entitlements_file=None,
     icon=icon_path,

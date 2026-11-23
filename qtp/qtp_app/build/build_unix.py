@@ -1,7 +1,8 @@
-"""Linux ve macOS tek dosya taşınabilir paketleme betiği -> dist/qtp.bin (<= 60 MB)."""
+"""Linux, BSD (Unix-benzeri) ve macOS tek dosya taşınabilir paketleme betiği -> dist/qtp.bin (<= 60 MB)."""
 
 from __future__ import annotations
 
+import argparse
 import datetime as _dt
 import hashlib
 import os
@@ -44,15 +45,27 @@ def write_build_info(target: Path, digest: str) -> None:
         "Çapraz Derleme Notu:\n"
         "- Windows için `dist/qtp.exe` yalnızca Windows üzerinde derlenir.\n"
         "- Linux ikilisi maksimum uyumluluk için Ubuntu 22.04 (glibc 2.35) tabanında derlenmelidir.\n"
+        "- macOS ikilisinde Mach-O/PKG bütünlüğü için `strip` uygulanmaz; ad-hoc `codesign` uygulanır.\n"
     )
     (DIST_DIR / "BUILD_INFO.txt").write_text(info, encoding="utf-8")
 
 
-def build_unix() -> Path:
-    if sys.platform == "win32":
+def build_unix(
+    *,
+    target_arch: str | None = None,
+    macosx_deployment_target: str | None = None,
+) -> Path:
+    if sys.platform == "win32" or sys.platform.startswith("win"):
         raise RuntimeError(
-            "Uyarı: Linux/macOS için qtp.bin derlemesi Windows üzerinde desteklenmiyor; Linux veya macOS üzerinde çalıştırın."
+            "Uyarı: Linux/BSD/macOS için qtp.bin derlemesi Windows üzerinde desteklenmiyor; Unix/macOS üzerinde çalıştırın."
         )
+
+    build_env = dict(os.environ)
+    if target_arch:
+        build_env["QTP_TARGET_ARCH"] = target_arch
+    if sys.platform == "darwin":
+        deploy_target = macosx_deployment_target or build_env.get("MACOSX_DEPLOYMENT_TARGET") or "11.0"
+        build_env["MACOSX_DEPLOYMENT_TARGET"] = deploy_target
 
     cmd = [
         sys.executable,
@@ -67,7 +80,7 @@ def build_unix() -> Path:
         str(SPEC_PATH),
     ]
     print("PyInstaller çalıştırılıyor:", " ".join(cmd))
-    subprocess.run(cmd, cwd=str(ROOT_DIR), check=True)
+    subprocess.run(cmd, cwd=str(ROOT_DIR), env=build_env, check=True)
 
     built_bin = DIST_DIR / "QTP"
     target_bin = DIST_DIR / "qtp.bin"
@@ -90,7 +103,7 @@ def build_unix() -> Path:
     target_bin.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     strip_tool = shutil.which("strip")
-    if strip_tool and sys.platform.startswith("linux"):
+    if strip_tool and sys.platform != "darwin":
         subprocess.run([strip_tool, str(target_bin)], check=False)
 
     if sys.platform == "darwin":
@@ -104,7 +117,7 @@ def build_unix() -> Path:
         )
 
     env = dict(os.environ)
-    if sys.platform.startswith("linux") and not env.get("DISPLAY") and not env.get("WAYLAND_DISPLAY"):
+    if sys.platform != "darwin" and not env.get("DISPLAY") and not env.get("WAYLAND_DISPLAY"):
         env["QT_QPA_PLATFORM"] = "offscreen"
 
     print("Otomatik doğrulama çalıştırılıyor: ./dist/qtp.bin --selftest")
@@ -141,5 +154,21 @@ def build_unix() -> Path:
     return target_bin
 
 
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="QTP Unix/macOS/BSD tek dosya derleyicisi")
+    parser.add_argument(
+        "--target-arch",
+        choices=("x86_64", "arm64", "universal2"),
+        default=None,
+    )
+    parser.add_argument("--macosx-deployment-target", default=None)
+    args = parser.parse_args(argv)
+    build_unix(
+        target_arch=args.target_arch,
+        macosx_deployment_target=args.macosx_deployment_target,
+    )
+    return 0
+
+
 if __name__ == "__main__":
-    build_unix()
+    raise SystemExit(main())

@@ -1,0 +1,6 @@
+pyinstaller==5.13.2
+pynput==1.7.7
+pillow==9.5.0
+keyboard==0.13.5; sys_platform == "win32"
+pytest==7.4.4
+pytest-cov==4.1.0
