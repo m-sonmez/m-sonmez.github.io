@@ -1,0 +1,30 @@
+{
+  "data": {
+    "category": "ALL",
+    "count": 1,
+    "items": [
+      {
+        "group": "Restoran",
+        "keys": "L-Win+A",
+        "label": "Karşılama",
+        "matched_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "raw_key": "text_000",
+        "terminator": "<E<N<D|",
+        "text": "Merhaba şğıöç ŞĞÜÖÇİ 😊"
+      }
+    ],
+    "query": "Merhaba"
+  },
+  "error": null,
+  "exit_code": 0,
+  "message": "Arama tamamlandı: 1 eşleşme.",
+  "ok": true
+}

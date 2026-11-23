@@ -1,0 +1,22 @@
+QTP v2.1.0 | Mod: TUI | Ara: "" [/ Ara] | Kayıt: 2/2
+Kategoriler: [Tümü (2)] | A · İş Ortağı (1) | Z · Kurye (1) | X · Canlı Yardım (0) | Q · Turkcell (0)
+------------------------------------------------------------------------------------------------
+>   1. [A] Merhaba şğıöç ŞĞÜÖÇİ 😊
+    2. [Z] İkinci satır Devam
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------
+Durum: Yapıştırıldı ✔
+↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış

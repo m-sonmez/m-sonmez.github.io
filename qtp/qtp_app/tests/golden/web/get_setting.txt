@@ -1,0 +1,10 @@
+{
+  "data": {
+    "key": "theme",
+    "value": "dark"
+  },
+  "error": null,
+  "exit_code": 0,
+  "message": "Ayar okundu.",
+  "ok": true
+}

@@ -1,0 +1,22 @@
+QTP v2.1.0 | Mod: TUI | Ara: "" [/ Ara] | Kayıt: 2/2
+Kategoriler: [Tümü (2)] | A · İş Ortağı (1) | Z · Kurye (1) | X · Canlı Yardım (0) | Q · Turkcell (0)
+------------------------------------------------------------------------------------------------
+=== INI Kaydı (text_000) (Kapatmak için Esc/q) ===
+[list_text]
+text_000=L-Win+A=Merhaba şğıöç ŞĞÜÖÇİ 😊<E<N<D|
+
+[list_order]
+text_000=1
+
+[list_label]
+text_000=Restoran/Karşılama
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------
+Durum: INI kaydı görüntülendi.
+↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış

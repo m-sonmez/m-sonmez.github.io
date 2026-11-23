@@ -1,0 +1,11 @@
+{
+  "data": {
+    "ini_path": "QuickTextPaste.ini",
+    "preview": "[list_text]\ntext_000=L-Win+A=Merhaba şğıöç ŞĞÜÖÇİ 😊<E<N<D|\n\n[list_order]\ntext_000=1\n\n[list_label]\ntext_000=Restoran/Karşılama",
+    "raw_key": "text_000"
+  },
+  "error": null,
+  "exit_code": 0,
+  "message": "INI kaydı görüntülendi.",
+  "ok": true
+}

@@ -1,0 +1,41 @@
+{
+  "data": {
+    "categories": [
+      {
+        "code": "ALL",
+        "count": 2,
+        "hotkey_prefix": "",
+        "label": "Tümü"
+      },
+      {
+        "code": "A",
+        "count": 1,
+        "hotkey_prefix": "L-Win+A",
+        "label": "A · İş Ortağı"
+      },
+      {
+        "code": "Z",
+        "count": 1,
+        "hotkey_prefix": "L-Win+Z",
+        "label": "Z · Kurye"
+      },
+      {
+        "code": "X",
+        "count": 0,
+        "hotkey_prefix": "L-Win+X",
+        "label": "X · Canlı Yardım"
+      },
+      {
+        "code": "Q",
+        "count": 0,
+        "hotkey_prefix": "L-Win+Q",
+        "label": "Q · Turkcell"
+      }
+    ],
+    "total": 2
+  },
+  "error": null,
+  "exit_code": 0,
+  "message": "Kategoriler listelendi.",
+  "ok": true
+}

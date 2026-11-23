@@ -103,3 +103,65 @@ def test_save_settings_and_logging_levels(tmp_path: Path):
         fallback_logger = setup_logging(tmp_path / "blocked", level="info")
     assert fallback_logger is not None
 
+
+def test_get_and_set_setting_value_validation():
+    import copy
+    import pytest
+    from qtp_app.core.settings import SettingValidationError, get_setting_value, set_setting_value
+
+    cfg = copy.deepcopy(DEFAULT_SETTINGS)
+    assert get_setting_value(cfg, "theme") == "dark"
+    assert get_setting_value(cfg, "web.port") == 8765
+    assert get_setting_value(cfg, "hotkeys.A") == "Win+A"
+
+    cfg = set_setting_value(cfg, "theme", "auto")
+    cfg = set_setting_value(cfg, "paste_method", "shift_insert")
+    cfg = set_setting_value(cfg, "log_level", "debug")
+    cfg = set_setting_value(cfg, "last_category", "z")
+    cfg = set_setting_value(cfg, "enter_after_paste", "false")
+    cfg = set_setting_value(cfg, "start_minimized", "true")
+    cfg = set_setting_value(cfg, "backup_count", "20")
+    cfg = set_setting_value(cfg, "data_path", "./custom.ini")
+    cfg = set_setting_value(cfg, "language", "tr")
+    cfg = set_setting_value(cfg, "window_size", "800x600")
+    cfg = set_setting_value(cfg, "web.port", "9090")
+    cfg = set_setting_value(cfg, "hotkeys.A", "Ctrl+Alt+A")
+
+    assert cfg["theme"] == "auto"
+    assert cfg["paste_method"] == "shift_insert"
+    assert cfg["log_level"] == "debug"
+    assert cfg["last_category"] == "Z"
+    assert cfg["enter_after_paste"] is False
+    assert cfg["start_minimized"] is True
+    assert cfg["backup_count"] == 20
+    assert cfg["window_size"] == [800, 600]
+    assert cfg["web"]["port"] == 9090
+    assert cfg["hotkeys"]["A"] == "Ctrl+Alt+A"
+
+    for bad_key in ("", "olmayan", "web.olmayan", "hotkeys.olmayan"):
+        with pytest.raises(SettingValidationError):
+            get_setting_value(cfg, bad_key)
+
+    for k, v in (
+        ("theme", "neon"),
+        ("paste_method", "magic"),
+        ("log_level", "verbose"),
+        ("last_category", "B"),
+        ("enter_after_paste", "belki"),
+        ("backup_count", "abc"),
+        ("backup_count", "999"),
+        ("data_path", "   "),
+        ("language", "en"),
+        ("window_size", "100"),
+        ("window_size", "bad,size"),
+        ("window_size", "100,100"),
+        ("web.port", "abc"),
+        ("web.port", "70000"),
+        ("hotkeys.A", ""),
+        ("hotkeys.BAD", "Win+B"),
+        ("bilinmeyen", "1"),
+    ):
+        with pytest.raises(SettingValidationError):
+            set_setting_value(cfg, k, v)
+
+

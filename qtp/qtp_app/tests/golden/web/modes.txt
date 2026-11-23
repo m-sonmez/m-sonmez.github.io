@@ -1,0 +1,14 @@
+{
+  "data": {
+    "modes": [
+      "gui",
+      "tui",
+      "cli",
+      "web"
+    ]
+  },
+  "error": null,
+  "exit_code": 0,
+  "message": "Desteklenen çalışma modları: gui, tui, cli, web.",
+  "ok": true
+}

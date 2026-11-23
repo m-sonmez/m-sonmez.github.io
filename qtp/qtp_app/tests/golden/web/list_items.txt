@@ -1,0 +1,31 @@
+{
+  "data": {
+    "category": "ALL",
+    "count": 2,
+    "items": [
+      {
+        "group": "Restoran",
+        "keys": "L-Win+A",
+        "label": "Karşılama",
+        "matched_indices": [],
+        "raw_key": "text_000",
+        "terminator": "<E<N<D|",
+        "text": "Merhaba şğıöç ŞĞÜÖÇİ 😊"
+      },
+      {
+        "group": "Kurye",
+        "keys": "L-Win+Z",
+        "label": "Bilgi",
+        "matched_indices": [],
+        "raw_key": "text_001",
+        "terminator": "<E<N<D|",
+        "text": "İkinci satır\nDevam"
+      }
+    ],
+    "query": ""
+  },
+  "error": null,
+  "exit_code": 0,
+  "message": "Hazır cevaplar listelendi: 2 kayıt.",
+  "ok": true
+}

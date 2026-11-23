@@ -133,3 +133,29 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
         assert check_macos_accessibility(prompt=False) is False
         assert check_macos_accessibility(prompt=True) is True
 
+    # Wayland üzerinde başarısız pynput kaydı bloklamadan False döner
+    mgr_wl = HotkeyManager(
+        pynput_factory=lambda _m: (_ for _ in ()).throw(RuntimeError("Wayland no X11")),
+        platform_name="linux",
+    )
+    with mock.patch("qtp_app.core.hotkeys.is_wayland_session", return_value=True):
+        assert mgr_wl.register({"all": "Ctrl+Shift+Space"}, lambda _c: None) == {"all": False}
+
+    # Geçersiz kombinasyon reddedilir
+    assert mgr_wl.register({"A": "Win+A"}, lambda _c: None) == {"A": False}
+
+    # unregister sırasındaki istisnalar ve macOS CDLL hatası güvenli yakalanır
+    bad_listener = mock.Mock()
+    bad_listener.stop.side_effect = RuntimeError("stop err")
+    bad_kb = mock.Mock()
+    bad_kb.remove_hotkey.side_effect = RuntimeError("remove err")
+    mgr_err = HotkeyManager(pynput_factory=lambda _m: bad_listener, keyboard_module=bad_kb, platform_name="win32")
+    mgr_err.register({"A": "Win+A"}, lambda _c: None)
+    mgr_err._keyboard_handles.append("hk1")
+    mgr_err.unregister()
+    with mock.patch("qtp_app.core.hotkeys.sys.platform", "darwin"), \
+         mock.patch("qtp_app.core.hotkeys.ctypes.CDLL", side_effect=OSError("no framework")):
+        assert check_macos_accessibility(prompt=False) is False
+
+
+
