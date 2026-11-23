@@ -17,11 +17,12 @@ Tüm modların tam karşılaştırması için: [Modlar Arası Eşitlik Matrisi](
 
 ---
 
-## 1. Tek Dosya Uygulama (Önerilen)
+## 1. Tek Dosya Uygulama ve Canlı Web Dağıtımı (GitHub Pages)
 
-- **Windows 10/11 (x64):** `dist/qtp.exe` — Çift tıklayıp doğrudan çalıştırın; yerel Win32 `RegisterHotKey` ve PowerShell/Terminal konsol eki (`--help`, `--verbose`, `--completion`) yerleşiktir.
-- **Windows 7 / 8 / 8.1 (x64):** `dist/qtp-win7.exe` — Python 3.8 x64 + `requirements-win7.txt` + `python -m qtp_app.build.build_windows_legacy` hedefi.
-- **Linux, macOS 10.15–15 ve BSD / Unix-like:** `dist/qtp.bin` — `chmod +x qtp.bin && ./qtp.bin` (`--tui`, `--cli` ve `--web` modları PyQt6 olmadan Alpine/musl ve BSD sistemlerde de çalışır).
+- **Canlı Web Arayüzü (GitHub Pages / Çevrimdışı):** [https://m-sonmez.github.io/qtp/](https://m-sonmez.github.io/qtp/) (`index.html` — `--web` arayüzüyle birebir, sıfır arka uçla statik çalışır ve yerel `--web` modunu otomatik algılar)
+- **Taşınabilir Windows Uygulaması (`qtp.exe`):** [https://m-sonmez.github.io/qtp/qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe) (`dist/qtp.exe` ile birebir) — Çift tıklayıp doğrudan çalıştırın; yerel Win32 `RegisterHotKey` ve PowerShell/Terminal konsol eki (`--help`, `--verbose`, `--completion`) yerleşiktir. *(Windows 7 / 8 / 8.1 x64 için Python 3.8 + `requirements-win7.txt` + `python -m qtp_app.build.build_windows_legacy` hedefini kullanın.)*
+- **Taşınabilir Linux x64 Uygulaması (`qtp.bin`):** [https://m-sonmez.github.io/qtp/qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin) — `chmod +x qtp.bin && ./qtp.bin` (`--tui`, `--cli` ve `--web` modları PyQt6 olmadan Alpine/musl ve BSD sistemlerde de çalışır).
+- **Eski QuickTextPaste Web Arayüzü (`old.html`):** [https://m-sonmez.github.io/qtp/old.html](https://m-sonmez.github.io/qtp/old.html) — Önceki 3. parti QuickTextPaste yapılandırma ve hızlı kullanım PWA sayfasının korunan yedeği.
 - **Tamamen Çevrimdışı, Taşınabilir ve Canlı Yenilemeli:** Ayarlar (`qtp_settings.json`), `QuickTextPaste.ini` (`data_path`) ve `data.json` harici düzenlemelerde `ConfigFileWatcher` ile **yeniden başlatma olmadan** otomatik yenilenir (kısayollar ve tema dahil).
 
 ---
@@ -77,7 +78,7 @@ Ayrıntılı tablo, profiller ve Türkçe-Q `AltGr` notları için: [docs/KISAYO
 
 ## 5. Miras / Legacy & Web PWA Notu
 
-Mevcut `QuickTextPaste.ini` biçimi (`UTF-16 LE BOM`, `UTF-16 BE BOM`, `UTF-8 BOM`, `cp1254`, `[Program]`, `[list_text]`, `[list_order]`, `[list_label]`, `<E<N<D|` ve `L-Win+A/Z/X/Q/W/1` önekleri) **tam ve kayıpsız** korunmuştur. Depodaki mevcut `index.html`, `cevaplar.html`, `sw.js` ve `manifest.webmanifest` dosyaları tarayıcı PWA bileşenleri olarak bozulmadan korunmaktadır.
+Mevcut `QuickTextPaste.ini` biçimi (`UTF-16 LE BOM`, `UTF-16 BE BOM`, `UTF-8 BOM`, `cp1254`, `[Program]`, `[list_text]`, `[list_order]`, `[list_label]`, `<E<N<D|` ve `L-Win+A/Z/X/Q/W/1` önekleri) **tam ve kayıpsız** korunmuştur. Unified `index.html` (`theme.css` ile) hem GitHub Pages üzerinde statik çevrimdışı olarak hem de yerel `qtp --web` API sunucusuyla otomatik mod algılayarak birebir çalışır; önceki 3. parti QuickTextPaste PWA sayfası [old.html](old.html) olarak, diğer PWA bileşenleri ise `cevaplar.html`, `sw.js` ve `manifest.webmanifest` olarak korunmaktadır.
 
 ---
 

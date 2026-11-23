@@ -4,7 +4,12 @@
 
 ---
 
-## 1. İkili Dosyalar ve İşletim Sistemi Geriye Dönük Uyumluluk Matrisi
+## 1. Doğrudan İndirme / Canlı GitHub Pages Bağlantıları ve İkili Matris
+
+- **Canlı Web Arayüzü:** `https://m-sonmez.github.io/qtp/` (`index.html`, `--web` ile birebir, sıfır arka uçla statik çalışır)
+- **Windows (Win 10/11 x64 birincil):** `https://m-sonmez.github.io/qtp/qtp.exe` *(Win 7/8/8.1 x64 için `python -m qtp_app.build.build_windows_legacy` ile `qtp-win7.exe` üretin)*
+- **Linux x64:** `https://m-sonmez.github.io/qtp/qtp.bin`
+- **Eski 3. Parti QuickTextPaste Sayfası:** `https://m-sonmez.github.io/qtp/old.html`
 
 | İşletim Sistemi | Hedef Çıktı | Mimari / Sürüm | Desteklenen Modlar ve Öne Çıkan Özellikler |
 | :--- | :--- | :--- | :--- |

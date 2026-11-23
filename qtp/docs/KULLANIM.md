@@ -137,7 +137,7 @@ Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerind
 ## 11. TUI Modu (`--tui`) ve Web Modu (`--web`)
 
 - **`--tui`:** Python standart kütüphanesi dışında bağımlılık gerektirmez; Linux/macOS'ta `curses` (veya `termios`/düz metin), Windows'ta VT100 veya Win32 Console API kullanır. Canlı oturumda dosya değişikliklerini otomatik yansıtır; `F1` yardım modalında eksiksiz dört bölümlü içeriği (`CLI & Parametreler`, `Kullanım`, `Kısayollar`, `SSS`) `↑`/`↓` ve `PageUp`/`PageDown` kaydırmasıyla sunar ve `k` (çakışma denetimi), `P` (önerilen profil), `C` (tamamlama) tuşlarını destekler.
-- **`--web`:** Yalnızca `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; **Yardım (F1)** düğmesi / `F1` tuşu (`/api/help?verbose=1`), **Kısayollar** modalı, canlı `/api/revision` yenilemesi (başlangıç `--category`/`--query` dahil) ve `/api/hotkeys/*`, `/api/completion` uç noktalarını sunar (`POST /api/shutdown` ile zarifçe kapanır).
+- **`--web` ve GitHub Pages:** Yerelde `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; **Yardım (F1)** düğmesi / `F1` tuşu (`/api/help?verbose=1`), **INI'de Göster**, **Kısayollar** modalı, canlı `/api/revision` yenilemesi (başlangıç `--category`/`--query` dahil) ve `/api/hotkeys/*`, `/api/completion` uç noktalarını sunar (`POST /api/shutdown` ile zarifçe kapanır). Aynı `index.html` + `theme.css` çifti `https://m-sonmez.github.io/qtp/` adresinde de sıfır arka uçla birebir statik olarak çalışır ve `qtp.exe`, `qtp.bin`, `old.html` bağlantıları içerir.
 - **`--gui` `F1` Yardım Penceresi:** `Kullanım Kılavuzu`, `Kısayollar`, `Sorun Giderme (SSS)` sekmelerine ek olarak **CLI & Parametreler** sekmesinde birebir `--verbose --help` başvurusunu içerir.
 
 ---
