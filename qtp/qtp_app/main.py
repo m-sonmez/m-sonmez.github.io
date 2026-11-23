@@ -9,13 +9,13 @@ import socket
 import sys
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from qtp_app import __app_name__, __version__
-from qtp_app.core.engine import FIRST_RUN_TOAST, QtpEngine
+from qtp_app.core.engine import QtpEngine, format_hotkeys_toast
 from qtp_app.core.hotkeys import HotkeyManager
 from qtp_app.core.logging_setup import get_logger
-from qtp_app.core.settings import save_settings
+from qtp_app.core.watcher import ReloadEvent
 
 LOCK_FILENAME = "qtp.lock"
 
@@ -99,11 +99,56 @@ class SingleInstanceGuard:
                 pass
 
 
+def apply_reload_event_gui(
+    event: ReloadEvent,
+    engine: QtpEngine,
+    overlay: Any,
+    tray: Any,
+    register_hotkeys_fn: Callable[[], dict[str, str]],
+) -> None:
+    """Canlı dosya değişikliği olayını GUI katmanı, tepsi ve global kısayollara uygular."""
+    if event.warning:
+        overlay.show_toast(event.warning, duration_ms=3200)
+        return
+
+    if event.items_changed:
+        overlay.set_items(engine.items)
+        overlay.show_toast(
+            f"Hazır cevaplar otomatik yenilendi ({len(engine.items)} kayıt) ✔",
+            duration_ms=2200,
+        )
+
+    if event.theme_changed or event.data_path_changed:
+        overlay.apply_settings(theme=engine.settings["theme"], ini_path=str(engine.ini_path))
+
+    if event.window_size_changed:
+        ws = engine.settings.get("window_size") or [720, 520]
+        overlay.resize(int(ws[0]), int(ws[1]))
+
+    if event.tray_changed:
+        tray.setVisible(bool(engine.settings.get("tray_icon", True)))
+
+    if event.hotkeys_changed:
+        conflicts = register_hotkeys_fn()
+        open_hk = str((engine.settings.get("hotkeys") or {}).get("all", ""))
+        tray.update_hotkeys_label(open_hk)
+        if conflicts:
+            conflict_keys = ", ".join(f"{k} ({engine.settings.get('hotkeys', {}).get(k, '')})" for k in conflicts)
+            overlay.show_toast(
+                f"Kısayol çakışması: {conflict_keys} — Ayarlar → Global Kısayollar'dan değiştirin",
+                duration_ms=3600,
+            )
+        elif not event.items_changed:
+            overlay.show_toast("Ayarlar ve kısayollar otomatik güncellendi ✔", duration_ms=2200)
+    elif event.settings_changed and not event.items_changed:
+        overlay.show_toast("Ayarlar otomatik yenilendi ✔", duration_ms=2000)
+
+
 def launch_gui(engine: QtpEngine) -> int:
     """GUI adaptörü: Overlay + Tray + Global Kısayollar, tüm işlemleri QtpEngine üzerinden yürütür."""
     logger = get_logger("main")
     try:
-        from PyQt6.QtCore import QObject, QUrl, pyqtSignal
+        from PyQt6.QtCore import QObject, Qt, QUrl, pyqtSignal
         from PyQt6.QtGui import QDesktopServices
         from PyQt6.QtWidgets import (
             QApplication,
@@ -145,6 +190,7 @@ def launch_gui(engine: QtpEngine) -> int:
     class UiBridge(QObject):
         hotkey_fired = pyqtSignal(str)
         show_ipc = pyqtSignal()
+        file_reloaded = pyqtSignal(object)
 
     bridge = UiBridge()
 
@@ -172,7 +218,7 @@ def launch_gui(engine: QtpEngine) -> int:
         if engine.settings.get("window_size") != [w, h]:
             engine.settings["window_size"] = [w, h]
             try:
-                save_settings(engine.settings, engine.settings_path)
+                engine.save_current_settings(engine.settings)
             except Exception:
                 pass
 
@@ -187,7 +233,7 @@ def launch_gui(engine: QtpEngine) -> int:
 
     hotkey_mgr = HotkeyManager()
 
-    def register_all_hotkeys() -> None:
+    def register_all_hotkeys() -> dict[str, str]:
         hk_map = engine.settings.get("hotkeys") or {}
         res = hotkey_mgr.register(
             hk_map,
@@ -195,8 +241,9 @@ def launch_gui(engine: QtpEngine) -> int:
             request_macos_permission=False,
         )
         for cat, ok in res.items():
-            if not ok:
+            if not ok and cat not in hotkey_mgr.conflicts:
                 logger.warning("Global kısayol kaydedilemedi: %s -> %s", cat, hk_map.get(cat))
+        return hotkey_mgr.conflicts
 
     def on_hotkey_gui(cat: str) -> None:
         if cat == "all":
@@ -211,17 +258,28 @@ def launch_gui(engine: QtpEngine) -> int:
         dlg = SettingsWindow(engine.settings, current_palette(), parent=overlay if overlay.isVisible() else None)
         if dlg.exec() == dlg.DialogCode.Accepted and dlg.result_settings is not None:
             old_data_path = engine.settings.get("data_path")
-            engine.settings.update(dlg.result_settings)
-            engine.settings["last_category_by_hotkey"] = overlay.last_category_by_hotkey
-            save_settings(engine.settings, engine.settings_path)
+            merged = dict(dlg.result_settings)
+            merged["last_category_by_hotkey"] = overlay.last_category_by_hotkey
+            engine.save_current_settings(merged)
             overlay.apply_settings(theme=engine.settings["theme"], ini_path=str(engine.ini_path))
-            register_all_hotkeys()
+            ws_new = engine.settings.get("window_size") or [720, 520]
+            overlay.resize(int(ws_new[0]), int(ws_new[1]))
+            conflicts = register_all_hotkeys()
+            open_hk = str((engine.settings.get("hotkeys") or {}).get("all", ""))
+            tray.update_hotkeys_label(open_hk)
             tray.setVisible(bool(engine.settings.get("tray_icon", True)))
             if engine.settings.get("data_path") != old_data_path:
                 engine.reload_data()
                 overlay.set_items(engine.items)
             logger.info("Ayarlar kullanıcı tarafından güncellendi.")
-            overlay.show_toast("Ayarlar kaydedildi ✔")
+            if conflicts:
+                ckeys = ", ".join(f"{k} ({engine.settings.get('hotkeys', {}).get(k, '')})" for k in conflicts)
+                overlay.show_toast(
+                    f"Kısayol çakışması: {ckeys} — Ayarlar → Global Kısayollar",
+                    duration_ms=3200,
+                )
+            else:
+                overlay.show_toast("Ayarlar kaydedildi ✔")
 
     def reload_ini() -> None:
         res = engine.reload_data()
@@ -322,10 +380,11 @@ def launch_gui(engine: QtpEngine) -> int:
         dlg.exec()
 
     def quit_app() -> None:
+        engine.stop_watcher()
         engine.settings["last_category"] = overlay.active_category
         engine.settings["last_category_by_hotkey"] = overlay.last_category_by_hotkey
         try:
-            save_settings(engine.settings, engine.settings_path)
+            engine.save_current_settings(engine.settings)
         except Exception:
             pass
         hotkey_mgr.unregister()
@@ -336,6 +395,7 @@ def launch_gui(engine: QtpEngine) -> int:
     overlay.settings_requested.connect(open_settings)
     overlay.help_requested.connect(open_help)
 
+    open_hk = str((engine.settings.get("hotkeys") or {}).get("all", ""))
     tray = QtpTrayIcon(
         on_open=lambda: overlay.show_overlay(category="ALL", hotkey_key="all"),
         on_settings=open_settings,
@@ -344,24 +404,46 @@ def launch_gui(engine: QtpEngine) -> int:
         on_backups=open_backups,
         on_help=open_help,
         on_quit=quit_app,
+        open_hotkey=open_hk,
     )
     tray.setVisible(bool(engine.settings.get("tray_icon", True)))
 
+    bridge.file_reloaded.connect(
+        lambda ev: apply_reload_event_gui(ev, engine, overlay, tray, register_all_hotkeys),
+        Qt.ConnectionType.QueuedConnection,
+    )
+    engine.start_watcher(on_reload=lambda ev: bridge.file_reloaded.emit(ev))
+
     guard.acquire(lambda: bridge.show_ipc.emit())
-    register_all_hotkeys()
+    conflicts = register_all_hotkeys()
 
-    app.aboutToQuit.connect(guard.release)
+    def _cleanup() -> None:
+        engine.stop_watcher()
+        hotkey_mgr.unregister()
+        guard.release()
 
+    app.aboutToQuit.connect(_cleanup)
+
+    toast_msg = format_hotkeys_toast(engine.settings.get("hotkeys"))
     if not engine.settings.get("start_minimized", False):
         overlay.show_overlay(category="ALL", hotkey_key="all")
-        overlay.show_toast(FIRST_RUN_TOAST, duration_ms=2600)
+        overlay.show_toast(toast_msg, duration_ms=2600)
     elif engine.first_run and tray.isVisible():
-        tray.showMessage("QTP", FIRST_RUN_TOAST)
+        tray.showMessage("QTP", toast_msg)
 
     if engine.settings_warning:
         overlay.show_toast("Bozuk ayar dosyası varsayılanlarla yenilendi", duration_ms=2400)
+    elif conflicts:
+        ckeys = ", ".join(f"{k} ({engine.settings.get('hotkeys', {}).get(k, '')})" for k in conflicts)
+        overlay.show_toast(
+            f"Kısayol çakışması: {ckeys} — Ayarlar → Global Kısayollar'dan değiştirin",
+            duration_ms=3400,
+        )
 
-    return app.exec()
+    try:
+        return app.exec()
+    finally:
+        _cleanup()
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from typing import Callable
 
-from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
-from PyQt6.QtGui import QPainter
 from PyQt6.QtWidgets import QMenu, QSystemTrayIcon, QWidget
 
 from qtp_app.ui.theme import get_asset_path
@@ -46,15 +45,15 @@ class QtpTrayIcon(QSystemTrayIcon):
         on_backups: Callable[[], None],
         on_help: Callable[[], None],
         on_quit: Callable[[], None],
+        open_hotkey: str = "Win+Alt+Space",
         parent: QWidget | None = None,
     ):
         super().__init__(load_tray_icon(), parent)
-        self.setToolTip("QTP — Hazır Cevaplar (Ctrl+Shift+Space)")
 
         self._on_open = on_open
         self.menu = QMenu(parent)
 
-        self.act_open = QAction("Aç (Ctrl+Shift+Space)", self.menu)
+        self.act_open = QAction("", self.menu)
         self.act_settings = QAction("Ayarlar…", self.menu)
         self.act_reload = QAction("INI Yeniden Yükle", self.menu)
         self.act_open_json = QAction("data.json Aç", self.menu)
@@ -80,8 +79,18 @@ class QtpTrayIcon(QSystemTrayIcon):
         self.menu.addAction(self.act_help)
         self.menu.addAction(self.act_quit)
 
+        self.update_hotkeys_label(open_hotkey)
         self.setContextMenu(self.menu)
         self.activated.connect(self._handle_activated)
+
+    def update_hotkeys_label(self, open_hotkey: str) -> None:
+        hk = (open_hotkey or "").strip()
+        if hk:
+            self.act_open.setText(f"Aç ({hk})")
+            self.setToolTip(f"QTP — Hazır Cevaplar ({hk})")
+        else:
+            self.act_open.setText("Aç")
+            self.setToolTip("QTP — Hazır Cevaplar")
 
     def _handle_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         if reason == QSystemTrayIcon.ActivationReason.DoubleClick:

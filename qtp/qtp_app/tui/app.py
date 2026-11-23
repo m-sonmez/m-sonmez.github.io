@@ -5,11 +5,13 @@ from __future__ import annotations
 import os
 import shutil
 import sys
+import threading
 from typing import Any, Callable, Iterable, TextIO
 
 from qtp_app import __version__
-from qtp_app.core.engine import CATEGORY_DEFINITIONS, FIRST_RUN_TOAST, OperationResult, QtpEngine
+from qtp_app.core.engine import CATEGORY_DEFINITIONS, OperationResult, QtpEngine, format_hotkeys_toast
 from qtp_app.core.operations import OPERATIONS
+from qtp_app.core.watcher import ReloadEvent
 
 TUI_FOOTER_HINTS = (
     "↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış"
@@ -44,7 +46,9 @@ class QtpTui:
         self.modal_title: str = ""
         self.modal_lines: list[str] = []
         self.status_message: str = (
-            FIRST_RUN_TOAST if engine.first_run else f"QTP hazır ({len(engine.items)} kayıt)"
+            format_hotkeys_toast(engine.settings.get("hotkeys"))
+            if engine.first_run
+            else f"QTP hazır ({len(engine.items)} kayıt)"
         )
         self.last_result: OperationResult = OperationResult(
             ok=True,
@@ -56,7 +60,19 @@ class QtpTui:
         self._visible_items: list[dict[str, Any]] = []
         self._categories_cache: list[dict[str, Any]] = []
         self.recorded_frames: list[str] = []
+        self._reload_lock = threading.RLock()
         self._refresh_view_data()
+
+    def apply_reload_event(self, event: ReloadEvent) -> None:
+        """İzleyici iş parçacığından gelen canlı değişiklik özetini TUI görünümüne uygular."""
+        with self._reload_lock:
+            self._refresh_view_data()
+            if event.warning:
+                self.status_message = event.warning
+            elif event.items_changed:
+                self.status_message = f"Hazır cevaplar otomatik yenilendi ({len(self.engine.items)} kayıt) ✔"
+            elif event.settings_changed:
+                self.status_message = "Ayarlar ve kısayollar otomatik güncellendi ✔"
 
     def _refresh_view_data(self) -> None:
         cat_res = self.engine.op_list_categories()
@@ -80,60 +96,61 @@ class QtpTui:
 
     def render_plain_lines(self) -> list[str]:
         """Altın anlık görüntü (golden snapshot) ve düz metin doğrulaması için deterministik ekran."""
-        width, height = self.term_size
-        inner_w = max(50, width)
-        lines: list[str] = []
+        with self._reload_lock:
+            width, height = self.term_size
+            inner_w = max(50, width)
+            lines: list[str] = []
 
-        search_state = "[YAZIYOR]" if self.search_mode else "[/ Ara]"
-        lines.append(
-            f"QTP v{__version__} | Mod: TUI | Ara: \"{self.query}\" {search_state} | Kayıt: {len(self._visible_items)}/{len(self.engine.items)}"
-        )
+            search_state = "[YAZIYOR]" if self.search_mode else "[/ Ara]"
+            lines.append(
+                f"QTP v{__version__} | Mod: TUI | Ara: \"{self.query}\" {search_state} | Kayıt: {len(self._visible_items)}/{len(self.engine.items)}"
+            )
 
-        pills: list[str] = []
-        for cat in self._categories_cache:
-            code = cat["code"]
-            label = cat["label"]
-            cnt = cat["count"]
-            if code == self.category:
-                pills.append(f"[{label} ({cnt})]")
+            pills: list[str] = []
+            for cat in self._categories_cache:
+                code = cat["code"]
+                label = cat["label"]
+                cnt = cat["count"]
+                if code == self.category:
+                    pills.append(f"[{label} ({cnt})]")
+                else:
+                    pills.append(f"{label} ({cnt})")
+            lines.append("Kategoriler: " + " | ".join(pills))
+            lines.append("-" * min(inner_w, 96))
+
+            body_rows = max(5, height - 6)
+            if self.modal_lines:
+                lines.append(f"=== {self.modal_title} (Kapatmak için Esc/q) ===")
+                for mline in self.modal_lines[: body_rows - 1]:
+                    lines.append(mline[:inner_w])
+                while len(lines) < 3 + body_rows:
+                    lines.append("")
             else:
-                pills.append(f"{label} ({cnt})")
-        lines.append("Kategoriler: " + " | ".join(pills))
-        lines.append("-" * min(inner_w, 96))
+                if self.selected_idx < self.scroll_offset:
+                    self.scroll_offset = self.selected_idx
+                elif self.selected_idx >= self.scroll_offset + body_rows:
+                    self.scroll_offset = self.selected_idx - body_rows + 1
 
-        body_rows = max(5, height - 6)
-        if self.modal_lines:
-            lines.append(f"=== {self.modal_title} (Kapatmak için Esc/q) ===")
-            for mline in self.modal_lines[: body_rows - 1]:
-                lines.append(mline[:inner_w])
-            while len(lines) < 3 + body_rows:
-                lines.append("")
-        else:
-            if self.selected_idx < self.scroll_offset:
-                self.scroll_offset = self.selected_idx
-            elif self.selected_idx >= self.scroll_offset + body_rows:
-                self.scroll_offset = self.selected_idx - body_rows + 1
+                slice_items = self._visible_items[self.scroll_offset : self.scroll_offset + body_rows]
+                for offset, item in enumerate(slice_items):
+                    abs_idx = self.scroll_offset + offset
+                    pointer = ">" if abs_idx == self.selected_idx else " "
+                    keys = str(item.get("keys", ""))
+                    badge = keys.rsplit("+", 1)[-1].upper() if "+" in keys else (keys.upper() or "•")
+                    snippet = str(item.get("text", "")).replace("\r\n", " ").replace("\n", " ")
+                    row_txt = f"{pointer} {abs_idx + 1:>3}. [{badge}] {snippet}"
+                    if len(row_txt) > inner_w:
+                        row_txt = row_txt[: inner_w - 1] + "…"
+                    lines.append(row_txt)
+                if not slice_items:
+                    lines.append("  (Eşleşen hazır cevap bulunamadı)")
+                while len(lines) < 3 + body_rows:
+                    lines.append("")
 
-            slice_items = self._visible_items[self.scroll_offset : self.scroll_offset + body_rows]
-            for offset, item in enumerate(slice_items):
-                abs_idx = self.scroll_offset + offset
-                pointer = ">" if abs_idx == self.selected_idx else " "
-                keys = str(item.get("keys", ""))
-                badge = keys.rsplit("+", 1)[-1].upper() if "+" in keys else (keys.upper() or "•")
-                snippet = str(item.get("text", "")).replace("\r\n", " ").replace("\n", " ")
-                row_txt = f"{pointer} {abs_idx + 1:>3}. [{badge}] {snippet}"
-                if len(row_txt) > inner_w:
-                    row_txt = row_txt[: inner_w - 1] + "…"
-                lines.append(row_txt)
-            if not slice_items:
-                lines.append("  (Eşleşen hazır cevap bulunamadı)")
-            while len(lines) < 3 + body_rows:
-                lines.append("")
-
-        lines.append("-" * min(inner_w, 96))
-        lines.append(f"Durum: {self.status_message[:inner_w - 7]}")
-        lines.append(TUI_FOOTER_HINTS[:inner_w])
-        return lines
+            lines.append("-" * min(inner_w, 96))
+            lines.append(f"Durum: {self.status_message[:inner_w - 7]}")
+            lines.append(TUI_FOOTER_HINTS[:inner_w])
+            return lines
 
     def render_ansi_lines(self) -> list[str]:
         """Renkli 256/TrueColor ANSI terminal görünümü üretir (ui/theme.py renkleriyle uyumlu)."""
@@ -186,6 +203,12 @@ class QtpTui:
             self.modal_title = "Desteklenen Modlar"
             self.modal_lines = [res.message]
             return self._record_result(res)
+        if op_id == "completion":
+            res = self.engine.op_completion(arg or "auto")
+            if res.ok:
+                self.modal_title = f"Kabuk Tamamlama ({res.data['shell']})"
+                self.modal_lines = str(res.data["script"]).splitlines()
+            return self._record_result(res)
         if op_id == "list_categories":
             return self._record_result(self.engine.op_list_categories())
         if op_id == "list_items":
@@ -234,6 +257,20 @@ class QtpTui:
         if op_id == "set_setting":
             res = self.engine.op_set_setting(arg, extra)
             return self._record_result(res)
+        if op_id == "check_hotkeys":
+            res = self.engine.op_check_hotkeys()
+            self.modal_title = "Kısayol Çakışma Denetimi"
+            lines = [f"{k}: {v}" for k, v in res.data["hotkeys"].items()]
+            if res.data["conflicts"]:
+                lines.append("")
+                for k, msgs in res.data["conflicts"].items():
+                    lines.append(f"[!] {k}: {'; '.join(msgs)}")
+            self.modal_lines = lines
+            return self._record_result(res)
+        if op_id == "hotkey_preset":
+            return self._record_result(self.engine.op_apply_hotkey_preset(arg or "recommended"))
+        if op_id == "hotkey_modifiers":
+            return self._record_result(self.engine.op_apply_hotkey_modifiers(arg or "Win+Alt"))
 
         err = f"Bilinmeyen TUI işlemi: {op_id}"
         return self._record_result(OperationResult(ok=False, exit_code=2, message=err, error=err))
@@ -301,6 +338,12 @@ class QtpTui:
             self.execute_operation("reload")
         elif key == "s":
             self.execute_operation("get_setting")
+        elif key == "k":
+            self.execute_operation("check_hotkeys")
+        elif key == "C":
+            self.execute_operation("completion")
+        elif key == "P":
+            self.execute_operation("hotkey_preset", "recommended")
         elif key == "F1":
             self.execute_operation("help")
         elif key == "V":
@@ -329,7 +372,7 @@ class QtpTui:
             if (not prev_modal and self.modal_lines) or (
                 not prev_modal
                 and (not prev_search or k == "ENTER")
-                and k in ("c", "ENTER", "F1", "e", "b", "B", "x", "r", "s", "V", "T", "M")
+                and k in ("c", "ENTER", "F1", "e", "b", "B", "x", "r", "s", "k", "C", "P", "V", "T", "M")
             ):
                 self._capture_script_frame()
         self._capture_script_frame()
@@ -502,63 +545,67 @@ def run_tui(
         out.flush()
         return tui.exit_code
 
-    if sys.platform == "win32":
-        from qtp_app.tui._win_console import WinConsoleBackend
+    engine.start_watcher(on_reload=tui.apply_reload_event)
+    try:
+        if sys.platform == "win32":
+            from qtp_app.tui._win_console import WinConsoleBackend
 
-        backend = WinConsoleBackend(out)
-        backend.enter()
-        tui.use_color = backend.supports_ansi
+            backend = WinConsoleBackend(out)
+            backend.enter()
+            tui.use_color = backend.supports_ansi
+            try:
+                while tui.running:
+                    tui.term_size = backend.size()
+                    lines = tui.render_ansi_lines() if backend.supports_ansi else tui.render_plain_lines()
+                    backend.render(lines)
+                    key = backend.read_key()
+                    if key:
+                        tui.handle_key(key)
+            finally:
+                backend.leave()
+            return tui.exit_code
+
         try:
+            import curses
+        except ImportError:
+            return _run_posix_termios_fallback(tui, out)
+
+        def _curses_loop(stdscr: Any) -> None:
+            curses.curs_set(0)
+            stdscr.keypad(True)
             while tui.running:
-                tui.term_size = backend.size()
-                lines = tui.render_ansi_lines() if backend.supports_ansi else tui.render_plain_lines()
-                backend.render(lines)
-                key = backend.read_key()
-                if key:
-                    tui.handle_key(key)
-        finally:
-            backend.leave()
+                max_y, max_x = stdscr.getmaxyx()
+                tui.term_size = (max(40, max_x), max(14, max_y))
+                stdscr.erase()
+                for row_i, line in enumerate(tui.render_plain_lines()[: max_y - 1]):
+                    stdscr.addnstr(row_i, 0, line, max_x - 1)
+                stdscr.refresh()
+                ch = stdscr.get_wch()
+                if ch in ("\n", "\r", curses.KEY_ENTER):
+                    tui.handle_key("ENTER")
+                elif ch == curses.KEY_UP:
+                    tui.handle_key("UP")
+                elif ch == curses.KEY_DOWN:
+                    tui.handle_key("DOWN")
+                elif ch == curses.KEY_PPAGE:
+                    tui.handle_key("PGUP")
+                elif ch == curses.KEY_NPAGE:
+                    tui.handle_key("PGDN")
+                elif ch == curses.KEY_F1:
+                    tui.handle_key("F1")
+                elif ch in (curses.KEY_BACKSPACE, "\x08", "\x7f"):
+                    tui.handle_key("BACKSPACE")
+                elif ch == "\t":
+                    tui.handle_key("TAB")
+                elif ch == "\x1b":
+                    tui.handle_key("ESC")
+                elif isinstance(ch, str):
+                    tui.handle_key(ch)
+
+        try:
+            curses.wrapper(_curses_loop)
+        except Exception:
+            return _run_posix_termios_fallback(tui, out)
         return tui.exit_code
-
-    try:
-        import curses
-    except ImportError:
-        return _run_posix_termios_fallback(tui, out)
-
-    def _curses_loop(stdscr: Any) -> None:
-        curses.curs_set(0)
-        stdscr.keypad(True)
-        while tui.running:
-            max_y, max_x = stdscr.getmaxyx()
-            tui.term_size = (max(40, max_x), max(14, max_y))
-            stdscr.erase()
-            for row_i, line in enumerate(tui.render_plain_lines()[: max_y - 1]):
-                stdscr.addnstr(row_i, 0, line, max_x - 1)
-            stdscr.refresh()
-            ch = stdscr.get_wch()
-            if ch in ("\n", "\r", curses.KEY_ENTER):
-                tui.handle_key("ENTER")
-            elif ch == curses.KEY_UP:
-                tui.handle_key("UP")
-            elif ch == curses.KEY_DOWN:
-                tui.handle_key("DOWN")
-            elif ch == curses.KEY_PPAGE:
-                tui.handle_key("PGUP")
-            elif ch == curses.KEY_NPAGE:
-                tui.handle_key("PGDN")
-            elif ch == curses.KEY_F1:
-                tui.handle_key("F1")
-            elif ch in (curses.KEY_BACKSPACE, "\x08", "\x7f"):
-                tui.handle_key("BACKSPACE")
-            elif ch == "\t":
-                tui.handle_key("TAB")
-            elif ch == "\x1b":
-                tui.handle_key("ESC")
-            elif isinstance(ch, str):
-                tui.handle_key(ch)
-
-    try:
-        curses.wrapper(_curses_loop)
-    except Exception:
-        return _run_posix_termios_fallback(tui, out)
-    return tui.exit_code
+    finally:
+        engine.stop_watcher()

@@ -5,7 +5,6 @@ from __future__ import annotations
 import importlib.resources
 import json
 import os
-import signal
 import sys
 import threading
 import urllib.parse
@@ -127,6 +126,10 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/modes":
             self._send_result(self.engine.op_modes())
             return
+        if path == "/api/completion":
+            shell = qs.get("shell", ["auto"])[0]
+            self._send_result(self.engine.op_completion(shell))
+            return
         if path == "/api/categories":
             self._send_result(self.engine.op_list_categories())
             return
@@ -150,6 +153,23 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/backups":
             self._send_result(self.engine.op_list_backups())
+            return
+        if path == "/api/hotkeys/check":
+            self._send_result(self.engine.op_check_hotkeys())
+            return
+        if path == "/api/revision":
+            res = OperationResult(
+                ok=True,
+                exit_code=0,
+                message="Durum alındı.",
+                data={
+                    "revision": self.engine.revision,
+                    "theme": self.engine.settings.get("theme"),
+                    "hotkeys": self.engine.settings.get("hotkeys"),
+                    "item_count": len(self.engine.items),
+                },
+            )
+            self._send_result(res)
             return
 
         err = f"Bilinmeyen API uç noktası: {path}"
@@ -177,6 +197,14 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             key = str(body.get("key", ""))
             value = body.get("value")
             self._send_result(self.engine.op_set_setting(key, value))
+            return
+        if path == "/api/hotkeys/preset":
+            preset = str(body.get("preset", "recommended"))
+            self._send_result(self.engine.op_apply_hotkey_preset(preset))
+            return
+        if path == "/api/hotkeys/modifiers":
+            mods = str(body.get("modifiers", "Win+Alt"))
+            self._send_result(self.engine.op_apply_hotkey_modifiers(mods))
             return
         if path == "/api/import-ini":
             self._send_result(
@@ -230,8 +258,9 @@ def run_web_server(
     port: int | None = None,
     open_browser: bool = False,
     shutdown_after: float | None = None,
+    quiet: bool = False,
 ) -> int:
-    """Yerel web sunucusunu başlatır; SIGINT/SIGTERM veya --shutdown-after ile zarifçe kapatır."""
+    """Yerel web sunucusunu başlatır; canlı dosya izleyici ve zarif kapanış sağlar."""
     try:
         srv = create_web_server(engine, host="127.0.0.1", port=port)
     except OSError as exc:
@@ -242,9 +271,12 @@ def run_web_server(
 
     actual_port = srv.server_address[1]
     url = f"http://127.0.0.1:{actual_port}/"
-    print(f"QTP Web Modu çalışıyor: {url} (Kapatmak için Ctrl+C veya POST /api/shutdown)")
-    sys.stdout.flush()
+    if not quiet:
+        print(f"QTP Web Modu çalışıyor: {url} (Kapatmak için Ctrl+C veya POST /api/shutdown)")
+        sys.stdout.flush()
     engine.logger.info("Web sunucusu başlatıldı: %s", url)
+
+    engine.start_watcher()
 
     if open_browser and (
         sys.platform in ("win32", "darwin")
@@ -266,6 +298,7 @@ def run_web_server(
     except KeyboardInterrupt:
         pass
     finally:
+        engine.stop_watcher()
         srv.server_close()
         engine.logger.info("Web sunucusu kapatıldı.")
     return 0

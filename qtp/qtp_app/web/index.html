@@ -10,6 +10,7 @@
   <main class="overlay-card" role="application" aria-label="QTP Hızlı Yapıştırma Katmanı">
     <div class="top-row">
       <input id="searchInput" class="search-input" type="text" placeholder="Ara… (mesaj, kategori, etiket)" autofocus />
+      <button class="action-btn" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi">Kısayollar</button>
       <button class="action-btn" id="btnReload" title="INI Yeniden Yükle">Yenile</button>
       <button class="action-btn" id="btnBackup" title="Anlık Yedek Al">Yedekle</button>
       <button class="action-btn" id="btnHelp" title="Türkçe Yardım (F1)">Yardım (F1)</button>
@@ -32,12 +33,33 @@
         <strong id="modalTitle">Bilgi</strong>
         <button class="action-btn" id="modalClose">Kapat (Esc)</button>
       </div>
+      <div id="hotkeyControls" style="display:none;margin-bottom:10px;gap:6px;flex-wrap:wrap;align-items:center;">
+        <select id="presetSelect" class="action-btn">
+          <option value="recommended">Önerilen (Win+Alt)</option>
+          <option value="win_ctrl">Win+Ctrl</option>
+          <option value="ctrl_alt">Ctrl+Alt</option>
+          <option value="ctrl_shift_alt">Ctrl+Alt+Shift</option>
+          <option value="function_keys">Ctrl+Shift+F1–F5</option>
+          <option value="legacy_win">Klasik (Win)</option>
+        </select>
+        <button class="action-btn" id="btnApplyPreset">Profil Uygula</button>
+        <select id="modSelect" class="action-btn">
+          <option value="Win+Alt">Win+Alt</option>
+          <option value="Win+Ctrl">Win+Ctrl</option>
+          <option value="Ctrl+Alt">Ctrl+Alt</option>
+          <option value="Ctrl+Alt+Shift">Ctrl+Alt+Shift</option>
+          <option value="Ctrl+Shift">Ctrl+Shift</option>
+          <option value="Ctrl">Ctrl</option>
+          <option value="Win">Win</option>
+        </select>
+        <button class="action-btn" id="btnApplyMods">Değiştirici Uygula</button>
+      </div>
       <pre id="modalBody"></pre>
     </div>
   </div>
 
   <script>
-    const state = { category: 'ALL', query: '', items: [], categories: [], selected: 0 };
+    const state = { category: 'ALL', query: '', items: [], categories: [], selected: 0, revision: 0 };
     const els = {
       search: document.getElementById('searchInput'),
       pills: document.getElementById('categoryPills'),
@@ -47,6 +69,7 @@
       modal: document.getElementById('modalBackdrop'),
       modalTitle: document.getElementById('modalTitle'),
       modalBody: document.getElementById('modalBody'),
+      hotkeyControls: document.getElementById('hotkeyControls'),
     };
 
     function showToast(msg) {
@@ -82,6 +105,24 @@
         state.selected = 0;
         renderList();
       }
+    }
+
+    async function showHotkeysModal() {
+      const r = await api('/api/hotkeys/check');
+      els.modalTitle.textContent = 'Global Kısayollar ve Çakışma Denetimi';
+      els.hotkeyControls.style.display = 'flex';
+      const lines = Object.entries(r.data.hotkeys).map(([k, v]) => `${k}: ${v}`);
+      const ckeys = Object.keys(r.data.conflicts || {});
+      if (ckeys.length) {
+        lines.push('', 'Uyarılar:');
+        for (const ck of ckeys) {
+          lines.push(`! ${ck}: ${r.data.conflicts[ck].join('; ')}`);
+        }
+      } else {
+        lines.push('', 'Çakışma algılanmadı ✔');
+      }
+      els.modalBody.textContent = lines.join('\n');
+      els.modal.style.display = 'flex';
     }
 
     function renderPills() {
@@ -151,6 +192,7 @@
       if (e.key === 'F1') {
         e.preventDefault();
         const r = await api('/api/help');
+        els.hotkeyControls.style.display = 'none';
         els.modalTitle.textContent = 'Türkçe Yardım (F1)';
         els.modalBody.textContent = r.data.kullanim;
         els.modal.style.display = 'flex';
@@ -189,6 +231,19 @@
 
     document.getElementById('modalClose').onclick = () => { els.modal.style.display = 'none'; };
     document.getElementById('btnHelp').onclick = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1' }));
+    document.getElementById('btnHotkeys').onclick = showHotkeysModal;
+    document.getElementById('btnApplyPreset').onclick = async () => {
+      const preset = document.getElementById('presetSelect').value;
+      const r = await api('/api/hotkeys/preset', 'POST', { preset });
+      showToast(r.message || r.error);
+      showHotkeysModal();
+    };
+    document.getElementById('btnApplyMods').onclick = async () => {
+      const modifiers = document.getElementById('modSelect').value;
+      const r = await api('/api/hotkeys/modifiers', 'POST', { modifiers });
+      showToast(r.message || r.error);
+      showHotkeysModal();
+    };
     document.getElementById('btnReload').onclick = async () => {
       const r = await api('/api/reload', 'POST', {});
       showToast(r.message || r.error);
@@ -199,6 +254,22 @@
       const r = await api('/api/backup', 'POST', {});
       showToast(r.message || r.error);
     };
+
+    setInterval(async () => {
+      try {
+        const r = await api('/api/revision');
+        if (r.ok && r.data.revision !== state.revision) {
+          const prevRev = state.revision;
+          state.revision = r.data.revision;
+          if (prevRev !== 0) {
+            await loadCategories();
+            await loadItems();
+            showToast('Değişiklikler otomatik yenilendi ✔');
+          }
+        }
+      } catch (_err) {
+      }
+    }, 1000);
 
     loadCategories();
     loadItems();
