@@ -448,6 +448,61 @@ def test_cli_unknown_flag_and_full_subcommands(tmp_path: Path, capsys, monkeypat
     assert "Metin alanı boş olamaz." in json.loads(capsys.readouterr().out)["error"]
     assert cli.run(["--work-dir", str(work_dir), "--delete-item", "olmayan_999", "--json"]) == 2
     assert "Öğe bulunamadı:" in json.loads(capsys.readouterr().out)["error"]
+
+    assert cli.run(["--work-dir", str(work_dir), "--save", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+
+    assert cli.run(["--work-dir", str(work_dir), "--add-item", "Emoji Mesaj 😊 🚀", "--item-keys", "A", "--item-group", "Toplu", "--item-label", "E1", "--item-favorite", "true", "--json"]) == 0
+    emo_key = json.loads(capsys.readouterr().out)["data"]["item"]["raw_key"]
+    assert cli.run(["--work-dir", str(work_dir), "--duplicate-item", emo_key, "--json"]) == 0
+    dup_key = json.loads(capsys.readouterr().out)["data"]["item"]["raw_key"]
+    assert cli.run(["--work-dir", str(work_dir), "--move-item", dup_key, "--direction", "up", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    assert cli.run(["--work-dir", str(work_dir), "--toggle-favorite", emo_key, "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["data"]["favorite"] is False
+    assert cli.run(["--work-dir", str(work_dir), "--toggle-favorite", emo_key, "--item-favorite", "true", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["data"]["favorite"] is True
+
+    assert cli.run(["--work-dir", str(work_dir), "--list-items", "--only-favorites", "--sort", "alpha", "--json"]) == 0
+    fav_out = json.loads(capsys.readouterr().out)["data"]["items"]
+    assert any(it["raw_key"] == emo_key for it in fav_out)
+    assert cli.run(["--work-dir", str(work_dir), "--list-items", "--group", "Toplu", "--json"]) == 0
+    assert len(json.loads(capsys.readouterr().out)["data"]["items"]) >= 2
+
+    with mock.patch("qtp_app.core.engine.copy_to_clipboard", return_value=True):
+        assert cli.run(["--work-dir", str(work_dir), "--copy", emo_key, "--strip-emoji", "--json"]) == 0
+        c_out = json.loads(capsys.readouterr().out)
+        assert "😊" not in c_out["data"]["text"]
+
+    assert cli.run(["--work-dir", str(work_dir), "--bulk-edit", f"{emo_key},{dup_key}", "--find", "Emoji", "--replace", "Güncel", "--ignore-case", "--prefix", "P:", "--suffix", "!", "--strip-emojis", "--add-emoji", "✅", "--favorite-action", "add", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["data"]["updated_count"] == 2
+    assert cli.run(["--work-dir", str(work_dir), "--rename-group", "Toplu", "--new-group", "YeniToplu", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+
+    sel_ini = tmp_path / "selected_export.ini"
+    assert cli.run(["--work-dir", str(work_dir), "--export-ini", str(sel_ini), "--selected-keys", emo_key, "--encoding", "utf-8-bom", "--json"]) == 0
+    assert sel_ini.is_file()
+    capsys.readouterr()
+    assert cli.run(["--work-dir", str(work_dir), "--import-ini", str(sel_ini), "--merge", "--skip-duplicates", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+
+    assert cli.run(["--work-dir", str(work_dir), "--undo", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    assert cli.run(["--work-dir", str(work_dir), "--redo", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    assert cli.run(["--work-dir", str(work_dir), "--delete-group", "YeniToplu", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    assert cli.run(["--work-dir", str(work_dir), "--bulk-edit", "text_000", "--json"]) == 2
+    assert "Toplu düzenleme için" in json.loads(capsys.readouterr().out)["error"]
+    assert cli.run(["--work-dir", str(work_dir), "--bulk-delete", "olmayan_999", "--json"]) == 2
+    assert "Öğe bulunamadı:" in json.loads(capsys.readouterr().out)["error"]
+    assert cli.run(["--work-dir", str(work_dir), "--rename-group", "", "--new-group", "x", "--json"]) == 2
+    assert "Eski ve yeni grup adı boş olamaz." in json.loads(capsys.readouterr().out)["error"]
+    assert cli.run(["--work-dir", str(work_dir), "--delete-group", "", "--json"]) == 2
+    assert "Grup adı boş olamaz." in json.loads(capsys.readouterr().out)["error"]
+    assert cli.run(["--work-dir", str(work_dir), "--move-item", "text_000", "--direction", "up", "--json"]) == 2
+    assert "Kayıt zaten sınırda" in json.loads(capsys.readouterr().out)["error"]
+
     assert cli.run(["--work-dir", str(work_dir), "--web", "--port", "0", "--shutdown-after", "0.15"]) == 0
     assert "http://127.0.0.1:" in capsys.readouterr().out
 
@@ -458,7 +513,15 @@ def test_cli_unknown_flag_and_full_subcommands(tmp_path: Path, capsys, monkeypat
         assert cli.run(["--work-dir", str(work_dir), "--gui"]) == 0
         lg.assert_called_once()
 
-    from qtp_app.core.engine import QtpEngine, OperationResult, _get_git_short_sha, get_bundled_default_path, get_bundled_docs_dir, read_doc_text
+    from qtp_app.core.engine import (
+        OperationResult,
+        QtpEngine,
+        _get_git_short_sha,
+        get_bundled_default_path,
+        get_bundled_docs_dir,
+        read_doc_text,
+        strip_emojis,
+    )
 
     eng = QtpEngine(work_dir=work_dir)
     assert eng.resolve_item("") is None
@@ -538,4 +601,64 @@ def test_cli_unknown_flag_and_full_subcommands(tmp_path: Path, capsys, monkeypat
         eng.ini_path = empty_work / "none2.ini"
         eng.settings["data_path"] = "./none2.ini"
         assert eng.reload_data().data["count"] == 0
+
+    eng2 = QtpEngine(work_dir=tmp_path / "cov_eng2", paste_fn=lambda txt, **kw: mock.Mock(ok=True, copied=True, pasted=True, enter_sent=False, method="mock", warning=None, exit_code=0), clipboard_fn=lambda txt: True)
+    add_n = eng2.op_add_item("Not 😊", keys="", group="NotGrup", label="N1")
+    assert add_n.ok is True
+    note_key = add_n.data["item"]["raw_key"]
+    assert eng2.op_toggle_favorite("text_000", favorite=True).ok is True
+    for s_mode in ("order", "usage", "alpha", "keys", "favorites"):
+        assert eng2.op_list_items(sort_by=s_mode).ok is True
+        assert eng2.op_search("Not", sort_by=s_mode).ok is True
+    assert eng2.op_list_items(only_notes=True).ok is True
+    assert eng2.op_search("Not", only_notes=True).ok is True
+    assert strip_emojis("Merhaba 😊 🚀 dünya!") == "Merhaba dünya!"
+    assert eng2.op_paste(note_key, strip_emoji=True).ok is True
+    assert "😊" not in eng2.op_copy(note_key, strip_emoji=True).data["text"]
+    assert eng2.op_import_content(json.dumps([{"keys": "L-Win+A", "group": "I", "text": "Tek"}, {"keys": "L-Win+A", "group": "I", "text": "Tek"}]), filename="dup.json", mode="replace", skip_duplicates=True).data["count"] == 1
+    assert eng2.op_import_content(json.dumps([{"keys": "L-Win+A", "group": "I", "text": "Tek"}]), filename="dup.json", mode="merge", skip_duplicates=True).data["added"] == 0
+    assert eng2.op_import_content("gecersiz ini", filename="bad.ini").exit_code == 2
+    with mock.patch("qtp_app.core.engine.parse_any_content", side_effect=RuntimeError("boom")):
+        assert eng2.op_import_content("x", filename="x.ini").exit_code == 1
+    with mock.patch("qtp_app.core.engine.save_state", side_effect=OSError("disk")):
+        assert eng2.op_save_all().exit_code == 1
+    assert eng2.op_bulk_edit("", prefix="a").exit_code == 2
+    assert eng2.op_bulk_edit(["text_000"], keys="", favorite_action="remove").ok is True
+    assert eng2.op_bulk_edit(["olmayan_99"], prefix="a").exit_code == 2
+    assert eng2.op_bulk_delete([]).exit_code == 2
+    assert eng2.op_duplicate_item("olmayan_99").exit_code == 2
+    assert eng2.op_move_item("text_000", direction="left").exit_code == 2
+    assert eng2.op_move_item("olmayan_99", direction="up").exit_code == 2
+    assert eng2.op_toggle_favorite("olmayan_99").exit_code == 2
+    assert eng2.op_rename_group("OlmayanGrup", "YeniGrup").exit_code == 2
+    assert eng2.op_delete_group("OlmayanGrup").exit_code == 2
+    eng2._undo_stack.clear()
+    eng2._redo_stack.clear()
+    assert eng2.op_undo().exit_code == 2
+    assert eng2.op_redo().exit_code == 2
+
+    from qtp_app.core.watcher import FileChange
+
+    eng2.op_update_item(note_key, keys="L-Win+W", group="G2", label="L2", terminator="", favorite=False)
+    eng2.settings_path.write_text('{"theme": "dark", "data_path": "./QuickTextPaste.ini", "log_level": "debug", "auto_reload": true, "auto_reload_interval_ms": 400}', encoding="utf-8")
+    reload_events = []
+    eng2.start_watcher(on_reload=reload_events.append)
+    eng2._handle_watched_changes([FileChange(kind="settings", path=eng2.settings_path, exists=True), FileChange(kind="ini", path=eng2.ini_path, exists=True)])
+    assert len(reload_events) >= 1
+    eng2.settings_path.write_text("{bad_json", encoding="utf-8")
+    with mock.patch("qtp_app.core.engine.time.sleep"):
+        eng2._handle_watched_changes([FileChange(kind="settings", path=eng2.settings_path, exists=True)])
+    eng2.ini_path.write_text("bozuk ini", encoding="utf-8")
+    with mock.patch("qtp_app.core.engine.time.sleep"):
+        eng2._handle_watched_changes([FileChange(kind="ini", path=eng2.ini_path, exists=True)])
+    eng2.stop_watcher()
+    assert eng2.op_import_content("text_000=L-Win+A=Tek<E<N<D|", filename="bad2.ini").exit_code in (0, 2)
+    with mock.patch("qtp_app.core.engine.atomic_write_bytes", side_effect=OSError("hist")):
+        eng2._push_undo()
+    with mock.patch.object(QtpEngine, "_persist_copy_count"):
+        pass
+    assert len(eng2._undo_stack) >= 1
+    for _ in range(32):
+        eng2._push_undo()
+    assert len(eng2._undo_stack) == 30
     capsys.readouterr()

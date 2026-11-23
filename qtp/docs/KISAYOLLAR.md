@@ -1,6 +1,6 @@
 # QTP Klavye Kısayolları Rehberi
 
-QTP v2.2.1, Windows 10/11 sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama ve tüm arayüzlerde tam klavye/CRUD kontrolü sunar.
+QTP v2.3.0, Windows 10/11 sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama ve tüm arayüzlerde çoklu seçim / toplu işlem / geri al-yinele destekli tam klavye kontrolü sunar.
 
 ---
 
@@ -59,7 +59,12 @@ Varsayılan `all`, `A`, `Z`, `X`, `Q` yuvalarına ek olarak `qtp_settings.json` 
 | **Yeni Cevap Ekle (`add_item`)** | Üst çubuk `+ Yeni Cevap` düğmesi | `a` | `+ Yeni Cevap` düğmesi |
 | **Seçili Cevabı Düzenle (`update_item`)** | Sağ Tık → `Düzenle` | `E` | Satır içi `Düzenle` düğmesi |
 | **Seçili Cevabı Sil (`delete_item`)** | Sağ Tık → `Sil` | `d` | Satır içi `Sil` düğmesi |
-| **Ham INI Satırını Göster** | Sağ Tık → `INI'de Göster` | `e` | Satır içi `INI` düğmesi |
+| **Çoklu Seçim / Toplu İşlemler** | `Space` / Kutucuk / `Shift+Tık`, `✏️ Toplu`, `🗑️` | `Space`, `U`, `X` | Kutucuk / `Shift+Tık` / Üst Toplu Çubuğu |
+| **Çoğalt / Sıra Taşı (`duplicate_item`, `move_item`)** | Sağ Tık → `📑 Çoğalt` / `⬆️` / `⬇️` | `D`, `K`, `J` | Satır içi `📑`, `⬆️`, `⬇️` düğmeleri |
+| **Favori / Emoji Temizle / Görünüm** | `⭐`, `😊/🚫`, `☰/▦/▤` düğmeleri | `f`, `F`, `m` | `⭐`, `😊 Emojili / 🚫 Emojisiz`, `Liste/Kart/Tablo` |
+| **Grup Yöneticisi (`rename_group`, `delete_group`)** | Üst çubuk `📁` düğmesi | `g`, `G` | Üst çubuk `📁 Gruplar` düğmesi |
+| **Geri Al / Yinele / Kaydet** | `Ctrl+Z` / `Ctrl+Y` / `Ctrl+S` | `u`, `y`, `w` | `Ctrl+Z` / `Ctrl+Y` / `Ctrl+S` |
+| **Ham INI Satırını Göster** | Sağ Tık → `INI'de Göster` | `e` | Satır içi `INI'de Göster` düğmesi |
 | **Açık / Koyu Tema Geçişi** | Üst çubuk `🌙 Koyu` / `☀️ Açık` veya `Ctrl+,` | `s` → `theme` | Üst sağ `🌙 Koyu` / `☀️ Açık` düğmesi |
 | **Ayarlar / Yedek / Yenile** | `Ctrl+,` / Tepsi Menüsü | `s` / `b` / `B` / `r` / `x` / `i` / `R` | `Ayarlar`, `Yedek Al`, `Yeniden Yükle`, `İçe/Dışa Aktar` |
 | **Yardım Penceresi** | `F1` (5 sekme) | `F1` (Markdown modal) | `F1` / `Yardım (F1)` (6 sekme) |

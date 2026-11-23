@@ -170,6 +170,9 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
     assert get_setting_value(cfg, "auto_reload") is True
 
     cfg = set_setting_value(cfg, "theme", "auto")
+    cfg = set_setting_value(cfg, "view_mode", "table")
+    cfg = set_setting_value(cfg, "strip_emoji", "true")
+    cfg = set_setting_value(cfg, "sort_by", "usage")
     cfg = set_setting_value(cfg, "paste_method", "shift_insert")
     cfg = set_setting_value(cfg, "log_level", "debug")
     cfg = set_setting_value(cfg, "last_category", "z")
@@ -186,6 +189,9 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
     cfg = set_setting_value(cfg, "hotkeys.W", "shift+ctrl+w")
 
     assert cfg["theme"] == "auto"
+    assert cfg["view_mode"] == "table"
+    assert cfg["strip_emoji"] is True
+    assert cfg["sort_by"] == "usage"
     assert cfg["paste_method"] == "shift_insert"
     assert cfg["log_level"] == "debug"
     assert cfg["last_category"] == "Z"
@@ -210,6 +216,9 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
 
     for k, v in (
         ("theme", "neon"),
+        ("view_mode", "kanban"),
+        ("strip_emoji", "belki"),
+        ("sort_by", "random"),
         ("paste_method", "magic"),
         ("log_level", "verbose"),
         ("last_category", "B"),

@@ -69,6 +69,14 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
     import_ini_file = FIXTURES_DIR / "encoding_utf8bom.ini"
     export_ini_target = tmp_path / f"out_{mode}.ini"
     export_bak_target = tmp_path / f"bak_{mode}.json"
+    bulk_targets = ",".join(it["raw_key"] for it in engine.items[:2]) or "text_000"
+    group0 = str(engine.items[0].get("group") or "Genel") if engine.items else "Genel"
+
+    if op_id == "undo":
+        engine.op_toggle_favorite("text_000")
+    elif op_id == "redo":
+        engine.op_toggle_favorite("text_000")
+        engine.op_undo()
 
     if mode == "cli":
         argv_map: dict[str, list[str]] = {
@@ -89,6 +97,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "backup": ["--backup", "--json"],
             "restore": ["--restore", str(FIXTURES_DIR / "data.json"), "--replace", "--json"],
             "reload": ["--reload", "--json"],
+            "save_all": ["--save", "--json"],
             "get_setting": ["--get", "theme", "--json"],
             "set_setting": ["--set", "theme", "light", "--json"],
             "check_hotkeys": ["--check-hotkeys", "--json"],
@@ -97,6 +106,15 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "add_item": ["--add-item", "Parite yeni cevap", "--item-keys", "A", "--item-group", "Parite", "--item-label", "Etiket", "--json"],
             "update_item": ["--update-item", "text_000", "--item-text", "Parite güncel cevap", "--json"],
             "delete_item": ["--delete-item", "text_000", "--json"],
+            "duplicate_item": ["--duplicate-item", "text_000", "--json"],
+            "move_item": ["--move-item", "text_001", "--direction", "up", "--json"],
+            "toggle_favorite": ["--toggle-favorite", "text_000", "--json"],
+            "bulk_edit": ["--bulk-edit", bulk_targets, "--prefix", "Önek ", "--json"],
+            "bulk_delete": ["--bulk-delete", bulk_targets, "--json"],
+            "rename_group": ["--rename-group", group0, "--new-group", "PariteGrup", "--json"],
+            "delete_group": ["--delete-group", group0, "--json"],
+            "undo": ["--undo", "--json"],
+            "redo": ["--redo", "--json"],
         }
         parser = cli.build_arg_parser()
         args = parser.parse_args(argv_map[op_id])
@@ -125,6 +143,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "backup": ("", ""),
             "restore": (str(FIXTURES_DIR / "data.json"), "replace"),
             "reload": ("", ""),
+            "save_all": ("", ""),
             "get_setting": ("theme", ""),
             "set_setting": ("theme", "light"),
             "check_hotkeys": ("", ""),
@@ -133,6 +152,15 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             "add_item": ("Parite yeni cevap", json.dumps({"keys": "A", "group": "Parite", "label": "Etiket"})),
             "update_item": ("text_000", json.dumps({"text": "Parite güncel cevap"})),
             "delete_item": ("text_000", ""),
+            "duplicate_item": ("text_000", ""),
+            "move_item": ("text_001", "up"),
+            "toggle_favorite": ("text_000", ""),
+            "bulk_edit": (bulk_targets, json.dumps({"prefix": "Önek "})),
+            "bulk_delete": (bulk_targets, ""),
+            "rename_group": (group0, "PariteGrup"),
+            "delete_group": (group0, ""),
+            "undo": ("", ""),
+            "redo": ("", ""),
         }
         a1, a2 = arg_map[op_id]
         res = tui.execute_operation(op_id, a1, a2)
@@ -166,6 +194,7 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
                 "backup": ("POST", "/api/backup", {}),
                 "restore": ("POST", "/api/restore", {"target": str(FIXTURES_DIR / "data.json"), "mode": "replace"}),
                 "reload": ("POST", "/api/reload", {}),
+                "save_all": ("POST", "/api/save", {}),
                 "get_setting": ("GET", "/api/settings?key=theme", None),
                 "set_setting": ("POST", "/api/settings", {"key": "theme", "value": "light"}),
                 "check_hotkeys": ("GET", "/api/hotkeys/check", None),
@@ -174,6 +203,15 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
                 "add_item": ("POST", "/api/items/add", {"text": "Parite yeni cevap", "keys": "A", "group": "Parite", "label": "Etiket"}),
                 "update_item": ("POST", "/api/items/update", {"target": "text_000", "text": "Parite güncel cevap"}),
                 "delete_item": ("POST", "/api/items/delete", {"target": "text_000"}),
+                "duplicate_item": ("POST", "/api/items/duplicate", {"target": "text_000"}),
+                "move_item": ("POST", "/api/items/move", {"target": "text_001", "direction": "up"}),
+                "toggle_favorite": ("POST", "/api/items/favorite", {"target": "text_000"}),
+                "bulk_edit": ("POST", "/api/items/bulk-edit", {"targets": bulk_targets.split(","), "prefix": "Önek "}),
+                "bulk_delete": ("POST", "/api/items/bulk-delete", {"targets": bulk_targets.split(",")}),
+                "rename_group": ("POST", "/api/groups/rename", {"old_group": group0, "new_group": "PariteGrup"}),
+                "delete_group": ("POST", "/api/groups/delete", {"group": group0}),
+                "undo": ("POST", "/api/undo", {}),
+                "redo": ("POST", "/api/redo", {}),
             }
             method, url, body = route_map[op_id]
             headers = {"Content-Type": "application/json"} if body is not None else {}
@@ -255,6 +293,26 @@ def _invoke_mode_op(mode: str, engine: QtpEngine, op_id: str, tmp_path: Path, ca
             res = engine.op_update_item("text_000", text="Parite güncel cevap")
         elif op_id == "delete_item":
             res = engine.op_delete_item("text_000")
+        elif op_id == "save_all":
+            res = engine.op_save_all()
+        elif op_id == "duplicate_item":
+            res = engine.op_duplicate_item("text_000")
+        elif op_id == "move_item":
+            res = engine.op_move_item("text_001", direction="up")
+        elif op_id == "toggle_favorite":
+            res = engine.op_toggle_favorite("text_000")
+        elif op_id == "bulk_edit":
+            res = engine.op_bulk_edit(bulk_targets, prefix="Önek ")
+        elif op_id == "bulk_delete":
+            res = engine.op_bulk_delete(bulk_targets)
+        elif op_id == "rename_group":
+            res = engine.op_rename_group(group0, "PariteGrup")
+        elif op_id == "delete_group":
+            res = engine.op_delete_group(group0)
+        elif op_id == "undo":
+            res = engine.op_undo()
+        elif op_id == "redo":
+            res = engine.op_redo()
         else:
             raise AssertionError(f"Bilinmeyen GUI işlemi: {op_id}")
         return res.exit_code, res.message, res.to_api_dict()
@@ -319,12 +377,17 @@ def test_error_parity_across_modes(mode: str, tmp_path: Path, capsys):
         code_badset = cli.execute_cli(eng, parser.parse_args(["--set", "bilinmeyen_ayar", "x", "--json"]))
         out_bs = json.loads(capsys.readouterr().out)
         assert code_badset == 2 and "Geçersiz ayar anahtarı:" in out_bs["error"]
+        code_undo = cli.execute_cli(eng, parser.parse_args(["--undo", "--json"]))
+        out_un = json.loads(capsys.readouterr().out)
+        assert code_undo == 2 and "Geri alınacak işlem yok." in out_un["error"]
     elif mode == "tui":
         tui = QtpTui(eng)
         r1 = tui.execute_operation("copy", "olmayan_anahtar_999")
         assert r1.exit_code == 2 and "Öğe bulunamadı:" in r1.message
         r2 = tui.execute_operation("set_setting", "bilinmeyen_ayar", "x")
         assert r2.exit_code == 2 and "Geçersiz ayar anahtarı:" in r2.message
+        r3 = tui.execute_operation("undo")
+        assert r3.exit_code == 2 and "Geri alınacak işlem yok." in r3.message
     elif mode == "web":
         srv = create_web_server(eng, port=0)
         port = srv.server_address[1]
@@ -338,6 +401,9 @@ def test_error_parity_across_modes(mode: str, tmp_path: Path, capsys):
             conn.request("POST", "/api/settings", body=json.dumps({"key": "bilinmeyen_ayar", "value": "x"}))
             r2 = json.loads(conn.getresponse().read().decode("utf-8"))
             assert r2["exit_code"] == 2 and "Geçersiz ayar anahtarı:" in r2["error"]
+            conn.request("POST", "/api/undo", body="{}")
+            r3 = json.loads(conn.getresponse().read().decode("utf-8"))
+            assert r3["exit_code"] == 2 and "Geri alınacak işlem yok." in r3["error"]
         finally:
             srv.shutdown()
             srv.server_close()
@@ -346,6 +412,8 @@ def test_error_parity_across_modes(mode: str, tmp_path: Path, capsys):
         assert r1.exit_code == 2 and "Öğe bulunamadı:" in (r1.error or "")
         r2 = eng.op_set_setting("bilinmeyen_ayar", "x")
         assert r2.exit_code == 2 and "Geçersiz ayar anahtarı:" in (r2.error or "")
+        r3 = eng.op_undo()
+        assert r3.exit_code == 2 and "Geri alınacak işlem yok." in (r3.error or "")
 
 
 def test_tui_interactive_keys_ansi_and_win_console_shim(tmp_path: Path):
@@ -376,6 +444,27 @@ def test_tui_interactive_keys_ansi_and_win_console_shim(tmp_path: Path):
     tui2 = QtpTui(eng)
     tui2.run_scripted(["/", "M", "ENTER", "q"])
     assert len(eng._test_copied) >= 1
+
+    tui3 = QtpTui(eng, use_color=False)
+    tui3.run_scripted([
+        " ", "w", "f", "F", "F", "m", "m",
+        "D", "J", "K",
+        "a", "N", "o", "t", "ENTER",
+        "E", "!", "ENTER",
+        "U", "A", "ENTER",
+        "g", "Z", "ENTER",
+        "u", "y",
+        "X", "ENTER",
+        "G", "ESC",
+        "d", "ESC",
+        "q",
+    ])
+    from qtp_app.core.watcher import ReloadEvent
+    tui3.apply_reload_event(ReloadEvent(items_changed=False, settings_changed=False, warning="Uyarı testi"))
+    assert tui3.status_message == "Uyarı testi"
+    tui3.apply_reload_event(ReloadEvent(items_changed=True, settings_changed=False))
+    tui3.apply_reload_event(ReloadEvent(items_changed=False, settings_changed=True))
+    assert "güncellendi" in tui3.status_message
 
     parsed = _parse_stream_keys("\x1b[A\x1b[B\x1b[5~\x1b[6~\x1bOP\x1b[11~\t\x08\r\n\x1bq")
     assert parsed == ["UP", "DOWN", "PGUP", "PGDN", "F1", "F1", "TAB", "BACKSPACE", "ENTER", "ESC", "q"]

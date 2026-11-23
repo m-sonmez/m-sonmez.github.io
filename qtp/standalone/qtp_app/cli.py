@@ -35,6 +35,7 @@ _CLI_ACTION_FLAGS = frozenset(
         "--restore",
         "--backup",
         "--reload",
+        "--save",
         "--get",
         "--set",
         "--check-hotkeys",
@@ -43,6 +44,15 @@ _CLI_ACTION_FLAGS = frozenset(
         "--add-item",
         "--update-item",
         "--delete-item",
+        "--duplicate-item",
+        "--move-item",
+        "--toggle-favorite",
+        "--bulk-edit",
+        "--bulk-delete",
+        "--rename-group",
+        "--delete-group",
+        "--undo",
+        "--redo",
     }
 )
 
@@ -276,6 +286,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--restore", metavar="HEDEF")
     parser.add_argument("--backup", action="store_true")
     parser.add_argument("--reload", action="store_true")
+    parser.add_argument("--save", action="store_true")
     parser.add_argument("--get", metavar="ANAHTAR")
     parser.add_argument("--set", nargs=2, metavar=("ANAHTAR", "DEGER"))
     parser.add_argument("--check-hotkeys", action="store_true")
@@ -284,21 +295,50 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--add-item", metavar="METIN")
     parser.add_argument("--update-item", metavar="HEDEF")
     parser.add_argument("--delete-item", metavar="HEDEF")
+    parser.add_argument("--duplicate-item", metavar="HEDEF")
+    parser.add_argument("--move-item", metavar="HEDEF")
+    parser.add_argument("--direction", default="up", choices=["up", "down"])
+    parser.add_argument("--toggle-favorite", metavar="HEDEF")
+    parser.add_argument("--bulk-edit", metavar="HEDEFLER")
+    parser.add_argument("--bulk-delete", metavar="HEDEFLER")
+    parser.add_argument("--rename-group", metavar="ESKI")
+    parser.add_argument("--new-group", default="", metavar="YENI")
+    parser.add_argument("--delete-group", metavar="GRUP")
+    parser.add_argument("--undo", action="store_true")
+    parser.add_argument("--redo", action="store_true")
     parser.add_argument("--item-keys", default=None, metavar="TUS")
     parser.add_argument("--item-group", default=None, metavar="GRUP")
     parser.add_argument("--item-label", default=None, metavar="ETIKET")
     parser.add_argument("--item-text", default=None, metavar="METIN")
+    parser.add_argument("--item-favorite", default=None, choices=["true", "false"])
     parser.add_argument("--no-end-marker", action="store_true")
+
+    parser.add_argument("--find", default=None, metavar="ARANAN")
+    parser.add_argument("--ignore-case", action="store_true")
+    parser.add_argument("--prefix", default="", metavar="ONEK")
+    parser.add_argument("--suffix", default="", metavar="SONEK")
+    parser.add_argument("--strip-emojis", action="store_true")
+    parser.add_argument("--add-emoji", default="", metavar="EMOJI")
+    parser.add_argument("--favorite-action", default="keep", choices=["keep", "add", "remove"])
 
     parser.add_argument("--category", default="ALL")
     parser.add_argument("--query", default="")
+    parser.add_argument("--only-favorites", action="store_true")
+    parser.add_argument("--only-notes", action="store_true")
+    parser.add_argument("--group", default="", metavar="GRUP")
+    parser.add_argument("--sort", default=None, choices=["order", "usage", "alpha", "keys", "favorites"])
+    parser.add_argument("--strip-emoji", action="store_true")
+    parser.add_argument("--selected-keys", default="", metavar="ANAHTARLAR")
+    parser.add_argument("--encoding", default="utf-16-le-bom")
+    parser.add_argument("--skip-duplicates", action="store_true")
     parser.add_argument("--json", action="store_true", dest="as_json")
     parser.add_argument("--work-dir", metavar="DIZIN")
     parser.add_argument("--keep", type=int, default=None)
 
     merge_group = parser.add_mutually_exclusive_group()
     merge_group.add_argument("--merge", action="store_true")
-    merge_group.add_argument("--replace", action="store_true")
+    merge_group.add_argument("--replace-all", action="store_true")
+    merge_group.add_argument("--replace", nargs="?", const="__FLAG_TRUE__", default=None, metavar="YENI")
 
     parser.add_argument("--port", type=int, default=None)
     parser.add_argument("--open-browser", action="store_true")
@@ -335,6 +375,7 @@ def _has_cli_action(args: argparse.Namespace) -> bool:
             args.restore is not None,
             args.backup,
             args.reload,
+            args.save,
             args.get is not None,
             args.set is not None,
             args.check_hotkeys,
@@ -343,6 +384,15 @@ def _has_cli_action(args: argparse.Namespace) -> bool:
             args.add_item is not None,
             args.update_item is not None,
             args.delete_item is not None,
+            args.duplicate_item is not None,
+            args.move_item is not None,
+            args.toggle_favorite is not None,
+            args.bulk_edit is not None,
+            args.bulk_delete is not None,
+            args.rename_group is not None,
+            args.delete_group is not None,
+            args.undo,
+            args.redo,
         )
     )
 
@@ -446,7 +496,14 @@ def _dispatch_cli_action(
 
     if args.list_items:
         return _print_result(
-            engine.op_list_items(category=args.category, query=args.query),
+            engine.op_list_items(
+                category=args.category,
+                query=args.query,
+                only_favorites=bool(getattr(args, "only_favorites", False)),
+                only_notes=bool(getattr(args, "only_notes", False)),
+                group=str(getattr(args, "group", "") or ""),
+                sort_by=getattr(args, "sort", None),
+            ),
             as_json=as_json,
             raw_formatter=lambda r: "\n".join(
                 f"{it['raw_key']} [{it['keys']}] {it['text']}" for it in r.data["items"]
@@ -455,7 +512,14 @@ def _dispatch_cli_action(
 
     if args.search is not None:
         return _print_result(
-            engine.op_search(args.search, category=args.category),
+            engine.op_search(
+                args.search,
+                category=args.category,
+                only_favorites=bool(getattr(args, "only_favorites", False)),
+                only_notes=bool(getattr(args, "only_notes", False)),
+                group=str(getattr(args, "group", "") or ""),
+                sort_by=getattr(args, "sort", None),
+            ),
             as_json=as_json,
             raw_formatter=lambda r: "\n".join(
                 f"{it['raw_key']} [{it['keys']}] {it['text']}" for it in r.data["items"]
@@ -470,17 +534,43 @@ def _dispatch_cli_action(
         )
 
     if args.copy is not None:
-        return _print_result(engine.op_copy(args.copy), as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+        strip_opt = True if getattr(args, "strip_emoji", False) else None
+        return _print_result(
+            engine.op_copy(args.copy, strip_emoji=strip_opt),
+            as_json=as_json,
+            quiet=quiet,
+            suppress_ok_if_quiet=True,
+        )
 
     if args.paste is not None:
-        return _print_result(engine.op_paste(args.paste), as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+        strip_opt = True if getattr(args, "strip_emoji", False) else None
+        return _print_result(
+            engine.op_paste(args.paste, strip_emoji=strip_opt),
+            as_json=as_json,
+            quiet=quiet,
+            suppress_ok_if_quiet=True,
+        )
 
     if args.export_ini is not None:
-        return _print_result(engine.op_export_ini(Path(args.export_ini)), as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+        sel_csv = str(getattr(args, "selected_keys", "") or "")
+        raw_keys = [k.strip() for k in sel_csv.split(",") if k.strip()] or None
+        enc = str(getattr(args, "encoding", "utf-16-le-bom") or "utf-16-le-bom")
+        return _print_result(
+            engine.op_export_ini(Path(args.export_ini), raw_keys=raw_keys, encoding=enc),
+            as_json=as_json,
+            quiet=quiet,
+            suppress_ok_if_quiet=True,
+        )
 
     if args.import_ini is not None:
-        imp_mode = "replace" if args.replace else "merge"
-        return _print_result(engine.op_import_ini(Path(args.import_ini), mode=imp_mode), as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+        imp_mode = "replace" if (getattr(args, "replace_all", False) or getattr(args, "replace", None) == "__FLAG_TRUE__") else "merge"
+        skip_dup = bool(getattr(args, "skip_duplicates", False))
+        return _print_result(
+            engine.op_import_ini(Path(args.import_ini), mode=imp_mode, skip_duplicates=skip_dup),
+            as_json=as_json,
+            quiet=quiet,
+            suppress_ok_if_quiet=True,
+        )
 
     if args.export_backup is not None:
         return _print_result(engine.op_export_backup(Path(args.export_backup)), as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
@@ -494,6 +584,9 @@ def _dispatch_cli_action(
 
     if args.reload:
         return _print_result(engine.reload_data(), as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "save", False):
+        return _print_result(engine.op_save_all(), as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
 
     if args.get is not None:
         return _print_result(
@@ -530,17 +623,21 @@ def _dispatch_cli_action(
 
     if getattr(args, "add_item", None) is not None:
         term = "" if args.no_end_marker else "<E<N<D|"
+        fav_flag = str(getattr(args, "item_favorite", "") or "").lower() == "true"
         res = engine.op_add_item(
             args.add_item,
             keys=args.item_keys or "",
             group=args.item_group or "Genel",
             label=args.item_label or "",
             terminator=term,
+            favorite=fav_flag,
         )
         return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
 
     if getattr(args, "update_item", None) is not None:
         term = "" if args.no_end_marker else None
+        fav_arg = getattr(args, "item_favorite", None)
+        fav_opt = None if fav_arg is None else (str(fav_arg).lower() == "true")
         res = engine.op_update_item(
             args.update_item,
             keys=args.item_keys,
@@ -548,6 +645,7 @@ def _dispatch_cli_action(
             label=args.item_label,
             text=args.item_text,
             terminator=term,
+            favorite=fav_opt,
         )
         return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
 
@@ -555,9 +653,74 @@ def _dispatch_cli_action(
         res = engine.op_delete_item(args.delete_item)
         return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
 
-    if str(getattr(args, "category", "ALL")).strip().upper() != "ALL" or str(getattr(args, "query", "")):
+    if getattr(args, "duplicate_item", None) is not None:
+        res = engine.op_duplicate_item(args.duplicate_item)
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "move_item", None) is not None:
+        res = engine.op_move_item(args.move_item, direction=getattr(args, "direction", "up"))
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "toggle_favorite", None) is not None:
+        fav_arg = getattr(args, "item_favorite", None)
+        fav_opt = None if fav_arg is None else (str(fav_arg).lower() == "true")
+        res = engine.op_toggle_favorite(args.toggle_favorite, favorite=fav_opt)
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "bulk_edit", None) is not None:
+        raw_repl = getattr(args, "replace", None)
+        repl_val = "" if raw_repl in (None, "__FLAG_TRUE__") else str(raw_repl)
+        res = engine.op_bulk_edit(
+            args.bulk_edit,
+            keys=args.item_keys,
+            group=args.item_group,
+            find=getattr(args, "find", None),
+            replace=repl_val,
+            ignore_case=bool(getattr(args, "ignore_case", False)),
+            prefix=str(getattr(args, "prefix", "") or ""),
+            suffix=str(getattr(args, "suffix", "") or ""),
+            strip_emojis=bool(getattr(args, "strip_emojis", False)),
+            add_emoji=str(getattr(args, "add_emoji", "") or ""),
+            favorite_action=str(getattr(args, "favorite_action", "keep") or "keep"),
+        )
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "bulk_delete", None) is not None:
+        res = engine.op_bulk_delete(args.bulk_delete)
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "rename_group", None) is not None:
+        res = engine.op_rename_group(args.rename_group, getattr(args, "new_group", ""))
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "delete_group", None) is not None:
+        res = engine.op_delete_group(args.delete_group)
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "undo", False):
+        res = engine.op_undo()
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if getattr(args, "redo", False):
+        res = engine.op_redo()
+        return _print_result(res, as_json=as_json, quiet=quiet, suppress_ok_if_quiet=True)
+
+    if (
+        str(getattr(args, "category", "ALL")).strip().upper() != "ALL"
+        or str(getattr(args, "query", ""))
+        or bool(getattr(args, "only_favorites", False))
+        or bool(getattr(args, "only_notes", False))
+        or str(getattr(args, "group", "") or "")
+    ):
         return _print_result(
-            engine.op_list_items(category=args.category, query=args.query),
+            engine.op_list_items(
+                category=args.category,
+                query=args.query,
+                only_favorites=bool(getattr(args, "only_favorites", False)),
+                only_notes=bool(getattr(args, "only_notes", False)),
+                group=str(getattr(args, "group", "") or ""),
+                sort_by=getattr(args, "sort", None),
+            ),
             as_json=as_json,
             raw_formatter=lambda r: "\n".join(
                 f"{it['raw_key']} [{it['keys']}] {it['text']}" for it in r.data["items"]

@@ -4,6 +4,17 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.3.0] - 2026-11-23
+
+### Tam Güçlü Yönetim Paritesi (`legacy/` → GUI/Web/TUI/CLI) & `qtp_manager.py` Sözdizimi Düzeltmesi
+- **Klasik Yöneticideki Sözdizimi Hatası Giderildi (`legacy/qtp_manager.py:492`):** `open_web_panel` içinde `subprocess.Popen(...)` argümanlarının içine yazılmış `if not srv_script.is_file():` bloğu çağrı öncesine alınarak `SyntaxError` kökten çözüldü; `legacy/tests/test_qtp.py` içine tüm `legacy/*.py` dosyalarını derleyen `test_legacy_python_files_compile_cleanly` kapısı eklendi.
+- **Çoklu Seçim, Toplu Düzenleme & Toplu Silme (`bulk_edit`, `bulk_delete`):** GUI/Web/TUI/CLI katmanlarında çoklu seçim (`Space`, onay kutusu, `Shift+Tık`, tümünü seç/temizle), kısayol/grup atama, büyük-küçük harf duyarsız Türkçe bul-değiştir, önek/sonek, toplu emoji ekleme/temizleme ve favori durumu güncelleme getirildi.
+- **Unicode Emoji Temizleme & Hızlı Emoji Yongaları (`strip_emoji`, `strip_emojis`):** Kopyalama/yapıştırma sırasında depolanmış metni bozmadan emojileri kaldıran genel `😊 Emojili / 🚫 Emojisiz` anahtarı ve düzenleyici/toplu işlem içinde tek-tık emoji yongaları eklendi.
+- **Liste / Kart / Tablo Görünümleri (`view_mode: "list" | "grid" | "table"`):** Hem PyQt6 `OverlayWindow` (`QListView` Liste & `IconMode` Kart + `QTableView`) hem de Web (`qtp.html`) arayüzüne `view_mode` kalıcılığıyla eklendi.
+- **Favoriler (`⭐`), Kullanım Sayacı (`copyCount`), Sıralama (`sort_by`), Çoğalt (`duplicate_item`), Yukarı/Aşağı Taşı (`move_item`), Grup Yöneticisi (`rename_group`, `delete_group`), 30 Adımlı Geri Al/Yinele (`undo`, `redo`) & Anlık Kayıt (`save_all`):** Tüm yeni işlemler `operations.py` ve `QtpEngine` üzerinde birleştirilip 4 modda eşitlendi; Web modunda sürükle-bırak içe aktarım, UTF-16/UTF-8/ANSI/JSON/Word `.doc`/Yazdır dışa aktarımı ve yerel/disk anlık kayıt geçmişi sunuldu (`sw.js` `v3.4.0`).
+
+---
+
 ## [2.2.1] - 2026-11-23
 
 ### Açık/Koyu Tema Kök Düzeltmesi, WCAG Kontrast Kapısı, PE Sürüm Bilgisi & Authenticode İmzalama

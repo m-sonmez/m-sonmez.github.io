@@ -64,6 +64,11 @@ Bu belge, QTP'nin üretebileceği **tüm Türkçe hata/uyarı mesajlarını bire
 | `HATA: Arama kutusu otomatik odaklanamadı.` | `--selftest` sırasında arama alanı odak alamadı. | Qt platform eklentisini (`QT_QPA_PLATFORM=offscreen`) kontrol edin. |
 | `Belge dosyası bulunamadı:` | İstenen Markdown yardım dosyası pakette veya `docs/` klasöründe yer almıyor. | İkili dosyanın `docs/*.md` verilerini içerdiğinden emin olun. |
 | `Metin alanı boş olamaz.` | `--add-item`, `--update-item` (`POST /api/items/add`, `POST /api/items/update`, TUI `a`/`E` veya GUI Düzenleyici) işleminde metin alanı boş bırakılmış. | En az bir görünür karakter içeren hazır cevap metni yazıp tekrar kaydedin. |
+| `HATA: Kayıt ve ayarlar diske yazılamadı:` | `--save` (`POST /api/save`, TUI `w` veya GUI `Ctrl+S`) sırasında disk yazma hatası oluştu. | Çalışma dizininin yazılabilir olduğunu ve dosyaların kilitli olmadığını doğrulayın. |
+| `Geçersiz taşıma yönü:` / `Kayıt zaten sınırda, taşınamadı.` | `--move-item` (`POST /api/items/move`, TUI `K`/`J`) için yön `up`/`down` dışında verildi veya kayıt zaten ilk/son sırada. | Yönü `up` veya `down` olarak girin ve orta konumdaki bir öğeyi seçin. |
+| `Toplu işlem için en az bir hedef kayıt seçilmelidir.` / `Toplu düzenleme için en az bir değişiklik seçeneği belirtilmelidir.` | `--bulk-edit` / `--bulk-delete` (`POST /api/items/bulk-*`, TUI `U`/`X` veya GUI Toplu Düzenle) boş seçimle ya da değişiklik alanı olmadan çağrıldı. | En az bir hedef kayıt seçin ve kısayol, grup, bul/değiştir, önek/sonek, emoji veya favori alanlarından en az birini doldurun. |
+| `Eski ve yeni grup adı boş olamaz.` / `Grup adı boş olamaz.` / `Grup bulunamadı:` | `--rename-group` veya `--delete-group` (`POST /api/groups/*`, TUI `g`/`G`) için boş ya da mevcut olmayan grup adı verildi. | Mevcut grup adlarından birini eksiksiz girin. |
+| `Geri alınacak işlem yok.` / `Yinelenecek işlem yok.` | `--undo` / `--redo` (`POST /api/undo`, `POST /api/redo`, `Ctrl+Z` / `Ctrl+Y`) geçmiş veya ileri alma yığını boşken çağrıldı. | Önce geri alınabilir bir ekleme, düzenleme, silme veya grup işlemi gerçekleştirin. |
 
 ---
 
@@ -83,7 +88,7 @@ Windows `qtp.exe` çift tıklandığında siyah komut penceresi açmamak için G
 - **`qtp.lock` & Türkçe Kodlama:** Bayat `qtp.lock` sonraki açılışta otomatik temizlenir; `cp1254` ve BOM'suz INI'ler kayıpsız `UTF-16 LE BOM` olarak okunur.
 
 ### Açık / Koyu Tema Nasıl Değiştirilir?
-- QTP v2.2.1 sürümünden itibaren tüm arayüzlerde (`--gui`, `--web`, `qtp.html`, `index.html`, `legacy/cevaplar.html`) varsayılan tema **Açık (Light)** olarak başlar ve tüm bileşenler (kartlar, bağlam menüleri, açılır listeler, kaydırma çubukları, bildirim balonları, yardım sekmeleri) WCAG 2.1 kontrast standartlarına göre tam yalıtılmıştır.
+- QTP v2.3.0 sürümünden itibaren tüm arayüzlerde (`--gui`, `--web`, `qtp.html`, `index.html`, `legacy/cevaplar.html`) varsayılan tema **Açık (Light)** olarak başlar ve tüm bileşenler (kartlar, bağlam menüleri, tablolar, açılır listeler, kaydırma çubukları, bildirim balonları, yardım sekmeleri) WCAG 2.1 kontrast standartlarına göre tam yalıtılmıştır.
 - **Tek Tıkla Açık / Koyu Moda Geçiş:**
   - **GUI (`--gui`):** Üst çubuktaki `🌙 Koyu` / `☀️ Açık` düğmesine tıklayın veya Ayarlar (`Ctrl+,`) penceresindeki Tema (`light` / `dark` / `auto`) seçeneğini değiştirin; değişiklik anında canlı olarak katmana, tepsi menüsüne ve tüm açılır pencerelere uygulanır.
   - **Web / GitHub Pages (`qtp.html` / `index.html`):** Üst sağdaki `🌙 Koyu` / `☀️ Açık` tema düğmesine tıklayın; canlı `--web` modunda `qtp_settings.json` güncellenir, statik GitHub Pages üzerinde ise tarayıcı `localStorage` hafızasına kaydedilir.

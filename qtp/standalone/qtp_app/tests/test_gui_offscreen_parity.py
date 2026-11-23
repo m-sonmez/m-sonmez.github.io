@@ -41,6 +41,21 @@ def test_gui_offscreen_model_matches_cli_json_output(tmp_path: Path, capsys):
         gui_texts = [overlay.list_model.item_at(i)["text"] for i in range(overlay.list_model.rowCount())]
         cli_texts = [it["text"] for it in cli_items]
         assert gui_texts == cli_texts
+
+        overlay.set_view_mode("grid", persist=False)
+        assert overlay.view_stack.currentWidget() is overlay.list_view
+        assert overlay.list_delegate.grid_mode is True
+        overlay.set_view_mode("table", persist=False)
+        assert overlay.view_stack.currentWidget() is overlay.table_view
+        assert overlay.table_model.rowCount() == len(cli_items)
+        overlay.set_view_mode("list", persist=False)
+        assert overlay.view_stack.currentWidget() is overlay.list_view
+        overlay.toggle_check(0)
+        assert len(overlay._selected_keys) == 1
+        overlay.select_all_visible()
+        assert len(overlay._selected_keys) == len(cli_items)
+        overlay.clear_selection()
+        assert len(overlay._selected_keys) == 0
     finally:
         overlay.close()
         overlay.deleteLater()

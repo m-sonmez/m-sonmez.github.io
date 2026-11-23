@@ -167,6 +167,94 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         assert rev["ok"] is True and rev["data"]["revision"] >= 2
         assert rev["data"]["initial_category"] == "ALL"
         assert rev["data"]["initial_query"] == ""
+        assert rev["data"]["view_mode"] == "list"
+        assert rev["data"]["strip_emoji"] is False
+
+        conn.request("GET", "/api/groups")
+        grps = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert grps["ok"] is True and len(grps["data"]["groups"]) >= 1
+
+        conn.request(
+            "POST",
+            "/api/items/add",
+            body=json.dumps({"text": "Emoji 👋 Mesaj 😊", "keys": "L-Win+A", "group": "EmojiGrup", "label": "E1", "favorite": True}),
+            headers={"Content-Type": "application/json"},
+        )
+        e_add = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert e_add["ok"] is True
+        ek = e_add["data"]["item"]["raw_key"]
+
+        conn.request("GET", "/api/items?only_favorites=1&sort=alpha")
+        fav_items = json.loads(conn.getresponse().read().decode("utf-8"))["data"]["items"]
+        assert any(it["raw_key"] == ek for it in fav_items)
+
+        conn.request(
+            "POST",
+            "/api/copy",
+            body=json.dumps({"target": ek, "strip_emoji": True}),
+            headers={"Content-Type": "application/json"},
+        )
+        c_res = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert c_res["ok"] is True and "😊" not in c_res["data"]["text"]
+
+        conn.request(
+            "POST",
+            "/api/items/duplicate",
+            body=json.dumps({"target": ek}),
+            headers={"Content-Type": "application/json"},
+        )
+        d_res = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert d_res["ok"] is True
+        dk = d_res["data"]["item"]["raw_key"]
+
+        conn.request(
+            "POST",
+            "/api/items/move",
+            body=json.dumps({"target": dk, "direction": "up"}),
+            headers={"Content-Type": "application/json"},
+        )
+        assert json.loads(conn.getresponse().read().decode("utf-8"))["ok"] is True
+
+        conn.request(
+            "POST",
+            "/api/items/bulk-edit",
+            body=json.dumps({"targets": [ek, dk], "prefix": "Ön:", "strip_emojis": True, "favorite_action": "remove"}),
+            headers={"Content-Type": "application/json"},
+        )
+        be_res = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert be_res["ok"] is True and be_res["data"]["updated_count"] == 2
+
+        conn.request(
+            "POST",
+            "/api/groups/rename",
+            body=json.dumps({"old_group": "EmojiGrup", "new_group": "YeniEmojiGrup"}),
+            headers={"Content-Type": "application/json"},
+        )
+        assert json.loads(conn.getresponse().read().decode("utf-8"))["ok"] is True
+
+        conn.request("POST", "/api/undo", body="{}", headers={"Content-Type": "application/json"})
+        assert json.loads(conn.getresponse().read().decode("utf-8"))["ok"] is True
+        conn.request("POST", "/api/redo", body="{}", headers={"Content-Type": "application/json"})
+        assert json.loads(conn.getresponse().read().decode("utf-8"))["ok"] is True
+
+        conn.request(
+            "POST",
+            "/api/groups/delete",
+            body=json.dumps({"group": "YeniEmojiGrup"}),
+            headers={"Content-Type": "application/json"},
+        )
+        assert json.loads(conn.getresponse().read().decode("utf-8"))["ok"] is True
+
+        conn.request("POST", "/api/save", body="{}", headers={"Content-Type": "application/json"})
+        assert json.loads(conn.getresponse().read().decode("utf-8"))["ok"] is True
+
+        conn.request(
+            "POST",
+            "/api/import-content",
+            body=json.dumps({"content": json.dumps([{"keys": "L-Win+Z", "group": "Imp", "text": "İçe içerik"}]), "filename": "imp.json", "mode": "merge", "skip_duplicates": True}),
+            headers={"Content-Type": "application/json"},
+        )
+        assert json.loads(conn.getresponse().read().decode("utf-8"))["ok"] is True
 
         conn.request("GET", "/api/olmayan_rota")
         assert conn.getresponse().status == 404
@@ -402,6 +490,9 @@ function runSim(liveMode) {
       if (u.includes('/api/categories')) {
         return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ ok: true, data: { categories: [{ code: 'ALL', label: 'Tümü', count: dataArr.length }] } }) };
       }
+      if (u.includes('/api/groups')) {
+        return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ ok: true, data: { groups: [{ name: 'Genel', count: 5, hotkeys: [] }] } }) };
+      }
       if (u.includes('/api/items')) {
         return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ ok: true, data: { items: dataArr.slice(0, 5).map((it, i) => ({ ...it, raw_key: 'text_' + i, matched_indices: [] })) } }) };
       }
@@ -452,6 +543,27 @@ function runSim(liveMode) {
   await st.ctx.saveCrudModal();
   assert.strictEqual(st.getState().allItems.length, beforeLen + 1);
   assert(st.ls.qtp_unified_items_v1 && st.ls.qtp_unified_items_v1.includes('Statik Web Yeni Cevap'));
+
+  assert.strictEqual(st.ctx.stripEmojis('Selam 😊 🚀 dünya'), 'Selam dünya');
+  await st.ctx.toggleStripEmoji();
+  assert.strictEqual(st.getState().stripEmoji, true);
+  await st.ctx.switchViewMode('grid');
+  assert.strictEqual(st.getState().viewMode, 'grid');
+  await st.ctx.switchViewMode('table');
+  assert.strictEqual(st.getState().viewMode, 'table');
+  await st.ctx.switchViewMode('list');
+  const firstIt = st.getState().allItems[0];
+  await st.ctx.handleToggleFavorite(firstIt);
+  assert.strictEqual(st.getState().allItems[0].favorite, true);
+  await st.ctx.handleDuplicateItem(firstIt);
+  assert.strictEqual(st.getState().allItems.length, beforeLen + 2);
+  await st.ctx.handleUndo();
+  assert.strictEqual(st.getState().allItems.length, beforeLen + 1);
+  await st.ctx.handleRedo();
+  assert.strictEqual(st.getState().allItems.length, beforeLen + 2);
+  const wdoc = st.ctx.itemsToWordHtml([firstIt]);
+  assert(wdoc.includes('<table') && !wdoc.includes('http://'));
+
   await st.elsById.get('btnThemeToggle').onclick();
   assert.strictEqual(st.htmlRoot.attributes['data-theme'], 'dark');
   assert.strictEqual(st.ls.qtp_unified_theme_v1, 'dark');

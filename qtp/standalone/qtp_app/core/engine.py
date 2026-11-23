@@ -7,6 +7,7 @@ import copy
 import importlib.resources
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -29,6 +30,7 @@ from qtp_app.core.operations import OPERATIONS
 from qtp_app.core.ini_parser import (
     DEFAULT_TERMINATOR,
     IniParseError,
+    atomic_write_bytes,
     build_qtp_ini,
     decode_bytes_auto,
     parse_qtp_ini,
@@ -71,7 +73,28 @@ from qtp_app.core.settings import (
     set_setting_value,
 )
 from qtp_app.core.watcher import ConfigFileWatcher, FileChange, ReloadEvent
-from qtp_app.ui.search import FuzzyMatcher
+from qtp_app.ui.search import FuzzyMatcher, tr_lower
+
+_EMOJI_RE = re.compile(
+    "["
+    "\U0001F1E0-\U0001FAFF"
+    "\u2600-\u27BF"
+    "\u2B50\u2B55\u231A\u231B\u23E9-\u23F3\u23F8-\u23FA"
+    "\ufe0e\ufe0f\u200d\u20e3"
+    "]+",
+    flags=re.UNICODE,
+)
+
+
+def _strip_unicode_emojis(text: str) -> str:
+    cleaned = _EMOJI_RE.sub("", str(text or ""))
+    lines = [re.sub(r"[ \t]{2,}", " ", ln).strip() for ln in cleaned.splitlines()]
+    return "\n".join(lines).strip()
+
+
+def strip_emojis(text: str) -> str:
+    """Türkçe harfleri, noktalama ve satır sonlarını koruyarak Unicode emojileri metinden temizler."""
+    return _strip_unicode_emojis(text)
 
 CATEGORY_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
     ("ALL", "Tümü", ""),
@@ -125,6 +148,7 @@ _DEFAULT_CLI_FLAGS: tuple[str, ...] = (
     "--restore",
     "--backup",
     "--reload",
+    "--save",
     "--get",
     "--set",
     "--check-hotkeys",
@@ -133,17 +157,45 @@ _DEFAULT_CLI_FLAGS: tuple[str, ...] = (
     "--add-item",
     "--update-item",
     "--delete-item",
+    "--duplicate-item",
+    "--move-item",
+    "--direction",
+    "--toggle-favorite",
+    "--bulk-edit",
+    "--bulk-delete",
+    "--rename-group",
+    "--new-group",
+    "--delete-group",
+    "--undo",
+    "--redo",
     "--item-keys",
     "--item-group",
     "--item-label",
     "--item-text",
+    "--item-favorite",
     "--no-end-marker",
+    "--find",
+    "--ignore-case",
+    "--prefix",
+    "--suffix",
+    "--strip-emojis",
+    "--add-emoji",
+    "--favorite-action",
     "--category",
     "--query",
+    "--only-favorites",
+    "--only-notes",
+    "--group",
+    "--sort",
+    "--strip-emoji",
+    "--selected-keys",
+    "--encoding",
+    "--skip-duplicates",
     "--json",
     "--work-dir",
     "--keep",
     "--merge",
+    "--replace-all",
     "--replace",
     "--port",
     "--open-browser",
@@ -217,6 +269,9 @@ def build_completion_script(shell: str, option_strings: list[str] | tuple[str, .
     presets = list(HOTKEY_PRESETS.keys())
     shells = ["powershell", "bash", "zsh", "fish", "auto"]
     skeys = _all_setting_keys()
+    sorts = ["order", "usage", "alpha", "keys", "favorites"]
+    dirs = ["up", "down"]
+    fav_acts = ["keep", "add", "remove"]
 
     if shell == "powershell":
         flags_ps = ", ".join(f"'{f}'" for f in flags)
@@ -225,6 +280,9 @@ def build_completion_script(shell: str, option_strings: list[str] | tuple[str, .
         presets_ps = ", ".join(f"'{p}'" for p in presets)
         shells_ps = ", ".join(f"'{s}'" for s in shells)
         skeys_ps = ", ".join(f"'{k}'" for k in skeys)
+        sorts_ps = ", ".join(f"'{s}'" for s in sorts)
+        dirs_ps = ", ".join(f"'{d}'" for d in dirs)
+        fav_ps = ", ".join(f"'{a}'" for a in fav_acts)
         return (
             "Register-ArgumentCompleter -Native -CommandName qtp, qtp.exe, qtp.bin -ScriptBlock {\n"
             "    param($wordToComplete, $commandAst, $cursorPosition)\n"
@@ -235,6 +293,9 @@ def build_completion_script(shell: str, option_strings: list[str] | tuple[str, .
             f"        '--category' = @({cats_ps})\n"
             f"        '--completion' = @({shells_ps})\n"
             f"        '--hotkey-preset' = @({presets_ps})\n"
+            f"        '--sort' = @({sorts_ps})\n"
+            f"        '--direction' = @({dirs_ps})\n"
+            f"        '--favorite-action' = @({fav_ps})\n"
             f"        '--get' = @({skeys_ps})\n"
             f"        '--set' = @({skeys_ps})\n"
             "    }\n"
@@ -259,6 +320,9 @@ def build_completion_script(shell: str, option_strings: list[str] | tuple[str, .
             f"        --category) COMPREPLY=( $(compgen -W \"{' '.join(cats)}\" -- \"${{cur}}\") ); return 0 ;;\n"
             f"        --completion) COMPREPLY=( $(compgen -W \"{' '.join(shells)}\" -- \"${{cur}}\") ); return 0 ;;\n"
             f"        --hotkey-preset) COMPREPLY=( $(compgen -W \"{' '.join(presets)}\" -- \"${{cur}}\") ); return 0 ;;\n"
+            f"        --sort) COMPREPLY=( $(compgen -W \"{' '.join(sorts)}\" -- \"${{cur}}\") ); return 0 ;;\n"
+            f"        --direction) COMPREPLY=( $(compgen -W \"{' '.join(dirs)}\" -- \"${{cur}}\") ); return 0 ;;\n"
+            f"        --favorite-action) COMPREPLY=( $(compgen -W \"{' '.join(fav_acts)}\" -- \"${{cur}}\") ); return 0 ;;\n"
             f"        --get|--set) COMPREPLY=( $(compgen -W \"{' '.join(skeys)}\" -- \"${{cur}}\") ); return 0 ;;\n"
             "    esac\n"
             f"    COMPREPLY=( $(compgen -W \"{' '.join(flags)}\" -- \"${{cur}}\") )\n"
@@ -270,7 +334,7 @@ def build_completion_script(shell: str, option_strings: list[str] | tuple[str, .
     if shell == "zsh":
         specs = [
             f"  '{f}[QTP seçeneği]'"
-            if f not in ("--mode", "--category", "--completion", "--hotkey-preset", "--get", "--set")
+            if f not in ("--mode", "--category", "--completion", "--hotkey-preset", "--sort", "--direction", "--favorite-action", "--get", "--set")
             else (
                 f"  '--mode[Çalışma modu]:mod:({' '.join(modes)})'"
                 if f == "--mode"
@@ -280,6 +344,12 @@ def build_completion_script(shell: str, option_strings: list[str] | tuple[str, .
                 if f == "--completion"
                 else f"  '--hotkey-preset[Kısayol profili]:profil:({' '.join(presets)})'"
                 if f == "--hotkey-preset"
+                else f"  '--sort[Sıralama ölçütü]:sıra:({' '.join(sorts)})'"
+                if f == "--sort"
+                else f"  '--direction[Taşıma yönü]:yön:({' '.join(dirs)})'"
+                if f == "--direction"
+                else f"  '--favorite-action[Favori işlemi]:eylem:({' '.join(fav_acts)})'"
+                if f == "--favorite-action"
                 else f"  '{f}[Ayar anahtarı]:anahtar:({' '.join(skeys)})'"
             )
             for f in flags
@@ -299,6 +369,12 @@ def build_completion_script(shell: str, option_strings: list[str] | tuple[str, .
                 extra = f" -xa \"{' '.join(shells)}\""
             elif f == "--hotkey-preset":
                 extra = f" -xa \"{' '.join(presets)}\""
+            elif f == "--sort":
+                extra = f" -xa \"{' '.join(sorts)}\""
+            elif f == "--direction":
+                extra = f" -xa \"{' '.join(dirs)}\""
+            elif f == "--favorite-action":
+                extra = f" -xa \"{' '.join(fav_acts)}\""
             elif f in ("--get", "--set"):
                 extra = f" -xa \"{' '.join(skeys)}\""
             fish_lines.append(f"complete -c qtp -l {long_name}{extra} -d 'QTP'")
@@ -408,14 +484,21 @@ def build_cli_help_text(*, verbose: bool = False) -> str:
         + "\n\nEk Seçenekler:\n"
         "  --category KOD                         --gui/--tui/--web ve --list-items/--search kategori filtresi (ALL/A/Z/X/Q)\n"
         "  --query METIN                          --gui/--tui/--web ve --list-items için arama süzgeci\n"
+        "  --only-favorites / --only-notes        Yalnızca favori veya [DAHİLİ NOT] kayıtlarını süzer\n"
+        "  --group GRUP / --sort OLCUT            Grup filtresi ve sıralama (order, usage, alpha, keys, favorites)\n"
+        "  --strip-emoji                          Kopyalama/yapıştırma sırasında emojileri temizler\n"
+        "  --selected-keys CSV / --skip-duplicates Seçili kayıt dışa aktarma ve içe aktarmada tekrar atlama\n"
         "  --merge / --replace                    --import-ini ve --restore için birleştir/değiştir modu\n"
         "  --keep N                               --backup için tutulacak maksimum yedek sayısı\n"
         "  --port N                               --web için 127.0.0.1 bağlantı noktası (varsayılan: 8765)\n"
         "  --open-browser                         --web başlatıldığında tarayıcıyı açar\n"
         "  --shutdown-after SN                    --web sunucusunu belirtilen saniye sonra zarifçe kapatır\n"
-        "  --item-keys TUS / --item-group GRUP    --add-item / --update-item için kısayol, grup, etiket ve metin alanları\n"
+        "  --item-keys TUS / --item-group GRUP    Ekleme/güncelleme/toplu düzenleme için kısayol, grup, etiket ve metin\n"
         "  --item-label ETIKET / --item-text METIN / --no-end-marker\n"
         "                                         Yeni veya güncellenen kaydın alanlarını ve <E<N<D| son ekini belirler\n"
+        "  --find ARA --replace YENI [--ignore-case] [--prefix ON] [--suffix SON] [--strip-emojis] [--add-emoji EMOJI]\n"
+        "  --favorite-action {keep,add,remove}    --bulk-edit için toplu metin ve favori seçenekleri\n"
+        "  --direction {up,down} / --new-group GRUP --move-item ve --rename-group alt parametreleri\n"
     )
     if not verbose:
         return base
@@ -538,9 +621,12 @@ class QtpEngine:
         self._reload_lock = threading.RLock()
         self.revision: int = 0
         self.last_reload_event: ReloadEvent | None = None
+        self._undo_stack: list[tuple[list[dict[str, Any]], dict[str, str], list[dict[str, Any]]]] = []
+        self._redo_stack: list[tuple[list[dict[str, Any]], dict[str, str], list[dict[str, Any]]]] = []
 
         self._seed_defaults_if_empty(seed_defaults and not self.ephemeral)
         self.reload_data()
+        self._load_history()
 
     def configure_verbosity(self, verbose: int = 0, quiet: bool = False) -> None:
         """Çalışma zamanında ayrıntı (-v/-vv) ve sessiz (-q) akışlarını birleştirir."""
@@ -1019,12 +1105,130 @@ class QtpEngine:
             data={"categories": categories, "total": len(self.items)},
         )
 
-    def op_list_items(self, *, category: str = "ALL", query: str = "") -> OperationResult:
+    def _history_path(self) -> Path:
+        return self.work_dir / ".qtp_history.json"
+
+    def _load_history(self) -> None:
+        if self.ephemeral:
+            return
+        hp = self._history_path()
+        if not hp.is_file():
+            return
+        try:
+            raw = json.loads(hp.read_text(encoding="utf-8"))
+            if isinstance(raw, dict):
+                undo_raw = raw.get("undo")
+                redo_raw = raw.get("redo")
+                if isinstance(undo_raw, list):
+                    self._undo_stack = [
+                        (list(e.get("items") or []), dict(e.get("program") or {}), list(e.get("extra_sections") or []))
+                        for e in undo_raw[-30:]
+                        if isinstance(e, dict)
+                    ]
+                if isinstance(redo_raw, list):
+                    self._redo_stack = [
+                        (list(e.get("items") or []), dict(e.get("program") or {}), list(e.get("extra_sections") or []))
+                        for e in redo_raw[-30:]
+                        if isinstance(e, dict)
+                    ]
+        except Exception:
+            pass
+
+    def _save_history(self) -> None:
+        if self.ephemeral:
+            return
+        try:
+            payload = {
+                "undo": [
+                    {"items": items, "program": prog, "extra_sections": extra}
+                    for items, prog, extra in self._undo_stack[-30:]
+                ],
+                "redo": [
+                    {"items": items, "program": prog, "extra_sections": extra}
+                    for items, prog, extra in self._redo_stack[-30:]
+                ],
+            }
+            atomic_write_bytes(
+                self._history_path(),
+                (json.dumps(payload, ensure_ascii=False) + "\n").encode("utf-8"),
+            )
+        except Exception as exc:
+            self.logger.warning("Geri alma geçmişi diske yazılamadı: %s", exc)
+
+    def _push_undo(self) -> None:
+        snap = (
+            copy.deepcopy(self.items),
+            copy.deepcopy(self.program_meta),
+            copy.deepcopy(self.extra_sections),
+        )
+        self._undo_stack.append(snap)
+        if len(self._undo_stack) > 30:
+            self._undo_stack.pop(0)
+        self._redo_stack.clear()
+        self._save_history()
+
+    def _persist_copy_count(self) -> None:
+        if self.ephemeral:
+            return
+        try:
+            with self._suppress_write(self.work_dir / "data.json"):
+                save_state(
+                    self.work_dir,
+                    self.items,
+                    program=self.program_meta,
+                    extra_sections=self.extra_sections,
+                    create_backup_flag=False,
+                    backup_reason="copy_count",
+                    max_backups=int(self.settings.get("backup_count", 15)),
+                    ini_path=self.ini_path,
+                    update_ini=False,
+                )
+        except Exception as exc:
+            self.logger.warning("Kopyalama sayacı diske yazılamadı: %s", exc)
+
+    def op_list_items(
+        self,
+        *,
+        category: str = "ALL",
+        query: str = "",
+        only_favorites: bool = False,
+        only_notes: bool = False,
+        group: str = "",
+        sort_by: str | None = None,
+    ) -> OperationResult:
         cat = (category or "ALL").strip().upper()
-        filtered_cat = [it for it in self.items if item_matches_category(it, cat)]
+        grp_filter = (group or "").strip()
+        filtered_cat: list[dict[str, Any]] = []
+        for idx, it in enumerate(self.items):
+            if not item_matches_category(it, cat):
+                continue
+            if only_favorites and not bool(it.get("favorite", False)):
+                continue
+            if only_notes and (str(it.get("keys", "")).strip() and not str(it.get("text", "")).startswith("[DAHİLİ NOT]")):
+                continue
+            if grp_filter and (str(it.get("group") or "Genel").strip() != grp_filter):
+                continue
+            entry = dict(it)
+            entry.setdefault("raw_key", f"text_{idx:03d}")
+            filtered_cat.append(entry)
+
         matched = self._matcher.filter_items(query or "", filtered_cat)
-        out_items = [
-            {
+        eff_sort = (sort_by if sort_by is not None else str(self.settings.get("sort_by", "order"))).strip().lower()
+        if eff_sort == "usage":
+            matched = sorted(matched, key=lambda r: (-int(r[1].get("copyCount") or 0), r[0]))
+        elif eff_sort == "alpha":
+            matched = sorted(
+                matched,
+                key=lambda r: (tr_lower(str(r[1].get("label") or r[1].get("text") or "")), r[0]),
+            )
+        elif eff_sort == "keys":
+            matched = sorted(matched, key=lambda r: (str(r[1].get("keys", "")).lower(), r[0]))
+        elif eff_sort == "favorites":
+            matched = sorted(matched, key=lambda r: (0 if r[1].get("favorite") else 1, r[0]))
+
+        out_items: list[dict[str, Any]] = []
+        for orig_idx, it, indices in matched:
+            row: dict[str, Any] = {
                 "raw_key": str(it.get("raw_key") or f"text_{orig_idx:03d}"),
                 "keys": str(it.get("keys", "")),
                 "group": str(it.get("group", "Genel")),
@@ -1033,8 +1237,12 @@ class QtpEngine:
                 "terminator": str(it.get("terminator", DEFAULT_TERMINATOR)),
                 "matched_indices": list(indices),
             }
-            for orig_idx, it, indices in matched
-        ]
+            if it.get("favorite"):
+                row["favorite"] = True
+            cc = int(it.get("copyCount") or 0)
+            if cc > 0:
+                row["copyCount"] = cc
+            out_items.append(row)
         return OperationResult(
             ok=True,
             exit_code=0,
@@ -1042,8 +1250,24 @@ class QtpEngine:
             data={"items": out_items, "count": len(out_items), "category": cat, "query": query},
         )
 
-    def op_search(self, query: str, *, category: str = "ALL") -> OperationResult:
-        res = self.op_list_items(category=category, query=query)
+    def op_search(
+        self,
+        query: str,
+        *,
+        category: str = "ALL",
+        only_favorites: bool = False,
+        only_notes: bool = False,
+        group: str = "",
+        sort_by: str | None = None,
+    ) -> OperationResult:
+        res = self.op_list_items(
+            category=category,
+            query=query,
+            only_favorites=only_favorites,
+            only_notes=only_notes,
+            group=group,
+            sort_by=sort_by,
+        )
         res.message = f"Arama tamamlandı: {res.data['count']} eşleşme."
         return res
 
@@ -1084,13 +1308,15 @@ class QtpEngine:
             data={"raw_key": tid, "ini_path": str(self.ini_path), "preview": preview},
         )
 
-    def op_copy(self, target: str) -> OperationResult:
+    def op_copy(self, target: str, *, strip_emoji: bool | None = None) -> OperationResult:
         found = self.resolve_item(target)
         if found is None:
             err = f"Öğe bulunamadı: {target}"
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
         idx, item = found
-        text = str(item.get("text", ""))
+        raw_text = str(item.get("text", ""))
+        use_strip = bool(self.settings.get("strip_emoji", False)) if strip_emoji is None else bool(strip_emoji)
+        text = _strip_unicode_emojis(raw_text) if use_strip else raw_text
         raw_key = str(item.get("raw_key") or f"text_{idx:03d}")
 
         ok = self._clipboard_fn(text) if self._clipboard_fn is not None else copy_to_clipboard(text)
@@ -1098,21 +1324,37 @@ class QtpEngine:
             err = "Pano erişimi başarısız: grafik oturumu veya pano desteği bulunamadı."
             return OperationResult(ok=False, exit_code=3, message=err, error=err)
 
+        item["copyCount"] = int(item.get("copyCount", 0) or 0) + 1
+        self._persist_copy_count()
         self.logger.info("Panoya kopyalandı: kategori=%s anahtar=%s", item.get("keys", ""), raw_key)
         return OperationResult(
             ok=True,
             exit_code=0,
             message="Panoya kopyalandı ✔",
-            data={"raw_key": raw_key, "keys": item.get("keys", ""), "text": text},
+            data={
+                "raw_key": raw_key,
+                "keys": item.get("keys", ""),
+                "text": text,
+                "copyCount": item["copyCount"],
+                "strip_emoji": use_strip,
+            },
         )
 
-    def op_paste(self, target: str, *, previous_app: Any = None) -> OperationResult:
+    def op_paste(
+        self,
+        target: str,
+        *,
+        previous_app: Any = None,
+        strip_emoji: bool | None = None,
+    ) -> OperationResult:
         found = self.resolve_item(target)
         if found is None:
             err = f"Öğe bulunamadı: {target}"
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
         idx, item = found
-        text = str(item.get("text", ""))
+        raw_text = str(item.get("text", ""))
+        use_strip = bool(self.settings.get("strip_emoji", False)) if strip_emoji is None else bool(strip_emoji)
+        text = _strip_unicode_emojis(raw_text) if use_strip else raw_text
         raw_key = str(item.get("raw_key") or f"text_{idx:03d}")
         has_end = str(item.get("terminator", DEFAULT_TERMINATOR)) == DEFAULT_TERMINATOR
 
@@ -1145,6 +1387,8 @@ class QtpEngine:
                 data={"raw_key": raw_key, "copied": res.copied, "pasted": res.pasted, "method": res.method},
             )
 
+        item["copyCount"] = int(item.get("copyCount", 0) or 0) + 1
+        self._persist_copy_count()
         self.logger.info(
             "Yapıştırıldı: kategori=%s anahtar=%s yöntem=%s enter=%s",
             item.get("keys", ""),
@@ -1162,33 +1406,121 @@ class QtpEngine:
                 "text": text,
                 "method": res.method,
                 "enter_sent": res.enter_sent,
+                "copyCount": item["copyCount"],
+                "strip_emoji": use_strip,
             },
             warning=res.warning,
         )
 
-    def op_export_ini(self, target_path: str | Path) -> OperationResult:
-        if not self.items:
+    def op_export_ini(
+        self,
+        target_path: str | Path,
+        *,
+        raw_keys: list[str] | None = None,
+        encoding: str = "utf-16-le-bom",
+    ) -> OperationResult:
+        export_items = self.items
+        if raw_keys is not None:
+            want = {str(k).strip().lower() for k in raw_keys if str(k).strip()}
+            export_items = [
+                it
+                for idx, it in enumerate(self.items)
+                if str(it.get("raw_key") or f"text_{idx:03d}").lower() in want
+                or str(it.get("id") or "").lower() in want
+            ]
+        if not export_items:
             err = "HATA: Dışa aktarılacak hazır cevap kaydı bulunamadı."
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
         try:
             dest = Path(target_path)
             ini_text = build_qtp_ini(
-                self.items,
+                export_items,
                 program=self.program_meta,
-                extra_sections=self.extra_sections,
+                extra_sections=[] if raw_keys is not None else self.extra_sections,
                 preserve_test_ini=True,
             )
             with self._suppress_write(dest):
-                write_qtp_ini(dest, ini_text, encoding="utf-16-le-bom", create_bak=True)
-            msg = f"INI dışa aktarıldı: {dest} ({len(self.items)} kayıt)."
+                write_qtp_ini(dest, ini_text, encoding=encoding, create_bak=True)
+            msg = f"INI dışa aktarıldı: {dest} ({len(export_items)} kayıt)."
             self.logger.info(msg)
-            return OperationResult(ok=True, exit_code=0, message=msg, data={"path": str(dest), "count": len(self.items)})
+            return OperationResult(ok=True, exit_code=0, message=msg, data={"path": str(dest), "count": len(export_items)})
         except Exception as exc:
             err = f"HATA: INI dışa aktarılamadı: {exc}"
             self.logger.error(err)
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
-    def op_import_ini(self, source_path: str | Path, *, mode: str = "merge") -> OperationResult:
+    def _apply_imported_records(
+        self,
+        incoming: list[dict[str, Any]],
+        *,
+        program: dict[str, str] | None = None,
+        extra_sections: list[dict[str, Any]] | None = None,
+        mode: str = "merge",
+        skip_duplicates: bool = False,
+    ) -> tuple[int, int]:
+        self._push_undo()
+        if mode == "replace":
+            if skip_duplicates:
+                merged: list[dict[str, Any]] = []
+                seen_texts: set[str] = set()
+                for it in incoming:
+                    txt_norm = str(it.get("text", "")).strip()
+                    if txt_norm in seen_texts:
+                        continue
+                    seen_texts.add(txt_norm)
+                    merged.append(it)
+            else:
+                merged = list(incoming)
+            added = len(merged)
+            if program:
+                self.program_meta = dict(program)
+            if extra_sections:
+                self.extra_sections = list(extra_sections)
+        else:
+            merged = list(self.items)
+            seen = {(str(it.get("keys", "")), str(it.get("group", "")), str(it.get("text", ""))) for it in merged}
+            seen_texts = {str(it.get("text", "")).strip() for it in merged}
+            added = 0
+            for it in incoming:
+                sig = (str(it.get("keys", "")), str(it.get("group", "")), str(it.get("text", "")))
+                txt_norm = str(it.get("text", "")).strip()
+                if skip_duplicates and txt_norm in seen_texts:
+                    continue
+                if sig not in seen:
+                    merged.append(it)
+                    seen.add(sig)
+                    seen_texts.add(txt_norm)
+                    added += 1
+            if not self.program_meta and program:
+                self.program_meta = dict(program)
+            if not self.extra_sections and extra_sections:
+                self.extra_sections = list(extra_sections)
+
+        for idx, it in enumerate(merged):
+            it["raw_key"] = f"text_{idx:03d}"
+            it.setdefault("terminator", DEFAULT_TERMINATOR)
+
+        with self._suppress_write(self.ini_path, self.work_dir / "data.json"):
+            save_state(
+                self.work_dir,
+                merged,
+                program=self.program_meta,
+                extra_sections=self.extra_sections,
+                backup_reason=f"import_{mode}",
+                max_backups=int(self.settings.get("backup_count", 15)),
+                ini_path=self.ini_path,
+            )
+        self.items = merged
+        self.revision += 1
+        return added, len(merged)
+
+    def op_import_ini(
+        self,
+        source_path: str | Path,
+        *,
+        mode: str = "merge",
+        skip_duplicates: bool = False,
+    ) -> OperationResult:
         src = Path(source_path)
         if not src.is_file():
             err = f"HATA: İçe aktarılacak INI dosyası bulunamadı: {src}"
@@ -1206,50 +1538,54 @@ class QtpEngine:
             {**it.to_dict(include_meta=False), "terminator": it.terminator}
             for it in doc.items
         ]
-        if mode == "replace":
-            merged = incoming
-            added = len(incoming)
-            if doc.program:
-                self.program_meta = dict(doc.program)
-            if doc.extra_sections:
-                self.extra_sections = list(doc.extra_sections)
-        else:
-            merged = list(self.items)
-            seen = {(str(it.get("keys", "")), str(it.get("group", "")), str(it.get("text", ""))) for it in merged}
-            added = 0
-            for it in incoming:
-                sig = (str(it.get("keys", "")), str(it.get("group", "")), str(it.get("text", "")))
-                if sig not in seen:
-                    merged.append(it)
-                    seen.add(sig)
-                    added += 1
-            if not self.program_meta and doc.program:
-                self.program_meta = dict(doc.program)
-            if not self.extra_sections and doc.extra_sections:
-                self.extra_sections = list(doc.extra_sections)
-
-        for idx, it in enumerate(merged):
-            it["raw_key"] = f"text_{idx:03d}"
-
-        with self._suppress_write(self.ini_path, self.work_dir / "data.json"):
-            save_state(
-                self.work_dir,
-                merged,
-                program=self.program_meta,
-                extra_sections=self.extra_sections,
-                backup_reason=f"import_{mode}",
-                max_backups=int(self.settings.get("backup_count", 15)),
-                ini_path=self.ini_path,
-            )
-        self.items = merged
-        self.revision += 1
-        msg = f"INI içe aktarıldı: {added} yeni kayıt eklendi (toplam {len(merged)} kayıt korundu)."
+        added, total = self._apply_imported_records(
+            incoming,
+            program=doc.program,
+            extra_sections=doc.extra_sections,
+            mode=mode,
+            skip_duplicates=skip_duplicates,
+        )
+        msg = f"INI içe aktarıldı: {added} yeni kayıt eklendi (toplam {total} kayıt korundu)."
         self.logger.info(msg)
         return OperationResult(
             ok=True,
             exit_code=0,
             message=msg,
-            data={"added": added, "count": len(merged), "mode": mode},
+            data={"added": added, "count": total, "mode": mode},
+        )
+
+    def op_import_content(
+        self,
+        content: str,
+        *,
+        filename: str = "import.ini",
+        mode: str = "merge",
+        skip_duplicates: bool = False,
+    ) -> OperationResult:
+        try:
+            parsed = parse_any_content(str(content or ""), filename)
+        except (JsonStoreError, IniParseError, json.JSONDecodeError) as exc:
+            err = str(exc)
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+        except Exception as exc:
+            err = f"HATA: İçe aktarılan içerik okunamadı: {exc}"
+            return OperationResult(ok=False, exit_code=1, message=err, error=err)
+
+        incoming = [dict(it) for it in (parsed.get("items") or [])]
+        added, total = self._apply_imported_records(
+            incoming,
+            program=parsed.get("program") or {},
+            extra_sections=parsed.get("extra_sections") or [],
+            mode=mode,
+            skip_duplicates=skip_duplicates,
+        )
+        msg = f"İçe aktarıldı: {added} yeni kayıt eklendi (toplam {total} kayıt)."
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={"added": added, "count": total, "mode": mode, "kind": parsed.get("kind")},
         )
 
     def op_backup(self, *, keep: int | None = None) -> OperationResult:
@@ -1302,6 +1638,7 @@ class QtpEngine:
                 err = f"HATA: Yedek okunamadı: {exc}"
                 return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
+            self._push_undo()
             incoming = parsed["items"]
             if mode == "merge":
                 merged = list(self.items)
@@ -1343,6 +1680,7 @@ class QtpEngine:
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
         try:
+            self._push_undo()
             with self._suppress_write(self.ini_path, self.work_dir / "data.json"):
                 res = restore_backup(self.work_dir, raw_str)
             st = res["state"]
@@ -1361,9 +1699,15 @@ class QtpEngine:
                 data={"restored": res["restored"], "count": len(self.items)},
             )
         except FileNotFoundError as exc:
+            if self._undo_stack:
+                self._undo_stack.pop()
+                self._save_history()
             err = str(exc)
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
         except Exception as exc:
+            if self._undo_stack:
+                self._undo_stack.pop()
+                self._save_history()
             err = f"HATA: Yedek geri yüklenemedi: {exc}"
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
 
@@ -1507,12 +1851,14 @@ class QtpEngine:
         group: str = "Genel",
         label: str = "",
         terminator: str = DEFAULT_TERMINATOR,
+        favorite: bool = False,
     ) -> OperationResult:
         raw_text = str(text or "")
         if not raw_text.strip():
             err = "Metin alanı boş olamaz."
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
 
+        self._push_undo()
         new_item: dict[str, Any] = {
             "keys": str(keys or "").strip(),
             "group": str(group or "Genel").strip() or "Genel",
@@ -1520,6 +1866,8 @@ class QtpEngine:
             "text": raw_text,
             "terminator": DEFAULT_TERMINATOR if terminator is None else str(terminator),
         }
+        if favorite:
+            new_item["favorite"] = True
         updated_list = [dict(it) for it in self.items] + [new_item]
         self._persist_items_change(updated_list, "add_item", create_backup_flag=False)
         created = dict(self.items[-1])
@@ -1541,6 +1889,7 @@ class QtpEngine:
         label: str | None = None,
         text: str | None = None,
         terminator: str | None = None,
+        favorite: bool | None = None,
     ) -> OperationResult:
         found = self.resolve_item(target)
         if found is None:
@@ -1559,6 +1908,7 @@ class QtpEngine:
             err = "Metin alanı boş olamaz."
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
 
+        self._push_undo()
         if keys is not None:
             item["keys"] = str(keys).strip()
         if group is not None:
@@ -1567,6 +1917,8 @@ class QtpEngine:
             item["label"] = str(label).strip()
         if terminator is not None:
             item["terminator"] = str(terminator)
+        if favorite is not None:
+            item["favorite"] = bool(favorite)
 
         self._persist_items_change(updated_list, "update_item", create_backup_flag=False)
         saved_item = dict(self.items[idx])
@@ -1586,6 +1938,7 @@ class QtpEngine:
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
 
         idx, existing = found
+        self._push_undo()
         deleted_item = dict(existing)
         remaining = [dict(it) for i, it in enumerate(self.items) if i != idx]
         self._persist_items_change(remaining, "delete_item", create_backup_flag=True)
@@ -1596,4 +1949,396 @@ class QtpEngine:
             exit_code=0,
             message=msg,
             data={"deleted": deleted_item, "count": len(self.items), "revision": self.revision},
+        )
+
+    def op_save_all(self) -> OperationResult:
+        try:
+            self.save_current_settings(self.settings)
+            self._persist_items_change([dict(it) for it in self.items], "manual_save", create_backup_flag=True)
+            msg = "Tüm kayıtlar ve ayarlar kaydedildi ✔"
+            self.logger.info(msg)
+            return OperationResult(
+                ok=True,
+                exit_code=0,
+                message=msg,
+                data={
+                    "count": len(self.items),
+                    "ini_path": str(self.ini_path),
+                    "settings_path": str(self.settings_path),
+                    "revision": self.revision,
+                },
+            )
+        except Exception as exc:
+            err = f"HATA: Kayıt ve ayarlar diske yazılamadı: {exc}"
+            self.logger.error(err)
+            return OperationResult(ok=False, exit_code=1, message=err, error=err)
+
+    def op_duplicate_item(self, target: str) -> OperationResult:
+        found = self.resolve_item(target)
+        if found is None:
+            err = f"Öğe bulunamadı: {target}"
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        idx, existing = found
+        self._push_undo()
+        clone = copy.deepcopy(existing)
+        lbl = str(clone.get("label", "")).strip()
+        if lbl:
+            clone["label"] = f"{lbl} (Kopya)"
+        clone["copyCount"] = 0
+        clone.pop("id", None)
+        clone.pop("raw_key", None)
+        updated_list = [dict(it) for it in self.items]
+        updated_list.insert(idx + 1, clone)
+        self._persist_items_change(updated_list, "duplicate_item", create_backup_flag=False)
+        created = dict(self.items[idx + 1])
+        msg = f"Kayıt çoğaltıldı ✔ ({created['raw_key']})"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={"item": created, "count": len(self.items), "revision": self.revision},
+        )
+
+    def op_move_item(self, target: str, direction: str = "up") -> OperationResult:
+        dir_norm = str(direction or "").strip().lower()
+        if dir_norm not in ("up", "down"):
+            err = f"Geçersiz taşıma yönü: '{direction}' (up veya down bekleniyor)."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+        found = self.resolve_item(target)
+        if found is None:
+            err = f"Öğe bulunamadı: {target}"
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        idx, _ = found
+        new_idx = idx - 1 if dir_norm == "up" else idx + 1
+        if new_idx < 0 or new_idx >= len(self.items):
+            err = "Kayıt zaten sınırda, taşınamadı."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        self._push_undo()
+        updated_list = [dict(it) for it in self.items]
+        updated_list[idx], updated_list[new_idx] = updated_list[new_idx], updated_list[idx]
+        for pos, entry in enumerate(updated_list, start=1):
+            entry["order"] = pos
+        self._persist_items_change(updated_list, "move_item", create_backup_flag=False)
+        moved = dict(self.items[new_idx])
+        msg = f"Kayıt sırası güncellendi ✔ ({moved['raw_key']})"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={
+                "item": moved,
+                "old_index": idx,
+                "new_index": new_idx,
+                "count": len(self.items),
+                "revision": self.revision,
+            },
+        )
+
+    def op_toggle_favorite(self, target: str, *, favorite: bool | None = None) -> OperationResult:
+        found = self.resolve_item(target)
+        if found is None:
+            err = f"Öğe bulunamadı: {target}"
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        idx, existing = found
+        self._push_undo()
+        updated_list = [dict(it) for it in self.items]
+        new_fav = (not bool(existing.get("favorite", False))) if favorite is None else bool(favorite)
+        updated_list[idx]["favorite"] = new_fav
+        self._persist_items_change(updated_list, "toggle_favorite", create_backup_flag=False)
+        saved = dict(self.items[idx])
+        msg = f"Favori durumu güncellendi ✔ ({saved['raw_key']})"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={"item": saved, "favorite": new_fav, "revision": self.revision},
+        )
+
+    def _resolve_targets(self, targets: list[str] | str) -> tuple[list[int] | None, OperationResult | None]:
+        if isinstance(targets, str):
+            raw_list = [t.strip() for t in targets.split(",") if t.strip()]
+        elif isinstance(targets, (list, tuple, set)):
+            raw_list = [str(t).strip() for t in targets if str(t).strip()]
+        else:
+            raw_list = []
+
+        if not raw_list:
+            err = "Toplu işlem için en az bir hedef kayıt seçilmelidir."
+            return None, OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        indices: list[int] = []
+        seen_idx: set[int] = set()
+        for t in raw_list:
+            found = self.resolve_item(t)
+            if found is None:
+                err = f"Öğe bulunamadı: {t}"
+                return None, OperationResult(ok=False, exit_code=2, message=err, error=err)
+            if found[0] not in seen_idx:
+                indices.append(found[0])
+                seen_idx.add(found[0])
+        return indices, None
+
+    def op_bulk_edit(
+        self,
+        targets: list[str] | str,
+        *,
+        keys: str | None = None,
+        group: str | None = None,
+        find: str | None = None,
+        replace: str = "",
+        ignore_case: bool = False,
+        prefix: str = "",
+        suffix: str = "",
+        strip_emojis: bool = False,
+        add_emoji: str = "",
+        favorite_action: str = "keep",
+    ) -> OperationResult:
+        indices, err_res = self._resolve_targets(targets)
+        if err_res is not None or indices is None:
+            return err_res
+
+        fav_act = str(favorite_action or "keep").strip().lower()
+        has_change = any(
+            (
+                keys is not None,
+                group is not None and bool(str(group).strip()),
+                bool(find),
+                bool(prefix),
+                bool(suffix),
+                bool(strip_emojis),
+                bool(str(add_emoji or "").strip()),
+                fav_act in ("add", "remove"),
+            )
+        )
+        if not has_change:
+            err = "Toplu düzenleme için en az bir değişiklik seçeneği belirtilmelidir."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        self._push_undo()
+        updated_list = [dict(it) for it in self.items]
+        pattern = None
+        if find:
+            flags = re.IGNORECASE if ignore_case else 0
+            pattern = re.compile(re.escape(str(find)), flags)
+
+        emoji_tok = str(add_emoji or "").strip()
+        updated_keys: list[str] = []
+        for idx in indices:
+            item = updated_list[idx]
+            if keys is not None:
+                item["keys"] = str(keys).strip()
+            if group is not None and str(group).strip():
+                item["group"] = str(group).strip()
+            txt = str(item.get("text", ""))
+            if pattern is not None:
+                txt = pattern.sub(str(replace or ""), txt)
+            if prefix or suffix:
+                txt = f"{prefix}{txt}{suffix}"
+            if strip_emojis:
+                txt = _strip_unicode_emojis(txt)
+            if emoji_tok:
+                sep = " " if txt and not txt.endswith((" ", "\n")) else ""
+                txt = f"{txt}{sep}{emoji_tok}"
+            item["text"] = txt
+            if fav_act == "add":
+                item["favorite"] = True
+            elif fav_act == "remove":
+                item["favorite"] = False
+            updated_keys.append(str(item.get("raw_key") or f"text_{idx:03d}"))
+
+        self._persist_items_change(updated_list, "bulk_edit", create_backup_flag=True)
+        msg = f"Toplu düzenleme tamamlandı ✔ ({len(indices)} kayıt güncellendi)"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={
+                "updated_count": len(indices),
+                "raw_keys": updated_keys,
+                "count": len(self.items),
+                "revision": self.revision,
+            },
+        )
+
+    def op_bulk_delete(self, targets: list[str] | str) -> OperationResult:
+        indices, err_res = self._resolve_targets(targets)
+        if err_res is not None or indices is None:
+            return err_res
+
+        self._push_undo()
+        idx_set = set(indices)
+        deleted_keys = [
+            str(it.get("raw_key") or f"text_{i:03d}")
+            for i, it in enumerate(self.items)
+            if i in idx_set
+        ]
+        remaining = [dict(it) for i, it in enumerate(self.items) if i not in idx_set]
+        self._persist_items_change(remaining, "bulk_delete", create_backup_flag=True)
+        msg = f"Seçili kayıtlar silindi ✔ ({len(idx_set)} kayıt)"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={
+                "deleted_count": len(idx_set),
+                "deleted_keys": deleted_keys,
+                "count": len(self.items),
+                "revision": self.revision,
+            },
+        )
+
+    def op_list_groups(self) -> OperationResult:
+        counts: dict[str, int] = {}
+        hotkeys_map: dict[str, list[str]] = {}
+        for it in self.items:
+            grp = str(it.get("group") or "Genel").strip() or "Genel"
+            counts[grp] = counts.get(grp, 0) + 1
+            hk = str(it.get("keys", "")).strip()
+            lst = hotkeys_map.setdefault(grp, [])
+            if hk and hk not in lst:
+                lst.append(hk)
+        groups = [
+            {"name": name, "count": cnt, "hotkeys": hotkeys_map.get(name, [])}
+            for name, cnt in counts.items()
+        ]
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=f"Gruplar listelendi ({len(groups)} grup).",
+            data={"groups": groups, "count": len(groups)},
+        )
+
+    def op_rename_group(self, old_group: str, new_group: str) -> OperationResult:
+        old_g = str(old_group or "").strip()
+        new_g = str(new_group or "").strip()
+        if not old_g or not new_g:
+            err = "Eski ve yeni grup adı boş olamaz."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        matches = [i for i, it in enumerate(self.items) if (str(it.get("group") or "Genel").strip() == old_g)]
+        if not matches:
+            err = f"Grup bulunamadı: {old_g}"
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        self._push_undo()
+        updated_list = [dict(it) for it in self.items]
+        for idx in matches:
+            updated_list[idx]["group"] = new_g
+        self._persist_items_change(updated_list, "rename_group", create_backup_flag=True)
+        msg = f"Grup yeniden adlandırıldı ✔ ({old_g} → {new_g}, {len(matches)} kayıt)"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={
+                "old_group": old_g,
+                "new_group": new_g,
+                "updated_count": len(matches),
+                "count": len(self.items),
+                "revision": self.revision,
+            },
+        )
+
+    def op_delete_group(self, group_name: str) -> OperationResult:
+        grp = str(group_name or "").strip()
+        if not grp:
+            err = "Grup adı boş olamaz."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        remaining = [dict(it) for it in self.items if (str(it.get("group") or "Genel").strip() != grp)]
+        deleted_count = len(self.items) - len(remaining)
+        if deleted_count == 0:
+            err = f"Grup bulunamadı: {grp}"
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        self._push_undo()
+        self._persist_items_change(remaining, "delete_group", create_backup_flag=True)
+        msg = f"Grup silindi ✔ ({grp}, {deleted_count} kayıt)"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={
+                "group": grp,
+                "deleted_count": deleted_count,
+                "count": len(self.items),
+                "revision": self.revision,
+            },
+        )
+
+    def op_undo(self) -> OperationResult:
+        if not self._undo_stack:
+            err = "Geri alınacak işlem yok."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        current_snap = (
+            copy.deepcopy(self.items),
+            copy.deepcopy(self.program_meta),
+            copy.deepcopy(self.extra_sections),
+        )
+        self._redo_stack.append(current_snap)
+        if len(self._redo_stack) > 30:
+            self._redo_stack.pop(0)
+
+        prev_items, prev_prog, prev_extra = self._undo_stack.pop()
+        self.program_meta = prev_prog
+        self.extra_sections = prev_extra
+        self._persist_items_change(prev_items, "undo", create_backup_flag=False)
+        self._save_history()
+        msg = f"Son işlem geri alındı ✔ ({len(self.items)} kayıt)"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={
+                "count": len(self.items),
+                "revision": self.revision,
+                "can_undo": bool(self._undo_stack),
+                "can_redo": bool(self._redo_stack),
+            },
+        )
+
+    def op_redo(self) -> OperationResult:
+        if not self._redo_stack:
+            err = "Yinelenecek işlem yok."
+            return OperationResult(ok=False, exit_code=2, message=err, error=err)
+
+        current_snap = (
+            copy.deepcopy(self.items),
+            copy.deepcopy(self.program_meta),
+            copy.deepcopy(self.extra_sections),
+        )
+        self._undo_stack.append(current_snap)
+        if len(self._undo_stack) > 30:
+            self._undo_stack.pop(0)
+
+        next_items, next_prog, next_extra = self._redo_stack.pop()
+        self.program_meta = next_prog
+        self.extra_sections = next_extra
+        self._persist_items_change(next_items, "redo", create_backup_flag=False)
+        self._save_history()
+        msg = f"İşlem yinelendi ✔ ({len(self.items)} kayıt)"
+        self.logger.info(msg)
+        return OperationResult(
+            ok=True,
+            exit_code=0,
+            message=msg,
+            data={
+                "count": len(self.items),
+                "revision": self.revision,
+                "can_undo": bool(self._undo_stack),
+                "can_redo": bool(self._redo_stack),
+            },
         )

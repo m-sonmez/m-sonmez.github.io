@@ -40,7 +40,9 @@ from qtp_app.core.settings import (
     SETTING_DESCRIPTIONS,
     VALID_LOG_LEVELS,
     VALID_PASTE_METHODS,
+    VALID_SORT_BY,
     VALID_THEMES,
+    VALID_VIEW_MODES,
     _sanitize_settings,
 )
 from qtp_app.ui.help_dialog import HelpDialog
@@ -361,6 +363,23 @@ class SettingsWindow(QDialog):
         self.theme_cb.setToolTip(tip)
         gen_form.addRow(lbl + ":", self.theme_cb)
 
+        lbl, tip = self._desc("view_mode")
+        self.view_mode_cb = QComboBox()
+        self.view_mode_cb.addItems(list(VALID_VIEW_MODES))
+        self.view_mode_cb.setToolTip(tip)
+        gen_form.addRow(lbl + ":", self.view_mode_cb)
+
+        lbl, tip = self._desc("sort_by")
+        self.sort_by_cb = QComboBox()
+        self.sort_by_cb.addItems(list(VALID_SORT_BY))
+        self.sort_by_cb.setToolTip(tip)
+        gen_form.addRow(lbl + ":", self.sort_by_cb)
+
+        lbl, tip = self._desc("strip_emoji")
+        self.strip_emoji_chk = QCheckBox(lbl)
+        self.strip_emoji_chk.setToolTip(tip)
+        gen_form.addRow("", self.strip_emoji_chk)
+
         lbl, tip = self._desc("last_category")
         self.last_cat_cb = QComboBox()
         self.last_cat_cb.addItems(["ALL", "A", "Z", "X", "Q"])
@@ -639,6 +658,9 @@ class SettingsWindow(QDialog):
 
     def _populate(self, data: dict[str, Any]) -> None:
         self.theme_cb.setCurrentText(str(data.get("theme", "light")))
+        self.view_mode_cb.setCurrentText(str(data.get("view_mode", "list")))
+        self.sort_by_cb.setCurrentText(str(data.get("sort_by", "order")))
+        self.strip_emoji_chk.setChecked(bool(data.get("strip_emoji", False)))
         self.last_cat_cb.setCurrentText(str(data.get("last_category", "ALL")))
         ws = data.get("window_size") or [720, 520]
         self.width_spin.setValue(int(ws[0]))
@@ -701,6 +723,9 @@ class SettingsWindow(QDialog):
         """Form değerlerini qtp_settings.json sözlüğü olarak toplar."""
         out = copy.deepcopy(base if base is not None else self._base_settings)
         out["theme"] = self.theme_cb.currentText()
+        out["view_mode"] = self.view_mode_cb.currentText()
+        out["sort_by"] = self.sort_by_cb.currentText()
+        out["strip_emoji"] = self.strip_emoji_chk.isChecked()
         out["last_category"] = self.last_cat_cb.currentText()
         out["window_size"] = [self.width_spin.value(), self.height_spin.value()]
         out["language"] = self.lang_cb.currentText()

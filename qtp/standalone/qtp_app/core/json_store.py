@@ -456,6 +456,7 @@ def save_state(
     backup_reason: str = "save",
     max_backups: int = 15,
     ini_path: Path | None = None,
+    update_ini: bool = True,
 ) -> dict[str, Any]:
     """Kayıtları hem data.json hem de QuickTextPaste.ini (.bak yedeğiyle) üzerine atomik yazar."""
     wd = Path(work_dir).resolve()
@@ -483,16 +484,17 @@ def save_state(
         except ValueError:
             m_show_tree_val = 1
 
-    ini_text = build_qtp_ini(
-        items,
-        m_show_tree=m_show_tree_val,
-        include_program=True,
-        program=merged_prog,
-        extra_sections=extra_sections,
-        tr_prefs=str(merged_prog.get("lng", "21")) == "21",
-        keep_winrc=bool(merged_prog.get("WinRC", DEFAULT_QTP_PROGRAM["WinRC"])),
-    )
-    write_qtp_ini(target_ini, ini_text, encoding=encoding, create_bak=True)
+    if update_ini:
+        ini_text = build_qtp_ini(
+            items,
+            m_show_tree=m_show_tree_val,
+            include_program=True,
+            program=merged_prog,
+            extra_sections=extra_sections,
+            tr_prefs=str(merged_prog.get("lng", "21")) == "21",
+            keep_winrc=bool(merged_prog.get("WinRC", DEFAULT_QTP_PROGRAM["WinRC"])),
+        )
+        write_qtp_ini(target_ini, ini_text, encoding=encoding, create_bak=True)
 
     item_meta: dict[str, dict[str, Any]] = {}
     for it in items:

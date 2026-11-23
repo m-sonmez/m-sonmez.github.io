@@ -28,6 +28,9 @@ LEGACY_DEFAULT_HOTKEYS: dict[str, str] = {
 
 DEFAULT_SETTINGS: dict[str, Any] = {
     "theme": "light",
+    "view_mode": "list",
+    "strip_emoji": False,
+    "sort_by": "order",
     "hotkeys": dict(DEFAULT_HOTKEYS),
     "last_category": "ALL",
     "last_category_by_hotkey": {},
@@ -49,6 +52,18 @@ SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
     "theme": {
         "label": "Tema",
         "tooltip": "Arayüz renk temasını belirler: 'auto' işletim sistemini izler, 'dark' koyu, 'light' açık tema kullanır.",
+    },
+    "view_mode": {
+        "label": "Görünüm Kipi",
+        "tooltip": "Hazır cevap listesinin görünüm düzenini belirler: 'list' (Liste), 'grid' (Izgara) veya 'table' (Tablo).",
+    },
+    "strip_emoji": {
+        "label": "Emojisiz Kopyala / Yapıştır",
+        "tooltip": "Etkinleştirildiğinde kopyalama ve yapıştırma sırasında Unicode emojiler otomatik temizlenir; kayıtlı özgün metin korunur.",
+    },
+    "sort_by": {
+        "label": "Sıralama Ölçütü",
+        "tooltip": "Kayıtların sıralama düzeni: 'order' (Sıra), 'usage' (En Çok Kullanılan), 'alpha' (A–Z), 'keys' (Kısayol), 'favorites' (Favoriler Önce).",
     },
     "hotkeys": {
         "label": "Global Kısayollar",
@@ -109,6 +124,8 @@ SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
 }
 
 VALID_THEMES = ("auto", "dark", "light")
+VALID_VIEW_MODES = ("list", "grid", "table")
+VALID_SORT_BY = ("order", "usage", "alpha", "keys", "favorites")
 VALID_PASTE_METHODS = ("auto", "ctrl_v", "shift_insert", "type")
 VALID_LOG_LEVELS = ("debug", "info", "warn", "error")
 
@@ -168,6 +185,14 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
 
     theme = str(raw.get("theme", merged["theme"])).strip().lower()
     merged["theme"] = theme if theme in VALID_THEMES else DEFAULT_SETTINGS["theme"]
+
+    vm = str(raw.get("view_mode", merged["view_mode"])).strip().lower()
+    merged["view_mode"] = vm if vm in VALID_VIEW_MODES else DEFAULT_SETTINGS["view_mode"]
+
+    merged["strip_emoji"] = bool(raw.get("strip_emoji", DEFAULT_SETTINGS["strip_emoji"]))
+
+    sb = str(raw.get("sort_by", merged["sort_by"])).strip().lower()
+    merged["sort_by"] = sb if sb in VALID_SORT_BY else DEFAULT_SETTINGS["sort_by"]
 
     raw_hotkeys = raw.get("hotkeys")
     if isinstance(raw_hotkeys, dict):
@@ -282,6 +307,20 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
         if val not in VALID_THEMES:
             raise SettingValidationError(f"Geçersiz ayar değeri ('theme'): '{value}' ({', '.join(VALID_THEMES)}).")
         updated["theme"] = val
+    elif norm == "view_mode":
+        val = str(value).strip().lower()
+        if val not in VALID_VIEW_MODES:
+            raise SettingValidationError(
+                f"Geçersiz ayar değeri ('view_mode'): '{value}' ({', '.join(VALID_VIEW_MODES)})."
+            )
+        updated["view_mode"] = val
+    elif norm == "sort_by":
+        val = str(value).strip().lower()
+        if val not in VALID_SORT_BY:
+            raise SettingValidationError(
+                f"Geçersiz ayar değeri ('sort_by'): '{value}' ({', '.join(VALID_SORT_BY)})."
+            )
+        updated["sort_by"] = val
     elif norm == "paste_method":
         val = str(value).strip().lower()
         if val not in VALID_PASTE_METHODS:
@@ -301,7 +340,7 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
         if val not in ("ALL", "A", "Z", "X", "Q"):
             raise SettingValidationError(f"Geçersiz ayar değeri ('last_category'): '{value}' (ALL/A/Z/X/Q).")
         updated["last_category"] = val
-    elif norm in ("enter_after_paste", "start_minimized", "tray_icon", "auto_reload"):
+    elif norm in ("enter_after_paste", "start_minimized", "tray_icon", "auto_reload", "strip_emoji"):
         updated[norm] = _parse_bool(value)
     elif norm == "auto_reload_interval_ms":
         try:

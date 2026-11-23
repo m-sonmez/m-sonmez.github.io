@@ -124,8 +124,14 @@ def apply_reload_event_gui(
             duration_ms=2200,
         )
 
-    if event.theme_changed or event.data_path_changed:
-        overlay.apply_settings(theme=engine.settings["theme"], ini_path=str(engine.ini_path))
+    if event.theme_changed or event.data_path_changed or event.settings_changed:
+        overlay.apply_settings(
+            theme=engine.settings["theme"],
+            ini_path=str(engine.ini_path),
+            view_mode=engine.settings.get("view_mode", "list"),
+            strip_emoji=bool(engine.settings.get("strip_emoji", False)),
+            sort_by=engine.settings.get("sort_by", "order"),
+        )
         if event.theme_changed and hasattr(tray, "apply_palette") and hasattr(overlay, "_palette"):
             tray.apply_palette(overlay._palette)
 
@@ -215,6 +221,12 @@ def launch_gui(
 
     bridge = UiBridge()
 
+    def _sync_overlay_after_mutation(res: Any) -> Any:
+        if getattr(res, "ok", False):
+            overlay.set_items(engine.items)
+        overlay.set_history_state(bool(engine._undo_stack), bool(engine._redo_stack))
+        return res
+
     def handle_paste(item: dict[str, Any], prev_app: Any) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
         return engine.op_paste(target, previous_app=prev_app)
@@ -230,10 +242,9 @@ def launch_gui(
             group=str(payload.get("group", "Genel")),
             label=str(payload.get("label", "")),
             terminator=str(payload.get("terminator", "<E<N<D|")),
+            favorite=bool(payload.get("favorite", False)),
         )
-        if res.ok:
-            overlay.set_items(engine.items)
-        return res
+        return _sync_overlay_after_mutation(res)
 
     def handle_edit(item: dict[str, Any], payload: dict[str, Any]) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
@@ -244,26 +255,94 @@ def launch_gui(
             label=payload.get("label"),
             text=payload.get("text"),
             terminator=payload.get("terminator"),
+            favorite=payload.get("favorite") if "favorite" in payload else None,
         )
-        if res.ok:
-            overlay.set_items(engine.items)
-        return res
+        return _sync_overlay_after_mutation(res)
 
     def handle_delete(item: dict[str, Any]) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
-        res = engine.op_delete_item(target)
-        if res.ok:
-            overlay.set_items(engine.items)
-        return res
+        return _sync_overlay_after_mutation(engine.op_delete_item(target))
 
     def handle_theme_change(new_theme: str) -> None:
         engine.op_set_setting("theme", new_theme)
+
+    def handle_save_all() -> Any:
+        return _sync_overlay_after_mutation(engine.op_save_all())
+
+    def handle_duplicate(item: dict[str, Any]) -> Any:
+        target = str(item.get("raw_key") or item.get("text") or "")
+        return _sync_overlay_after_mutation(engine.op_duplicate_item(target))
+
+    def handle_move(item: dict[str, Any], direction: str) -> Any:
+        target = str(item.get("raw_key") or item.get("text") or "")
+        return _sync_overlay_after_mutation(engine.op_move_item(target, direction=direction))
+
+    def handle_toggle_favorite(item: dict[str, Any]) -> Any:
+        target = str(item.get("raw_key") or item.get("text") or "")
+        return _sync_overlay_after_mutation(engine.op_toggle_favorite(target))
+
+    def handle_bulk_edit(targets: list[str], payload: dict[str, Any]) -> Any:
+        res = engine.op_bulk_edit(
+            targets,
+            keys=payload.get("keys"),
+            group=payload.get("group"),
+            find=payload.get("find"),
+            replace=str(payload.get("replace", "") or ""),
+            ignore_case=bool(payload.get("ignore_case", False)),
+            prefix=str(payload.get("prefix", "") or ""),
+            suffix=str(payload.get("suffix", "") or ""),
+            strip_emojis=bool(payload.get("strip_emojis", False)),
+            add_emoji=str(payload.get("add_emoji", "") or ""),
+            favorite_action=str(payload.get("favorite_action", "keep") or "keep"),
+        )
+        return _sync_overlay_after_mutation(res)
+
+    def handle_bulk_delete(targets: list[str]) -> Any:
+        return _sync_overlay_after_mutation(engine.op_bulk_delete(targets))
+
+    def handle_rename_group(old_g: str, new_g: str) -> Any:
+        return _sync_overlay_after_mutation(engine.op_rename_group(old_g, new_g))
+
+    def handle_delete_group(grp_name: str) -> Any:
+        return _sync_overlay_after_mutation(engine.op_delete_group(grp_name))
+
+    def handle_export_group(grp_name: str) -> Any:
+        keys = [
+            str(it.get("raw_key", ""))
+            for it in engine.items
+            if (str(it.get("group") or "Genel").strip() or "Genel") == grp_name
+        ]
+        path, _ = QFileDialog.getSaveFileName(
+            overlay if overlay.isVisible() else None,
+            f"Grubu Dışa Aktar ({grp_name})",
+            str(engine.work_dir / f"qtp-grup-{grp_name}.ini"),
+            "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
+        )
+        if not path:
+            return None
+        res = engine.op_export_ini(path, raw_keys=keys)
+        overlay.show_toast(res.message)
+        return res
+
+    def handle_undo() -> Any:
+        return _sync_overlay_after_mutation(engine.op_undo())
+
+    def handle_redo() -> Any:
+        return _sync_overlay_after_mutation(engine.op_redo())
+
+    def handle_setting_change(key: str, value: Any) -> Any:
+        return engine.op_set_setting(key, value)
 
     effective_cat = (initial_category or str(engine.settings.get("last_category", "ALL"))).strip().upper() or "ALL"
     ws = engine.settings.get("window_size") or [720, 520]
     overlay = OverlayWindow(
         engine.items,
         theme=str(engine.settings.get("theme", "light")),
+        view_mode=str(engine.settings.get("view_mode", "list")),
+        strip_emoji=bool(engine.settings.get("strip_emoji", False)),
+        sort_by=str(engine.settings.get("sort_by", "order")),
+        can_undo=bool(engine._undo_stack),
+        can_redo=bool(engine._redo_stack),
         window_size=(int(ws[0]), int(ws[1])),
         last_category=effective_cat,
         last_category_by_hotkey=engine.settings.get("last_category_by_hotkey") or {},
@@ -275,6 +354,18 @@ def launch_gui(
         on_edit=handle_edit,
         on_delete=handle_delete,
         on_theme_change=handle_theme_change,
+        on_save_all=handle_save_all,
+        on_duplicate=handle_duplicate,
+        on_move=handle_move,
+        on_toggle_favorite=handle_toggle_favorite,
+        on_bulk_edit=handle_bulk_edit,
+        on_bulk_delete=handle_bulk_delete,
+        on_rename_group=handle_rename_group,
+        on_delete_group=handle_delete_group,
+        on_export_group=handle_export_group,
+        on_undo=handle_undo,
+        on_redo=handle_redo,
+        on_setting_change=handle_setting_change,
     )
     logger.info(
         "GUI başlatılıyor (platform=%s, tema=%s, yazı_tipi=%s, ilk_kategori=%s, ilk_sorgu=%r).",
@@ -334,7 +425,13 @@ def launch_gui(
             merged = dict(dlg.result_settings)
             merged["last_category_by_hotkey"] = overlay.last_category_by_hotkey
             engine.save_current_settings(merged)
-            overlay.apply_settings(theme=engine.settings["theme"], ini_path=str(engine.ini_path))
+            overlay.apply_settings(
+                theme=engine.settings["theme"],
+                ini_path=str(engine.ini_path),
+                view_mode=engine.settings.get("view_mode", "list"),
+                strip_emoji=bool(engine.settings.get("strip_emoji", False)),
+                sort_by=engine.settings.get("sort_by", "order"),
+            )
             tray.apply_palette(current_palette())
             ws_new = engine.settings.get("window_size") or [720, 520]
             overlay.resize(int(ws_new[0]), int(ws_new[1]))

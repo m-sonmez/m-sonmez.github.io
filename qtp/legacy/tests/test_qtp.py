@@ -354,7 +354,7 @@ class TestHtmlJsParity(unittest.TestCase):
         self.assertLess(len(idx_scripts[2].encode("utf-8")), 105_000)
 
         sw_js = (ROOT_DIR / "sw.js").read_text(encoding="utf-8")
-        self.assertIn("qtp-pwa-cache-v3.3.1", sw_js)
+        self.assertIn("qtp-pwa-cache-v3.4.0", sw_js)
         self.assertIn("/api/", sw_js)
         self.assertIn("data.json", sw_js)
         self.assertIn("./theme.css", sw_js)
@@ -673,6 +673,14 @@ setTimeout(async () => {
         proc = subprocess.run([node, "-e", vm_script], capture_output=True, text=True, env=env, check=False)
         self.assertEqual(proc.returncode, 0, msg=f"STDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}")
         self.assertIn("CEVAPLAR_AND_SW_VM_OK", proc.stdout)
+
+    def test_legacy_python_files_compile_cleanly(self):
+        import py_compile
+
+        py_files = sorted(LEGACY_DIR.rglob("*.py"))
+        self.assertGreaterEqual(len(py_files), 4)
+        for py_path in py_files:
+            py_compile.compile(str(py_path), doraise=True)
 
 
 if __name__ == "__main__":

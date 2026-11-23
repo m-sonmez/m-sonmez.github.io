@@ -43,6 +43,24 @@ ACCENT_GRADIENT_QSS = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #7C3AED, s
 SEARCH_PLACEHOLDER = "Ara… (mesaj, kategori, etiket)"
 SEARCH_CHIP_TEXT = "Ctrl+K"
 FOOTER_HINTS_TEXT = "↑↓ Gezin · ⏎ Yapıştır · Ctrl+⏎ Kopyala · Esc Kapat"
+QUICK_EMOJIS: tuple[str, ...] = (
+    "😊",
+    "👍",
+    "🎉",
+    "🚀",
+    "✅",
+    "⚠️",
+    "🙏",
+    "💳",
+    "📦",
+    "🛵",
+    "📞",
+    "❤️",
+    "🔥",
+    "⭐",
+    "💡",
+    "📌",
+)
 
 CATEGORY_TABS: tuple[tuple[str, str, str], ...] = (
     ("ALL", "Tümü", ""),
@@ -511,6 +529,72 @@ def build_overlay_stylesheet(palette: ThemePalette, *, translucent: bool = False
         color: {palette.text_primary};
         border: 1px solid {palette.selected_border};
     }}
+    QPushButton#HeaderActionBtn:disabled {{
+        background-color: {palette.surface_alt};
+        color: {palette.text_muted};
+        border: 1px solid {palette.border};
+    }}
+    QPushButton#HeaderActionBtn[active="true"],
+    QPushButton#HeaderActionBtn:checked {{
+        background: {ACCENT_GRADIENT_QSS};
+        color: {palette.pill_active_text};
+        border: 1px solid {palette.selected_border};
+    }}
+    QComboBox#CompactCombo {{
+        background-color: {palette.input_bg};
+        color: {palette.text_primary};
+        border: 1px solid {palette.input_border};
+        border-radius: 7px;
+        padding: 3px 8px;
+        font-size: {FONT_SIZE_META}px;
+    }}
+    QComboBox#CompactCombo QAbstractItemView {{
+        background-color: {palette.menu_bg};
+        color: {palette.menu_text};
+        border: 1px solid {palette.menu_border};
+        selection-background-color: {palette.menu_hover_bg};
+        selection-color: {palette.menu_hover_text};
+    }}
+    QFrame#BulkActionBar {{
+        background-color: {palette.surface_alt};
+        border: 1px solid {palette.selected_border};
+        border-radius: 8px;
+    }}
+    QTableView#SnippetTable {{
+        background-color: {palette.input_bg};
+        alternate-background-color: {palette.surface_alt};
+        color: {palette.text_primary};
+        gridline-color: {palette.border};
+        border: 1px solid {palette.border};
+        border-radius: 8px;
+        selection-background-color: {palette.card_selected};
+        selection-color: {palette.text_primary};
+        outline: 0;
+    }}
+    QTableView#SnippetTable::item:hover {{
+        background-color: {palette.card_hover};
+        color: {palette.text_primary};
+    }}
+    QTableView#SnippetTable::item:selected {{
+        background-color: {palette.card_selected};
+        color: {palette.text_primary};
+    }}
+    QHeaderView::section {{
+        background-color: {palette.surface_alt};
+        color: {palette.text_primary};
+        border: none;
+        border-bottom: 1px solid {palette.border};
+        border-right: 1px solid {palette.border};
+        padding: 5px 8px;
+        font-size: {FONT_SIZE_META}px;
+        font-weight: 700;
+    }}
+    QTableCornerButton::section {{
+        background-color: {palette.surface_alt};
+        border: none;
+        border-bottom: 1px solid {palette.border};
+        border-right: 1px solid {palette.border};
+    }}
     QLabel#ToastLabel {{
         background-color: {palette.toast_bg};
         color: {palette.toast_text};
@@ -698,6 +782,23 @@ def build_dialog_stylesheet(palette: ThemePalette) -> str:
     QPushButton#HeaderActionBtn:hover {{
         background-color: {palette.btn_hover};
         color: {palette.text_primary};
+    }}
+    QPushButton#EmojiChipBtn {{
+        background-color: {palette.btn_bg};
+        color: {palette.text_primary};
+        border: 1px solid {palette.btn_border};
+        border-radius: 6px;
+        padding: 3px 6px;
+        font-size: 13px;
+        min-width: 28px;
+    }}
+    QPushButton#EmojiChipBtn:hover {{
+        background-color: {palette.btn_hover};
+        border-color: {palette.selected_border};
+    }}
+    QListWidget::indicator, QTableView::indicator {{
+        width: 15px;
+        height: 15px;
     }}
     QTabWidget::pane {{
         border: 1px solid {palette.border};

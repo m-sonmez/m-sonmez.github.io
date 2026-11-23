@@ -487,10 +487,10 @@ class QTPManagerApp(tk.Tk):
 
         if not server_alive:
             flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
+            srv_script = Path(__file__).resolve().parent / "qtp_server.py"
+            if not srv_script.is_file():
+                srv_script = self.work_dir / "qtp_server.py"
             subprocess.Popen(
-                srv_script = Path(__file__).resolve().parent / "qtp_server.py"
-                if not srv_script.is_file():
-                    srv_script = self.work_dir / "qtp_server.py"
                 [sys.executable, str(srv_script), "--work-dir", str(self.work_dir), "--ensure-qtp"],
                 cwd=str(self.work_dir),
                 stdin=subprocess.DEVNULL,

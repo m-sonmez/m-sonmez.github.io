@@ -78,7 +78,20 @@ class QtpWebServer(ThreadingHTTPServer):
 
 
 class QtpWebRequestHandler(BaseHTTPRequestHandler):
-    server_version = "QTPWeb/2.2.1"
+    server_version = "QTPWeb/2.3.0"
+
+    @staticmethod
+    def _parse_qs_bool(val: str) -> bool:
+        return str(val or "").strip().lower() in ("1", "true", "evet", "yes", "on")
+
+    @staticmethod
+    def _parse_opt_bool(body: dict[str, Any], key: str) -> bool | None:
+        if key not in body or body[key] is None:
+            return None
+        val = body[key]
+        if isinstance(val, bool):
+            return val
+        return str(val).strip().lower() in ("1", "true", "evet", "yes", "on")
 
     @property
     def engine(self) -> QtpEngine:
@@ -174,12 +187,41 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/items":
             cat = qs.get("category", ["ALL"])[0]
             q = qs.get("query", [""])[0]
-            self._send_result(self.engine.op_list_items(category=cat, query=q))
+            only_fav = self._parse_qs_bool(qs.get("only_favorites", [""])[0])
+            only_notes = self._parse_qs_bool(qs.get("only_notes", [""])[0])
+            grp = qs.get("group", [""])[0]
+            sort_by = qs.get("sort", qs.get("sort_by", [""]))[0] or None
+            self._send_result(
+                self.engine.op_list_items(
+                    category=cat,
+                    query=q,
+                    only_favorites=only_fav,
+                    only_notes=only_notes,
+                    group=grp,
+                    sort_by=sort_by,
+                )
+            )
             return
         if path == "/api/search":
             q = qs.get("q", qs.get("query", [""]))[0]
             cat = qs.get("category", ["ALL"])[0]
-            self._send_result(self.engine.op_search(q, category=cat))
+            only_fav = self._parse_qs_bool(qs.get("only_favorites", [""])[0])
+            only_notes = self._parse_qs_bool(qs.get("only_notes", [""])[0])
+            grp = qs.get("group", [""])[0]
+            sort_by = qs.get("sort", qs.get("sort_by", [""]))[0] or None
+            self._send_result(
+                self.engine.op_search(
+                    q,
+                    category=cat,
+                    only_favorites=only_fav,
+                    only_notes=only_notes,
+                    group=grp,
+                    sort_by=sort_by,
+                )
+            )
+            return
+        if path == "/api/groups":
+            self._send_result(self.engine.op_list_groups())
             return
         if path == "/api/show-ini":
             target = qs.get("target", [""])[0]
@@ -196,6 +238,7 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             self._send_result(self.engine.op_check_hotkeys())
             return
         if path == "/api/revision":
+            fav_count = sum(1 for it in self.engine.items if bool(it.get("favorite", False)))
             res = OperationResult(
                 ok=True,
                 exit_code=0,
@@ -203,8 +246,14 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
                 data={
                     "revision": self.engine.revision,
                     "theme": self.engine.settings.get("theme"),
+                    "view_mode": self.engine.settings.get("view_mode", "list"),
+                    "strip_emoji": bool(self.engine.settings.get("strip_emoji", False)),
+                    "sort_by": self.engine.settings.get("sort_by", "order"),
                     "hotkeys": self.engine.settings.get("hotkeys"),
                     "item_count": len(self.engine.items),
+                    "favorite_count": fav_count,
+                    "can_undo": bool(self.engine._undo_stack),
+                    "can_redo": bool(self.engine._redo_stack),
                     "initial_category": self.server.initial_category,
                     "initial_query": self.server.initial_query,
                 },
@@ -221,13 +270,18 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         body = self._read_json_body()
 
         if path == "/api/copy":
-            self._send_result(self.engine.op_copy(str(body.get("target", ""))))
+            strip_flag = self._parse_opt_bool(body, "strip_emoji")
+            self._send_result(self.engine.op_copy(str(body.get("target", "")), strip_emoji=strip_flag))
             return
         if path == "/api/paste":
-            self._send_result(self.engine.op_paste(str(body.get("target", ""))))
+            strip_flag = self._parse_opt_bool(body, "strip_emoji")
+            self._send_result(self.engine.op_paste(str(body.get("target", "")), strip_emoji=strip_flag))
             return
         if path == "/api/reload":
             self._send_result(self.engine.reload_data())
+            return
+        if path == "/api/save":
+            self._send_result(self.engine.op_save_all())
             return
         if path == "/api/backup":
             keep = body.get("keep")
@@ -247,15 +301,42 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             self._send_result(self.engine.op_apply_hotkey_modifiers(mods))
             return
         if path == "/api/import-ini":
+            skip_dup = bool(body.get("skip_duplicates", False))
             self._send_result(
                 self.engine.op_import_ini(
                     str(body.get("path", "")),
                     mode=str(body.get("mode", "merge")),
+                    skip_duplicates=skip_dup,
+                )
+            )
+            return
+        if path == "/api/import-content":
+            skip_dup = bool(body.get("skip_duplicates", False))
+            self._send_result(
+                self.engine.op_import_content(
+                    str(body.get("content", "")),
+                    filename=str(body.get("filename", "import.ini")),
+                    mode=str(body.get("mode", "merge")),
+                    skip_duplicates=skip_dup,
                 )
             )
             return
         if path == "/api/export-ini":
-            self._send_result(self.engine.op_export_ini(str(body.get("path", ""))))
+            raw_keys_val = body.get("raw_keys")
+            if isinstance(raw_keys_val, str):
+                raw_keys = [k.strip() for k in raw_keys_val.split(",") if k.strip()] or None
+            elif isinstance(raw_keys_val, list):
+                raw_keys = [str(k).strip() for k in raw_keys_val if str(k).strip()] or None
+            else:
+                raw_keys = None
+            enc = str(body.get("encoding", "utf-16-le-bom") or "utf-16-le-bom")
+            self._send_result(
+                self.engine.op_export_ini(
+                    str(body.get("path", "")),
+                    raw_keys=raw_keys,
+                    encoding=enc,
+                )
+            )
             return
         if path == "/api/export-backup":
             self._send_result(self.engine.op_export_backup(str(body.get("path", ""))))
@@ -276,6 +357,7 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
                     group=str(body.get("group", "Genel")),
                     label=str(body.get("label", "")),
                     terminator=body.get("terminator", "<E<N<D|"),
+                    favorite=bool(body.get("favorite", False)),
                 )
             )
             return
@@ -288,6 +370,7 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
                     label=body.get("label"),
                     text=body.get("text"),
                     terminator=body.get("terminator"),
+                    favorite=self._parse_opt_bool(body, "favorite"),
                 )
             )
             return
@@ -295,6 +378,68 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             self._send_result(
                 self.engine.op_delete_item(str(body.get("target", body.get("raw_key", ""))))
             )
+            return
+        if path == "/api/items/duplicate":
+            self._send_result(
+                self.engine.op_duplicate_item(str(body.get("target", body.get("raw_key", ""))))
+            )
+            return
+        if path == "/api/items/move":
+            self._send_result(
+                self.engine.op_move_item(
+                    str(body.get("target", body.get("raw_key", ""))),
+                    direction=str(body.get("direction", "up")),
+                )
+            )
+            return
+        if path == "/api/items/favorite":
+            self._send_result(
+                self.engine.op_toggle_favorite(
+                    str(body.get("target", body.get("raw_key", ""))),
+                    favorite=self._parse_opt_bool(body, "favorite"),
+                )
+            )
+            return
+        if path == "/api/items/bulk-edit":
+            targets = body.get("targets", body.get("raw_keys", []))
+            self._send_result(
+                self.engine.op_bulk_edit(
+                    targets,
+                    keys=body.get("keys"),
+                    group=body.get("group"),
+                    find=body.get("find"),
+                    replace=str(body.get("replace", "") or ""),
+                    ignore_case=bool(body.get("ignore_case", False)),
+                    prefix=str(body.get("prefix", "") or ""),
+                    suffix=str(body.get("suffix", "") or ""),
+                    strip_emojis=bool(body.get("strip_emojis", False)),
+                    add_emoji=str(body.get("add_emoji", "") or ""),
+                    favorite_action=str(body.get("favorite_action", "keep") or "keep"),
+                )
+            )
+            return
+        if path == "/api/items/bulk-delete":
+            targets = body.get("targets", body.get("raw_keys", []))
+            self._send_result(self.engine.op_bulk_delete(targets))
+            return
+        if path == "/api/groups/rename":
+            self._send_result(
+                self.engine.op_rename_group(
+                    str(body.get("old_group", body.get("old", ""))),
+                    str(body.get("new_group", body.get("new", ""))),
+                )
+            )
+            return
+        if path == "/api/groups/delete":
+            self._send_result(
+                self.engine.op_delete_group(str(body.get("group", body.get("name", ""))))
+            )
+            return
+        if path == "/api/undo":
+            self._send_result(self.engine.op_undo())
+            return
+        if path == "/api/redo":
+            self._send_result(self.engine.op_redo())
             return
         if path == "/api/shutdown":
             res = OperationResult(ok=True, exit_code=0, message="Web sunucusu kapatılıyor.")

@@ -309,7 +309,13 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
     from PyQt6.QtCore import QRect
     from PyQt6.QtGui import QImage, QPainter
     from PyQt6.QtWidgets import QApplication, QStyle, QStyleOptionViewItem
-    from qtp_app.ui.overlay import IniSnippetViewerDialog, SnippetEditorDialog, SnippetItemDelegate
+    from qtp_app.ui.overlay import (
+        BulkEditDialog,
+        GroupManagerDialog,
+        IniSnippetViewerDialog,
+        SnippetEditorDialog,
+        SnippetItemDelegate,
+    )
     from qtp_app.ui.theme import DARK_PALETTE, LIGHT_PALETTE
 
     sample_items = [
@@ -367,6 +373,13 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
             HelpDialog(pal),
             SnippetEditorDialog(pal, ["Genel"], item=sample_items[0]),
             IniSnippetViewerDialog(sample_items[0], 0, "QuickTextPaste.ini", pal),
+            BulkEditDialog(pal, 2, ["Genel", "Kurye"]),
+            GroupManagerDialog(
+                pal,
+                lambda: [("Genel", 2), ("Kurye", 1)],
+                on_rename=lambda _o, _n: None,
+                on_delete=lambda _g: None,
+            ),
         ):
             qtbot.addWidget(dlg)
             dlg.show()
@@ -378,4 +391,18 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
             else:
                 assert dlg_lum < 0.25, f"Koyu {type(dlg).__name__} parlaklığı yüksek: {dlg_lum:.3f}"
             dlg.close()
+
+    ed = SnippetEditorDialog(LIGHT_PALETTE, ["Genel"], item={"keys": "L-Win+A", "group": "Genel", "text": "Merhaba 😊 🚀", "favorite": True})
+    qtbot.addWidget(ed)
+    ed._strip_editor_emojis()
+    assert ed.text_edit.toPlainText() == "Merhaba"
+    ed.close()
+
+    ov.set_view_mode("grid", persist=False)
+    QApplication.processEvents()
+    ov.set_view_mode("table", persist=False)
+    QApplication.processEvents()
+    assert ov.table_model.rowCount() == 2
+    ov.toggle_strip_emoji()
+    assert ov._strip_emoji is True
 

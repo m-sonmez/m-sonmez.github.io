@@ -76,6 +76,12 @@ class QtpTui:
         self.prompt_mode: str = ""
         self.prompt_buffer: str = ""
         self.prompt_target: str = ""
+        self.checked_keys: set[str] = set()
+        self.only_favorites: bool = False
+        self.only_notes: bool = False
+        self.group_filter: str = ""
+        self.sort_by: str = str(engine.settings.get("sort_by", "order") or "order")
+        self.strip_emoji: bool = bool(engine.settings.get("strip_emoji", False))
         self._reload_lock = threading.RLock()
         self._refresh_view_data()
 
@@ -99,7 +105,14 @@ class QtpTui:
         with self._reload_lock:
             cat_res = self.engine.op_list_categories()
             self._categories_cache = cat_res.data["categories"]
-            list_res = self.engine.op_list_items(category=self.category, query=self.query)
+            list_res = self.engine.op_list_items(
+                category=self.category,
+                query=self.query,
+                only_favorites=self.only_favorites,
+                only_notes=self.only_notes,
+                group=self.group_filter,
+                sort_by=self.sort_by,
+            )
             self._visible_items = list_res.data["items"]
             if not self._visible_items:
                 self.selected_idx = 0
@@ -165,10 +178,13 @@ class QtpTui:
                 for offset, item in enumerate(slice_items):
                     abs_idx = self.scroll_offset + offset
                     pointer = ">" if abs_idx == self.selected_idx else " "
+                    rk = str(item.get("raw_key", ""))
                     keys = str(item.get("keys", ""))
                     badge = keys.rsplit("+", 1)[-1].upper() if "+" in keys else (keys.upper() or "•")
                     snippet = str(item.get("text", "")).replace("\r\n", " ").replace("\n", " ")
-                    row_txt = f"{pointer} {abs_idx + 1:>3}. [{badge}] {snippet}"
+                    chk_pfx = "[x] " if rk in self.checked_keys else ""
+                    fav_pfx = "★ " if item.get("favorite") else ""
+                    row_txt = f"{pointer} {abs_idx + 1:>3}. {chk_pfx}{fav_pfx}[{badge}] {snippet}"
                     if len(row_txt) > inner_w:
                         row_txt = row_txt[: inner_w - 1] + "…"
                     lines.append(row_txt)
@@ -184,6 +200,14 @@ class QtpTui:
                 status_line = f"Düzenle [{self.prompt_target}] (⏎ Kaydet · Esc İptal): {self.prompt_buffer}"
             elif self.prompt_mode == "delete":
                 status_line = f"Sil [{self.prompt_target}]? (⏎/e Onayla · Esc İptal)"
+            elif self.prompt_mode == "bulk_prefix":
+                status_line = f"Toplu Önek ({len(self.checked_keys)} kayıt) (⏎ Uygula · Esc İptal): {self.prompt_buffer}"
+            elif self.prompt_mode == "bulk_delete":
+                status_line = f"Seçili {len(self.checked_keys)} kayıt silinsin mi? (⏎/e Onayla · Esc İptal)"
+            elif self.prompt_mode == "rename_group":
+                status_line = f"Grubu Yeniden Adlandır [{self.prompt_target}] → (⏎ Uygula · Esc İptal): {self.prompt_buffer}"
+            elif self.prompt_mode == "delete_group":
+                status_line = f"Grup silinsin mi [{self.prompt_target}]? (⏎/e Onayla · Esc İptal)"
             else:
                 status_line = f"Durum: {self.status_message[:inner_w - 7]}"
             lines.append(status_line[:inner_w])
@@ -265,11 +289,29 @@ class QtpTui:
         if op_id == "list_categories":
             return self._record_result(self.engine.op_list_categories())
         if op_id == "list_items":
-            return self._record_result(self.engine.op_list_items(category=self.category, query=self.query))
+            return self._record_result(
+                self.engine.op_list_items(
+                    category=self.category,
+                    query=self.query,
+                    only_favorites=self.only_favorites,
+                    only_notes=self.only_notes,
+                    group=self.group_filter,
+                    sort_by=self.sort_by,
+                )
+            )
         if op_id == "search":
             self.query = arg
             self._refresh_view_data()
-            return self._record_result(self.engine.op_search(arg, category=self.category))
+            return self._record_result(
+                self.engine.op_search(
+                    arg,
+                    category=self.category,
+                    only_favorites=self.only_favorites,
+                    only_notes=self.only_notes,
+                    group=self.group_filter,
+                    sort_by=self.sort_by,
+                )
+            )
         if op_id == "show_ini":
             res = self.engine.op_show_ini(target)
             if res.ok:
@@ -277,11 +319,18 @@ class QtpTui:
                 self.modal_lines = str(res.data["preview"]).splitlines()
             return self._record_result(res)
         if op_id == "copy":
-            return self._record_result(self.engine.op_copy(target))
+            res = self.engine.op_copy(target, strip_emoji=self.strip_emoji if extra == "" else bool(extra))
+            self._refresh_view_data()
+            return self._record_result(res)
         if op_id == "paste":
-            return self._record_result(self.engine.op_paste(target))
+            res = self.engine.op_paste(target, strip_emoji=self.strip_emoji if extra == "" else bool(extra))
+            self._refresh_view_data()
+            return self._record_result(res)
         if op_id == "export_ini":
-            return self._record_result(self.engine.op_export_ini(arg or (self.engine.work_dir / "QuickTextPaste_export.ini")))
+            raw_keys = [k.strip() for k in extra.split(",") if k.strip()] if extra else None
+            return self._record_result(
+                self.engine.op_export_ini(arg or (self.engine.work_dir / "QuickTextPaste_export.ini"), raw_keys=raw_keys)
+            )
         if op_id == "import_ini":
             res = self.engine.op_import_ini(arg, mode=extra or "merge")
             self._refresh_view_data()
@@ -339,6 +388,7 @@ class QtpTui:
                 group=str(payload.get("group", "Genel")),
                 label=str(payload.get("label", "")),
                 terminator=str(payload.get("terminator", "<E<N<D|")),
+                favorite=bool(payload.get("favorite", False)),
             )
             self._refresh_view_data()
             return self._record_result(res)
@@ -360,11 +410,82 @@ class QtpTui:
                 label=payload.get("label"),
                 text=text_arg,
                 terminator=payload.get("terminator"),
+                favorite=payload.get("favorite"),
             )
             self._refresh_view_data()
             return self._record_result(res)
         if op_id == "delete_item":
             res = self.engine.op_delete_item(target)
+            self.checked_keys.discard(target)
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "save_all":
+            return self._record_result(self.engine.op_save_all())
+        if op_id == "duplicate_item":
+            res = self.engine.op_duplicate_item(target)
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "move_item":
+            if arg in ("up", "down") and not extra:
+                mv_target = self.current_raw_key()
+                mv_dir = arg
+            else:
+                mv_target = target
+                mv_dir = extra or "up"
+            res = self.engine.op_move_item(mv_target, direction=mv_dir)
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "toggle_favorite":
+            res = self.engine.op_toggle_favorite(target)
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "bulk_edit":
+            b_targets = arg or ",".join(sorted(self.checked_keys))
+            b_payload: dict[str, Any] = {}
+            if extra and extra.lstrip().startswith("{"):
+                try:
+                    parsed = json.loads(extra)
+                    if isinstance(parsed, dict):
+                        b_payload = parsed
+                except Exception:
+                    b_payload = {}
+            res = self.engine.op_bulk_edit(
+                b_targets,
+                keys=b_payload.get("keys"),
+                group=b_payload.get("group"),
+                find=b_payload.get("find"),
+                replace=str(b_payload.get("replace", "") or ""),
+                ignore_case=bool(b_payload.get("ignore_case", False)),
+                prefix=str(b_payload.get("prefix", extra if not b_payload else "") or ""),
+                suffix=str(b_payload.get("suffix", "") or ""),
+                strip_emojis=bool(b_payload.get("strip_emojis", False)),
+                add_emoji=str(b_payload.get("add_emoji", "") or ""),
+                favorite_action=str(b_payload.get("favorite_action", "keep") or "keep"),
+            )
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "bulk_delete":
+            b_targets = arg or ",".join(sorted(self.checked_keys))
+            res = self.engine.op_bulk_delete(b_targets)
+            if res.ok:
+                for dk in res.data.get("deleted_keys", []):
+                    self.checked_keys.discard(dk)
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "rename_group":
+            res = self.engine.op_rename_group(arg, extra)
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "delete_group":
+            res = self.engine.op_delete_group(arg)
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "undo":
+            res = self.engine.op_undo()
+            self._refresh_view_data()
+            return self._record_result(res)
+        if op_id == "redo":
+            res = self.engine.op_redo()
             self._refresh_view_data()
             return self._record_result(res)
 
@@ -405,6 +526,19 @@ class QtpTui:
                     self.prompt_target = ""
                     self.execute_operation("delete_item", tgt)
                 return
+            if self.prompt_mode == "bulk_delete":
+                if key in ("ENTER", "e", "E", "y", "Y"):
+                    self.prompt_mode = ""
+                    self.prompt_target = ""
+                    self.execute_operation("bulk_delete")
+                return
+            if self.prompt_mode == "delete_group":
+                if key in ("ENTER", "e", "E", "y", "Y"):
+                    grp = self.prompt_target
+                    self.prompt_mode = ""
+                    self.prompt_target = ""
+                    self.execute_operation("delete_group", grp)
+                return
             if key == "ENTER":
                 mode_now = self.prompt_mode
                 buf_now = self.prompt_buffer
@@ -416,6 +550,10 @@ class QtpTui:
                     self.execute_operation("add_item", buf_now)
                 elif mode_now == "edit":
                     self.execute_operation("update_item", tgt_now, buf_now)
+                elif mode_now == "bulk_prefix":
+                    self.execute_operation("bulk_edit", "", json.dumps({"prefix": buf_now}, ensure_ascii=False))
+                elif mode_now == "rename_group":
+                    self.execute_operation("rename_group", tgt_now, buf_now)
                 return
             if key == "BACKSPACE":
                 self.prompt_buffer = self.prompt_buffer[:-1]
@@ -510,6 +648,62 @@ class QtpTui:
                 self.prompt_mode = "delete"
                 self.prompt_target = self.current_raw_key()
                 self.prompt_buffer = ""
+        elif key == " ":
+            rk = self.current_raw_key()
+            if rk:
+                if rk in self.checked_keys:
+                    self.checked_keys.remove(rk)
+                else:
+                    self.checked_keys.add(rk)
+                self.status_message = f"{len(self.checked_keys)} kayıt seçili"
+        elif key == "w":
+            self.execute_operation("save_all")
+        elif key == "D":
+            self.execute_operation("duplicate_item")
+        elif key == "K":
+            self.execute_operation("move_item", self.current_raw_key(), "up")
+        elif key == "J":
+            self.execute_operation("move_item", self.current_raw_key(), "down")
+        elif key == "f":
+            self.execute_operation("toggle_favorite")
+        elif key == "F":
+            self.only_favorites = not self.only_favorites
+            self._refresh_view_data()
+            self.status_message = "Yalnızca favoriler" if self.only_favorites else "Tüm kayıtlar"
+        elif key == "m":
+            self.strip_emoji = not self.strip_emoji
+            self.engine.op_set_setting("strip_emoji", self.strip_emoji)
+            self.status_message = "Emojisiz kopyalama etkin" if self.strip_emoji else "Emojili kopyalama etkin"
+        elif key == "U":
+            if self.checked_keys:
+                self.prompt_mode = "bulk_prefix"
+                self.prompt_buffer = ""
+                self.prompt_target = ""
+            else:
+                self.execute_operation("bulk_edit", "")
+        elif key == "X":
+            if self.checked_keys:
+                self.prompt_mode = "bulk_delete"
+                self.prompt_buffer = ""
+                self.prompt_target = ""
+            else:
+                self.execute_operation("bulk_delete", "")
+        elif key == "g":
+            cur = self.current_item()
+            if cur is not None:
+                self.prompt_mode = "rename_group"
+                self.prompt_target = str(cur.get("group") or "Genel")
+                self.prompt_buffer = self.prompt_target
+        elif key == "G":
+            cur = self.current_item()
+            if cur is not None:
+                self.prompt_mode = "delete_group"
+                self.prompt_target = str(cur.get("group") or "Genel")
+                self.prompt_buffer = ""
+        elif key == "u":
+            self.execute_operation("undo")
+        elif key == "y":
+            self.execute_operation("redo")
         elif key in ("q", "ESC"):
             self.running = False
 

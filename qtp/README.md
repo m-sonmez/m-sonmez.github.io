@@ -1,15 +1,15 @@
 # QTP — QuickTextPaste & Hazır Cevaplar (Bağımsız Uygulama + Klasik PWA)
 
-**QTP v2.2.1**, ek harici bağımlılık gerektirmeyen, tek taşınabilir yürütülebilir dosya (`qtp.exe` / `qtp.bin`) ve sıfır arka uçlu statik Web arayüzü (`qtp.html` + `index.html`) olarak çalışan gelişmiş hazır cevap, snippet yöneticisi ve otomatik yapıştırma aracıdır. Windows ikilisi (`qtp.exe`), `CompanyName = Murat Sönmez` PE sürüm bilgisini ve `CN=Murat Sönmez` SHA-256 Authenticode dijital imzasını taşır.
+**QTP v2.3.0**, ek harici bağımlılık gerektirmeyen, tek taşınabilir yürütülebilir dosya (`qtp.exe` / `qtp.bin`) ve sıfır arka uçlu statik Web arayüzü (`qtp.html` + `index.html`) olarak çalışan gelişmiş hazır cevap, snippet yöneticisi ve otomatik yapıştırma aracıdır. Windows ikilisi (`qtp.exe`), `CompanyName = Murat Sönmez` PE sürüm bilgisini ve `CN=Murat Sönmez` SHA-256 Authenticode dijital imzasını taşır.
 
 ---
 
-## Dört Mod (`--gui`, `--tui`, `--cli`, `--web`) & Tam CRUD
+## Dört Mod (`--gui`, `--tui`, `--cli`, `--web`) & Tam Güçlü Yönetim
 
-- **`--gui`:** Varsayılan **Açık (Light)** tema (üst çubukta 1-tık `🌙 Koyu` / `☀️ Açık` düğmesi ve `Ctrl+,` Ayarlar seçimi), anlık Türkçe-duyarlı bulanık arama, **`+ Yeni Cevap` / Sağ Tık `Düzenle` & `Sil`**, sistem tepsisi, `F1` (5 sekmeli Yardım) ve çakışmasız global kısayollar (`Win+Alt+*`).
-- **`--tui`:** Renkli VT / eski Windows 7 Console uyumlu tam terminal arayüzü (`a`/`E`/`d` CRUD, `F1` tam Markdown kılavuz, `P`/`O`/`k` kısayol yönetimi).
-- **`--cli`:** PowerShell / bash / zsh / fish otomatik tamamlama (`--completion`), `--json`, `--add-item` / `--update-item` / `--delete-item`, `-v`/`-vv` tanılama ve `-q` sessiz kip.
-- **`--web` ve `qtp.html`:** Yerelde `127.0.0.1` loopback sunucusu; canlı ve statik modda Açık/Koyu tema geçişi, tam Cevap CRUD (`POST /api/items/*` veya tarayıcı `localStorage`), 6 sekmeli `F1` Yardım ve `Ctrl+K` / `/` hızlı arama.
+- **`--gui`:** Varsayılan **Açık (Light)** tema (üst çubukta `🌙 Koyu` / `☀️ Açık`), **`☰ Liste` / `▦ Kart` / `▤ Tablo`** görünümleri, çoklu seçim ve **`✏️ Toplu Düzenle`**, **`📁 Grup Yöneticisi`**, **`⭐ Favoriler`**, **`😊/🚫 Emoji Temizle & Ekle`**, **`Ctrl+Z` / `Ctrl+Y` Geri Al/Yinele**, **`Ctrl+S` Kaydet**, sistem tepsisi ve `Win+Alt+*` kısayollar.
+- **`--tui`:** Renkli VT / eski Windows 7 Console uyumlu tam terminal arayüzü (`a`/`E`/`d` CRUD, `Space` çoklu seçim, `U`/`X` toplu işlem, `D`/`K`/`J` çoğalt/taşı, `f`/`F` favoriler, `m` emoji temizleme, `g`/`G` gruplar, `u`/`y` geri/yinele, `w` kaydet).
+- **`--cli`:** PowerShell / bash / zsh / fish otomatik tamamlama (`--completion`), `--json`, `--bulk-edit` / `--bulk-delete`, `--duplicate-item`, `--move-item`, `--toggle-favorite`, `--rename-group` / `--delete-group`, `--undo` / `--redo`, `--save`, `--only-favorites` / `--only-notes` / `--sort` / `--strip-emoji`.
+- **`--web` ve `qtp.html`:** Yerelde `127.0.0.1` loopback veya GitHub Pages `localStorage`: Liste/Kart/Tablo görünümleri, sürükle-bırak İçe Aktarım, UTF-16 LE/UTF-8/ANSI/JSON/Word `.doc`/Yazdır dışa aktarımı, Toplu Düzenleme, Grup Yöneticisi, Emoji yongaları, Geri Al/Yinele ve yerel Anlık Kayıt Geçmişi.
 
 ---
 
@@ -46,10 +46,10 @@
 
 - `qtp/standalone/` → Bağımsız uygulama kaynakları (`qtp_app/`), PyInstaller yapılandırmaları ve `pytest` takımı.
 - `qtp/legacy/` → Klasik HTML/Python/PowerShell betikleri (`cevaplar.html`, `qtp_manager.py`, `qtp_core.py`, `qtp_server.py`, `kurulum.ps1`, `tests/test_qtp.py`).
-- `qtp_settings.json` varsayılan değerleri: `theme: "light"`, `auto_reload: true` (`500 ms`), `paste_method: "auto"`, `enter_after_paste: true`, `backup_count: 15`, `web.port: 8765`.
+- `qtp_settings.json` varsayılan değerleri: `theme: "light"`, `view_mode: "list"`, `strip_emoji: false`, `sort_by: "order"`, `auto_reload: true` (`500 ms`), `paste_method: "auto"`, `enter_after_paste: true`, `backup_count: 15`, `web.port: 8765`.
 
 ---
 
 ## 5. English Summary
 
-**QTP v2.2.1** is a standalone, zero-runtime-dependency snippet & quick-paste manager shipping portable single-file binaries (Authenticode-signed `qtp.exe` for Windows with `CN=Murat Sönmez` & PE version metadata, `qtp.bin` for Linux x64) and a unified browser UI (`qtp.html`) alongside the preserved classic PWA (`index.html`, `legacy/`). It features a WCAG-verified light-first UI with 1-click dark mode toggle across GUI and Web, full snippet CRUD (Add/Edit/Delete) across GUI/TUI/CLI/Live-Web (plus offline `localStorage` CRUD on GitHub Pages), conflict-free `Win+Alt+*` Win32 global hotkeys, lossless UTF-16 LE BOM INI round-tripping, live reload, OS-aware download buttons, and PWA install support.
+**QTP v2.3.0** is a standalone, zero-runtime-dependency snippet & quick-paste manager shipping portable single-file binaries (Authenticode-signed `qtp.exe` for Windows with `CN=Murat Sönmez` & PE version metadata, `qtp.bin` for Linux x64) and a unified browser UI (`qtp.html`) alongside the preserved classic PWA (`index.html`, `legacy/`). It delivers full power-user parity across GUI, TUI, CLI, and Web/Static modes: List/Grid/Table views, multi-select & bulk edit/delete, Unicode emoji strip & quick chips, favorites, usage tracking & sorting, duplicate & reorder, group manager, 30-step Undo/Redo, drag-and-drop INI/JSON import, multi-encoding INI / JSON / Word `.doc` / Print export, and local/disk snapshots with a WCAG-verified light-first UI.
