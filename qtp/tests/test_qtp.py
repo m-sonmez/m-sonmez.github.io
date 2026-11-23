@@ -323,39 +323,47 @@ class TestHtmlJsParity(unittest.TestCase):
         import re as _re
 
         index_path = ROOT_DIR / "index.html"
+        old_path = ROOT_DIR / "old.html"
         cevaplar_path = ROOT_DIR / "cevaplar.html"
         index_html = index_path.read_text(encoding="utf-8")
+        old_html = old_path.read_text(encoding="utf-8")
         cevaplar_html = cevaplar_path.read_text(encoding="utf-8")
 
-        self.assertNotIn("DEFAULT_ITEMS", index_html)
-        self.assertNotIn("DEFAULT_ITEMS", cevaplar_html)
-        self.assertNotIn("Talebinizi detaylı olarak iletmeniz halinde", index_html)
-        self.assertNotIn("Talebinizi detaylı olarak iletmeniz halinde", cevaplar_html)
-        self.assertIsNone(_re.search(r'\[\s*\{"keys"\s*:', index_html))
-        self.assertIsNone(_re.search(r'\[\s*\{"keys"\s*:', cevaplar_html))
+        for blob in (index_html, old_html, cevaplar_html):
+            self.assertNotIn("DEFAULT_ITEMS", blob)
+            self.assertNotIn("Talebinizi detaylı olarak iletmeniz halinde", blob)
+            self.assertIsNone(_re.search(r'\[\s*\{"keys"\s*:', blob))
 
-        scripts = _re.findall(r"<script>([\s\S]*?)</script>", index_html)
-        self.assertGreaterEqual(len(scripts), 3)
-        self.assertLess(len(scripts[2].encode("utf-8")), 101_612)
+        self.assertNotIn("http://", index_html)
+        self.assertNotIn("https://", index_html)
+        self.assertIn("./theme.css", index_html)
+        self.assertIn("./old.html", index_html)
+
+        old_scripts = _re.findall(r"<script>([\s\S]*?)</script>", old_html)
+        self.assertGreaterEqual(len(old_scripts), 3)
+        self.assertLess(len(old_scripts[2].encode("utf-8")), 101_612)
 
         sw_js = (ROOT_DIR / "sw.js").read_text(encoding="utf-8")
-        self.assertIn("qtp-pwa-cache-v3.1.0", sw_js)
+        self.assertIn("qtp-pwa-cache-v3.2.0", sw_js)
         self.assertIn("/api/", sw_js)
         self.assertIn("data.json", sw_js)
+        self.assertIn("./theme.css", sw_js)
+        self.assertIn("./old.html", sw_js)
+        self.assertIn("./QuickTextPaste.ini", sw_js)
 
     def test_index_html_ini_parser_and_builder_with_node(self):
         node = shutil.which("node")
         if not node:
             self.skipTest("Node.js kurulu değil")
 
-        html = (ROOT_DIR / "index.html").read_text(encoding="utf-8")
+        old_html = (ROOT_DIR / "old.html").read_text(encoding="utf-8")
         marker_start = "function detectUtf16NoBom(uint8) {"
         marker_end = "function genId() {"
-        s_idx = html.index(marker_start)
-        e_idx = html.index(marker_end)
+        s_idx = old_html.index(marker_start)
+        e_idx = old_html.index(marker_end)
         js_block = (
             "const DEFAULT_QTP_PREFS = { m_show_tree: 1, lng: 21, start_tray: 1, WinRC: '2399;17;3368;1335;1;x,y,w,h,SW' };\n"
-            + html[s_idx:e_idx]
+            + old_html[s_idx:e_idx]
         )
 
         test_script = js_block + """
@@ -404,6 +412,18 @@ console.log('JS_PARITY_OK');
         self.assertEqual(proc.returncode, 0, msg=f"STDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}")
         self.assertIn("JS_PARITY_OK", proc.stdout)
 
+        idx_html = (ROOT_DIR / "index.html").read_text(encoding="utf-8")
+        u_start = idx_html.index("function decodeBytesAuto(uint8) {")
+        u_end = idx_html.index("function formatIniPreview(")
+        u_js = (
+            "const DEFAULT_TERMINATOR = '<E<N<D|';\n"
+            + idx_html[u_start:u_end]
+            + "\nconst assert = require('assert');\nconst s = '[Program]\\r\\nlng=21\\r\\n[list_text]\\r\\ntext_000=L-Win+A=Şğü = ok<E<N<D|\\r\\n[list_order]\\r\\ntext_000=1\\r\\n[list_label]\\r\\ntext_000=A/Etiket\\r\\n';\nconst p = parseQtpIni(s);\nassert.strictEqual(p.items[0].text, 'Şğü = ok');\nconst r = buildQtpIni(p.items, p.program, p.extraSections);\nconst b = encodeUtf16LeBom(r);\nassert.strictEqual(b[0], 0xFF); assert.strictEqual(b[1], 0xFE);\nconst dec = decodeBytesAuto(b);\nassert.strictEqual(dec.encoding, 'utf-16-le-bom');\nconsole.log('UNIFIED_JS_INI_OK');\n"
+        )
+        proc_u = subprocess.run([node, "-e", u_js], capture_output=True, text=True, check=False)
+        self.assertEqual(proc_u.returncode, 0, msg=f"STDERR:\n{proc_u.stderr}\nSTDOUT:\n{proc_u.stdout}")
+        self.assertIn("UNIFIED_JS_INI_OK", proc_u.stdout)
+
     def test_qtp_app_vm_import_export_527_filters_and_header_state(self):
         node = shutil.which("node")
         if not node:
@@ -416,7 +436,7 @@ const vm = require('vm');
 const assert = require('assert');
 
 const rootDir = process.env.QTP_ROOT;
-const html = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
+const html = fs.readFileSync(path.join(rootDir, 'old.html'), 'utf8');
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 const appScript = scripts[2];
 const dataJsonBytes = fs.readFileSync(path.join(rootDir, 'data.json'));
