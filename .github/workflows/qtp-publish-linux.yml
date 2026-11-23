@@ -73,11 +73,12 @@ jobs:
             ./qtp.bin --version
             ./qtp.bin --list-categories --json >/dev/null
             ./qtp.bin --search "şifre" --json >/dev/null
-            printf "c\nq\n" | ./qtp.bin --tui >/dev/null
+            printf "V\033M\033q" | ./qtp.bin --tui >/dev/null
             ./qtp.bin --web --port 0 --shutdown-after 0.5
           )
           cp qtp/dist/qtp.bin qtp/qtp.bin
           chmod +x qtp/qtp.bin
+          rm -rf qtp/dist qtp/build qtp/.venv qtp/.coverage qtp/.pytest_cache || true
 
       - name: Commit and push qtp/qtp.bin to main
         run: |
