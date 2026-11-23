@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QTP — Hazır Cevaplar (Web Modu)</title>
+  <link rel="stylesheet" href="/theme.css" />
+</head>
+<body>
+  <main class="overlay-card" role="application" aria-label="QTP Hızlı Yapıştırma Katmanı">
+    <div class="top-row">
+      <input id="searchInput" class="search-input" type="text" placeholder="Ara… (mesaj, kategori, etiket)" autofocus />
+      <button class="action-btn" id="btnReload" title="INI Yeniden Yükle">Yenile</button>
+      <button class="action-btn" id="btnBackup" title="Anlık Yedek Al">Yedekle</button>
+      <button class="action-btn" id="btnHelp" title="Türkçe Yardım (F1)">Yardım (F1)</button>
+    </div>
+
+    <div class="pills-row" id="categoryPills"></div>
+    <section class="snippet-list" id="snippetList" tabindex="0"></section>
+
+    <footer class="footer-bar">
+      <span>↑↓ Gezin · ⏎ Yapıştır · Ctrl+⏎ Kopyala · Esc Kapat</span>
+      <span id="itemCount">0 kayıt</span>
+    </footer>
+  </main>
+
+  <div class="toast" id="toastBox"></div>
+
+  <div class="modal" id="modalBackdrop">
+    <div class="modal-card">
+      <div class="top-row" style="justify-content:space-between;margin-bottom:8px;">
+        <strong id="modalTitle">Bilgi</strong>
+        <button class="action-btn" id="modalClose">Kapat (Esc)</button>
+      </div>
+      <pre id="modalBody"></pre>
+    </div>
+  </div>
+
+  <script>
+    const state = { category: 'ALL', query: '', items: [], categories: [], selected: 0 };
+    const els = {
+      search: document.getElementById('searchInput'),
+      pills: document.getElementById('categoryPills'),
+      list: document.getElementById('snippetList'),
+      count: document.getElementById('itemCount'),
+      toast: document.getElementById('toastBox'),
+      modal: document.getElementById('modalBackdrop'),
+      modalTitle: document.getElementById('modalTitle'),
+      modalBody: document.getElementById('modalBody'),
+    };
+
+    function showToast(msg) {
+      els.toast.textContent = msg;
+      els.toast.style.display = 'block';
+      setTimeout(() => { els.toast.style.display = 'none'; }, 1500);
+    }
+
+    async function api(path, method = 'GET', body = null) {
+      const opts = { method, headers: {} };
+      if (body !== null) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
+      const resp = await fetch(path, opts);
+      return await resp.json();
+    }
+
+    async function loadCategories() {
+      const res = await api('/api/categories');
+      if (res.ok) {
+        state.categories = res.data.categories;
+        renderPills();
+      }
+    }
+
+    async function loadItems() {
+      const q = encodeURIComponent(state.query);
+      const c = encodeURIComponent(state.category);
+      const res = await api(`/api/items?category=${c}&query=${q}`);
+      if (res.ok) {
+        state.items = res.data.items;
+        state.selected = 0;
+        renderList();
+      }
+    }
+
+    function renderPills() {
+      els.pills.innerHTML = '';
+      for (const cat of state.categories) {
+        const b = document.createElement('button');
+        b.className = 'pill' + (cat.code === state.category ? ' active' : '');
+        b.textContent = `${cat.label} (${cat.count})`;
+        b.onclick = () => { state.category = cat.code; renderPills(); loadItems(); };
+        els.pills.appendChild(b);
+      }
+    }
+
+    function renderList() {
+      els.list.innerHTML = '';
+      const visible = state.items.slice(0, 200);
+      els.count.textContent = `${state.items.length} kayıt`;
+      visible.forEach((it, idx) => {
+        const row = document.createElement('div');
+        row.className = 'snippet-row' + (idx === state.selected ? ' selected' : '');
+        const left = document.createElement('div');
+        const txt = document.createElement('div');
+        txt.className = 'snippet-text';
+        txt.textContent = it.text.slice(0, 140);
+        const meta = document.createElement('div');
+        meta.className = 'snippet-meta';
+        meta.textContent = it.label ? `${it.group} · ${it.label}` : it.group;
+        left.appendChild(txt);
+        left.appendChild(meta);
+
+        const right = document.createElement('div');
+        right.style.display = 'flex';
+        right.style.gap = '6px';
+        right.style.alignItems = 'center';
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'action-btn';
+        copyBtn.textContent = 'Kopyala';
+        copyBtn.onclick = async (ev) => {
+          ev.stopPropagation();
+          const r = await api('/api/copy', 'POST', { target: it.raw_key });
+          showToast(r.message || r.error);
+        };
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = (it.keys || '').split('+').pop() || '•';
+        right.appendChild(copyBtn);
+        right.appendChild(badge);
+
+        row.appendChild(left);
+        row.appendChild(right);
+        row.onclick = async () => {
+          state.selected = idx;
+          renderList();
+          const r = await api('/api/paste', 'POST', { target: it.raw_key });
+          showToast(r.message || r.error);
+        };
+        els.list.appendChild(row);
+      });
+    }
+
+    els.search.addEventListener('input', () => {
+      state.query = els.search.value;
+      loadItems();
+    });
+
+    document.addEventListener('keydown', async (e) => {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        const r = await api('/api/help');
+        els.modalTitle.textContent = 'Türkçe Yardım (F1)';
+        els.modalBody.textContent = r.data.kullanim;
+        els.modal.style.display = 'flex';
+      } else if (e.key === 'Escape') {
+        if (els.modal.style.display === 'flex') {
+          els.modal.style.display = 'none';
+        } else {
+          els.search.value = '';
+          state.query = '';
+          loadItems();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        els.search.focus();
+      } else if (e.key === '/') {
+        if (document.activeElement !== els.search) {
+          e.preventDefault();
+          els.search.focus();
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        state.selected = Math.min(Math.max(0, state.items.length - 1), state.selected + 1);
+        renderList();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        state.selected = Math.max(0, state.selected - 1);
+        renderList();
+      } else if (e.key === 'Enter' && state.items[state.selected]) {
+        e.preventDefault();
+        const it = state.items[state.selected];
+        const route = (e.ctrlKey || e.metaKey) ? '/api/copy' : '/api/paste';
+        const r = await api(route, 'POST', { target: it.raw_key });
+        showToast(r.message || r.error);
+      }
+    });
+
+    document.getElementById('modalClose').onclick = () => { els.modal.style.display = 'none'; };
+    document.getElementById('btnHelp').onclick = () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1' }));
+    document.getElementById('btnReload').onclick = async () => {
+      const r = await api('/api/reload', 'POST', {});
+      showToast(r.message || r.error);
+      loadCategories();
+      loadItems();
+    };
+    document.getElementById('btnBackup').onclick = async () => {
+      const r = await api('/api/backup', 'POST', {});
+      showToast(r.message || r.error);
+    };
+
+    loadCategories();
+    loadItems();
+  </script>
+</body>
+</html>
