@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
+from qtp_app.core.operations import OPERATIONS
+
+QTP_ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 UI_DIR = Path(__file__).resolve().parent.parent / "ui"
-DOCS_DIR = Path(__file__).resolve().parent.parent.parent / "docs"
+DOCS_DIR = QTP_ROOT_DIR / "docs"
 
 _VISUAL_TOKENS = (
     "color",
@@ -107,3 +111,45 @@ def test_all_required_turkish_docs_exist_and_have_no_placeholders():
         assert "todo" not in low
         assert "coming soon" not in low
         assert "yakında" not in low
+
+
+def test_markdown_docs_have_no_local_paths_or_todos_and_links_valid():
+    skip_parts = {".venv", ".pytest_cache", "build", "dist", "__pycache__"}
+    forbidden_tokens = ("file:///", "C:/Users", "C:\\Users", "TODO", "FIXME")
+    link_re = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+
+    for md_path in QTP_ROOT_DIR.rglob("*.md"):
+        if any(part in skip_parts for part in md_path.parts):
+            continue
+        text = md_path.read_text(encoding="utf-8")
+        for tok in forbidden_tokens:
+            assert tok not in text, f"{md_path.relative_to(QTP_ROOT_DIR)} içinde yasak ifade '{tok}' bulundu."
+
+        # Göreli Markdown bağlantıları geçerli hedeflere işaret etmeli
+        for match in link_re.finditer(text):
+            target = match.group(1).strip()
+            if not target or target.startswith(("http://", "https://", "#", "mailto:")):
+                continue
+            rel_file = target.split("#", 1)[0]
+            if rel_file:
+                resolved = (md_path.parent / rel_file).resolve()
+                assert resolved.exists(), (
+                    f"{md_path.relative_to(QTP_ROOT_DIR)} içinde kırık Markdown bağlantısı: {target}"
+                )
+
+
+def test_all_operations_errors_match_sss_verbatim():
+    sss_text = (DOCS_DIR / "SSS.md").read_text(encoding="utf-8")
+    for op in OPERATIONS:
+        for err_msg in op.error_msgs_tr:
+            assert err_msg in sss_text, (
+                f"operations.py ({op.op_id}) hata mesajı docs/SSS.md içinde birebir bulunamadı: {err_msg!r}"
+            )
+
+
+def test_all_operations_documented_in_kullanim_parity_matrix():
+    kullanim_text = (DOCS_DIR / "KULLANIM.md").read_text(encoding="utf-8")
+    for op in OPERATIONS:
+        assert op.op_id in kullanim_text, f"docs/KULLANIM.md eksik işlem: {op.op_id}"
+        assert op.cli_flag in kullanim_text, f"docs/KULLANIM.md eksik CLI bayrağı: {op.cli_flag}"
+        assert op.web_route in kullanim_text, f"docs/KULLANIM.md eksik Web rotası: {op.web_route}"

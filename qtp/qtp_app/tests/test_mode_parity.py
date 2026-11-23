@@ -348,8 +348,8 @@ def test_tui_interactive_keys_ansi_and_win_console_shim(tmp_path: Path):
     assert len(eng._test_copied) >= 1  # type: ignore[attr-defined]
 
     # _parse_stream_keys tüm kaçış dizilerini tanımalı
-    parsed = _parse_stream_keys("\x1b[A\x1b[B\x1b[5~\x1b[6~\x1bOP\t\x08\r\x1bq")
-    assert parsed == ["UP", "DOWN", "PGUP", "PGDN", "F1", "TAB", "BACKSPACE", "ENTER", "ESC", "q"]
+    parsed = _parse_stream_keys("\x1b[A\x1b[B\x1b[5~\x1b[6~\x1bOP\x1b[11~\t\x08\r\n\x1bq")
+    assert parsed == ["UP", "DOWN", "PGUP", "PGDN", "F1", "F1", "TAB", "BACKSPACE", "ENTER", "ESC", "q"]
 
     # run_tui scripted & non-tty stdin
     out_buf = io.StringIO()
@@ -385,7 +385,7 @@ def test_tui_interactive_keys_ansi_and_win_console_shim(tmp_path: Path):
     assert tui.execute_operation("restore", str(FIXTURES_DIR / "data.json"), "replace").exit_code == 0
     assert tui.execute_operation("set_setting", "theme", "dark").exit_code == 0
     assert tui.execute_operation("nonexistent_op").exit_code == 2
-    tui.run_scripted(["/", "z", "z", "z", "q", "q", "q", "UP", "DOWN", "ESC", "q"])
+    tui.run_scripted(["/", "z", "z", "z", "q", "q", "q", "UP", "DOWN", "ESC", "x", "q"])
 
     # Linux/macOS curses döngüsü mock ile çalıştırılır
     fake_stdscr = mock.Mock()

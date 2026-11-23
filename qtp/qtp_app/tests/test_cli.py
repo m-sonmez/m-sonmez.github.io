@@ -14,29 +14,43 @@ from qtp_app.main import main
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
 
-def test_cli_version(capsys):
+def test_cli_version(capsys, tmp_path: Path, monkeypatch):
+    app_dir = tmp_path / "isolated_ver"
+    app_dir.mkdir()
+    monkeypatch.setattr("qtp_app.core.engine.get_app_dir", lambda: app_dir)
     code = main(["--version"])
     assert code == 0
     out = capsys.readouterr().out
     assert __version__ in out
     assert "Derleme:" in out
+    assert list(app_dir.iterdir()) == []
 
 
-def test_cli_help_turkish(capsys):
+def test_cli_help_turkish(capsys, tmp_path: Path, monkeypatch):
+    app_dir = tmp_path / "isolated_help"
+    app_dir.mkdir()
+    monkeypatch.setattr("qtp_app.core.engine.get_app_dir", lambda: app_dir)
     code = main(["--help"])
     assert code == 0
     out = capsys.readouterr().out
     for flag in ("--help", "--version", "--selftest", "--export-ini", "--import-ini"):
         assert flag in out
     assert "Komut Satırı Kullanımı" in out
+    assert list(app_dir.iterdir()) == []
 
 
-def test_cli_selftest_offscreen(capsys, monkeypatch):
+def test_cli_selftest_offscreen(capsys, monkeypatch, tmp_path: Path):
+    app_dir = tmp_path / "isolated_selftest"
+    app_dir.mkdir()
+    monkeypatch.setattr("qtp_app.core.engine.get_app_dir", lambda: app_dir)
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+    assert main(["--modes"]) == 0
+    capsys.readouterr()
     code = main(["--selftest"])
     assert code == 0
     out = capsys.readouterr().out
     assert "Otomatik test başarılı" in out
+    assert list(app_dir.iterdir()) == []
 
 
 def test_cli_export_and_import_ini(tmp_path: Path, capsys):

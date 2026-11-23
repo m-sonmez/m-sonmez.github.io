@@ -91,7 +91,6 @@ def test_web_server_backups_shutdown_and_error_status(tmp_path: Path):
         # Geçersiz JSON body ve 404/400 yanıtları
         conn.request("POST", "/api/olmayan", body="{bad")
         assert conn.getresponse().status == 404
-        conn.getresponse() if False else None
 
         conn.request("POST", "/api/import-ini", body=json.dumps({"path": str(tmp_path / "yok.ini")}))
         assert conn.getresponse().status == 400
@@ -107,4 +106,18 @@ def test_web_server_backups_shutdown_and_error_status(tmp_path: Path):
     assert run_web_server(eng, port=0, open_browser=False, shutdown_after=0.1) == 0
     with mock.patch("qtp_app.web.create_web_server", side_effect=OSError("Address already in use")):
         assert run_web_server(eng, port=8765) == 1
+
+    # Frozen PyInstaller _MEIPASS içinden web varlıklarını yükleme testi
+    import sys
+    from qtp_app.web import _read_web_asset
+
+    mei = tmp_path / "mei_web"
+    (mei / "qtp_app" / "web").mkdir(parents=True)
+    (mei / "qtp_app" / "web" / "index.html").write_text("<h1>frozen</h1>", encoding="utf-8")
+    (mei / "qtp_app" / "web" / "theme.css").write_text(":root{}", encoding="utf-8")
+    with mock.patch.object(sys, "frozen", True, create=True), \
+         mock.patch.object(sys, "_MEIPASS", str(mei), create=True), \
+         mock.patch("qtp_app.web.importlib.resources.files", side_effect=RuntimeError("frozen")):
+        assert _read_web_asset("index.html") == b"<h1>frozen</h1>"
+        assert _read_web_asset("theme.css") == b":root{}"
 

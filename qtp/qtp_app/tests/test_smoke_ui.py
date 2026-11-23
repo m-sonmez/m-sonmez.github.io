@@ -14,7 +14,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtTest import QTest
 
 from qtp_app.core.ini_parser import parse_qtp_ini, read_text_auto
-from qtp_app.core.settings import DEFAULT_SETTINGS
+from qtp_app.core.settings import DEFAULT_SETTINGS, load_settings, save_settings
 from qtp_app.ui.help_dialog import HelpDialog
 from qtp_app.ui.overlay import OverlayWindow
 from qtp_app.ui.settings_window import SettingsWindow
@@ -115,3 +115,37 @@ def test_help_settings_and_tray_smoke(qtbot):
         "Yardım (F1)",
         "Çıkış",
     ]
+
+
+def test_settings_window_edits_web_port_theme_preserves_nested_and_resets(qtbot, tmp_path: Path):
+    import copy
+
+    custom = copy.deepcopy(DEFAULT_SETTINGS)
+    custom["web"] = {"port": 8899}
+    custom["last_category_by_hotkey"] = {"win_z": "Z"}
+
+    dlg = SettingsWindow(custom, DARK_PALETTE)
+    qtbot.addWidget(dlg)
+
+    assert dlg.web_port_spin.value() == 8899
+    assert dlg.web_port_spin.toolTip()
+    dlg.web_port_spin.setValue(9123)
+    dlg.theme_cb.setCurrentText("light")
+    dlg._save_and_accept()
+
+    assert dlg.result_settings is not None
+    assert dlg.result_settings["web"]["port"] == 9123
+    assert dlg.result_settings["theme"] == "light"
+    assert dlg.result_settings["last_category_by_hotkey"] == {"win_z": "Z"}
+
+    cfg_path = tmp_path / "qtp_settings.json"
+    save_settings(dlg.result_settings, cfg_path)
+    reloaded, _, warn = load_settings(tmp_path)
+    assert warn is None
+    assert reloaded["web"]["port"] == 9123
+    assert reloaded["theme"] == "light"
+    assert reloaded["last_category_by_hotkey"] == {"win_z": "Z"}
+
+    dlg._reset_defaults()
+    assert dlg.web_port_spin.value() == 8765
+    assert dlg.theme_cb.currentText() == "dark"
