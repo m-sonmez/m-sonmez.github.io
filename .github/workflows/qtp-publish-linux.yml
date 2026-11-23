@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'qtp/**'
+      - '!qtp/qtp.bin'
       - '.github/workflows/qtp-publish-linux.yml'
 
 permissions:
@@ -18,34 +19,41 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v10.4.0
 
       - name: Install headless Qt shared libraries on Ubuntu
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libegl1 libgl1 libxkbcommon0 libdbus-1-3 libxcb-cursor0 libfontconfig1 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+            libegl1 libgl1 libglx-mesa0 libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxcb-xfixes0 \
+            libfontconfig1 libfreetype6 xvfb binutils
 
       - name: Setup Python 3.12 and dependencies
-        working-directory: qtp
+        working-directory: qtp/standalone
         run: |
           uv venv --python 3.12 .venv
           uv pip install --python .venv -r requirements-dev.txt
 
-      - name: Run full test & coverage gate before build
+      - name: Run legacy unit test suite
         working-directory: qtp
+        run: |
+          standalone/.venv/bin/python -m unittest discover -s legacy/tests -v
+
+      - name: Run full standalone test & coverage gate before build
+        working-directory: qtp/standalone
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
-          uv run --python .venv python -m unittest discover -s tests -v
-          uv run --python .venv pytest -q --cov=qtp_app.core --cov=qtp_app.ui.search --cov=qtp_app.tui --cov=qtp_app.web --cov=qtp_app.cli --cov-report=term-missing --cov-fail-under=90
+          xvfb-run -a .venv/bin/python -m pytest -q --cov=qtp_app.core --cov=qtp_app.ui.search --cov=qtp_app.tui --cov=qtp_app.web --cov=qtp_app.cli --cov-report=term-missing --cov-fail-under=90
 
       - name: Build native Linux x64 ELF binary
-        working-directory: qtp
+        working-directory: qtp/standalone
         env:
           QT_QPA_PLATFORM: offscreen
         run: |
@@ -53,17 +61,17 @@ jobs:
 
       - name: Verify ELF header, size and clean-dir stripped-PATH execution
         run: |
-          file qtp/dist/qtp.bin
+          command -v file >/dev/null && file qtp/standalone/dist/qtp.bin || readelf -h qtp/standalone/dist/qtp.bin | head -n 20
           python3 -c '
           from pathlib import Path
-          p = Path("qtp/dist/qtp.bin")
+          p = Path("qtp/standalone/dist/qtp.bin")
           raw = p.read_bytes()
           assert raw[:4] == b"\x7fELF", f"Not ELF: {raw[:4]!r}"
           assert len(raw) <= 60 * 1024 * 1024, f"Too large: {len(raw)}"
           print("ELF verified, bytes:", len(raw))
           '
           mkdir -p /tmp/qtp_clean
-          cp qtp/dist/qtp.bin /tmp/qtp_clean/qtp.bin
+          cp qtp/standalone/dist/qtp.bin /tmp/qtp_clean/qtp.bin
           chmod +x /tmp/qtp_clean/qtp.bin
           (
             cd /tmp/qtp_clean
@@ -71,14 +79,16 @@ jobs:
             mkdir -p "$HOME"
             ./qtp.bin --selftest
             ./qtp.bin --version
+            ./qtp.bin --verbose --help >/dev/null
+            ./qtp.bin --completion bash >/dev/null
             ./qtp.bin --list-categories --json >/dev/null
             ./qtp.bin --search "şifre" --json >/dev/null
             printf "V\033M\033q" | ./qtp.bin --tui >/dev/null
             ./qtp.bin --web --port 0 --shutdown-after 0.5
           )
-          cp qtp/dist/qtp.bin qtp/qtp.bin
+          cp qtp/standalone/dist/qtp.bin qtp/qtp.bin
           chmod +x qtp/qtp.bin
-          rm -rf qtp/dist qtp/build qtp/.venv qtp/.coverage qtp/.pytest_cache || true
+          rm -rf qtp/standalone/dist qtp/standalone/build qtp/standalone/.venv qtp/standalone/.coverage qtp/standalone/.pytest_cache || true
 
       - name: Commit and push qtp/qtp.bin to main
         run: |
