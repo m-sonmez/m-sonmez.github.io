@@ -22,13 +22,16 @@ import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
+import sys
 from unittest import mock
+
+LEGACY_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = LEGACY_DIR.parent
+if str(LEGACY_DIR) not in sys.path:
+    sys.path.insert(0, str(LEGACY_DIR))
 
 import qtp_core
 import qtp_server
-
-
-ROOT_DIR = Path(__file__).resolve().parent.parent
 
 
 class TestQtpCore(unittest.TestCase):
@@ -198,8 +201,12 @@ class TestQtpCore(unittest.TestCase):
 class TestFullStackServer(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="qtp_srv_test_"))
-        for fname in ("index.html", "cevaplar.html", "data.json", "QuickTextPaste.ini", "manifest.webmanifest", "sw.js"):
-            shutil.copy2(ROOT_DIR / fname, self.tmp / fname)
+        for fname in ("index.html", "qtp.html", "data.json", "QuickTextPaste.ini", "manifest.webmanifest", "sw.js"):
+            if (ROOT_DIR / fname).is_file():
+                shutil.copy2(ROOT_DIR / fname, self.tmp / fname)
+        (self.tmp / "legacy").mkdir(exist_ok=True)
+        shutil.copy2(LEGACY_DIR / "cevaplar.html", self.tmp / "legacy" / "cevaplar.html")
+        shutil.copy2(LEGACY_DIR / "cevaplar.html", self.tmp / "cevaplar.html")
 
         self.env_patch = mock.patch.dict(os.environ, {
             "APPDATA": str(self.tmp / "appdata"),
@@ -323,47 +330,52 @@ class TestHtmlJsParity(unittest.TestCase):
         import re as _re
 
         index_path = ROOT_DIR / "index.html"
-        old_path = ROOT_DIR / "old.html"
-        cevaplar_path = ROOT_DIR / "cevaplar.html"
+        qtp_html_path = ROOT_DIR / "qtp.html"
+        cevaplar_path = LEGACY_DIR / "cevaplar.html"
         index_html = index_path.read_text(encoding="utf-8")
-        old_html = old_path.read_text(encoding="utf-8")
+        qtp_html = qtp_html_path.read_text(encoding="utf-8")
         cevaplar_html = cevaplar_path.read_text(encoding="utf-8")
 
-        for blob in (index_html, old_html, cevaplar_html):
+        for blob in (index_html, qtp_html, cevaplar_html):
             self.assertNotIn("DEFAULT_ITEMS", blob)
             self.assertNotIn("Talebinizi detaylı olarak iletmeniz halinde", blob)
             self.assertIsNone(_re.search(r'\[\s*\{"keys"\s*:', blob))
 
-        self.assertNotIn("http://", index_html)
-        self.assertNotIn("https://", index_html)
-        self.assertIn("./theme.css", index_html)
-        self.assertIn("./old.html", index_html)
+        self.assertNotIn("http://", qtp_html)
+        self.assertNotIn("https://", qtp_html)
+        self.assertIn("./theme.css", qtp_html)
+        self.assertIn("./index.html", qtp_html)
+        self.assertIn("./qtp.html", index_html)
+        self.assertIn("./legacy/cevaplar.html", index_html)
+        self.assertIn("standaloneDownloadMeta", index_html)
 
-        old_scripts = _re.findall(r"<script>([\s\S]*?)</script>", old_html)
-        self.assertGreaterEqual(len(old_scripts), 3)
-        self.assertLess(len(old_scripts[2].encode("utf-8")), 101_612)
+        idx_scripts = _re.findall(r"<script>([\s\S]*?)</script>", index_html)
+        self.assertGreaterEqual(len(idx_scripts), 3)
+        self.assertLess(len(idx_scripts[2].encode("utf-8")), 105_000)
 
         sw_js = (ROOT_DIR / "sw.js").read_text(encoding="utf-8")
-        self.assertIn("qtp-pwa-cache-v3.2.0", sw_js)
+        self.assertIn("qtp-pwa-cache-v3.3.0", sw_js)
         self.assertIn("/api/", sw_js)
         self.assertIn("data.json", sw_js)
         self.assertIn("./theme.css", sw_js)
-        self.assertIn("./old.html", sw_js)
+        self.assertIn("./qtp.html", sw_js)
+        self.assertIn("./legacy/cevaplar.html", sw_js)
         self.assertIn("./QuickTextPaste.ini", sw_js)
+        self.assertIn("./docs/KURULUM.md", sw_js)
 
     def test_index_html_ini_parser_and_builder_with_node(self):
         node = shutil.which("node")
         if not node:
             self.skipTest("Node.js kurulu değil")
 
-        old_html = (ROOT_DIR / "old.html").read_text(encoding="utf-8")
+        idx_html_old = (ROOT_DIR / "index.html").read_text(encoding="utf-8")
         marker_start = "function detectUtf16NoBom(uint8) {"
         marker_end = "function genId() {"
-        s_idx = old_html.index(marker_start)
-        e_idx = old_html.index(marker_end)
+        s_idx = idx_html_old.index(marker_start)
+        e_idx = idx_html_old.index(marker_end)
         js_block = (
             "const DEFAULT_QTP_PREFS = { m_show_tree: 1, lng: 21, start_tray: 1, WinRC: '2399;17;3368;1335;1;x,y,w,h,SW' };\n"
-            + old_html[s_idx:e_idx]
+            + idx_html_old[s_idx:e_idx]
         )
 
         test_script = js_block + """
@@ -412,12 +424,12 @@ console.log('JS_PARITY_OK');
         self.assertEqual(proc.returncode, 0, msg=f"STDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}")
         self.assertIn("JS_PARITY_OK", proc.stdout)
 
-        idx_html = (ROOT_DIR / "index.html").read_text(encoding="utf-8")
-        u_start = idx_html.index("function decodeBytesAuto(uint8) {")
-        u_end = idx_html.index("function formatIniPreview(")
+        qtp_html = (ROOT_DIR / "qtp.html").read_text(encoding="utf-8")
+        u_start = qtp_html.index("function decodeBytesAuto(uint8) {")
+        u_end = qtp_html.index("function formatIniPreview(")
         u_js = (
             "const DEFAULT_TERMINATOR = '<E<N<D|';\n"
-            + idx_html[u_start:u_end]
+            + qtp_html[u_start:u_end]
             + "\nconst assert = require('assert');\nconst s = '[Program]\\r\\nlng=21\\r\\n[list_text]\\r\\ntext_000=L-Win+A=Şğü = ok<E<N<D|\\r\\n[list_order]\\r\\ntext_000=1\\r\\n[list_label]\\r\\ntext_000=A/Etiket\\r\\n';\nconst p = parseQtpIni(s);\nassert.strictEqual(p.items[0].text, 'Şğü = ok');\nconst r = buildQtpIni(p.items, p.program, p.extraSections);\nconst b = encodeUtf16LeBom(r);\nassert.strictEqual(b[0], 0xFF); assert.strictEqual(b[1], 0xFE);\nconst dec = decodeBytesAuto(b);\nassert.strictEqual(dec.encoding, 'utf-16-le-bom');\nconsole.log('UNIFIED_JS_INI_OK');\n"
         )
         proc_u = subprocess.run([node, "-e", u_js], capture_output=True, text=True, check=False)
@@ -436,7 +448,7 @@ const vm = require('vm');
 const assert = require('assert');
 
 const rootDir = process.env.QTP_ROOT;
-const html = fs.readFileSync(path.join(rootDir, 'old.html'), 'utf8');
+const html = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 const appScript = scripts[2];
 const dataJsonBytes = fs.readFileSync(path.join(rootDir, 'data.json'));
@@ -564,7 +576,7 @@ function createHarness({ proto = 'https:', host = 'm-sonmez.github.io', lsInit =
   console.log('QTP_APP_VM_ALL_OK');
 })();
 """
-        env = dict(os.environ, QTP_ROOT=str(ROOT_DIR))
+        env = dict(os.environ, QTP_ROOT=str(ROOT_DIR), QTP_LEGACY=str(LEGACY_DIR))
         proc = subprocess.run([node, "-e", vm_script], capture_output=True, text=True, env=env, check=False)
         self.assertEqual(proc.returncode, 0, msg=f"STDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}")
         self.assertIn("QTP_APP_VM_ALL_OK", proc.stdout)
@@ -581,7 +593,8 @@ const vm = require('vm');
 const assert = require('assert');
 
 const rootDir = process.env.QTP_ROOT;
-const cevHtml = fs.readFileSync(path.join(rootDir, 'cevaplar.html'), 'utf8');
+const legacyDir = process.env.QTP_LEGACY;
+const cevHtml = fs.readFileSync(path.join(legacyDir, 'cevaplar.html'), 'utf8');
 const swJs = fs.readFileSync(path.join(rootDir, 'sw.js'), 'utf8');
 const scripts = [...cevHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 assert(scripts.length >= 3);
@@ -656,7 +669,7 @@ setTimeout(async () => {
   }
 }, 50);
 """
-        env = dict(os.environ, QTP_ROOT=str(ROOT_DIR))
+        env = dict(os.environ, QTP_ROOT=str(ROOT_DIR), QTP_LEGACY=str(LEGACY_DIR))
         proc = subprocess.run([node, "-e", vm_script], capture_output=True, text=True, env=env, check=False)
         self.assertEqual(proc.returncode, 0, msg=f"STDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}")
         self.assertIn("CEVAPLAR_AND_SW_VM_OK", proc.stdout)

@@ -59,5 +59,7 @@ if (-not $running) {
 }
 
 if ($StartServer -and (Test-Path -LiteralPath (Join-Path $InstallDir "qtp_server.py"))) {
-    python (Join-Path $InstallDir "qtp_server.py") --work-dir $InstallDir --open-browser
+    $parentIni = Join-Path (Split-Path $InstallDir -Parent) "QuickTextPaste.ini"
+    $workTarget = if (Test-Path -LiteralPath $parentIni) { Split-Path $InstallDir -Parent } else { $InstallDir }
+    python (Join-Path $InstallDir "qtp_server.py") --work-dir $workTarget --open-browser
 }

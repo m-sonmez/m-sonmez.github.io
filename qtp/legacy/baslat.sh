@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORK_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$SCRIPT_DIR"
 
 pick_python() {
@@ -27,19 +28,19 @@ PORT="${QTP_PORT:-8765}"
 case "$MODE" in
   gui)
     echo "[QTP] Python Masaüstü Arayüzü başlatılıyor..."
-    "$PY_CMD" qtp_server.py --work-dir "$SCRIPT_DIR" --install-qtp >/dev/null 2>&1 || true
-    "$PY_CMD" qtp_server.py --work-dir "$SCRIPT_DIR" --start-qtp >/dev/null 2>&1 || true
-    exec "$PY_CMD" qtp_manager.py
+    "$PY_CMD" "$SCRIPT_DIR/qtp_server.py" --work-dir "$WORK_DIR" --install-qtp >/dev/null 2>&1 || true
+    "$PY_CMD" "$SCRIPT_DIR/qtp_server.py" --work-dir "$WORK_DIR" --start-qtp >/dev/null 2>&1 || true
+    exec "$PY_CMD" "$SCRIPT_DIR/qtp_manager.py"
     ;;
   qtp)
-    "$PY_CMD" qtp_server.py --work-dir "$SCRIPT_DIR" --install-qtp
-    exec "$PY_CMD" qtp_server.py --work-dir "$SCRIPT_DIR" --start-qtp
+    "$PY_CMD" "$SCRIPT_DIR/qtp_server.py" --work-dir "$WORK_DIR" --install-qtp
+    exec "$PY_CMD" "$SCRIPT_DIR/qtp_server.py" --work-dir "$WORK_DIR" --start-qtp
     ;;
   check|status)
-    exec "$PY_CMD" qtp_server.py --work-dir "$SCRIPT_DIR" --status
+    exec "$PY_CMD" "$SCRIPT_DIR/qtp_server.py" --work-dir "$WORK_DIR" --status
     ;;
   sync)
-    exec "$PY_CMD" qtp_server.py --work-dir "$SCRIPT_DIR" --sync
+    exec "$PY_CMD" "$SCRIPT_DIR/qtp_server.py" --work-dir "$WORK_DIR" --sync
     ;;
   web|*)
     echo "=============================================================="
@@ -47,6 +48,6 @@ case "$MODE" in
     echo " Adres: http://127.0.0.1:${PORT}/"
     echo " Kullanım: ./baslat.sh [web|gui|qtp|check|sync]"
     echo "=============================================================="
-    exec "$PY_CMD" qtp_server.py --work-dir "$SCRIPT_DIR" --port "$PORT" --ensure-qtp --open-browser
+    exec "$PY_CMD" "$SCRIPT_DIR/qtp_server.py" --work-dir "$WORK_DIR" --port "$PORT" --ensure-qtp --open-browser
     ;;
 esac

@@ -136,7 +136,12 @@ class QTPManagerApp(tk.Tk):
         self.minsize(1060, 660)
         self.configure(bg=self.BG)
 
-        self.work_dir = Path(".").resolve()
+        cwd_dir = Path(".").resolve()
+        parent_dir = Path(__file__).resolve().parent.parent
+        if not (cwd_dir / "QuickTextPaste.ini").is_file() and (parent_dir / "QuickTextPaste.ini").is_file():
+            self.work_dir = parent_dir
+        else:
+            self.work_dir = cwd_dir
         self.items: list[dict] = []
         self.program_meta: dict[str, str] = {}
         self.extra_sections: list[dict] = []
@@ -483,7 +488,10 @@ class QTPManagerApp(tk.Tk):
         if not server_alive:
             flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
             subprocess.Popen(
-                [sys.executable, str(self.work_dir / "qtp_server.py"), "--work-dir", str(self.work_dir), "--ensure-qtp"],
+                srv_script = Path(__file__).resolve().parent / "qtp_server.py"
+                if not srv_script.is_file():
+                    srv_script = self.work_dir / "qtp_server.py"
+                [sys.executable, str(srv_script), "--work-dir", str(self.work_dir), "--ensure-qtp"],
                 cwd=str(self.work_dir),
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,

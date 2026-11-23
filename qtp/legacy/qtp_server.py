@@ -36,6 +36,7 @@ ALLOWED_ORIGINS = {
 mimetypes.add_type("application/manifest+json", ".webmanifest")
 mimetypes.add_type("image/svg+xml", ".svg")
 mimetypes.add_type("application/javascript; charset=utf-8", ".js")
+mimetypes.add_type("text/markdown; charset=utf-8", ".md")
 
 
 def _configure_stdio() -> None:
@@ -531,6 +532,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     work_dir = Path(args.work_dir).resolve()
+    if args.work_dir == "." and not (work_dir / "QuickTextPaste.ini").is_file() and not (work_dir / "data.json").is_file():
+        parent_candidate = Path(__file__).resolve().parent.parent
+        if (parent_candidate / "QuickTextPaste.ini").is_file() or (parent_candidate / "data.json").is_file():
+            work_dir = parent_candidate
 
     if args.status:
         print(json.dumps({

@@ -544,7 +544,7 @@ def _to_windows_path(path: Path) -> str:
 
 def find_quicktextpaste_exe(work_dir: str | Path) -> Path | None:
     wd = Path(work_dir).resolve()
-    search_dirs: list[Path] = [wd, wd / "bin"]
+    search_dirs: list[Path] = [wd, wd / "legacy", wd / "bin"]
 
     if os.name == "nt":
         for env_key, sub in (

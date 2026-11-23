@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr" class="dark">
+<html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,10 +14,10 @@
     (function () {
       try {
         const savedTheme = localStorage.getItem('qtp_pwa_theme_v2');
-        const theme = savedTheme === 'light' ? 'light' : 'dark';
+        const theme = savedTheme === 'dark' ? 'dark' : 'light';
         document.documentElement.classList.toggle('dark', theme === 'dark');
       } catch (_) {
-        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('dark');
       }
     })();
   </script>
@@ -64,7 +64,7 @@
       x64: 'https://www.softwareok.com/Download/QuickTextPaste_x64_Portable.zip',
       x86: 'https://www.softwareok.com/Download/QuickTextPaste_Portable.zip',
       home: 'https://www.softwareok.com/?Download=QuickTextPaste',
-      psCommand: 'irm https://m-sonmez.github.io/qtp/kurulum.ps1 | iex'
+      psCommand: 'irm https://m-sonmez.github.io/qtp/legacy/kurulum.ps1 | iex'
     };
 
     let _linkedFileHandle = null;
@@ -542,7 +542,7 @@
         undoStack: [],
         redoStack: [],
         snapshots: [],
-        theme: 'dark',
+        theme: 'light',
         viewMode: 'cards',
         stripEmoji: false,
         onlyFavorites: false,
@@ -671,7 +671,7 @@
           const loaded = await QtpStorage.loadAll();
           const s = loaded.settings || {};
           const lsTheme = (() => { try { return localStorage.getItem(LS_THEME_KEY); } catch (_) { return null; } })();
-          this.theme = (s.theme === 'light' || s.theme === 'dark') ? s.theme : (lsTheme === 'light' ? 'light' : 'dark');
+          this.theme = (s.theme === 'light' || s.theme === 'dark') ? s.theme : (lsTheme === 'dark' ? 'dark' : 'light');
           this.applyThemeDom();
 
           this.viewMode = s.viewMode === 'table' ? 'table' : 'cards';
@@ -1391,19 +1391,28 @@
           await this.persistSettings();
         },
 
+        get standaloneDownloadMeta() {
+          const nav = typeof navigator !== 'undefined' ? navigator : {};
+          const hint = `${nav.userAgentData?.platform || ''} ${nav.platform || ''} ${nav.userAgent || ''}`.toLowerCase();
+          if (hint.includes('win')) {
+            return { href: './qtp.exe', file: 'qtp.exe', label: '⬇ Bağımsız QTP İndir (qtp.exe)', title: 'Tek dosya Windows x64 QTP indir (kurulum gerektirmez)' };
+          }
+          if (hint.includes('mac') || hint.includes('darwin')) {
+            return { href: './qtp.html', file: '', label: '🌐 Yeni Web (qtp.html)', title: 'macOS için kaynak/Web arayüzünü aç veya qtp.bin derle' };
+          }
+          return { href: './qtp.bin', file: 'qtp.bin', label: '⬇ Bağımsız QTP İndir (qtp.bin)', title: 'Linux x64 ELF ikilisi: chmod +x qtp.bin && ./qtp.bin' };
+        },
+
         get isQtpReadyForInstall() {
           return Boolean((this.serverConnected && this.qtpStatus && this.qtpStatus.running) || this.qtpReadyConfirmed);
         },
 
         async installPwa() {
-          if (!this.deferredPrompt) return;
-          if (!this.isQtpReadyForInstall) {
-            this.pendingPwaInstall = true;
-            this.qtpModalOpen = true;
-            this.showToast('Uygulamayı yüklemeden önce QuickTextPaste kurulumunu doğrulayın.', 'info');
+          if (this.deferredPrompt) {
+            await this._triggerBrowserInstall();
             return;
           }
-          await this._triggerBrowserInstall();
+          this.showToast("Tarayıcı menüsünden 'Uygulamayı yükle / Ana Ekrana Ekle'yi seçin (PWA zaten hazır veya tarayıcı desteği kısıtlı).", 'info');
         },
 
         async confirmQtpAndInstallPwa() {
@@ -2528,13 +2537,28 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-1.5">
-            <button
-              x-show="deferredPrompt"
-              x-cloak
-              @click="installPwa()"
-              class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition"
+            <a
+              :href="standaloneDownloadMeta.href"
+              :download="standaloneDownloadMeta.file || undefined"
+              :title="standaloneDownloadMeta.title"
+              class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition inline-flex items-center gap-1"
+              x-text="standaloneDownloadMeta.label"
+            ></a>
+
+            <a
+              href="./qtp.html"
+              class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white shadow-sm transition inline-flex items-center gap-1"
+              title="Yeni QTP bağımsız Web arayüzüne geç (qtp.html)"
             >
-              📲 Yükle
+              🌐 Yeni Web Arayüzü (qtp.html)
+            </a>
+
+            <button
+              @click="installPwa()"
+              class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition"
+              title="Bu web uygulamasını çevrimdışı masaüstü PWA olarak yükle"
+            >
+              📲 PWA Yükle
             </button>
 
             <button @click="openAddModal()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
@@ -2605,7 +2629,7 @@
                 <button @click="exportMenuOpen = false; window.print()" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">
                   🖨️ Yazdır (A4)
                 </button>
-                <a href="./cevaplar.html" class="block px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-500">
+                <a href="./legacy/cevaplar.html" class="block px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-500">
                   ⚡ Hızlı Kopyalama Panosunu Aç
                 </a>
               </div>

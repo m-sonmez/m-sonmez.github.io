@@ -8,7 +8,7 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0f172a",
+  "background_color": "#f8fafc",
   "theme_color": "#4f46e5",
   "icons": [
     {
@@ -32,14 +32,19 @@
   ],
   "shortcuts": [
     {
-      "name": "Tam Yönetim & INI Düzenleyici",
-      "short_name": "Düzenleyici",
+      "name": "QTP Yeni Web Arayüzü",
+      "short_name": "QTP Web",
+      "url": "./qtp.html"
+    },
+    {
+      "name": "Eski QuickTextPaste Yöneticisi",
+      "short_name": "Yönetici",
       "url": "./index.html"
     },
     {
       "name": "Hızlı Kopyalama Panosu",
       "short_name": "Hızlı Pano",
-      "url": "./cevaplar.html"
+      "url": "./legacy/cevaplar.html"
     }
   ]
 }
