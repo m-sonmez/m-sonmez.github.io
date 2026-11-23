@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 QuickTextPaste & Hazır Cevaplar Çekirdek Modülü (qtp_core.py)
 - Tam Unicode QuickTextPaste.ini <-> data.json çift yönlü dönüştürücü
@@ -428,8 +427,8 @@ def export_word_document(items: list[dict[str, Any]], filepath: str) -> tuple[bo
         grouped.setdefault(item.get("group") or "Genel", []).append(item)
 
     try:
-        import docx  # type: ignore
-        from docx.shared import Inches, Pt, RGBColor  # type: ignore
+        import docx
+        from docx.shared import Inches, Pt, RGBColor
 
         doc = docx.Document()
         for sec in doc.sections:

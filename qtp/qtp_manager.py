@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 QuickTextPaste & data.json Modern Yönetim Uygulaması (qtp_manager.py)
 - Çift yönlü QuickTextPaste.ini <-> data.json içe/dışa aktarma (UTF-16 LE / UTF-8 / CP1254)
@@ -24,7 +23,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 import qtp_core
-from qtp_core import (  # noqa: F401
+from qtp_core import (
     build_qtp_ini,
     export_word_document,
     normalize_tr,

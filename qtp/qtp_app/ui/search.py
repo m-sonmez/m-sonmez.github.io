@@ -66,7 +66,6 @@ class FuzzyMatcher:
         if not t_norm:
             return None
 
-        # İlk olarak tam bitişik alt dize kontrolü (en yüksek öncelik)
         exact_pos = t_norm.find(q_clean)
         if exact_pos != -1:
             indices = tuple(range(exact_pos, exact_pos + len(q_clean)))
@@ -74,8 +73,6 @@ class FuzzyMatcher:
             score = 200.0 + boundary_bonus - (exact_pos * 0.15) - (len(t_norm) * 0.01)
             return FuzzyMatch(score=score, matched_indices=indices)
 
-        # Çok kelimeli (boşlukla ayrılmış) alt-dizi veya tam alt-dizi eşleşmesi
-        # Tüm sorgu karakterlerini (veya boşluk hariç karakterleri) sırayla bul
         q_chars = [ch for ch in q_clean if not ch.isspace()]
         if not q_chars:
             return FuzzyMatch(score=0.0, matched_indices=())
@@ -95,7 +92,6 @@ class FuzzyMatcher:
                 return None
             matched.append(found)
 
-        # Puanlama: ardışıklık, kelime başlangıcı ve kısalık ödüllendirilir
         score = 80.0
         for pos_i, idx in enumerate(matched):
             if idx == 0 or not t_norm[idx - 1].isalnum():

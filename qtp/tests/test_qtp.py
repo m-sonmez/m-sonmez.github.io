@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 QTP Full-Stack Kapsamlı Test Paketi
 - Kodlama algılama (UTF-16 LE BOM, BOM'suz UTF-16 LE, UTF-16 BE BOM, UTF-8 BOM, CP1254)

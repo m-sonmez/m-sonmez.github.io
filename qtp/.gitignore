@@ -1,10 +1,7 @@
-# IDE / Editor
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Python & Test / Coverage
 __pycache__/
 *.py[cod]
 *$py.class
@@ -14,12 +11,8 @@ __pycache__/
 venv/
 .coverage
 htmlcov/
-
-# Derleme ve Dağıtım Çıktıları (kök düzeyinde)
 /dist/
 /build/
-
-# Çalışma zamanı ayar, kilit, yedek ve günlük dosyaları
 qtp_settings.json
 qtp.log*
 qtp.lock
@@ -27,13 +20,9 @@ backups/
 .qtp_state.json
 .qtp_tmp_*
 *.bak
-
-# Üçüncü parti çalıştırılabilir dosyalar ve indirilen arşivler
 *.exe
 *.bin
 *.zip
-
-# İşletim sistemi artıkları
 .DS_Store
 Thumbs.db
 desktop.ini

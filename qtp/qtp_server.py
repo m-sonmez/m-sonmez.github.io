@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 QTP Full-Stack Yerel Sunucu & REST API (qtp_server.py)
 - Web PWA (index.html / cevaplar.html) için statik sunucu + CORS/PNA destekli REST API
@@ -74,7 +73,7 @@ class QTPRequestHandler(BaseHTTPRequestHandler):
 
     @property
     def ctx(self) -> QTPServerState:
-        return self.server.ctx  # type: ignore[attr-defined]
+        return self.server.ctx
 
     def log_message(self, format: str, *args: Any) -> None:
         if args and isinstance(args[0], str) and args[0].startswith("GET /api/status"):
@@ -512,7 +511,7 @@ def ensure_qtp_ready(work_dir: Path, install_missing: bool = True, start_if_stop
 
 def create_http_server(work_dir: Path, host: str = "127.0.0.1", port: int = 8765) -> ThreadingHTTPServer:
     srv = ThreadingHTTPServer((host, port), QTPRequestHandler)
-    srv.ctx = QTPServerState(work_dir)  # type: ignore[attr-defined]
+    srv.ctx = QTPServerState(work_dir)
     return srv
 
 

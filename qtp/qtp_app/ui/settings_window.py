@@ -77,7 +77,6 @@ class SettingsWindow(QDialog):
         container_layout = QVBoxLayout(container)
         container_layout.setSpacing(12)
 
-        # Genel Görünüm ve Davranış
         gen_group = QGroupBox("Görünüm ve Davranış", container)
         gen_form = QFormLayout(gen_group)
         gen_form.setSpacing(8)
@@ -125,7 +124,6 @@ class SettingsWindow(QDialog):
 
         container_layout.addWidget(gen_group)
 
-        # Yapıştırma
         paste_group = QGroupBox("Yapıştırma Ayarları", container)
         paste_form = QFormLayout(paste_group)
         paste_form.setSpacing(8)
@@ -143,7 +141,6 @@ class SettingsWindow(QDialog):
 
         container_layout.addWidget(paste_group)
 
-        # Global Kısayollar
         hk_group = QGroupBox("Global Kısayollar", container)
         hk_form = QFormLayout(hk_group)
         hk_form.setSpacing(8)
@@ -165,7 +162,6 @@ class SettingsWindow(QDialog):
 
         container_layout.addWidget(hk_group)
 
-        # Veri, Yedekleme ve Günlük
         data_group = QGroupBox("Veri, Yedekleme ve Günlük", container)
         data_form = QFormLayout(data_group)
         data_form.setSpacing(8)
@@ -204,7 +200,6 @@ class SettingsWindow(QDialog):
         scroll.setWidget(container)
         root.addWidget(scroll, 1)
 
-        # Alt Düğmeler: Yardım, Varsayılana Sıfırla, İptal, Kaydet
         btn_row = QHBoxLayout()
         help_btn = QPushButton("Yardım")
         help_btn.clicked.connect(self._open_help)

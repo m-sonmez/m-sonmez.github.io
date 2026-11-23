@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 LOG_FILENAME = "qtp.log"
-MAX_LOG_BYTES = 1_048_576  # 1 MB
+MAX_LOG_BYTES = 1_048_576
 BACKUP_COUNT = 3
 LOGGER_NAME = "qtp"
 
@@ -62,7 +62,6 @@ def setup_logging(log_dir: str | Path, level: str = "info", *, console: bool = F
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     except OSError:
-        # Günlük klasörü salt-okunursa sessizce stderr/NullHandler'a düş
         logger.addHandler(logging.NullHandler())
 
     if console:

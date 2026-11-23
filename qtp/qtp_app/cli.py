@@ -317,7 +317,6 @@ def run(argv: list[str] | None = None) -> int:
             shutdown_after=args.shutdown_after,
         )
 
-    # mode == "gui"
     from qtp_app.main import launch_gui
 
     return launch_gui(engine)
