@@ -37,6 +37,10 @@ def _read_web_asset(filename: str) -> bytes:
             return candidate.read_bytes()
     except Exception:
         pass
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        meipass_candidate = Path(getattr(sys, "_MEIPASS")) / "qtp_app" / "web" / filename
+        if meipass_candidate.is_file():
+            return meipass_candidate.read_bytes()
     local = Path(__file__).resolve().parent / "web" / filename
     return local.read_bytes()
 

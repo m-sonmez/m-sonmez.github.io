@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import html
-import importlib.resources
 import re
-from pathlib import Path
 
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QDialog,
     QHBoxLayout,
@@ -18,6 +15,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from qtp_app.core.engine import get_bundled_docs_dir, read_doc_text
 from qtp_app.ui.theme import (
     ACCENT_CYAN,
     ThemePalette,
@@ -29,32 +27,8 @@ from qtp_app.ui.theme import (
 HELP_WIDTH = 740
 HELP_HEIGHT = 540
 
-
-def _locate_docs_dir() -> Path:
-    """docs/ klasörünü önce PyInstaller paketinden, ardından geliştirme kökünden çözer."""
-    try:
-        pkg_root = Path(str(importlib.resources.files("qtp_app")))
-        for candidate in (pkg_root / "docs", pkg_root.parent / "docs"):
-            if candidate.is_dir():
-                return candidate
-    except Exception:
-        pass
-    import sys
-
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        meipass_docs = Path(getattr(sys, "_MEIPASS")) / "docs"
-        if meipass_docs.is_dir():
-            return meipass_docs
-    return Path(__file__).resolve().parent.parent.parent / "docs"
-
-
-def read_doc_markdown(filename: str) -> str:
-    """Belirtilen Türkçe belge dosyasını UTF-8 olarak okur."""
-    docs_dir = _locate_docs_dir()
-    path = docs_dir / filename
-    if path.is_file():
-        return path.read_text(encoding="utf-8")
-    return f"# {filename}\n\nBelge dosyası bulunamadı: `{path}`"
+_locate_docs_dir = get_bundled_docs_dir
+read_doc_markdown = read_doc_text
 
 
 def markdown_to_html(md_text: str, palette: ThemePalette) -> str:

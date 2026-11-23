@@ -23,11 +23,19 @@ class WinConsoleBackend:
         if sys.platform == "win32":
             try:
                 k32 = ctypes.windll.kernel32
+                k32.GetStdHandle.argtypes = [ctypes.c_int32]
+                k32.GetStdHandle.restype = ctypes.c_void_p
+                k32.GetConsoleMode.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+                k32.GetConsoleMode.restype = ctypes.c_int
+                k32.SetConsoleMode.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+                k32.SetConsoleMode.restype = ctypes.c_int
                 handle = k32.GetStdHandle(_STD_OUTPUT_HANDLE)
-                mode = ctypes.c_uint32()
-                if k32.GetConsoleMode(handle, ctypes.byref(mode)):
-                    k32.SetConsoleMode(handle, mode.value | _ENABLE_VIRTUAL_TERMINAL_PROCESSING)
-                    self._vt_enabled = True
+                invalid_handle = ctypes.c_void_p(-1).value
+                if handle not in (None, 0, invalid_handle):
+                    mode = ctypes.c_uint32()
+                    if k32.GetConsoleMode(handle, ctypes.byref(mode)):
+                        k32.SetConsoleMode(handle, mode.value | _ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+                        self._vt_enabled = True
             except Exception:
                 pass
         self._active = True

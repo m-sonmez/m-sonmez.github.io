@@ -54,6 +54,7 @@ class QtpTui:
         self.running: bool = True
         self._visible_items: list[dict[str, Any]] = []
         self._categories_cache: list[dict[str, Any]] = []
+        self.recorded_frames: list[str] = []
         self._refresh_view_data()
 
     def _refresh_view_data(self) -> None:
@@ -157,9 +158,10 @@ class QtpTui:
                 styled.append(line)
         return styled
 
-    def _record_result(self, res: OperationResult) -> OperationResult:
+    def _record_result(self, res: OperationResult, *, status_override: str | None = None) -> OperationResult:
         self.last_result = res
-        self.status_message = res.message
+        raw_msg = status_override if status_override is not None else res.message
+        self.status_message = " ".join(str(raw_msg).splitlines()).strip()
         if not res.ok:
             self.exit_code = res.exit_code
         return res
@@ -177,7 +179,7 @@ class QtpTui:
             self.modal_title = "QTP Türkçe Yardım (F1)"
             docs = (res.data["kullanim"] + "\n\n" + res.data["kisayollar"]).splitlines()
             self.modal_lines = docs[:200]
-            return self._record_result(res)
+            return self._record_result(res, status_override="Kullanım yardımı görüntülendi.")
         if op_id == "selftest":
             return self._record_result(self.engine.op_selftest(run_ui_smoke=False))
         if op_id == "modes":
@@ -294,6 +296,8 @@ class QtpTui:
             self.execute_operation("backup")
         elif key == "B":
             self.execute_operation("export_backup")
+        elif key == "x":
+            self.execute_operation("export_ini")
         elif key == "r":
             self.execute_operation("reload")
         elif key == "s":
@@ -309,12 +313,28 @@ class QtpTui:
         elif key in ("q", "ESC"):
             self.running = False
 
+    def _capture_script_frame(self) -> None:
+        frame = "\n".join(self.render_plain_lines())
+        if not self.recorded_frames or self.recorded_frames[-1] != frame:
+            self.recorded_frames.append(frame)
+
     def run_scripted(self, keys: Iterable[str]) -> list[str]:
         """Betiklenmiş tuş dizisini çalıştırır ve son ekran satırlarını döndürür."""
+        self.recorded_frames = []
         for k in keys:
             if not self.running:
                 break
+            prev_modal = bool(self.modal_lines)
+            prev_search = self.search_mode
             self.handle_key(k)
+            # Modal açılışı veya işlem sonrası durum değişikliklerini yakala
+            if (not prev_modal and self.modal_lines) or (
+                not prev_modal
+                and (not prev_search or k == "ENTER")
+                and k in ("c", "ENTER", "F1", "e", "b", "B", "x", "r", "s", "V", "T", "M")
+            ):
+                self._capture_script_frame()
+        self._capture_script_frame()
         return self.render_plain_lines()
 
 
@@ -339,6 +359,12 @@ def _parse_stream_keys(raw_text: str) -> list[str]:
         elif raw_text[i : i + 3] == "\x1bOP":
             keys.append("F1")
             i += 3
+        elif raw_text[i : i + 5] == "\x1b[11~":
+            keys.append("F1")
+            i += 5
+        elif raw_text[i : i + 2] == "\r\n":
+            keys.append("ENTER")
+            i += 2
         elif raw_text[i] in ("\r", "\n"):
             keys.append("ENTER")
             i += 1
@@ -369,16 +395,16 @@ def run_tui(
 
     # Betikli test veya TTY olmayan stdin -> deterministik çıktı
     if scripted_keys is not None:
-        lines = tui.run_scripted(scripted_keys)
-        out.write("\n".join(lines) + "\n")
+        tui.run_scripted(scripted_keys)
+        out.write("\n---\n".join(tui.recorded_frames) + "\n")
         out.flush()
         return tui.exit_code
 
     if sys.stdin is not None and not sys.stdin.isatty():
         raw_in = sys.stdin.read()
         keys = _parse_stream_keys(raw_in) if raw_in else ["ESC"]
-        lines = tui.run_scripted(keys)
-        out.write("\n".join(lines) + "\n")
+        tui.run_scripted(keys)
+        out.write("\n---\n".join(tui.recorded_frames) + "\n")
         out.flush()
         return tui.exit_code
 

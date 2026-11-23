@@ -106,6 +106,7 @@ def launch_gui(engine: QtpEngine) -> int:
     from PyQt6.QtWidgets import (
         QApplication,
         QDialog,
+        QFileDialog,
         QHBoxLayout,
         QLabel,
         QListWidget,
@@ -138,13 +139,13 @@ def launch_gui(engine: QtpEngine) -> int:
 
     bridge = UiBridge()
 
-    def handle_paste(item: dict[str, Any], prev_app: Any) -> None:
+    def handle_paste(item: dict[str, Any], prev_app: Any) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
-        engine.op_paste(target, previous_app=prev_app)
+        return engine.op_paste(target, previous_app=prev_app)
 
-    def handle_copy(item: dict[str, Any]) -> None:
+    def handle_copy(item: dict[str, Any]) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
-        engine.op_copy(target)
+        return engine.op_copy(target)
 
     ws = engine.settings.get("window_size") or [720, 520]
     overlay = OverlayWindow(
@@ -247,6 +248,8 @@ def launch_gui(engine: QtpEngine) -> int:
         btns = QHBoxLayout()
         btn_now = QPushButton("Anlık Yedek Al")
         btn_full = QPushButton("Tam Yedek Dışa Aktar")
+        btn_exp_ini = QPushButton("INI Dışa Aktar…")
+        btn_imp_ini = QPushButton("INI İçe Aktar…")
         btn_restore = QPushButton("Seçileni Geri Yükle")
         btn_restore.setObjectName("PrimaryBtn")
         btn_close = QPushButton("Kapat")
@@ -258,6 +261,30 @@ def launch_gui(engine: QtpEngine) -> int:
         def _do_full() -> None:
             res = engine.op_export_backup(engine.work_dir)
             QMessageBox.information(dlg, "Tam Yedek", res.message)
+
+        def _do_export_ini() -> None:
+            path, _ = QFileDialog.getSaveFileName(
+                dlg,
+                "QuickTextPaste.ini Dışa Aktar",
+                str(engine.work_dir / "QuickTextPaste_export.ini"),
+                "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
+            )
+            if path:
+                res = engine.op_export_ini(path)
+                QMessageBox.information(dlg, "INI Dışa Aktar", res.message)
+
+        def _do_import_ini() -> None:
+            path, _ = QFileDialog.getOpenFileName(
+                dlg,
+                "QuickTextPaste.ini İçe Aktar",
+                str(engine.work_dir),
+                "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
+            )
+            if path:
+                res = engine.op_import_ini(path, mode="merge")
+                overlay.set_items(engine.items)
+                _refresh()
+                QMessageBox.information(dlg, "INI İçe Aktar", res.message)
 
         def _do_restore() -> None:
             cur = lst.currentItem()
@@ -271,10 +298,14 @@ def launch_gui(engine: QtpEngine) -> int:
 
         btn_now.clicked.connect(_do_backup)
         btn_full.clicked.connect(_do_full)
+        btn_exp_ini.clicked.connect(_do_export_ini)
+        btn_imp_ini.clicked.connect(_do_import_ini)
         btn_restore.clicked.connect(_do_restore)
         btn_close.clicked.connect(dlg.accept)
         btns.addWidget(btn_now)
         btns.addWidget(btn_full)
+        btns.addWidget(btn_exp_ini)
+        btns.addWidget(btn_imp_ini)
         btns.addWidget(btn_restore)
         btns.addStretch()
         btns.addWidget(btn_close)

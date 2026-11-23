@@ -54,6 +54,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from qtp_app.core.engine import format_ini_preview, item_matches_category
 from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.paster import capture_previous_app
 from qtp_app.ui.search import FuzzyMatcher
@@ -102,11 +103,7 @@ def _extract_badge(keys: str) -> str:
 
 
 def _matches_category(item: dict[str, Any], category_code: str) -> bool:
-    code = (category_code or "ALL").strip().upper()
-    if code in ("", "ALL"):
-        return True
-    keys = str(item.get("keys", item.get("hotkey_prefix", ""))).strip().upper()
-    return keys.endswith(f"+{code}") or keys == code
+    return item_matches_category(item, category_code)
 
 
 class SnippetListModel(QAbstractListModel):
@@ -404,19 +401,7 @@ class IniSnippetViewerDialog(QDialog):
         info.setProperty("class", "MutedHint")
         layout.addWidget(info)
 
-        tid = str(item.get("raw_key") or f"text_{index:03d}")
-        keys = str(item.get("keys", ""))
-        term = str(item.get("terminator", "<E<N<D|"))
-        text_enc = str(item.get("text", "")).replace("\r\n", "\n").replace("\n", "\\n")
-        grp = str(item.get("group", "Genel"))
-        lbl = str(item.get("label", ""))
-        full_label = f"{grp}/{lbl}" if grp and grp != "Genel" else lbl
-
-        preview_lines = (
-            f"[list_text]\n{tid}={keys}={text_enc}{term}\n\n"
-            f"[list_order]\n{tid}={index + 1}\n\n"
-            f"[list_label]\n{tid}={full_label}"
-        )
+        preview_lines = format_ini_preview(item, index)
         viewer = QPlainTextEdit()
         viewer.setReadOnly(True)
         viewer.setPlainText(preview_lines)
@@ -738,9 +723,9 @@ class OverlayWindow(QWidget):
         prev = self._previous_app
         self.hide_overlay(animate=False)
         self.paste_triggered.emit(item)
-        if self._on_paste_cb is not None:
-            self._on_paste_cb(item, prev)
-        self.show_toast("Yapıştırıldı ✔")
+        res = self._on_paste_cb(item, prev) if self._on_paste_cb is not None else None
+        msg = res.message if (res is not None and hasattr(res, "message")) else "Yapıştırıldı ✔"
+        self.show_toast(msg)
 
     def copy_row(self, row: int | None = None) -> None:
         target_row = self.selected_row() if row is None else row
@@ -748,9 +733,9 @@ class OverlayWindow(QWidget):
         if not item:
             return
         self.copy_triggered.emit(item)
-        if self._on_copy_cb is not None:
-            self._on_copy_cb(item)
-        self.show_toast("Panoya kopyalandı ✔")
+        res = self._on_copy_cb(item) if self._on_copy_cb is not None else None
+        msg = res.message if (res is not None and hasattr(res, "message")) else "Panoya kopyalandı ✔"
+        self.show_toast(msg)
 
     def _open_context_menu(self, row: int, global_pos: QPoint) -> None:
         item = self.list_model.item_at(row)

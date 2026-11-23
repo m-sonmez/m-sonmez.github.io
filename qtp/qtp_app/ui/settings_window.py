@@ -28,6 +28,7 @@ from qtp_app.core.settings import (
     VALID_LOG_LEVELS,
     VALID_PASTE_METHODS,
     VALID_THEMES,
+    _sanitize_settings,
 )
 from qtp_app.ui.help_dialog import HelpDialog
 from qtp_app.ui.theme import (
@@ -49,15 +50,16 @@ class SettingsWindow(QDialog):
     ):
         super().__init__(parent)
         self.setWindowTitle("QTP Ayarları")
-        self.resize(560, 610)
+        self.resize(560, 640)
         self._palette = palette
+        self._base_settings = copy.deepcopy(current_settings)
         self._font_family = load_bundled_fonts()
         self.setFont(create_app_font(self._font_family, 13))
         self.setStyleSheet(build_dialog_stylesheet(palette))
         self.result_settings: dict[str, Any] | None = None
 
         self._build_ui()
-        self._populate(current_settings)
+        self._populate(self._base_settings)
 
     def _desc(self, key: str) -> tuple[str, str]:
         entry = SETTING_DESCRIPTIONS.get(key, {})
@@ -190,6 +192,12 @@ class SettingsWindow(QDialog):
         self.log_level_cb.setToolTip(tip)
         data_form.addRow(lbl + ":", self.log_level_cb)
 
+        lbl, tip = self._desc("web")
+        self.web_port_spin = QSpinBox()
+        self.web_port_spin.setRange(0, 65535)
+        self.web_port_spin.setToolTip(tip)
+        data_form.addRow(f"{lbl} Portu:", self.web_port_spin)
+
         container_layout.addWidget(data_group)
         container_layout.addStretch()
 
@@ -234,6 +242,8 @@ class SettingsWindow(QDialog):
         self.data_path_edit.setText(str(data.get("data_path", "./QuickTextPaste.ini")))
         self.backup_spin.setValue(int(data.get("backup_count", 15)))
         self.log_level_cb.setCurrentText(str(data.get("log_level", "info")))
+        web_cfg = data.get("web") if isinstance(data.get("web"), dict) else {}
+        self.web_port_spin.setValue(int(web_cfg.get("port", DEFAULT_SETTINGS["web"]["port"])))
 
     def _browse_ini(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -246,7 +256,8 @@ class SettingsWindow(QDialog):
             self.data_path_edit.setText(path)
 
     def _reset_defaults(self) -> None:
-        self._populate(copy.deepcopy(DEFAULT_SETTINGS))
+        self._base_settings = copy.deepcopy(DEFAULT_SETTINGS)
+        self._populate(self._base_settings)
 
     def _open_help(self) -> None:
         dlg = HelpDialog(self._palette, initial_tab=0, parent=self)
@@ -255,7 +266,7 @@ class SettingsWindow(QDialog):
 
     def collect_settings(self, base: dict[str, Any] | None = None) -> dict[str, Any]:
         """Form değerlerini qtp_settings.json sözlüğü olarak toplar."""
-        out = copy.deepcopy(base or DEFAULT_SETTINGS)
+        out = copy.deepcopy(base if base is not None else self._base_settings)
         out["theme"] = self.theme_cb.currentText()
         out["last_category"] = self.last_cat_cb.currentText()
         out["window_size"] = [self.width_spin.value(), self.height_spin.value()]
@@ -271,7 +282,8 @@ class SettingsWindow(QDialog):
         out["data_path"] = self.data_path_edit.text().strip() or "./QuickTextPaste.ini"
         out["backup_count"] = self.backup_spin.value()
         out["log_level"] = self.log_level_cb.currentText()
-        return out
+        out["web"] = {"port": int(self.web_port_spin.value())}
+        return _sanitize_settings(out)
 
     def _save_and_accept(self) -> None:
         self.result_settings = self.collect_settings()
