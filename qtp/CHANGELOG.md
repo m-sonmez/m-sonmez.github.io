@@ -19,6 +19,10 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
   - `--verbose` (`-v` / `-vv`) / `--quiet` (`-q`) ve yan etkisiz dinamik `--completion [powershell|bash|zsh|fish|auto]` dört mod eşitliğiyle (`operations.py`, `web.py`, `tui/app.py`) eklendi.
 - **Geliştirilmiş Ayarlar Penceresi (`ui/settings_window.py`) ve Dinamik Tepsi/Web Arayüzü:**
   - `HotkeyRow` (4 değiştirici onay kutusu + doğrudan tuş yakalayabilen `HotkeyEdit`), **+ Özel Kısayol Ekle**, hazır profil ve toplu değiştirici çubuğu, canlı Türkçe çakışma etiketi ve `auto_reload` kontrolleri eklendi.
+- **Modlar Arası Birebir Entegrasyon Eşitliği (`cli.py`, `logging_setup.py`, `main.py`, `web.py`, `tui/app.py`, `ui/help_dialog.py`):**
+  - `-v`/`--verbose`/`-vv` ve `-q`/`--quiet` tüm modlara (`--cli`, `--web`, `--tui`, `--gui`) birleşik canlı `stderr` tanılama akışı (`_DynamicStderrHandler`) ile bağlandı; `--web --verbose` HTTP isteklerini (`METHOD /path -> STATUS`) ve yaşam döngüsü olaylarını canlı akıtır, Windows ebeveyn konsolu `--web --verbose`, `--gui --verbose` ve tüm `--<mode> --help` çağrılarında bağlanırken çift tık / sessiz `--gui` penceresiz kalır.
+  - `--cli/--web/--tui/--gui --help` ve `--verbose --help` bayrak sırasından bağımsız olarak her modda `0` ile çıkıp diske sıfır dosya yazar; kanonsal `engine.op_help(verbose=...)` (`usage`, `usage_verbose`, `kullanim`, `kisayollar`, `sss`) GUI `HelpDialog` **CLI & Parametreler** sekmesi, kaydırılabilir eksiksiz TUI `F1` modalı ve Web `/api/help?verbose=1` + `F1` modalında birleştirildi.
+  - `--category` ve `--query` başlangıç filtreleri `--cli`, `--tui`, `--gui` (`OverlayWindow`) ve `--web` (`/api/revision` + `index.html`) için tek tip hale getirildi.
 - **Mod Eşitliği, Çapraz-OS Geriye Dönük Uyumluluk ve Sıfır Yorum Kilidi:**
   - `--gui`, `--tui`, `--cli`, `--web` modları 22 kanonsal `operations.py` işlemiyle birleştirildi; Windows 7/8/8.1 x64 (`qtp-win7.exe`), Python 3.8+ çekirdeği, Linux X11/Wayland, macOS 10.15–15, BSD ve sözdizimi güvenli sıfır yorum (`test_no_unnecessary_comments`) korundu.
 

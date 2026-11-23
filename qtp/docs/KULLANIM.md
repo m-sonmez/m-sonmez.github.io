@@ -120,11 +120,12 @@ Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerind
 
 ## 10. Komut Satırı (CLI) Seçenekleri, Ayrıntı Düzeyi ve Otomatik Tamamlama
 
-- **Etkileşimli Windows Konsolu:** Windows tek-dosya (`console=False`) ikilisinde `--help`, `--verbose`, `--completion`, `--cli` veya `--tui` çalıştırıldığında QTP üst süreç zincirini (`PowerShell`/`pwsh`/`cmd`/Terminal) yürüyerek UTF-8 konsol akışlarını `argparse`'dan hemen önce otomatik bağlar.
-- **Ayrıntı Bayrakları (`-v`/`--verbose`, `-vv`, `-q`/`--quiet`):**
-  - `qtp --verbose --help` / `qtp --cli --verbose --help`: Tüm bayraklar, profiller, ayar anahtarları, çıkış kodları ve kabuk tamamlama komutlarını basar.
-  - `-v` / `-vv`: `stderr` akışına çalışma klasörü, INI yolu ve kısayol tanılama günlüklerini basar.
-  - `-q` / `--quiet`: Bilgi banner'larını gizler, hataları `stderr` üzerinde korur.
+- **Etkileşimli Windows Konsolu:** Windows tek-dosya (`console=False`) ikilisinde `--help`, `--verbose`, `--completion`, `--cli`, `--web` veya `--tui` çalıştırıldığında QTP üst süreç zincirini (`PowerShell`/`pwsh`/`cmd`/Terminal) yürüyerek UTF-8 konsol akışlarını `argparse`'dan hemen önce otomatik bağlar; çift tık ve sessiz `--gui` açılışlarında ise siyah konsol penceresi açmaz.
+- **Modlar Arası Eşit `--help`, `-v`/`--verbose`/`-vv` ve `-q`/`--quiet`:**
+  - `qtp --cli --help`, `qtp --web --help`, `qtp --tui --help`, `qtp --gui --help` (ve tüm `--verbose --help` bileşimleri, bayrak sırasından bağımsız olarak) yan etkisiz çalışır (diskte hiç dosya oluşturmaz), aynı kanonsal Türkçe yardımı yazar ve `0` ile çıkar.
+  - `-v` / `-vv`: Dört modun tamamında (`--cli`, `--web`, `--tui`, `--gui`) `stderr` akışına tek tip `[INFO]` / `[DEBUG]` tanılama kayıtları akıtır (`--web` HTTP istekleri, `--gui` kısayol/Qt yüklemesi, `--tui` arka ucu dahil); `stdout` JSON ve TUI ekranı kirletilmez.
+  - `-q` / `--quiet`: Tüm modlarda başlangıç ve bilgi afişlerini (`QTP Web Modu çalışıyor: ...`, TUI/GUI başlangıç balonu, CLI durum satırları) gizler (`-v` açıkça verilmediyse); hataları `stderr` üzerinde daima korur.
+  - `--category` ve `--query`: Dört modun tamamında (`--cli`, `--tui`, `--gui`, `--web`) açılışta aynı başlangıç kategori ve arama filtresini uygular.
 - **Kabuk Otomatik Tamamlama (`--completion [powershell|bash|zsh|fish]`):** Geçerli bayraklar ve ayar anahtarlarından dinamik tamamlama betiği üretir ve hiçbir yan etki dosyası oluşturmaz:
   - PowerShell: `.\qtp.exe --completion powershell | Out-String | Invoke-Expression`
   - Bash: `eval "$(./qtp.bin --completion bash)"`
@@ -135,8 +136,9 @@ Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerind
 
 ## 11. TUI Modu (`--tui`) ve Web Modu (`--web`)
 
-- **`--tui`:** Python standart kütüphanesi dışında bağımlılık gerektirmez; Linux/macOS'ta `curses` (veya `termios`/düz metin), Windows'ta VT100 veya Win32 Console API kullanır. Canlı oturumda dosya değişikliklerini otomatik yansıtır ve `k` (çakışma denetimi), `P` (önerilen profil), `C` (tamamlama) tuşlarını destekler.
-- **`--web`:** Yalnızca `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; **Kısayollar** modalı, canlı `/api/revision` yenilemesi ve `/api/hotkeys/*`, `/api/completion` uç noktalarını sunar (`POST /api/shutdown` ile zarifçe kapanır).
+- **`--tui`:** Python standart kütüphanesi dışında bağımlılık gerektirmez; Linux/macOS'ta `curses` (veya `termios`/düz metin), Windows'ta VT100 veya Win32 Console API kullanır. Canlı oturumda dosya değişikliklerini otomatik yansıtır; `F1` yardım modalında eksiksiz dört bölümlü içeriği (`CLI & Parametreler`, `Kullanım`, `Kısayollar`, `SSS`) `↑`/`↓` ve `PageUp`/`PageDown` kaydırmasıyla sunar ve `k` (çakışma denetimi), `P` (önerilen profil), `C` (tamamlama) tuşlarını destekler.
+- **`--web`:** Yalnızca `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; **Yardım (F1)** düğmesi / `F1` tuşu (`/api/help?verbose=1`), **Kısayollar** modalı, canlı `/api/revision` yenilemesi (başlangıç `--category`/`--query` dahil) ve `/api/hotkeys/*`, `/api/completion` uç noktalarını sunar (`POST /api/shutdown` ile zarifçe kapanır).
+- **`--gui` `F1` Yardım Penceresi:** `Kullanım Kılavuzu`, `Kısayollar`, `Sorun Giderme (SSS)` sekmelerine ek olarak **CLI & Parametreler** sekmesinde birebir `--verbose --help` başvurusunu içerir.
 
 ---
 

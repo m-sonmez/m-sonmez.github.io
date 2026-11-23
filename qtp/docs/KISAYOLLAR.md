@@ -58,7 +58,7 @@ Aşağıdaki tuşların çekirdek gezinme ve işlem mantığı dört modda da ay
 | Anlık Yedek / Tam Yedek | Tepsi → Yedekler… | `b` / `B` | Yedekle düğmesi | Dönen yedek veya `qtp-tam-yedek-*.json` oluşturur. |
 | INI Yeniden Yükle | Tepsi → INI Yeniden Yükle | `r` | Yenile düğmesi | Diskteki INI/JSON verisini yeniden yükler. |
 | Ayarları Aç / Kısayol Kontrol | `Ctrl+,` (`⌘+,`) | `s` / `k` / `P` | `/api/settings`, `Kısayollar` | Ayarları, profilleri ve çakışma durumunu açar. |
-| Türkçe Yardım | `F1` | `F1` | `F1` | Uygulama içi Türkçe yardımı açar (**tüm modlarda aynı**). |
+| Türkçe Yardım | `F1` | `F1` | `F1` | Dört modda da kanonsal yardımı (`CLI & Parametreler`, `Kullanım`, `Kısayollar`, `SSS`) açar; TUI'de `↑↓`/`PageUp`/`PageDown` ile kaydırılır. |
 | Kapat / Çık | `Esc` | `q` / `Esc` | `Esc` | Katmanı veya modal pencereyi kapatır (**tüm modlarda aynı**). |
 
 ---

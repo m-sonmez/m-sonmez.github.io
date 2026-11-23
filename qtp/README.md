@@ -13,7 +13,7 @@
 | **CLI** | `qtp --cli --search "şifre" --json` | Betikler ve CI için başsız alt komutlar, `-v/-q`, `--completion` ve kararlı çıkış kodları |
 | **Web** | `qtp --web --port 8765 --open-browser` | Yalnızca `127.0.0.1` üzerinde çalışan çevrimdışı HTTP/JSON sunucusu |
 
-Tüm modların tam karşılaştırması için: [Modlar Arası Eşitlik Matrisi](docs/KULLANIM.md#12-modlar-arası-eşitlik-matrisi)
+Tüm modların tam karşılaştırması için: [Modlar Arası Eşitlik Matrisi](docs/KULLANIM.md#12-modlar-arası-eşitlik-matrisi). `--verbose` (`-v`/`-vv`), `--quiet` (`-q`), `--help`, `F1` yardım modalı ve `--category` / `--query` başlangıç filtreleri dört modda da aynı şekilde çalışır.
 
 ---
 
