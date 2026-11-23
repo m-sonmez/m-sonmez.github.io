@@ -36,15 +36,12 @@ def test_bundled_quicktextpaste_ini_byte_identical_roundtrip():
     expected_total = len(doc.items)
     expected_prefix_counts = Counter(item.hotkey_prefix for item in doc.items)
 
-    # Belge serileştirildiğinde metin birebir aynı kalmalı
     serialized = serialize_qtp_ini(doc, update_test_ini=False)
     assert serialized == decoded_text
 
-    # UTF-16 LE BOM olarak yeniden kodlandığında bayt dizisi birebir aynı olmalı
     reencoded = encode_qtp_ini(serialized, encoding="utf-16-le-bom")
     assert reencoded == raw_bytes
 
-    # parse -> serialize -> parse sonrası öğe ve kategori sayıları birebir korunmalı
     reparsed = parse_qtp_ini(serialized)
     assert len(reparsed.items) == expected_total
     assert Counter(item.hotkey_prefix for item in reparsed.items) == expected_prefix_counts
@@ -95,26 +92,22 @@ def test_bomless_utf16_and_utf8_autodetect():
 
 
 def test_edge_cases_empty_program_only_list_text_only_crlf_and_mixed_terminators():
-    # 1. Boş dosya
     empty_doc = parse_qtp_ini("")
     assert empty_doc.items == []
     assert serialize_qtp_ini(empty_doc) == ""
 
-    # 2. Yalnızca [Program]
     prog_only = "[Program]\r\nlng=21\r\nstart_tray=1\r\n"
     prog_doc = parse_qtp_ini(prog_only)
     assert prog_doc.items == []
     assert prog_doc.program["lng"] == "21"
     assert serialize_qtp_ini(prog_doc) == prog_only
 
-    # 3. Yalnızca [list_text] (LF satır sonu)
     lt_only = "[list_text]\ntext_000=L-Win+Z=Satır 1\\nSatır 2<E<N<D|\n"
     lt_doc = parse_qtp_ini(lt_only)
     assert len(lt_doc.items) == 1
     assert lt_doc.items[0].text == "Satır 1\nSatır 2"
     assert serialize_qtp_ini(lt_doc) == lt_only
 
-    # 4. Karışık sonlandırıcılar (<E<N<D| var/yok) + CRLF
     mixed = (
         "[Program]\r\nTestIni=42\r\n"
         "[list_text]\r\n"
@@ -215,7 +208,6 @@ def test_qtp_item_helpers_extra_sections_and_encoding_variants():
     full = parse_qtp_ini_full(ini_extra)
     assert len(full["items"]) == 1
 
-    # Kodlama yardımcıları
     for enc in ("utf-8-bom", "utf-8", "utf-16-be-bom", "cp1254", "utf-16-le-bom"):
         encoded = encode_qtp_ini("Şğüöç", encoding=enc)
         txt, _ = decode_bytes_auto(encoded)

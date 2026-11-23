@@ -25,7 +25,6 @@ def test_gui_offscreen_model_matches_cli_json_output(tmp_path: Path, capsys):
         overlay.show_overlay(category="ALL", animate=False)
         app.processEvents()
 
-        # 1. Kategori sayıları CLI --list-categories --json ile birebir aynı olmalı
         parser = cli.build_arg_parser()
         cli.execute_cli(eng_cli, parser.parse_args(["--list-categories", "--json"]))
         cli_cats = json.loads(capsys.readouterr().out)["data"]["categories"]
@@ -33,7 +32,6 @@ def test_gui_offscreen_model_matches_cli_json_output(tmp_path: Path, capsys):
             gui_count = overlay.category_buttons[cat["code"]].property("item_count")
             assert gui_count == cat["count"]
 
-        # 2. Bulanık arama ("şifre") sonucu CLI --search --json ile aynı öğeleri aynı sırada üretmeli
         overlay.search_input.setText("şifre")
         app.processEvents()
         cli.execute_cli(eng_cli, parser.parse_args(["--search", "şifre", "--json"]))

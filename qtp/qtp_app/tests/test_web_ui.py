@@ -33,31 +33,26 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         assert r_css.status == 200
         css = r_css.read().decode("utf-8")
 
-        # Harici URL veya CDN olmamalı
         for blob in (html, css):
             assert "http://" not in blob
             assert "https://" not in blob
             assert "//cdn" not in blob
             assert "fonts.googleapis" not in blob
 
-        # Renk sabitleri ui/theme.py ile eşleşmeli
         assert ACCENT_PURPLE in css
         assert ACCENT_CYAN in css
         assert DARK_PALETTE.surface in css
         assert DARK_PALETTE.window_bg in css
         assert DARK_PALETTE.text_primary in css
 
-        # Alt bilgi kısayol metni GUI ile aynı olmalı
         assert FOOTER_HINTS_TEXT in html
         assert "ArrowDown" in html and "ArrowUp" in html and "F1" in html and "Escape" in html
 
-        # /api dizini tüm işlemleri listelemeli
         conn.request("GET", "/api")
         api_idx = json.loads(conn.getresponse().read().decode("utf-8"))
         assert api_idx["ok"] is True
         assert len(api_idx["data"]["routes"]) >= 18
 
-        # Bilinmeyen API rotası 404 döndürmeli
         conn.request("GET", "/api/olmayan_rota")
         r404 = conn.getresponse()
         assert r404.status == 404
@@ -88,7 +83,6 @@ def test_web_server_backups_shutdown_and_error_status(tmp_path: Path):
         r_bak = conn.getresponse()
         assert r_bak.status == 200 and json.loads(r_bak.read())["ok"] is True
 
-        # Geçersiz JSON body ve 404/400 yanıtları
         conn.request("POST", "/api/olmayan", body="{bad")
         assert conn.getresponse().status == 404
 
@@ -102,12 +96,10 @@ def test_web_server_backups_shutdown_and_error_status(tmp_path: Path):
     finally:
         srv.server_close()
 
-    # run_web_server kısa süreli otomatik kapanma ve port-çakışması OSError testi
     assert run_web_server(eng, port=0, open_browser=False, shutdown_after=0.1) == 0
     with mock.patch("qtp_app.web.create_web_server", side_effect=OSError("Address already in use")):
         assert run_web_server(eng, port=8765) == 1
 
-    # Frozen PyInstaller _MEIPASS içinden web varlıklarını yükleme testi
     import sys
     from qtp_app.web import _read_web_asset
 

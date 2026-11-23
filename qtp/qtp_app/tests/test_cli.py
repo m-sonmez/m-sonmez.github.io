@@ -54,7 +54,6 @@ def test_cli_selftest_offscreen(capsys, monkeypatch, tmp_path: Path):
 
 
 def test_cli_export_and_import_ini(tmp_path: Path, capsys):
-    # Başlangıçta 2 kayıtlı bir çalışma dizini hazırla
     work_dir = tmp_path / "work"
     work_dir.mkdir()
     seed_items = [
@@ -63,7 +62,6 @@ def test_cli_export_and_import_ini(tmp_path: Path, capsys):
     ]
     save_data_json(work_dir / "data.json", seed_items)
 
-    # --export-ini çıktısı aynı sayıda kaydı geri okunabilir biçimde yazmalı
     exported_ini = tmp_path / "exported.ini"
     code_exp = main(["--work-dir", str(work_dir), "--export-ini", str(exported_ini)])
     assert code_exp == 0
@@ -71,7 +69,6 @@ def test_cli_export_and_import_ini(tmp_path: Path, capsys):
     reparsed = parse_qtp_ini(read_text_auto(exported_ini))
     assert len(reparsed.items) == 2
 
-    # --import-ini yeni kayıtları mevcut kayıtları koruyarak birleştirmeli
     incoming_ini = FIXTURES_DIR / "minimal.ini"
     code_imp = main(["--work-dir", str(work_dir), "--import-ini", str(incoming_ini)])
     assert code_imp == 0
@@ -109,13 +106,11 @@ def test_cli_full_subcommands_json_and_mode_enforcement(tmp_path: Path, capsys, 
         [{"keys": "L-Win+A", "group": "Restoran", "label": "Selam", "text": "Merhaba Dünya"}],
     )
 
-    # CI/non-TTY ortamında --mode verilmeden boş çağrı çıkış kodu 2 döndürmeli
     monkeypatch.setenv("CI", "true")
     assert cli.run([]) == 2
     assert "--mode" in capsys.readouterr().err
     monkeypatch.delenv("CI", raising=False)
 
-    # Tüm CLI alt komutları
     assert cli.run(["--work-dir", str(work_dir), "--modes", "--json"]) == 0
     assert "web" in capsys.readouterr().out
 
@@ -148,11 +143,9 @@ def test_cli_full_subcommands_json_and_mode_enforcement(tmp_path: Path, capsys, 
     assert cli.run(["--work-dir", str(work_dir), "--get", "theme"]) == 0
     assert "theme=light" in capsys.readouterr().out
 
-    # --web modu --port 0 --shutdown-after 0.15
     assert cli.run(["--work-dir", str(work_dir), "--web", "--port", "0", "--shutdown-after", "0.15"]) == 0
     assert "http://127.0.0.1:" in capsys.readouterr().out
 
-    # Engine hata/eksik senaryoları
     from qtp_app.core.engine import QtpEngine
     eng = QtpEngine(work_dir=work_dir)
     assert eng.resolve_item("") is None
@@ -172,7 +165,6 @@ def test_cli_full_subcommands_json_and_mode_enforcement(tmp_path: Path, capsys, 
     assert eng.op_restore(bak_out, mode="merge").exit_code == 0
     assert eng.op_get_setting(None).exit_code == 0
 
-    # attach_windows_console_if_needed ve --mode tui / --mode gui yönlendirmeleri
     fake_k32 = mock.Mock()
     fake_k32.AttachConsole.return_value = 0
     fake_k32.AllocConsole.return_value = 1
@@ -193,7 +185,6 @@ def test_cli_full_subcommands_json_and_mode_enforcement(tmp_path: Path, capsys, 
         assert cli.run(["--work-dir", str(work_dir), "--gui"]) == 0
         lg.assert_called_once()
 
-    # Read-only work_dir fallback & selftest round-trip errors
     with mock.patch("qtp_app.core.engine.is_dir_writable", return_value=False):
         ro_eng = QtpEngine(work_dir=tmp_path / "ro_work", seed_defaults=False)
         assert len(ro_eng.items) >= 500
@@ -209,7 +200,6 @@ def test_cli_full_subcommands_json_and_mode_enforcement(tmp_path: Path, capsys, 
     eng.items = []
     assert eng.op_export_ini(tmp_path / "empty.ini").exit_code == 1
 
-    # CLI ek yollar: --help --json, --copy, --paste, read_doc_text missing, reload error, op_backup/export_backup error
     from qtp_app.core.engine import read_doc_text
     assert "Belge dosyası bulunamadı" in read_doc_text("olmayan_belge.md")
     assert cli.run(["--work-dir", str(work_dir), "--help", "--json"]) == 0
@@ -230,7 +220,6 @@ def test_cli_full_subcommands_json_and_mode_enforcement(tmp_path: Path, capsys, 
         assert eng.op_restore("yedek_id_1").exit_code == 2
     assert eng.op_restore("alt/yedek.json").exit_code == 1
 
-    # Frozen _MEIPASS, OperationResult.warning, _get_git_short_sha fail, op_selftest exception & frozen branches
     from qtp_app.core.engine import OperationResult, _get_git_short_sha, get_bundled_default_path, get_bundled_docs_dir
     r_warn = OperationResult(ok=True, exit_code=0, message="ok", warning="uyarı").to_api_dict()
     assert r_warn["warning"] == "uyarı"
@@ -255,11 +244,9 @@ def test_cli_full_subcommands_json_and_mode_enforcement(tmp_path: Path, capsys, 
         eng._seed_defaults_if_empty(True)
     with mock.patch.dict("sys.modules", {"PyQt6": None, "PyQt6.QtWidgets": None}):
         assert eng.op_selftest(run_ui_smoke=True).exit_code == 0
-    # op_import_ini generic read exception & op_restore unreadable json exception
     with mock.patch("qtp_app.core.engine.read_text_auto", side_effect=OSError("io fail")):
         assert eng.op_import_ini(FIXTURES_DIR / "minimal.ini").exit_code == 1
         assert eng.op_restore(FIXTURES_DIR / "data.json").exit_code == 1
-    # Empty directory fallback when no bundled defaults exist
     with mock.patch("qtp_app.core.engine.get_bundled_default_path", return_value=tmp_path / "none.ini"):
         eng.items = [{"keys": "L-Win+A", "group": "G", "text": "T"}]
         empty_work = tmp_path / "empty_rel"
@@ -268,7 +255,5 @@ def test_cli_full_subcommands_json_and_mode_enforcement(tmp_path: Path, capsys, 
         eng.ini_path = empty_work / "none2.ini"
         eng.settings["data_path"] = "./none2.ini"
         assert eng.reload_data().data["count"] == 0
-
-
 
 

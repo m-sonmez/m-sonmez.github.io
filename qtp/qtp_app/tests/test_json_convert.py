@@ -48,7 +48,6 @@ def test_data_json_preserves_all_pwa_fields(tmp_path: Path):
     reloaded = load_data_json(out_json)
     assert reloaded == src_items
 
-    # Her kayıt yalnızca data.json şemasındaki geçerli PWA alanlarını içerir
     for item in reloaded:
         assert set(item.keys()).issubset({"keys", "group", "label", "text"})
         assert "keys" in item and "group" in item and "text" in item
@@ -112,7 +111,6 @@ def test_save_load_state_and_backups_lifecycle(tmp_path: Path):
     assert len(restored["state"]["items"]) == 1
     assert restored["state"]["items"][0]["text"] == "Birinci sürüm"
 
-    # Manuel yedek + rotasyon sınırı
     for i in range(4):
         create_backup(tmp_path, reason=f"rot_{i}", max_keep=2)
     assert len(list_backups(tmp_path)) == 2
@@ -144,16 +142,13 @@ def test_json_store_error_paths(tmp_path: Path):
 def test_load_state_ini_newer_and_parse_any_content_branches(tmp_path: Path):
     import os
 
-    # Boş klasörde load_state empty döner
     empty_st = load_state(tmp_path)
     assert empty_st["source"] == "empty"
 
-    # Yedek klasöründe meta.json eksikse dahi list_backups çalışmalı
     bak_dir = tmp_path / "backups" / "20261123_120000_manual"
     bak_dir.mkdir(parents=True)
     assert list_backups(tmp_path)[0]["reason"] == "unknown"
 
-    # INI dosyası data.json'dan yeniyse INI seçilir
     ini_path = tmp_path / "QuickTextPaste.ini"
     json_path = tmp_path / "data.json"
     save_state(
@@ -172,7 +167,6 @@ def test_load_state_ini_newer_and_parse_any_content_branches(tmp_path: Path):
     assert st["source"] == "QuickTextPaste.ini"
     assert st["items"][0]["text"] == "Güncel INI"
 
-    # parse_any_content INI ve düz JSON listesi yolları
     ini_parsed = parse_any_content("[list_text]\r\ntext_000=L-Win+A=Deneme<E<N<D|\r\n", "test.ini")
     assert ini_parsed["kind"] == "ini" and len(ini_parsed["items"]) == 1
     json_parsed = parse_any_content(json.dumps([{"keys": "L-Win+A", "group": "G", "text": "T", "copyCount": "bad"}]), "data.json")

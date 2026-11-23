@@ -42,11 +42,9 @@ def test_corrupt_settings_regenerates_defaults_and_logs_turkish_warning(tmp_path
     assert path == bad_file
     assert settings == DEFAULT_SETTINGS
 
-    # Yeniden yazılan dosya geçerli JSON olmalı
     parsed = json.loads(bad_file.read_text(encoding="utf-8"))
     assert parsed["language"] == "tr"
 
-    # qtp.log içine uyarı yazılmış olmalı
     log_text = (tmp_path / LOG_FILENAME).read_text(encoding="utf-8")
     assert "Bozuk ayar dosyası" in log_text
 
@@ -62,6 +60,10 @@ def test_readonly_folder_selects_os_fallback_dir(tmp_path: Path, monkeypatch):
     assert get_os_fallback_dir("win32") == win_app / "QTP"
     assert get_os_fallback_dir("darwin") == fake_home / "Library" / "Application Support" / "QTP"
     assert get_os_fallback_dir("linux") == xdg_cfg / "qtp"
+    assert get_os_fallback_dir("freebsd14") == xdg_cfg / "qtp"
+    assert get_os_fallback_dir("openbsd7") == xdg_cfg / "qtp"
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    assert get_os_fallback_dir("netbsd10") == fake_home / ".config" / "qtp"
 
     readonly_dir = tmp_path / "readonly_bin_dir"
     readonly_dir.mkdir()
@@ -97,7 +99,6 @@ def test_save_settings_and_logging_levels(tmp_path: Path):
     assert "Bu uyarı satırı yazılmalı" in log_content
     assert "Bu bilgi satırı filtrelenmeli" not in log_content
 
-    # console=True ve OSError (salt-okunur günlük dizini) güvenli geri dönüşü
     setup_logging(tmp_path, level="debug", console=True)
     with mock.patch.object(Path, "mkdir", side_effect=OSError("readonly")):
         fallback_logger = setup_logging(tmp_path / "blocked", level="info")

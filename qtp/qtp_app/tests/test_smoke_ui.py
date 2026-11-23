@@ -26,7 +26,7 @@ FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
 def test_overlay_renders_all_items_focus_pills_and_enter_paste(qtbot):
     doc = parse_qtp_ini(read_text_auto(FIXTURES_DIR / "QuickTextPaste.ini"))
-    items = [it.to_dict(include_meta=False) | {"terminator": it.terminator} for it in doc.items]
+    items = [{**it.to_dict(include_meta=False), "terminator": it.terminator} for it in doc.items]
     total = len(items)
     counts_by_key = Counter(it["keys"] for it in items)
 
@@ -43,13 +43,10 @@ def test_overlay_renders_all_items_focus_pills_and_enter_paste(qtbot):
     overlay.show_overlay(category="ALL", animate=False, previous_app=None)
     qtbot.waitUntil(lambda: overlay.isVisible() and overlay.search_input.hasFocus(), timeout=1500)
 
-    # 1. Tüm kayıtlar listelenmiş olmalı
     assert overlay.list_model.rowCount() == total
 
-    # 2. Arama kutusu otomatik odaklanmış olmalı
     assert overlay.search_input.hasFocus()
 
-    # 3. Kategori haplarındaki sayılar gerçek INI sayılarıyla eşleşmeli
     assert overlay.category_buttons["ALL"].property("item_count") == total
     assert f"({total})" in overlay.category_buttons["ALL"].text()
     for code in ("A", "Z", "X", "Q"):
@@ -57,10 +54,8 @@ def test_overlay_renders_all_items_focus_pills_and_enter_paste(qtbot):
         assert overlay.category_buttons[code].property("item_count") == expected
         assert f"({expected})" in overlay.category_buttons[code].text()
 
-    # 4. Alt bilgi metni beklenen ipucunu içermeli
     assert overlay.footer_hints.text() == FOOTER_HINTS_TEXT
 
-    # 5. Kategori filtreleme ve bulanık arama
     overlay.set_category("Z")
     assert overlay.list_model.rowCount() == counts_by_key["L-Win+Z"]
     overlay.set_category("ALL")
@@ -69,14 +64,12 @@ def test_overlay_renders_all_items_focus_pills_and_enter_paste(qtbot):
     overlay.search_input.clear()
     assert overlay.list_model.rowCount() == total
 
-    # 6. Ctrl+Enter yalnızca kopyalar ve katmanı açık bırakır
     QTest.keyClick(overlay.search_input, Qt.Key.Key_Return, Qt.KeyboardModifier.ControlModifier)
     assert len(copied) == 1
     assert copied[0] == items[0]
     assert overlay.isVisible()
     assert "Panoya kopyalandı" in overlay.toast_label.text()
 
-    # 7. Enter ilk öğeyi yapıştırır
     QTest.keyClick(overlay.search_input, Qt.Key.Key_Return)
     assert len(pasted) == 1
     assert pasted[0] == items[0]

@@ -48,7 +48,6 @@ def test_reregister_unbinds_old_listener_without_duplicates():
     assert len(listeners) == 1
     assert "<cmd>+a" in listeners[0].mapping
 
-    # Ayarlar değiştiğinde eski dinleyici durdurulup yalnızca yeni kısayollar kaydedilmeli
     mgr.register({"A": "Ctrl+Alt+A", "Z": "Win+Z"}, lambda _c: None)
     listeners[0].stop.assert_called_once()
     assert len(listeners) == 2
@@ -91,12 +90,10 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
         to_pynput_combo("")
     assert to_pynput_combo("Ctrl+F1") == "<ctrl>+<f1>"
 
-    # Geçersiz veya boş kısayollar reddedilmeli
     mgr = HotkeyManager(pynput_factory=lambda _m: mock.Mock(), platform_name="linux")
     res_empty = mgr.register({"A": "", "Z": "   "}, lambda _c: None)
     assert res_empty == {"A": False, "Z": False}
 
-    # Linux üzerinde pynput başarısız olursa keyboard fallback devreye girmez, False döner
     mgr_linux_fail = HotkeyManager(
         pynput_factory=lambda _m: (_ for _ in ()).throw(RuntimeError("X11 error")),
         platform_name="linux",
@@ -104,7 +101,6 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
     res_fail = mgr_linux_fail.register({"A": "Win+A"}, lambda _c: None)
     assert res_fail == {"A": False}
 
-    # Windows üzerinde keyboard modülü yokken False döner
     mgr_win_no_kb = HotkeyManager(
         pynput_factory=lambda _m: (_ for _ in ()).throw(RuntimeError("Win hook error")),
         keyboard_module=None,
@@ -114,7 +110,6 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
         res_win_fail = mgr_win_no_kb.register({"A": "Win+A"}, lambda _c: None)
     assert res_win_fail == {"A": False}
 
-    # macOS ctypes mock ile check_macos_accessibility(prompt=False/True)
     fake_app_svc = mock.Mock()
     fake_app_svc.AXIsProcessTrusted.return_value = False
     fake_app_svc.AXIsProcessTrustedWithOptions.return_value = True
@@ -133,7 +128,6 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
         assert check_macos_accessibility(prompt=False) is False
         assert check_macos_accessibility(prompt=True) is True
 
-    # Wayland üzerinde başarısız pynput kaydı bloklamadan False döner
     mgr_wl = HotkeyManager(
         pynput_factory=lambda _m: (_ for _ in ()).throw(RuntimeError("Wayland no X11")),
         platform_name="linux",
@@ -141,14 +135,20 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
     with mock.patch("qtp_app.core.hotkeys.is_wayland_session", return_value=True):
         assert mgr_wl.register({"all": "Ctrl+Shift+Space"}, lambda _c: None) == {"all": False}
 
-    # Geçersiz kombinasyon reddedilir
     assert mgr_wl.register({"A": "Win+A"}, lambda _c: None) == {"A": False}
 
-    # unregister sırasındaki istisnalar ve macOS CDLL hatası güvenli yakalanır
     bad_listener = mock.Mock()
     bad_listener.stop.side_effect = RuntimeError("stop err")
     bad_kb = mock.Mock()
     bad_kb.remove_hotkey.side_effect = RuntimeError("remove err")
+    for bsd_plat in ("freebsd14", "openbsd7"):
+        mgr_bsd = HotkeyManager(
+            pynput_factory=lambda _m: (_ for _ in ()).throw(RuntimeError("Wayland no X11")),
+            platform_name=bsd_plat,
+        )
+        with mock.patch("qtp_app.core.hotkeys.is_wayland_session", return_value=True):
+            assert mgr_bsd.register({"all": "Ctrl+Shift+Space"}, lambda _c: None) == {"all": False}
+
     mgr_err = HotkeyManager(pynput_factory=lambda _m: bad_listener, keyboard_module=bad_kb, platform_name="win32")
     mgr_err.register({"A": "Win+A"}, lambda _c: None)
     mgr_err._keyboard_handles.append("hk1")
@@ -156,6 +156,5 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
     with mock.patch("qtp_app.core.hotkeys.sys.platform", "darwin"), \
          mock.patch("qtp_app.core.hotkeys.ctypes.CDLL", side_effect=OSError("no framework")):
         assert check_macos_accessibility(prompt=False) is False
-
 
 

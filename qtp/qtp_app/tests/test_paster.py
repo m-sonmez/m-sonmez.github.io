@@ -134,7 +134,6 @@ def test_paste_methods_shift_insert_and_type():
 
 
 def test_wayland_uses_wtype_when_available_and_warns_otherwise(caplog, monkeypatch):
-    # 1. wtype mevcutsa doğrudan wtype çağrılmalı
     with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True), \
          mock.patch("shutil.which", side_effect=lambda name: "/usr/bin/wtype" if name == "wtype" else None), \
          mock.patch("subprocess.run") as run_mock:
@@ -154,7 +153,6 @@ def test_wayland_uses_wtype_when_available_and_warns_otherwise(caplog, monkeypat
     assert run_mock.call_args_list[0][0][0] == ["/usr/bin/wtype", "-M", "ctrl", "v", "-m", "ctrl"]
     assert run_mock.call_args_list[1][0][0] == ["/usr/bin/wtype", "-k", "Return"]
 
-    # 2. wtype ve ydotool yoksa uyarı günlüğü basıp exit_code=4 dönmeli (DISPLAY yokken)
     monkeypatch.delenv("DISPLAY", raising=False)
     caplog.set_level(logging.WARNING)
     with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True), \
@@ -183,7 +181,6 @@ def test_wayland_ydotool_and_clipboard_failure(caplog):
     assert res_fail.exit_code == 3
     assert res_fail.method == "clipboard_error"
 
-    # ydotool on Wayland
     with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True), \
          mock.patch("shutil.which", side_effect=lambda name: "/usr/bin/ydotool" if name == "ydotool" else None), \
          mock.patch("subprocess.run") as run_mock:
@@ -200,7 +197,6 @@ def test_wayland_ydotool_and_clipboard_failure(caplog):
     assert res_ydo.method == "ydotool"
     assert run_mock.call_count == 2
 
-    # wtype type & shift_insert
     with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True), \
          mock.patch("shutil.which", side_effect=lambda name: "/usr/bin/wtype" if name == "wtype" else None), \
          mock.patch("subprocess.run") as run_mock2:
@@ -213,7 +209,6 @@ def test_wayland_ydotool_and_clipboard_failure(caplog):
     assert run_mock2.call_args_list[0][0][0] == ["/usr/bin/wtype", "--", "A"]
     assert run_mock2.call_args_list[1][0][0] == ["/usr/bin/wtype", "-M", "shift", "-k", "Insert", "-m", "shift"]
 
-    # Controller hatası exit_code=4 döner
     bad_ctrl = mock.Mock()
     bad_ctrl.press.side_effect = RuntimeError("input denied")
     with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True):
@@ -232,7 +227,6 @@ def test_wayland_ydotool_and_clipboard_failure(caplog):
 
 
 def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
-    # Wayland algılama
     monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
     with mock.patch("qtp_app.core.paster.sys.platform", "linux"):
         assert paster.is_wayland_session() is True
@@ -241,26 +235,22 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
     with mock.patch("qtp_app.core.paster.sys.platform", "linux"):
         assert paster.is_wayland_session() is False
 
-    # Windows gerçek ctypes veya mock pano
     fake_qt_cb = mock.Mock()
     assert paster.copy_to_clipboard("Qt doğrudan", qt_clipboard=fake_qt_cb) is True
     fake_qt_cb.setText.assert_called_once_with("Qt doğrudan")
 
-    # Linux TTY OSC 52 pano
     tty_buf = io.StringIO()
-    tty_buf.isatty = lambda: True  # type: ignore[method-assign]
+    tty_buf.isatty = lambda: True
     monkeypatch.delenv("DISPLAY", raising=False)
     with mock.patch.object(sys, "stdout", tty_buf):
         assert paster.copy_to_clipboard("OSC52 Test", platform_name="linux") is True
     assert "\x1b]52;c;" in tty_buf.getvalue()
 
-    # macOS stok pbcopy geri dönüşü
     with mock.patch("shutil.which", return_value="/usr/bin/pbcopy"), \
          mock.patch("subprocess.run", return_value=SimpleNamespace(returncode=0)) as pb_run:
         assert paster.copy_to_clipboard("Mac metin", platform_name="darwin") is True
         pb_run.assert_called_once()
 
-    # Windows win32 mocked user32 capture/restore
     fake_user32 = mock.Mock()
     fake_user32.GetForegroundWindow.return_value = 12345
     fake_user32.IsIconic.return_value = True
@@ -272,7 +262,6 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
         assert paster.restore_previous_app(hwnd, platform_name="win32") is True
     assert paster.restore_previous_app(None, platform_name="win32") is False
 
-    # Linux Xlib odak yakalama/geri yükleme
     fake_win = mock.Mock()
     fake_win.id = 9988
     fake_dpy = mock.Mock()
@@ -284,7 +273,6 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
         assert paster.capture_previous_app(platform_name="linux") == 9988
         assert paster.restore_previous_app(9988, platform_name="linux") is True
 
-    # macOS capture/restore
     with mock.patch("subprocess.run", return_value=SimpleNamespace(returncode=0, stdout="4321\n")):
         assert paster.capture_previous_app(platform_name="darwin") == 4321
         assert paster.restore_previous_app(4321, platform_name="darwin") is True
@@ -292,11 +280,9 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
     ns_app.activateWithOptions_.return_value = True
     assert paster.restore_previous_app(ns_app, platform_name="darwin") is True
 
-    # _get_pynput_controller gerçek pynput yüklemesi
     ctrl_real, key_real = paster._get_pynput_controller()
     assert ctrl_real is not None and hasattr(key_real, "enter")
 
-    # _copy_windows_ctypes, _copy_macos_native AppKit, _copy_linux_x11_ctypes mock kapsamı
     fake_k32 = mock.Mock()
     fake_k32.GlobalAlloc.return_value = 100
     fake_k32.GlobalLock.return_value = 200
@@ -320,7 +306,6 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
     with mock.patch("qtp_app.core.paster.ctypes.CDLL", return_value=fake_x11):
         assert paster._copy_linux_x11_ctypes("TestX11") is True
 
-    # Hata dalları ve yedek yollar
     fake_k32_fail = mock.Mock()
     fake_k32_fail.GlobalAlloc.return_value = 0
     with mock.patch.object(paster.ctypes, "windll", SimpleNamespace(user32=fake_u32, kernel32=fake_k32_fail), create=True):
@@ -340,21 +325,18 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
          mock.patch.object(paster.ctypes, "memmove"):
         assert paster._copy_windows_ctypes("SetFail") is False
 
-    # Linux Qt clipboard aktifken
     fake_qt_clip = mock.Mock()
     with mock.patch("PyQt6.QtGui.QGuiApplication.instance", return_value=SimpleNamespace(clipboard=lambda: fake_qt_clip)), \
          mock.patch.dict(paster.os.environ, {"DISPLAY": ":0", "QT_QPA_PLATFORM": "xcb"}):
         assert paster._copy_linux_x11_ctypes("QtLinux") is True
         fake_qt_clip.setText.assert_called_once_with("QtLinux")
 
-    # _emit_osc52 ve osascript/Xlib hata yakalama
     with mock.patch("subprocess.run", side_effect=RuntimeError("osascript fail")):
         assert paster.capture_previous_app(platform_name="darwin") is None
         assert paster.restore_previous_app(4321, platform_name="darwin") is False
     with mock.patch("qtp_app.core.paster.sys.platform", "freebsd"):
         assert paster.is_wayland_session() is False
 
-    # copy_to_clipboard tüm geri dönüş yolları: Qt özel hata -> Win32 hata -> QGuiApplication -> pyperclip -> OSC52
     bad_qt_cb = mock.Mock()
     bad_qt_cb.setText.side_effect = RuntimeError("qt err")
     good_qgui_cb = mock.Mock()
@@ -370,15 +352,69 @@ def test_zero_dep_clipboards_and_window_focus_platforms(monkeypatch):
         assert paster.copy_to_clipboard("OptFallback", platform_name="win32") is True
         fake_pyper.copy.assert_called_once_with("OptFallback")
 
-    # Darwin AppKit capture_previous_app ve freebsd capture/restore
     fake_ak = SimpleNamespace(NSWorkspace=SimpleNamespace(sharedWorkspace=lambda: SimpleNamespace(frontmostApplication=lambda: "AK_APP")))
     with mock.patch.dict("sys.modules", {"AppKit": fake_ak}):
         assert paster.capture_previous_app(platform_name="darwin") == "AK_APP"
+    monkeypatch.delenv("DISPLAY", raising=False)
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    monkeypatch.delenv("XDG_SESSION_TYPE", raising=False)
     assert paster.capture_previous_app(platform_name="freebsd") is None
     assert paster.restore_previous_app("123", platform_name="freebsd") is False
     with mock.patch("shutil.which", return_value="/usr/bin/pbcopy"), \
          mock.patch("subprocess.run", side_effect=RuntimeError("pbcopy err")):
         assert paster._copy_macos_native("FailMac") is False
 
+
+def test_bsd_unix_posix_and_macos_pasteboard_fallback(monkeypatch):
+    for bsd_plat in ("freebsd14", "openbsd7", "netbsd10"):
+        assert paster.is_posix_desktop(bsd_plat) is True
+        monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-1")
+        assert paster.is_wayland_session(bsd_plat) is True
+        monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+
+        monkeypatch.setenv("DISPLAY", ":0")
+        monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
+        fake_x11 = mock.Mock()
+        fake_x11.XOpenDisplay.return_value = 77
+        fake_x11.XInternAtom.return_value = 9
+        calls = []
+
+        def fake_cdll(name: str):
+            calls.append(name)
+            if name == "libX11.so.6":
+                raise OSError("not found")
+            return fake_x11
+
+        with mock.patch("qtp_app.core.paster.ctypes.CDLL", side_effect=fake_cdll):
+            assert paster.copy_to_clipboard("BSD Test", platform_name=bsd_plat) is True
+        assert calls == ["libX11.so.6", "libX11.so"]
+
+        with mock.patch("shutil.which", side_effect=lambda name: "/usr/local/bin/wtype" if name == "wtype" else None), \
+             mock.patch("subprocess.run") as wl_run, \
+             mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True):
+            res = paster.paste_into_active_app(
+                "Wayland BSD",
+                has_end_marker=True,
+                enter_after_paste=True,
+                delay_ms=0,
+                platform_name=bsd_plat,
+                wayland=True,
+                sleep_fn=lambda _s: None,
+            )
+        assert res.ok is True and res.method == "wtype" and wl_run.call_count == 2
+
+    pb_modern = mock.Mock()
+    pb_modern.setString_forType_.side_effect = [False, True]
+    appkit_both = SimpleNamespace(
+        NSPasteboard=SimpleNamespace(generalPasteboard=lambda: pb_modern),
+        NSPasteboardTypeString="public.utf8-plain-text",
+        NSStringPboardType="NSStringPboardType",
+    )
+    with mock.patch.dict("sys.modules", {"AppKit": appkit_both}):
+        assert paster._copy_macos_native("ModernThenLegacy") is True
+    assert [c.args[1] for c in pb_modern.setString_forType_.call_args_list] == [
+        "public.utf8-plain-text",
+        "NSStringPboardType",
+    ]
 
 

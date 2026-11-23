@@ -125,7 +125,6 @@ def test_markdown_docs_have_no_local_paths_or_todos_and_links_valid():
         for tok in forbidden_tokens:
             assert tok not in text, f"{md_path.relative_to(QTP_ROOT_DIR)} içinde yasak ifade '{tok}' bulundu."
 
-        # Göreli Markdown bağlantıları geçerli hedeflere işaret etmeli
         for match in link_re.finditer(text):
             target = match.group(1).strip()
             if not target or target.startswith(("http://", "https://", "#", "mailto:")):
@@ -153,3 +152,215 @@ def test_all_operations_documented_in_kullanim_parity_matrix():
         assert op.op_id in kullanim_text, f"docs/KULLANIM.md eksik işlem: {op.op_id}"
         assert op.cli_flag in kullanim_text, f"docs/KULLANIM.md eksik CLI bayrağı: {op.cli_flag}"
         assert op.web_route in kullanim_text, f"docs/KULLANIM.md eksik Web rotası: {op.web_route}"
+
+
+def test_overlay_detect_os_dark_qt_pre65_fallback():
+    from types import SimpleNamespace
+    from unittest import mock
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtWidgets import QApplication
+    from qtp_app.ui.overlay import OverlayWindow
+
+    app = QApplication.instance() or QApplication([])
+    ov = OverlayWindow([], theme="auto")
+    try:
+        with mock.patch("qtp_app.ui.overlay.QGuiApplication.styleHints", return_value=SimpleNamespace()):
+            assert ov._detect_os_dark() is True
+        with mock.patch.object(Qt, "ColorScheme", None, create=True):
+            assert ov._detect_os_dark() is True
+    finally:
+        ov.close()
+        ov.deleteLater()
+        app.processEvents()
+
+
+def _scan_js_comments_safe(code: str) -> list[str]:
+    found: list[str] = []
+    i = 0
+    n = len(code)
+    prev_tok = None
+    ident_re = re.compile(r"[A-Za-z_$][A-Za-z0-9_$]*")
+    num_re = re.compile(r"0[xXbBoO][0-9A-Fa-f_]+|\d[\d_]*(?:\.[\d_]*)?(?:[eE][+-]?\d+)?")
+    after_kw = {"return", "throw", "case", "delete", "void", "typeof", "await", "yield", "in", "instanceof", "of", "new", "else", "do"}
+    while i < n:
+        ch = code[i]
+        if ch in " \t\r\n":
+            i += 1
+            continue
+        if code.startswith("//", i):
+            end = code.find("\n", i)
+            end = n if end == -1 else end
+            found.append(code[i:end])
+            i = end
+            continue
+        if code.startswith("/*", i):
+            end = code.find("*/", i + 2)
+            end = n if end == -1 else end + 2
+            found.append(code[i:end])
+            i = end
+            continue
+        if ch in ('"', "'"):
+            q = ch
+            i += 1
+            while i < n and code[i] != q:
+                i += 2 if code[i] == "\\" else 1
+            i += 1
+            prev_tok = "operand"
+            continue
+        if ch == "`":
+            depth = 0
+            i += 1
+            while i < n:
+                if code[i] == "\\":
+                    i += 2
+                    continue
+                if code[i] == "`" and depth == 0:
+                    i += 1
+                    break
+                if code[i : i + 2] == "${":
+                    depth += 1
+                    i += 2
+                    continue
+                if code[i] == "}" and depth > 0:
+                    depth -= 1
+                    i += 1
+                    continue
+                i += 1
+            prev_tok = "operand"
+            continue
+        if ch == "/" and prev_tok in (None, "operator"):
+            j = i + 1
+            in_cls = False
+            ok = False
+            while j < n:
+                rc = code[j]
+                if rc == "\\":
+                    j += 2
+                    continue
+                if rc == "[":
+                    in_cls = True
+                elif rc == "]":
+                    in_cls = False
+                elif rc == "/" and not in_cls:
+                    j += 1
+                    while j < n and code[j].isalpha():
+                        j += 1
+                    ok = True
+                    break
+                elif rc in "\r\n" and not in_cls:
+                    break
+                j += 1
+            if ok:
+                i = j
+                prev_tok = "operand"
+                continue
+        if ch.isalpha() or ch in "_$":
+            m = ident_re.match(code, i)
+            word = m.group(0)
+            i = m.end()
+            prev_tok = "operator" if word in after_kw else "operand"
+            continue
+        if ch.isdigit() or (ch == "." and i + 1 < n and code[i + 1].isdigit()):
+            m = num_re.match(code, i)
+            i = m.end() if m else i + 1
+            prev_tok = "operand"
+            continue
+        if ch in ")]}":
+            i += 1
+            prev_tok = "operand"
+            continue
+        if ch in "+-" and code[i : i + 2] in ("++", "--"):
+            i += 2
+            prev_tok = "operand"
+            continue
+        i += 1
+        prev_tok = "operator"
+    return found
+
+
+def _scan_css_comments_safe(css: str) -> list[str]:
+    found: list[str] = []
+    i = 0
+    n = len(css)
+    while i < n:
+        if css.startswith("/*", i):
+            end = css.find("*/", i + 2)
+            end = n if end == -1 else end + 2
+            found.append(css[i:end])
+            i = end
+        elif css[i] in ('"', "'"):
+            q = css[i]
+            i += 1
+            while i < n and css[i] != q:
+                i += 2 if css[i] == "\\" else 1
+            i += 1
+        else:
+            i += 1
+    return found
+
+
+def _scan_html_comments_safe(html_src: str) -> list[str]:
+    found: list[str] = []
+    i = 0
+    n = len(html_src)
+    while i < n:
+        low = html_src[i : i + 9].lower()
+        if html_src.startswith("<!--", i):
+            end = html_src.find("-->", i + 4)
+            end = n if end == -1 else end + 3
+            found.append(html_src[i:end])
+            i = end
+        elif low.startswith("<style"):
+            gt = html_src.find(">", i)
+            end_tag = html_src.lower().find("</style>", gt + 1)
+            found.extend(_scan_css_comments_safe(html_src[gt + 1 : end_tag]))
+            i = end_tag + 8
+        elif low.startswith("<script"):
+            gt = html_src.find(">", i)
+            attrs = html_src[i:gt].lower()
+            end_tag = html_src.lower().find("</script>", gt + 1)
+            if "src=" not in attrs:
+                found.extend(_scan_js_comments_safe(html_src[gt + 1 : end_tag]))
+            i = end_tag + 9
+        else:
+            i += 1
+    return found
+
+
+def test_no_unnecessary_comments():
+    import io
+    import tokenize
+    from qtp_app.ui.theme import DARK_PALETTE, build_dialog_stylesheet, build_overlay_stylesheet
+
+    app_dir = QTP_ROOT_DIR / "qtp_app"
+    py_violations: list[str] = []
+    for path in sorted(list(app_dir.rglob("*.py")) + list((app_dir / "build").glob("*.spec"))):
+        if "__pycache__" in path.parts:
+            continue
+        src = path.read_text(encoding="utf-8")
+        for tok in tokenize.generate_tokens(io.StringIO(src).readline):
+            if tok.type == tokenize.COMMENT:
+                if tok.start[0] == 1 and tok.string.startswith("#!"):
+                    continue
+                rel = path.relative_to(QTP_ROOT_DIR).as_posix()
+                py_violations.append(f"{rel}:{tok.start[0]}: {tok.string}")
+
+    assert not py_violations, "Python/.spec dosyalarında gereksiz yorumlar bulundu:\n" + "\n".join(py_violations)
+
+    web_html = (app_dir / "web" / "index.html").read_text(encoding="utf-8")
+    web_css = (app_dir / "web" / "theme.css").read_text(encoding="utf-8")
+    assert not _scan_html_comments_safe(web_html), "qtp_app/web/index.html içinde yorum bulundu"
+    assert not _scan_css_comments_safe(web_css), "qtp_app/web/theme.css içinde yorum bulundu"
+
+    for qss in (build_overlay_stylesheet(DARK_PALETTE), build_dialog_stylesheet(DARK_PALETTE)):
+        assert not _scan_css_comments_safe(qss), "ui/theme.py QSS çıktısında CSS yorumu bulundu"
+
+    for rel_cfg in (".gitignore", "Makefile", "make.bat", ".github/workflows/ci.yml"):
+        lines = (QTP_ROOT_DIR / rel_cfg).read_text(encoding="utf-8").splitlines()
+        for ln_no, ln in enumerate(lines, start=1):
+            st = ln.strip()
+            if ln_no == 1 and st.startswith("#!"):
+                continue
+            if st.startswith("#") or st.upper().startswith("REM ") or st.startswith("::"):
+                raise AssertionError(f"{rel_cfg}:{ln_no} gereksiz yorum bulundu: {st}")
+
