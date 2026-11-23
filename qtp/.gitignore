@@ -4,23 +4,33 @@
 *.swp
 *.swo
 
-# Python
+# Python & Test / Coverage
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
 .pytest_cache/
-.venv/
+/.venv/
 venv/
+.coverage
+htmlcov/
 
-# Çalışma zamanı yedekleri, durum ve geçici dosyalar
+# Derleme ve Dağıtım Çıktıları (kök düzeyinde)
+/dist/
+/build/
+
+# Çalışma zamanı ayar, kilit, yedek ve günlük dosyaları
+qtp_settings.json
+qtp.log*
+qtp.lock
 backups/
 .qtp_state.json
 .qtp_tmp_*
-*.log
+*.bak
 
 # Üçüncü parti çalıştırılabilir dosyalar ve indirilen arşivler
-# (baslat.bat / baslat.sh / kurulum.ps1 / qtp_server.py eksikse resmi kaynaktan indirir)
 *.exe
+*.bin
 *.zip
 
 # İşletim sistemi artıkları
