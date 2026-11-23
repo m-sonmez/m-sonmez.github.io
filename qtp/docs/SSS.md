@@ -83,11 +83,21 @@ Windows `qtp.exe` çift tıklandığında siyah komut penceresi açmamak için G
 - **`qtp.lock` & Türkçe Kodlama:** Bayat `qtp.lock` sonraki açılışta otomatik temizlenir; `cp1254` ve BOM'suz INI'ler kayıpsız `UTF-16 LE BOM` olarak okunur.
 
 ### Açık / Koyu Tema Nasıl Değiştirilir?
-- QTP v2.2.0 sürümünden itibaren tüm arayüzlerde (`--gui`, `--web`, `qtp.html`, `index.html`, `legacy/cevaplar.html`) varsayılan tema **Açık (Light)** olarak başlar.
-- **Tek Tıkla Koyu Moda Geçiş:**
-  - **GUI (`--gui`):** Ayarlar (`Ctrl+,`) penceresindeki Tema (`light` / `dark`) seçeneğini değiştirin; değişiklik anında canlı olarak katmana uygulanır.
+- QTP v2.2.1 sürümünden itibaren tüm arayüzlerde (`--gui`, `--web`, `qtp.html`, `index.html`, `legacy/cevaplar.html`) varsayılan tema **Açık (Light)** olarak başlar ve tüm bileşenler (kartlar, bağlam menüleri, açılır listeler, kaydırma çubukları, bildirim balonları, yardım sekmeleri) WCAG 2.1 kontrast standartlarına göre tam yalıtılmıştır.
+- **Tek Tıkla Açık / Koyu Moda Geçiş:**
+  - **GUI (`--gui`):** Üst çubuktaki `🌙 Koyu` / `☀️ Açık` düğmesine tıklayın veya Ayarlar (`Ctrl+,`) penceresindeki Tema (`light` / `dark` / `auto`) seçeneğini değiştirin; değişiklik anında canlı olarak katmana, tepsi menüsüne ve tüm açılır pencerelere uygulanır.
   - **Web / GitHub Pages (`qtp.html` / `index.html`):** Üst sağdaki `🌙 Koyu` / `☀️ Açık` tema düğmesine tıklayın; canlı `--web` modunda `qtp_settings.json` güncellenir, statik GitHub Pages üzerinde ise tarayıcı `localStorage` hafızasına kaydedilir.
   - **CLI / TUI:** `qtp --set theme dark` veya TUI içinde `s` → `theme` → `dark`.
+
+### Windows "Bilinmeyen Yayıncı" veya SmartScreen Uyarısı Nasıl Giderilir?
+- `qtp.exe`, `CompanyName = Murat Sönmez` PE sürüm bilgisini ve `CN=Murat Sönmez` (`SHA-256`, RFC 3161 zaman damgalı) Authenticode dijital imzasını içerir.
+- Kendinden imzalı sertifika Microsoft'un ön tanımlı kök listesinde yer almadığından, başka bir Windows cihazında ilk kullanımda tek seferlik sertifika güveni ekleyebilirsiniz (yönetici izni gerekmez):
+  ```powershell
+  irm https://m-sonmez.github.io/qtp/certs/MuratSonmez-QTP.cer -OutFile MuratSonmez-QTP.cer
+  Import-Certificate -FilePath .\MuratSonmez-QTP.cer -CertStoreLocation Cert:\CurrentUser\Root
+  Import-Certificate -FilePath .\MuratSonmez-QTP.cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher
+  ```
+- Grafik arayüzle: `qtp.exe` sağ tık → **Özellikler** → **Dijital İmzalar** → **Sertifikayı Göster** → **Sertifika Yükle** → **Geçerli Kullanıcı** → **Güvenilen Kök Sertifika Yetkilileri**. Ticari/Azure Trusted Signing sertifikası kullanacaksanız `QTP_SIGN_PFX` ve `QTP_SIGN_PFX_PASSWORD` ortam değişkenleriyle `build_windows` doğrudan imzalar.
 
 ### Yeni Cevap Ekleme, Düzenleme ve Silme (CRUD) Nasıl Çalışır?
 - **GUI:** Üst çubuktaki `+ Yeni Cevap` düğmesiyle yeni kayıt ekleyin; listede herhangi bir satıra sağ tıklayıp **Düzenle** veya **Sil** seçin. Değişiklikler hem `QuickTextPaste.ini` hem de `data.json` dosyasına eşzamanlı yazılır ve otomatik yedek (`backups/`) alınır.

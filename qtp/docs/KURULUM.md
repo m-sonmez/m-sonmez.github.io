@@ -1,6 +1,6 @@
 # QTP Kurulum ve Sistem Gereksinimleri
 
-QTP v2.2.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya statik Web arayüzü içinde sunar.
+QTP v2.2.1 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya statik Web arayüzü içinde sunar.
 
 ---
 
@@ -10,7 +10,8 @@ QTP v2.2.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satır�
 | :--- | :--- | :--- | :--- |
 | **Canlı PWA (Klasik QTP)** | [https://m-sonmez.github.io/qtp/](https://m-sonmez.github.io/qtp/) (`index.html`) | Tüm Modern Tarayıcılar + Çevrimdışı PWA | Klasik QuickTextPaste kılavuzu, kategorize cevaplar (`legacy/cevaplar.html`), **PWA Yükle** ve işletim sistemine özel tek-tık indirme düğmesi. |
 | **Canlı Birleşik Web Arayüzü** | [https://m-sonmez.github.io/qtp/qtp.html](https://m-sonmez.github.io/qtp/qtp.html) | Tarayıcı (Statik `localStorage`) veya `--web` | `--web` sunucusuyla birebir aynı arayüz: Varsayılan **Açık (Light)** tema + Koyu geçişi, tam Cevap CRUD (`+ Yeni Cevap` / `Düzenle` / `Sil`), 6 sekmeli `F1` Yardım, **PWA Yükle** ve OS indirme düğmesi. |
-| **Windows 10 / 11 (x64)** | [https://m-sonmez.github.io/qtp/qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe) (`≤ 50 MB`) | Tek Dosya Taşınabilir PE64 (`console=False`) | Çift tık ile sistem tepsisinde GUI açılır; PowerShell/cmd üzerinden `--help`, `--cli`, `--tui`, `--web` parent-console bağlantısıyla çalışır. |
+| **Windows 10 / 11 (x64)** | [https://m-sonmez.github.io/qtp/qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe) (`≤ 50 MB`) | Tek Dosya Taşınabilir PE64 (`console=False`) | `CompanyName = Murat Sönmez` PE sürüm bilgisi + SHA-256 Authenticode imzalı (`CN=Murat Sönmez`, RFC 3161 zaman damgalı). Çift tık ile sistem tepsisinde GUI açılır; PowerShell/cmd üzerinden `--help`, `--cli`, `--tui`, `--web` parent-console bağlantısıyla çalışır. |
+| **Genel Sertifika (Windows)** | [https://m-sonmez.github.io/qtp/certs/MuratSonmez-QTP.cer](https://m-sonmez.github.io/qtp/certs/MuratSonmez-QTP.cer) | Yalnızca Ortak Anahtar (Public `.cer`) | Diğer Windows cihazlarında yayıncı güvenini tek komutta eklemek için kullanılır (özel anahtar içermez). |
 | **Windows 7 / 8 / 8.1 (x64)** | `qtp-win7.exe` (kaynaktan `build_windows_legacy`) | Python 3.8 x64 + `requirements-win7.txt` | Eski Windows Console (Win32 API VT fallback) ile tam `--tui`, `--cli` ve `--web` desteği. |
 | **Linux x64 (X11 & Wayland)** | [https://m-sonmez.github.io/qtp/qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin) (`≤ 60 MB`) | Tek Dosya Taşınabilir ELF (Ubuntu 22.04+ / glibc 2.35+) | GitHub Actions Ubuntu derlemesi; harici sistem Python'u gerektirmez. |
 | **macOS 10.15–15 / BSD** | `qtp.bin` (yerel `build_unix`) | Intel/Apple Silicon veya FreeBSD/OpenBSD | Wayland/macOS/BSD üzerinde `standalone/` altından kaynak veya yerel derleme. |
@@ -32,7 +33,14 @@ QTP v2.2.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satır�
    .\qtp.exe --tui
    .\qtp.exe --cli --list-items --category A --json
    ```
-4. **Windows SmartScreen Uyarısı:** Dijital olarak imzalanmamış taşınabilir tek-dosya yürütülebilirlerde Windows Defender SmartScreen ilk çalıştırmada onay isteyebilir; *Ek bilgi → Yine de çalıştır* adımıyla doğrulayabilirsiniz.
+4. **Dijital İmza, PE Bilgisi ve Diğer Windows Cihazlarında Güven:**
+   - `qtp.exe`, PE sürüm metadata bilgisi (`CompanyName = Murat Sönmez`) ile derlenir ve **SHA-256 + RFC 3161 zaman damgalı** Authenticode dijital imzası (`CN=Murat Sönmez`) taşır.
+   - Bu imza varsayılan olarak kendinden imzalı (self-signed) bir yayıncı sertifikası kullandığından (ticari Microsoft Güvenilir Kök CA / Azure Trusted Signing sertifikasına geçilene kadar), başka bir Windows bilgisayarında Windows SmartScreen veya yayıncı uyarısı görürseniz yönetici izni gerekmeden ortak sertifikayı (`certs/MuratSonmez-QTP.cer`, özel anahtar içermez) tek seferde güvenebilirsiniz:
+     ```powershell
+     irm https://m-sonmez.github.io/qtp/certs/MuratSonmez-QTP.cer -OutFile MuratSonmez-QTP.cer; Import-Certificate -FilePath .\MuratSonmez-QTP.cer -CertStoreLocation Cert:\CurrentUser\Root; Import-Certificate -FilePath .\MuratSonmez-QTP.cer -CertStoreLocation Cert:\CurrentUser\TrustedPublisher
+     ```
+   - Alternatif olarak **Windows Gezgini** üzerinden `qtp.exe` → **Özellikler** → **Dijital İmzalar** → **Murat Sönmez** → **Ayrıntılar** → **Sertifikayı Göster** → **Sertifika Yükle** → **Geçerli Kullanıcı** → **Tüm sertifikaları aşağıdaki depoya yerleştir** → **Güvenilen Kök Sertifika Yetkilileri** adımlarını izleyebilirsiniz.
+   - Ticari OV/EV veya Azure Trusted Signing `.pfx` sertifikası ile derleme için `QTP_SIGN_PFX` ve `QTP_SIGN_PFX_PASSWORD` (veya `QTP_SIGN_THUMBPRINT`) ortam değişkenleri doğrudan desteklenir.
 
 ### 2.2 Linux — X11 ve Wayland (`qtp.bin`)
 1. [qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin) dosyasını indirin ve çalıştırma izni verin:
@@ -75,6 +83,7 @@ QTP v2.2.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satır�
 
 ### Dizin Düzeni (`qtp/`)
 - `qtp/qtp.exe` & `qtp/qtp.bin`: Kök taşınabilir yürütülebilir dosyalar.
+- `qtp/certs/MuratSonmez-QTP.cer`: Yalnızca ortak anahtar içeren Authenticode yayıncı sertifikası.
 - `qtp/qtp.html` & `qtp/theme.css`: Birleşik modern Web UI (Açık/Koyu tema + tam CRUD + 6 sekmeli F1 Yardım).
 - `qtp/index.html`, `qtp/sw.js`, `qtp/manifest.webmanifest`: Klasik QuickTextPaste PWA.
 - `qtp/legacy/`: Klasik Windows HTML/Python/PowerShell betikleri (`cevaplar.html`, `qtp_manager.py`, `qtp_core.py`, `qtp_server.py`, `kurulum.ps1`, `tests/test_qtp.py`).

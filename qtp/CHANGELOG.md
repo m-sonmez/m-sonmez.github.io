@@ -4,6 +4,23 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.2.1] - 2026-11-23
+
+### Açık/Koyu Tema Kök Düzeltmesi, WCAG Kontrast Kapısı, PE Sürüm Bilgisi & Authenticode İmzalama
+- **GUI Açık Tema Siyah Kart & OS Palet Sızıntısı Düzeltmesi (`ui/theme.py`, `overlay.py`, `settings_window.py`, `help_dialog.py`, `tray.py`, `main.py`):**
+  - `SnippetItemDelegate` içinde PyQt6 `QColor("rgba(...)")` çağrısının `(0, 0, 0, 255)` saf siyah döndürmesinden kaynaklanan siyah seçili/vurgulu kart ve rozet hatası, CSS `rgb/rgba` + hex çözümleyen `parse_qcolor` ve tam semantik `ThemePalette` jetonlarıyla kökten giderildi.
+  - `build_qpalette` ile tüm `QApplication` ve açılır pencerelere (`QMenu`, `QComboBox QAbstractItemView`, `QPlainTextEdit`, `QListWidget`, `QScrollArea`, `QGroupBox`, `QMessageBox`, `QToolTip`, `QScrollBar`) işletim sistemi koyu/açık mod sızıntısını engelleyen tam `QPalette` ve QSS bağlandı.
+  - `HelpDialog` başlık ve kod blokları, `SettingsWindow` çakışma uyarıları (`success_text` / `warning_text`) ve `LIGHT_PALETTE` bildirim balonu açık temada yüksek okunurluğa getirildi; `OverlayWindow` üst çubuğuna 1-tık `🌙 Koyu` / `☀️ Açık` tema düğmesi eklendi.
+- **Web (`theme.css`, `qtp.html`) ve Klasik PWA (`index.html`, `legacy/cevaplar.html`) Tema Yalıtımı:**
+  - `theme.css` içine `:root { color-scheme: light; }` ve `:root[data-theme="dark"] { color-scheme: dark; }` eklendi; bileşen seçicilerindeki tüm sabit renkler `var(--...)` jetonlarına taşındı. `index.html` ve `legacy/cevaplar.html` koyu/açık sızıntıları giderildi; `sw.js` önbelleği `v3.3.1` sürümüne yükseltildi.
+- **Windows PE Sürüm Bilgisi & Authenticode Kod İmzalama (`CN=Murat Sönmez`):**
+  - `qtp_app/build/version_info.txt` (`CompanyName = Murat Sönmez`, `ProductVersion = 2.2.1.0`) `qtp.spec` ve `qtp_win7.spec` içine eklendi.
+  - `qtp_app/build/sign_windows.ps1` ile RSA-4096 / SHA-256 `CN=Murat Sönmez` kod imzalama sertifikası üretilip RFC 3161 zaman damgalı Authenticode imzalama `build_windows.py` akışına bağlandı; yalnızca ortak sertifika `qtp/certs/MuratSonmez-QTP.cer` yayımlandı (`.pfx`/`.p12`/`.key` `.gitignore` ile kalıcı dışlandı).
+- **Otomatik Kontrast, Statik Renk Taraması & Piksel Parlaklık Testleri:**
+  - `test_platform_parity.py`, `test_smoke_ui.py` ve `test_web_ui.py` içine WCAG 2.1 kontrast denetimi (≥ 4.5:1 metin, ≥ 3.0:1 kontroller), sabit renk sızıntı taraması ve offscreen piksel parlaklık + canlı geçiş testleri eklendi.
+
+---
+
 ## [2.2.0] - 2026-11-23
 
 ### Mimari Düzenleme (`legacy/` vs `standalone/`), Varsayılan Açık Tema, Tam CRUD & Kapsamlı Türkçe Belgeler

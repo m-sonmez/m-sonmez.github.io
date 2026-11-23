@@ -83,7 +83,7 @@ Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerind
 
 | Ayar Alanı (`qtp_settings.json`) | Varsayılan | Açıklama |
 | :--- | :--- | :--- |
-| `theme` | `"dark"` | Arayüz teması: `auto`, `dark` veya `light`. |
+| `theme` | `"light"` | Arayüz teması: `auto`, `dark` veya `light`. |
 | `hotkeys` | `Win+Alt+Space/A/Z/X/Q` | Global kısayol haritası (`all`, `A`, `Z`, `X`, `Q` ve isteğe bağlı özel yuvalar). |
 | `last_category` | `"ALL"` | Genel açılışta son seçili kategori (`ALL`, `A`, `Z`, `X`, `Q`). |
 | `last_category_by_hotkey` | `{}` | Her kısayol için en son seçilen sekme hafızası. |
@@ -137,7 +137,7 @@ Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerind
 ## 11. TUI Modu (`--tui`) ve Web Modu (`--web`)
 
 - **`--tui`:** Python standart kütüphanesi dışında bağımlılık gerektirmez; Linux/macOS'ta `curses` (veya `termios`/düz metin), Windows'ta VT100 veya Win32 Console API kullanır. Canlı oturumda dosya değişikliklerini otomatik yansıtır; `F1` yardım modalında eksiksiz dört bölümlü içeriği (`CLI & Parametreler`, `Kullanım`, `Kısayollar`, `SSS`) `↑`/`↓` ve `PageUp`/`PageDown` kaydırmasıyla sunar ve `k` (çakışma denetimi), `P` (önerilen profil), `C` (tamamlama) tuşlarını destekler.
-- **`--gui` Ana Katmanı (v2.2.0):** Varsayılan **Açık (Light)** tema ile açılır (`Ctrl+,` **Ayarlar → Tema** üzerinden Açık/Koyu değiştirilebilir). Üst çubuktaki **+ Yeni Cevap** düğmesi veya satır sağ-tık menüsündeki **Düzenle** / **Sil** işlemleriyle hazır cevapları doğrudan güncelleyebilirsiniz (`QuickTextPaste.ini` ve `data.json` otomatik yedeklenerek güncellenir).
+- **`--gui` Ana Katmanı (v2.2.1):** Varsayılan **Açık (Light)** tema ile açılır; üst çubuktaki **🌙 Koyu / ☀️ Açık** düğmesiyle tek tıkla veya `Ctrl+,` **Ayarlar → Tema** üzerinden değiştirilebilir. Üst çubuktaki **+ Yeni Cevap** düğmesi veya satır sağ-tık menüsündeki **Düzenle** / **Sil** işlemleriyle hazır cevapları doğrudan güncelleyebilirsiniz (`QuickTextPaste.ini` ve `data.json` otomatik yedeklenerek güncellenir).
 - **`--gui` `F1` Yardım Penceresi (5 Sekme):** `Kullanım (Web/GUI/TUI/CLI)`, `Kurulum & İndirme`, `Kısayollar & Profiller`, `Sorun Giderme (SSS)` ve birebir `--verbose --help` başvurusunu gösteren `CLI & Parametreler` sekmelerini içerir.
 - **`--tui` Etkileşimli Uçbirim:** Liste gezintisi yanında `a` (**Yeni Cevap Ekle**), `E` (**Düzenle**), `d` (**Sil**), `P` / `O` (Kısayol profili/değiştiriciler), `k` (Çakışma tarama) ve `F1` tam Markdown kılavuz (`KURULUM.md` dahil) destekler.
 - **`--web` ve GitHub Pages (`qtp.html`):** Yerelde `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; **Açık (Light) / Koyu Tema** tek-tık düğmesi, **6 sekmeli `F1` Yardım penceresi** (`Genel`, `GUI`, `TUI`, `CLI Referansı`, `Kısayollar`, `Kurulum & SSS`), **+ Yeni Cevap / Düzenle / Sil (CRUD)** formu (`POST /api/items/add`, `POST /api/items/update`, `POST /api/items/delete`), **INI'de Göster**, **Kısayollar** modalı, canlı `/api/revision` yenilemesi (başlangıç `--category`/`--query` dahil) ve `/api/hotkeys/*`, `/api/completion` uç noktalarını sunar (`POST /api/shutdown` ile zarifçe kapanır).
