@@ -10,12 +10,15 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from qtp_app.core.hotkeys import HOTKEY_PRESETS, normalize_hotkey
 from qtp_app.core.ini_parser import atomic_write_bytes
 from qtp_app.core.logging_setup import get_logger
 
 SETTINGS_FILENAME = "qtp_settings.json"
 
-DEFAULT_HOTKEYS: dict[str, str] = {
+DEFAULT_HOTKEYS: dict[str, str] = dict(HOTKEY_PRESETS["recommended"])
+
+LEGACY_DEFAULT_HOTKEYS: dict[str, str] = {
     "all": "Ctrl+Shift+Space",
     "A": "Win+A",
     "Z": "Win+Z",
@@ -37,6 +40,8 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "backup_count": 15,
     "log_level": "info",
     "language": "tr",
+    "auto_reload": True,
+    "auto_reload_interval_ms": 500,
     "web": {"port": 8765},
 }
 
@@ -47,7 +52,7 @@ SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
     },
     "hotkeys": {
         "label": "Global Kısayollar",
-        "tooltip": "Katmanı (overlay) tüm kategoriler veya belirli kategoriler (A, Z, X, Q) için açan sistem geneli tuş bileşimleri.",
+        "tooltip": "Katmanı (overlay) tüm kategoriler veya belirli kategoriler (A, Z, X, Q ve özel yuvalar) için açan sistem geneli tuş bileşimleri.",
     },
     "last_category": {
         "label": "Son Seçili Kategori",
@@ -88,6 +93,14 @@ SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
     "language": {
         "label": "Arayüz Dili",
         "tooltip": "Uygulama dili (şu an yalnızca 'tr' desteklenmektedir; gelecek sürümler için ayrılmıştır).",
+    },
+    "auto_reload": {
+        "label": "Otomatik Canlı Yenileme",
+        "tooltip": "Etkinleştirildiğinde qtp_settings.json, QuickTextPaste.ini ve data.json dosyasındaki harici değişiklikler yeniden başlatma olmadan canlı yüklenir.",
+    },
+    "auto_reload_interval_ms": {
+        "label": "Otomatik Yenileme Aralığı (ms)",
+        "tooltip": "Disk değişikliklerinin ne sıklıkla denetleneceğini belirler (100–10000 ms, varsayılan: 500 ms).",
     },
     "web": {
         "label": "Yerel Web Sunucusu",
@@ -159,9 +172,20 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
     raw_hotkeys = raw.get("hotkeys")
     if isinstance(raw_hotkeys, dict):
         hk = dict(DEFAULT_HOTKEYS)
-        for key in DEFAULT_HOTKEYS:
-            if key in raw_hotkeys and str(raw_hotkeys[key]).strip():
-                hk[key] = str(raw_hotkeys[key]).strip()
+        for key, raw_val in raw_hotkeys.items():
+            slot = str(key).strip()
+            if not slot or "." in slot:
+                continue
+            val_text = str(raw_val or "").strip()
+            if not val_text:
+                if slot in DEFAULT_HOTKEYS:
+                    hk[slot] = ""
+                continue
+            try:
+                hk[slot] = normalize_hotkey(val_text)
+            except ValueError:
+                if slot in DEFAULT_HOTKEYS:
+                    hk[slot] = DEFAULT_HOTKEYS[slot]
         merged["hotkeys"] = hk
 
     if "last_category" in raw and isinstance(raw["last_category"], str):
@@ -187,6 +211,13 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
     merged["enter_after_paste"] = bool(raw.get("enter_after_paste", DEFAULT_SETTINGS["enter_after_paste"]))
     merged["start_minimized"] = bool(raw.get("start_minimized", DEFAULT_SETTINGS["start_minimized"]))
     merged["tray_icon"] = bool(raw.get("tray_icon", DEFAULT_SETTINGS["tray_icon"]))
+    merged["auto_reload"] = bool(raw.get("auto_reload", DEFAULT_SETTINGS["auto_reload"]))
+
+    try:
+        interval = int(raw.get("auto_reload_interval_ms", DEFAULT_SETTINGS["auto_reload_interval_ms"]))
+        merged["auto_reload_interval_ms"] = max(100, min(10000, interval))
+    except (TypeError, ValueError):
+        pass
 
     dp = str(raw.get("data_path", DEFAULT_SETTINGS["data_path"])).strip()
     merged["data_path"] = dp or DEFAULT_SETTINGS["data_path"]
@@ -270,8 +301,18 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
         if val not in ("ALL", "A", "Z", "X", "Q"):
             raise SettingValidationError(f"Geçersiz ayar değeri ('last_category'): '{value}' (ALL/A/Z/X/Q).")
         updated["last_category"] = val
-    elif norm in ("enter_after_paste", "start_minimized", "tray_icon"):
+    elif norm in ("enter_after_paste", "start_minimized", "tray_icon", "auto_reload"):
         updated[norm] = _parse_bool(value)
+    elif norm == "auto_reload_interval_ms":
+        try:
+            iv = int(value)
+        except (TypeError, ValueError) as exc:
+            raise SettingValidationError(f"Geçersiz ayar değeri ('auto_reload_interval_ms'): '{value}'.") from exc
+        if not (100 <= iv <= 10000):
+            raise SettingValidationError(
+                f"Geçersiz ayar değeri ('auto_reload_interval_ms'): {iv} (100–10000 ms aralığında olmalı)."
+            )
+        updated["auto_reload_interval_ms"] = iv
     elif norm == "backup_count":
         try:
             bc = int(value)
@@ -315,13 +356,22 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
             raise SettingValidationError(f"Geçersiz ayar değeri ('web.port'): {port} (0–65535).")
         updated.setdefault("web", {})["port"] = port
     elif norm.startswith("hotkeys."):
-        sub = norm.split(".", 1)[1]
-        if sub not in DEFAULT_HOTKEYS:
+        sub = norm.split(".", 1)[1].strip()
+        if not sub or "." in sub:
             raise SettingValidationError(f"Geçersiz ayar anahtarı: '{norm}'.")
-        val = str(value).strip()
+        val = str(value or "").strip()
+        hk = dict(updated.get("hotkeys") or DEFAULT_HOTKEYS)
         if not val:
-            raise SettingValidationError(f"Geçersiz ayar değeri ('{norm}'): boş kısayol.")
-        updated.setdefault("hotkeys", dict(DEFAULT_HOTKEYS))[sub] = val
+            if sub in DEFAULT_HOTKEYS:
+                hk[sub] = ""
+            else:
+                hk.pop(sub, None)
+        else:
+            try:
+                hk[sub] = normalize_hotkey(val)
+            except ValueError as exc:
+                raise SettingValidationError(f"Geçersiz ayar değeri ('{norm}'): {exc}") from exc
+        updated["hotkeys"] = hk
     else:
         raise SettingValidationError(f"Geçersiz ayar anahtarı: '{norm}'.")
 
@@ -333,7 +383,7 @@ def load_settings(
     *,
     platform_name: str | None = None,
 ) -> tuple[dict[str, Any], Path, str | None]:
-    """qtp_settings.json dosyasını yükler; yoksa varsayılanlarla oluşturur."""
+    """qtp_settings.json dosyasını yükler; yoksa varsayılanlarla oluşturur ve eski çakışmalı varsayılanları güvenle geçirir."""
     logger = get_logger("settings")
     config_dir, portable = resolve_config_dir(preferred_dir, platform_name=platform_name)
     settings_path = config_dir / SETTINGS_FILENAME
@@ -349,7 +399,17 @@ def load_settings(
         raw = json.loads(text)
         if not isinstance(raw, dict):
             raise ValueError("Kök JSON nesnesi sözlük değil.")
+        migrated = False
+        if isinstance(raw.get("hotkeys"), dict) and raw["hotkeys"] == LEGACY_DEFAULT_HOTKEYS:
+            raw = copy.deepcopy(raw)
+            raw["hotkeys"] = dict(DEFAULT_HOTKEYS)
+            migrated = True
         clean = _sanitize_settings(raw)
+        if migrated:
+            save_settings(clean, settings_path)
+            logger.info(
+                "Eski çakışmalı varsayılan kısayollar (Win+A/Z/X/Q) yeni çakışmasız önerilen profile (Win+Alt+*) otomatik geçirildi."
+            )
         return clean, settings_path, None
     except (OSError, UnicodeDecodeError, ValueError, json.JSONDecodeError) as exc:
         warning_msg = (

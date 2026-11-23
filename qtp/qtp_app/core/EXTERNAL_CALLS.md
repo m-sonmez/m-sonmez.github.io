@@ -12,4 +12,5 @@ Bu belge, `qtp_app/` içindeki tüm dış süreç (`subprocess.run`, `subprocess
 | `qtp_app/core/paster.py` | `import pyperclip` (`try/except ImportError`) | Pano için en son isteğe bağlı Python geri dönüşü | `optional` | `ImportError` yakalanır; Windows `ctypes` ve Linux X11/Qt/OSC-52 önce çalışır. |
 | `qtp_app/build/build_windows.py` | `subprocess.run([sys.executable, "-m", "PyInstaller", ...])` | Derleme zamanı Windows tek dosya paketleme | `build-only` | Çalışma zamanı ikilisinde çalıştırılmaz. |
 | `qtp_app/build/build_unix.py` | `subprocess.run(["strip", ...])` / `codesign` | Derleme zamanı Unix küçültme ve macOS imzalama | `build-only` | Çalışma zamanı ikilisinde çalıştırılmaz. |
+| `qtp_app/core/hotkeys.py` | Win32 `RegisterHotKey` / `UnregisterHotKey` (`ctypes`) | Windows 7–11 üzerinde sıfır bağımlılıklı, tuş tüketen yerel global kısayol kaydı | `os-stock` | Yalnızca Windows stok `user32.dll` / `kernel32.dll` API'leri kullanır; Linux/macOS'ta `pynput` devreye girer. |
 | **Yasaklanmış Harici Çağrılar** | `xclip`, `xsel`, `xdotool`, `wmctrl`, `win32clipboard`, `QuickTextPaste.exe` | — | `forbidden — none` | **Hiçbiri çalışma zamanında kullanılmaz.** |
