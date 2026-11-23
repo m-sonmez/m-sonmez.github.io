@@ -129,3 +129,20 @@ python -m qtp_app.build.build_unix
 ```
 
 Üretilen dosya `dist/qtp.exe` (Windows) veya `dist/qtp.bin` (Linux/macOS) konumunda oluşur ve derleme sonunda `--selftest` ile otomatik doğrulanır.
+
+---
+
+## 6. Sıfır Bağımlılık Kanıtı ve İşletim Sistemi Notları
+
+QTP ikili dosyaları **tek başına kopyalanarak** boş bir klasörde çalışacak şekilde tasarlanmıştır:
+
+- **İkili İçinde Gömülenler:** Python 3.12 çalışma zamanı, PyQt6 + Qt6 kitaplıkları, `Inter` yazı tipleri, SVG/PNG simgeler, gömülü varsayılan 527 kayıt (`QuickTextPaste.ini` ve `data.json`), Türkçe `docs/*.md` yardım dosyaları, Windows TUI ANSI/VT100 katmanı (`_win_console.py`) ve çevrimdışı Web arayüzü (`index.html` + `theme.css`).
+- **Bağımlılık OLMAYAN Araçlar:** Hedef makinede Python, Qt kurulumu, `QuickTextPaste.exe`, `xclip`, `xsel`, `xdotool`, `wmctrl`, `Homebrew` veya harici `VC++` kurucusu gerekmez.
+- **İşletim Sistemine Göre Kanıt Adımları:**
+  - **Windows (`qtp.exe`):** Temiz bir Windows 10/11 makinesinde boş bir klasöre yalnızca `qtp.exe` kopyalayın; çift tıkladığınızda yanına `qtp_settings.json`, `qtp.log`, `QuickTextPaste.ini` ve `data.json` oluşturulur, tepsi simgesi açılır ve `--gui`/`--tui`/`--cli`/`--web` modlarının tamamı çalışır. (`--cli`/`--tui` modları GUI alt sisteminden çalıştırıldığında `AttachConsole`/`AllocConsole` ile konsola otomatik bağlanır. Sürüm etiketlemesi öncesi Windows Sandbox / temiz VM üzerinde tekrar doğrulanmalıdır.)
+  - **Linux (`qtp.bin`):** Ubuntu 22.04+ (glibc 2.35 tabanı), Ubuntu 24.04 ve Debian 12+ üzerinde yalnızca `./qtp.bin` + `chmod +x` ile çalışır (`PATH=/usr/bin:/bin` sıyrılmış temiz konteyner CI işiyle doğrulanır). *Not:* Alpine/musl ortamlarında Qt GUI yerine musl uyumlu TUI/CLI/Web çalıştırma modeli belgelenmiştir.
+  - **macOS (`qtp.bin`):** macOS 12/13/14 (x64 ve arm64) üzerinde `chmod +x qtp.bin` ve `xattr -d com.apple.quarantine qtp.bin` sonrası tüm dört mod doğrudan çalışır.
+- **Yalnızca İsteğe Bağlı OS Önkoşulları (Engelleyici Değil):**
+  - Wayland oturumunda arka plan global kısayol/otomatik tuş basımı için isteğe bağlı `wtype` veya `ydotool` (yoksa başlangıç bloklanmaz, Türkçe uyarı basılır ve tüm 4 mod çalışır).
+  - macOS global kısayolları için tek seferlik kullanıcı Erişilebilirlik izni.
+

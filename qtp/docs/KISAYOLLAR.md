@@ -22,22 +22,26 @@ Aşağıdaki kısayollar arka planda sistem genelinde dinlenir ve hangi uygulama
 
 ---
 
-## 2. Katman (Overlay) İçi Klavye Kısayolları
+## 2. Modlar Arası Etkileşim ve Katman Kısayolları (`--gui`, `--tui`, `--web`)
 
-Katman penceresi açıkken aşağıdaki tuşların tamamı üç işletim sisteminde **aynı** şekilde çalışır:
+Aşağıdaki tuşların çekirdek gezinme ve işlem mantığı dört modda da aynıdır (`Enter`, `Esc`/`q`, `Ctrl+K`/`/`, `F1`):
 
-| Olay | Kısayol (Windows) | Kısayol (Linux) | Kısayol (macOS) | Açıklama |
+| Olay | GUI (`--gui`) | TUI (`--tui`) | Web (`--web`) | Açıklama |
 | :--- | :--- | :--- | :--- | :--- |
-| Sonraki Öğeye Geç | `↓` (Aşağı Ok) | `↓` (Aşağı Ok) | `↓` (Aşağı Ok) | Listede bir alt satırı seçer (arama kutusu odaktayken de çalışır). |
-| Önceki Öğeye Geç | `↑` (Yukarı Ok) | `↑` (Yukarı Ok) | `↑` (Yukarı Ok) | Listede bir üst satırı seçer. |
-| Hızlı Aşağı Atla | `PageDown` | `PageDown` | `PageDown` | Listede 6 satır aşağı kaydırır. |
-| Hızlı Yukarı Atla | `PageUp` | `PageUp` | `PageUp` | Listede 6 satır yukarı kaydırır. |
-| Yapıştır ve Kapat | `Enter` (`⏎`) | `Enter` (`⏎`) | `Enter` (`⏎`) | Katmanı gizler, önceki uygulamaya döner, metni yapıştırır (`<E<N<D|` varsa `Enter` basar). |
-| Yalnızca Panoya Kopyala | `Ctrl+Enter` | `Ctrl+Enter` | `Ctrl+Enter` (ek alias: `⌘+Enter`) | Katmanı kapatmadan metni panoya kopyalar ve toast bildirimi gösterir. |
-| Aramaya Odaklan | `Ctrl+K` | `Ctrl+K` | `Ctrl+K` (ek alias: `⌘+K`) | İmleci arama kutusuna taşır ve mevcut arama metnini seçer. |
-| Ayarları Aç | `Ctrl+,` | `Ctrl+,` | `Ctrl+,` (ek alias: `⌘+,`) | Ayarlar penceresini açar. |
-| Türkçe Yardımı Aç | `F1` | `F1` | `F1` | Uygulama içi Türkçe yardım penceresini açar. |
-| Katmanı Kapat | `Esc` | `Esc` | `Esc` | Yapıştırma yapmadan katmanı animasyonla gizler. |
+| Sonraki / Önceki Öğe | `↑` / `↓` | `↑` / `↓` | `↑` / `↓` | Listede satır değiştirir (**tüm modlarda aynı**). |
+| Hızlı Kaydır | `PageUp` / `PageDown` | `PageUp` / `PageDown` | Liste kaydırma | 6 satır yukarı/aşağı atlar. |
+| Yapıştır | `Enter` (`⏎`) | `Enter` (`⏎`) | `Enter` (`⏎`) | Önceki pencereye yapıştırır (**tüm modlarda aynı**). |
+| Yalnızca Kopyala | `Ctrl+Enter` (`⌘+Enter`) | `c` | `Ctrl+Enter` (`⌘+Enter`) | Katmanı kapatmadan panoya kopyalar. |
+| Aramaya Odaklan | `Ctrl+K` (`⌘+K`) | `/` | `Ctrl+K` / `/` | Arama kutusuna odaklanır. |
+| Kategori Değiştir | Tıkla (`Tümü`/`A`/`Z`/`X`/`Q`) | `Tab` veya `1–5` | Tıkla (`Tümü`/`A`/`Z`/`X`/`Q`) | Kategori sekmesini değiştirir. |
+| INI'de Göster | Sağ Tık → INI'de Göster | `e` | `GET /api/show-ini` | Ham `[list_text]`/`[list_label]` satırlarını gösterir. |
+| Anlık Yedek / Tam Yedek | Tepsi → Yedekler… | `b` / `B` | Yedekle düğmesi | Dönen yedek veya `qtp-tam-yedek-*.json` oluşturur. |
+| INI Yeniden Yükle | Tepsi → INI Yeniden Yükle | `r` | Yenile düğmesi | Diskteki INI/JSON verisini yeniden yükler. |
+| Ayarları Aç | `Ctrl+,` (`⌘+,`) | `s` | `/api/settings` | Ayarları görüntüler veya düzenler. |
+| Türkçe Yardım | `F1` | `F1` | `F1` | Uygulama içi Türkçe yardımı açar (**tüm modlarda aynı**). |
+| Kapat / Çık | `Esc` | `q` / `Esc` | `Esc` | Katmanı veya modal pencereyi kapatır (**tüm modlarda aynı**). |
+
+> Not: `Ctrl+K` / `Ctrl+Enter` / `Ctrl+,` tüm masaüstü işletim sistemlerinde (Windows, Linux, macOS) birincil standart olarak korunur; macOS'ta `⌘` eşdeğerleri yalnızca ek sunum kısayolu olarak eklenir. TUI modunda terminal sınırlamaları nedeniyle `c`, `/`, `e`, `b`, `r`, `s`, `q` tek tuş eşdeğerleri sağlanır.
 
 ---
 

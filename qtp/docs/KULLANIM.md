@@ -152,3 +152,115 @@ Tüm platformlarda aynı komut satırı bayrakları desteklenir:
 | `--export-ini YOL` | Mevcut hazır cevapları UTF-16 LE BOM kodlamalı `QuickTextPaste.ini` olarak belirtilen yola yazar. |
 | `--import-ini YOL` | Belirtilen INI dosyasını mevcut listeyle birleştirir ve kaydeder. |
 | `--work-dir DIZIN` | Veri, ayar ve yedekleme işlemleri için özel bir çalışma dizini belirtir. |
+
+---
+
+## 11. TUI Modu (`--tui`)
+
+`--tui` modu, Python standart kütüphanesi dışında hiçbir bağımlılık olmadan çalışan tam etkileşimli terminal arayüzüdür (Linux/macOS'ta `curses`, Windows'ta gömülü ANSI/VT100 + `msvcrt` katmanı):
+
+```bash
+qtp --tui
+# veya
+qtp --mode tui --work-dir ./veriler
+```
+
+- **Görsel Yerleşim (GUI ile birebir mantıksal yapı):**
+  - Üst satır: Arama kutusu (`/` tuşuyla arama moduna geçilir) ve eşleşen kayıt sayacı.
+  - İkinci satır: Kategori sekmeleri (`Tümü`, `A · İş Ortağı`, `Z · Kurye`, `X · Canlı Yardım`, `Q · Turkcell`) ve parantez içinde kayıt sayıları.
+  - Gövde: Numaralandırılmış sanallaştırılmış liste ve sağda kısayol rozeti (`[A]`, `[Z]`, `[X]`, `[Q]`).
+  - Alt durum satırı: İlk çalıştırmada `"QTP hazır. Win+Z / Win+A / Win+X / Win+Q"` bildirimi ve işlem sonuç mesajları.
+  - Alt ipucu çubuğu: `↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış`.
+- **Pano ve Çıkış Kodları:** `Enter` veya `c` seçili kaydı doğrudan sıfır bağımlılıklı yerel pano API'si (ve etkileşimli terminalde OSC 52) üzerinden panoya alır; tüm işlemler CLI ile aynı çıkış kodlarını ve Türkçe mesajları üretir. `F1` tuşu `docs/KULLANIM.md` ve `docs/KISAYOLLAR.md` içeriğini sayfalayıcıda açar.
+
+> `[Ekran Görüntüsü Açıklaması: Terminal penceresinde en üstte camgöbeği renkli "QTP v2.1.0 | Mod: TUI | Ara: \"\" [/ Ara]" başlığı, altında aktif kategori parantez içine alınmış kategori şeridi, ortada mor vurgu ile seçilmiş aktif satır, altta durum satırı ve kısayol ipucu şeridi yer alır.]`
+
+---
+
+## 12. CLI Modu (`--cli`)
+
+`--cli` modu (veya doğrudan komut satırı bayrakları) otomasyon ve CI boru hatları için etkileşimsiz UTF-8 metin ya da `--json` çıktısı üretir. Etkileşimsiz/CI ortamlarında komut verilmeden çağrıldığında güvenlik amacıyla açıkça `--mode` belirtilmesi istenir.
+
+| Komut | Davranış | Çıkış Kodları |
+| :--- | :--- | :--- |
+| `qtp --version` | Sürüm, derleme tarihi ve kısa SHA yazar | `0` |
+| `qtp --help` | Türkçe yardım özetini yazar | `0` |
+| `qtp --selftest` | Başsız duman testi + INI gidiş-dönüş testi | `0` / `1` |
+| `qtp --modes` | Desteklenen modları (`gui, tui, cli, web`) listeler | `0` |
+| `qtp --list-categories [--json]` | Kategorileri ve kayıt sayılarını listeler | `0` |
+| `qtp --list-items [--category X] [--query Q] [--json]` | Öğeleri filtreleyip listeler | `0` |
+| `qtp --search <q> [--json]` | Türkçe uyumlu bulanık arama sonuçlarını sıralar | `0` |
+| `qtp --show-ini <anahtar\|metin> [--json]` | Seçili öğenin ham INI bloklarını gösterir | `0` / `2` |
+| `qtp --copy <anahtar\|metin> [--json]` | Öğeyi panoya kopyalar | `0` / `2` (bulunamadı) / `3` (pano yok) |
+| `qtp --paste <anahtar\|metin> [--json]` | Panoya kopyalar ve yapay tuş gönderir | `0` / `2` / `3` / `4` (tuş gönderilemedi) |
+| `qtp --export-ini <yol>` | Kayıtları UTF-16 LE BOM INI olarak yazar | `0` / `1` |
+| `qtp --import-ini <yol> [--merge\|--replace]` | INI dosyasını birleştirir veya değiştirir | `0` / `1` / `2` |
+| `qtp --export-backup <yol>` | `qtp-tam-yedek-*.json` tam yedeği üretir | `0` / `1` |
+| `qtp --restore <yol\|id> [--merge\|--replace]` | Tam yedek, JSON veya `backups/` yedeğini geri yükler | `0` / `1` / `2` |
+| `qtp --backup [--keep N]` | Dönen `backups/` yedeği alır | `0` / `1` |
+| `qtp --reload` | Diskteki `QuickTextPaste.ini` / `data.json` dosyasını yeniden okur | `0` / `1` |
+| `qtp --get <anahtar> [--json]` | Belirtilen `qtp_settings.json` alanını okur | `0` / `2` |
+| `qtp --set <anahtar> <değer>` | Ayar alanını doğrulayıp günceller | `0` / `2` |
+
+Örnek çıktılar:
+```bash
+$ qtp --search "şifre" --json
+{
+  "ok": true,
+  "exit_code": 0,
+  "message": "Arama tamamlandı: 3 eşleşme.",
+  "data": { "count": 3, "items": [...] },
+  "error": null
+}
+```
+
+---
+
+## 13. Web Modu (`--web`)
+
+`--web` modu yalnızca `127.0.0.1` loopback arayüzünde çalışan, harici CDN/ağ çağrısı içermeyen gömülü HTTP sunucusu ve tek sayfa arayüz sunar:
+
+```bash
+qtp --web --port 8765 --open-browser
+# Çıktı: QTP Web Modu çalışıyor: http://127.0.0.1:8765/ (Kapatmak için Ctrl+C veya POST /api/shutdown)
+```
+
+- **Güvenlik Kuralı:** Sunucu yalnızca `127.0.0.1` (veya `localhost`) üzerinde dinler; `0.0.0.0` bağlama girişimleri reddedilir (`SSS.md` bölümüne bakın). Varsayılan bağlantı noktası `qtp_settings.json` içindeki `web.port` (`8765`) alanından okunur; `--port 0` ile rastgele boş port kullanılabilir ve `--shutdown-after N` ile otomatik kapatılabilir.
+- **JSON API Rotaları:**
+  - `GET /` ve `GET /theme.css` → Gömülü çevrimdışı arayüz (`ui/theme.py` renkleriyle birebir).
+  - `GET /api` → Tüm desteklenen işlem rotalarının listesi.
+  - `GET /api/version`, `/api/help`, `/api/selftest`, `/api/modes`, `/api/categories`, `/api/items?category=ALL&query=`, `/api/search?q=`, `/api/show-ini?target=`, `/api/settings?key=`, `/api/backups`.
+  - `POST /api/copy`, `/api/paste`, `/api/reload`, `/api/backup`, `/api/settings`, `/api/import-ini`, `/api/export-ini`, `/api/export-backup`, `/api/restore`, `/api/shutdown`.
+- **Örnek İstek/Yanıt:**
+  ```json
+  POST /api/copy  {"target": "text_000"}
+  -> HTTP 200 {"ok": true, "exit_code": 0, "message": "Panoya kopyalandı ✔", "data": {"raw_key": "text_000", ...}, "error": null}
+  ```
+
+---
+
+## 14. Modlar arası eşitlik matrisi
+
+Tüm işlemler ortak `qtp_app/core/operations.py` kayıt defteri ve `qtp_app/core/engine.py` üzerinden çalıştırılır; hiçbir modda anlamsal fark veya eksik özellik bulunmaz:
+
+| İşlem (`op_id`) | `--gui` | `--tui` | `--cli` | `--web` |
+| :--- | :--- | :--- | :--- | :--- |
+| `version` | Tepsi / Yardım (F1) | `V` | `--version` | `GET /api/version` |
+| `help` | `F1` / Tepsi → Yardım (F1) | `F1` | `--help` | `GET /api/help` |
+| `selftest` | Başlangıç Doğrulama | `T` | `--selftest` | `GET /api/selftest` |
+| `modes` | Yardım (F1) → Modlar | `M` | `--modes` | `GET /api/modes` |
+| `list_categories` | Kategori Hapları (`Tümü` / `A` / `Z` / `X` / `Q`) | `Tab` / `1–5` | `--list-categories` | `GET /api/categories` |
+| `list_items` | Sanal Liste (`QListView`) | `↑` / `↓` | `--list-items` | `GET /api/items` |
+| `search` | `Ctrl+K` / Arama Kutusu | `/` | `--search <q>` | `GET /api/search?q=` |
+| `show_ini` | Sağ Tık → INI'de Göster | `e` | `--show-ini <hedef>` | `GET /api/show-ini` |
+| `copy` | `Ctrl+Enter` / `Shift+Tık` / Kopyala | `c` | `--copy <hedef>` | `POST /api/copy` |
+| `paste` | `Enter` / Sol Tık | `Enter` | `--paste <hedef>` | `POST /api/paste` |
+| `export_ini` | Tepsi / Yedekler → INI Dışa Aktar | `x` | `--export-ini <yol>` | `POST /api/export-ini` |
+| `import_ini` | Tepsi / INI İçe Aktar | `i` | `--import-ini <yol>` | `POST /api/import-ini` |
+| `export_backup` | Tepsi → Yedekler… → Tam Yedek Dışa Aktar | `B` | `--export-backup <yol>` | `POST /api/export-backup` |
+| `restore` | Tepsi → Yedekler… → Seçileni Geri Yükle | `R` | `--restore <hedef>` | `POST /api/restore` |
+| `backup` | Tepsi → Yedekler… → Anlık Yedek Al | `b` | `--backup` | `POST /api/backup` |
+| `reload` | Tepsi → INI Yeniden Yükle | `r` | `--reload` | `POST /api/reload` |
+| `get_setting` | `Ctrl+,` / Ayarlar Penceresi | `s` | `--get <anahtar>` | `GET /api/settings` |
+| `set_setting` | `Ctrl+,` / Ayarlar → Kaydet | `s` | `--set <anahtar> <değer>` | `POST /api/settings` |
+

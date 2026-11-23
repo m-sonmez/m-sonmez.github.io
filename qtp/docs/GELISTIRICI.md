@@ -4,35 +4,43 @@ Bu belge, QTP v2.0.0 tek dosya masaüstü uygulamasının mimarisini, test altya
 
 ---
 
-## 1. Mimari Genel Bakış ve Modül Haritası
+## 1. Mimari Genel Bakış, Mod Adaptörleri ve İşlem Kayıt Defteri
+
+QTP v2.1.0, tüm iş mantığını Qt'den bağımsız [engine.py](file:///C:/Users/User/Projects/m-sonmez.github.io/qtp/qtp_app/core/engine.py) ve tek doğruluk kaynağı olan [operations.py](file:///C:/Users/User/Projects/m-sonmez.github.io/qtp/qtp_app/core/operations.py) içinde toplar. Dört çalışma modu (`--gui`, `--tui`, `--cli`, `--web`) aynı `QtpEngine` sınıfını kullanan ince adaptörlerdir.
 
 ```text
 qtp_app/
-├── __init__.py               # Sürüm (__version__), derleme tarihi ve uygulama adı
-├── main.py                   # CLI (--selftest, --version, --export-ini, --import-ini, --help), qtp.lock, GUI orkestrasyonu
+├── __init__.py               # Sürüm (2.1.0), derleme tarihi ve uygulama adı
+├── cli.py                    # Birleşik argparse (--mode gui|tui|cli|web) ve headless CLI alt komutları
+├── main.py                   # GUI adaptörü (Overlay + Tray + Kısayollar + qtp.lock)
+├── web.py & web/             # 127.0.0.1 stdlib HTTP sunucusu + çevrimdışı HTML/CSS/JSON API
+├── tui/                      # curses + Windows ANSI/msvcrt (_win_console.py) terminal arayüzü
 ├── core/
-│   ├── ini_parser.py         # Çoklu kodlama algılama (UTF-16 LE/BE, UTF-8 BOM, cp1254) ve kayıpsız INI ayrıştırıcı
-│   ├── json_store.py         # data.json, INI<->JSON dönüşümü, backups/, qtp-tam-yedek-*.json (v2)
-│   ├── hotkeys.py            # pynput.GlobalHotKeys + Windows keyboard fallback + macOS Accessibility denetimi
-│   ├── paster.py             # pyperclip/Qt pano, odak geri yükleme, Ctrl+V/Cmd+V/wtype/ydotool, <E<N<D| -> Enter
-│   ├── settings.py           # qtp_settings.json taşınabilir + salt-okunur geri dönüş dizinleri
-│   └── logging_setup.py      # Dönen günlük kurulumu (qtp.log, 1 MB x 3)
-├── ui/
-│   ├── theme.py              # Renk paletleri, sabit boyutlar/yarıçaplar/animasyon süreleri, Inter yazı tipi yükleyici
-│   ├── search.py             # FuzzyMatcher (Türkçe İ/i ve I/ı uyumlu alt-dizi puanlama)
-│   ├── overlay.py            # Çerçevesiz katman penceresi, sanal QListView + QStyledItemDelegate, toast, animasyonlar
-│   ├── tray.py               # QSystemTrayIcon ve Türkçe sağ tık menüsü
-│   ├── settings_window.py    # Tüm qtp_settings.json alanları için Türkçe ayar penceresi
-│   └── help_dialog.py        # docs/*.md için çevrimdışı Markdown->HTML yardım penceresi (F1)
-├── assets/
-│   ├── icon.svg, icon-192.png, icon-512.png
-│   ├── fonts/Inter-*.ttf     # Çapraz platform birebir yazı tipi tutarlılığı için gömülü Inter yazı tipleri
-│   └── defaults/             # Gömülü QuickTextPaste.ini ve data.json örnekleri
-├── build/
-│   ├── qtp.spec              # PyInstaller onefile/windowed yapılandırması (UPX kapalı)
-│   ├── build_windows.py      # Windows -> dist/qtp.exe üretici ve --selftest doğrulayıcı
-│   └── build_unix.py         # Linux/macOS -> dist/qtp.bin üretici (+strip, +codesign)
-└── tests/                    # Kapsamlı pytest + pytest-qt test paketi
+│   ├── engine.py             # UI-bağımsız tek motor (QtpEngine & OperationResult)
+│   ├── operations.py         # 18 kanonsal OperationSpec tanımı (tek doğruluk kaynağı)
+│   ├── ini_parser.py         # Çoklu kodlama algılama ve kayıpsız INI ayrıştırıcı
+│   ├── json_store.py         # data.json, INI<->JSON dönüşümü, backups/, qtp-tam-yedek-*.json
+│   ├── hotkeys.py            # pynput.GlobalHotKeys + Wayland/macOS zarif geri dönüşü
+│   ├── paster.py             # Sıfır dış bağımlılıklı Win32 ctypes / macOS AppKit / Linux X11-OSC52 pano
+│   ├── settings.py           # qtp_settings.json (web.port dahil) ve taşınabilir yol çözümü
+│   ├── logging_setup.py      # Dönen günlük kurulumu (qtp.log, 1 MB x 3)
+│   └── EXTERNAL_CALLS.md     # Harici çağrı denetim raporu
+├── ui/                       # PyQt6 Overlay, Theme, Search, Tray, SettingsWindow, HelpDialog
+├── assets/                   # İkonlar, gömülü Inter TTF yazı tipleri ve defaults/
+├── build/                    # PyInstaller onefile/windowed spec + Windows/Unix derleme betikleri
+└── tests/                    # test_mode_parity, test_portability, test_web_ui, golden/ vb.
+```
+
+### Yeni Bir İşlemi Dört Moda Birden Ekleme
+1. `qtp_app/core/operations.py` içindeki `OPERATIONS` listesine yeni `OperationSpec` kaydını ekleyin.
+2. `qtp_app/core/engine.py` içinde ilgili `op_<id>()` yöntemini `OperationResult` döndürecek şekilde yazın.
+3. İnce adaptörlere bağlayın: `cli.py` (bayrak), `tui/app.py` (`execute_operation`), `web.py` (`/api/...`), `main.py` (GUI menü/kısayol).
+4. `test_mode_parity.py` yeni işlemi otomatik olarak tüm modlarda ve çıkış kodlarıyla test edecektir.
+
+### Altın Anlık Görüntüleri (Golden Snapshots) Yenileme
+TUI ve Web altın çıktıları `qtp_app/tests/golden/{tui,web}/<op_id>.txt` altında tutulur. Bilinçli görsel/çıktı güncellemesi sonrası yeniden üretmek için:
+```bash
+UPDATE_GOLDEN=1 pytest qtp_app/tests/test_mode_parity.py -q
 ```
 
 > Not: Kök dizindeki `index.html`, `cevaplar.html`, `sw.js`, `manifest.webmanifest`, `qtp_core.py`, `qtp_server.py`, `qtp_manager.py` ve `tests/test_qtp.py` mevcut Web PWA / miras bileşenleri olarak korunmuştur.

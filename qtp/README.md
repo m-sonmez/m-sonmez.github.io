@@ -1,6 +1,19 @@
 # QTP — QuickTextPaste & Hazır Cevaplar (Bağımsız Masaüstü Uygulaması)
 
-**QTP v2.0.0**, artık üçüncü parti `QuickTextPaste.exe` dosyasına veya herhangi bir sistem kurucusuna **hiçbir çalışma zamanı bağımlılığı olmadan**, Windows, Linux ve macOS üzerinde birebir aynı arayüz ve kısayol deneyimiyle çalışan **tek dosya** taşınabilir masaüstü uygulamasıdır.
+**QTP v2.1.0**, artık üçüncü parti `QuickTextPaste.exe` dosyasına veya herhangi bir harici çalışma zamanı aracına (`xclip`, `xdotool`, `pyperclip`, Python, Qt kurulumu vb.) **hiçbir bağımlılığı olmadan**, Windows, Linux ve macOS üzerinde **dört çalışma modunun (`--gui`, `--tui`, `--cli`, `--web`) tamamında birebir özellik eşitliği** sunan **tek dosya** taşınabilir uygulamadır.
+
+---
+
+## Dört Mod (`--gui`, `--tui`, `--cli`, `--web`)
+
+| Mod | Örnek Komut | Açıklama |
+| :--- | :--- | :--- |
+| **GUI** | `qtp --gui` (veya çift tık) | PyQt6 animasyonlu katman penceresi, global kısayollar ve sistem tepsisi |
+| **TUI** | `qtp --tui` | Sıfır bağımlılıklı terminal arayüzü (`curses` / Windows ANSI katmanı) |
+| **CLI** | `qtp --cli --search "şifre" --json` | Betikler ve CI için başsız alt komutlar ve kararlı çıkış kodları |
+| **Web** | `qtp --web --port 8765 --open-browser` | Yalnızca `127.0.0.1` üzerinde çalışan çevrimdışı HTTP/JSON sunucusu |
+
+Tüm modların tam karşılaştırması için: [Modlar Arası Eşitlik Matrisi](docs/KULLANIM.md#14-modlar-arası-eşitlik-matrisi)
 
 ---
 
