@@ -783,6 +783,11 @@ class HotkeyManager:
                 win32_specs.append((idx, cat, norm_combo, mod_mask, vk))
             if self._register_win32_native(win32_specs, on_trigger, results):
                 self._status = results
+                logger.debug(
+                    "Global kısayol kaydı tamamlandı: %d etkin, %d uyarı.",
+                    sum(1 for ok in results.values() if ok),
+                    len(self._conflicts),
+                )
                 return results
 
         pynput_mapping: dict[str, Callable[[], None]] = {}

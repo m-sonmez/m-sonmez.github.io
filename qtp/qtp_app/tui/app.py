@@ -92,15 +92,16 @@ class QtpTui:
             )
 
     def _refresh_view_data(self) -> None:
-        cat_res = self.engine.op_list_categories()
-        self._categories_cache = cat_res.data["categories"]
-        list_res = self.engine.op_list_items(category=self.category, query=self.query)
-        self._visible_items = list_res.data["items"]
-        if not self._visible_items:
-            self.selected_idx = 0
-            self.scroll_offset = 0
-        else:
-            self.selected_idx = max(0, min(self.selected_idx, len(self._visible_items) - 1))
+        with self._reload_lock:
+            cat_res = self.engine.op_list_categories()
+            self._categories_cache = cat_res.data["categories"]
+            list_res = self.engine.op_list_items(category=self.category, query=self.query)
+            self._visible_items = list_res.data["items"]
+            if not self._visible_items:
+                self.selected_idx = 0
+                self.scroll_offset = 0
+            else:
+                self.selected_idx = max(0, min(self.selected_idx, len(self._visible_items) - 1))
 
     def current_item(self) -> dict[str, Any] | None:
         if 0 <= self.selected_idx < len(self._visible_items):
