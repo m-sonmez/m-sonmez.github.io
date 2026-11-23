@@ -1,6 +1,6 @@
 # QTP Kullanım Kılavuzu
 
-**QTP (QuickTextPaste / Hazır Cevaplar)**, sık kullandığınız destek yanıtlarını ve metin şablonlarını global kısayollarla anında aramanızı, kategoriye göre filtrelemenizi ve tek tuşla aktif pencereye yapıştırmanızı sağlayan çevrimdışı masaüstü uygulamasıdır.
+**QTP (QuickTextPaste / Hazır Cevaplar)**, sık kullandığınız destek yanıtlarını ve metin şablonlarını çakışmasız global kısayollarla (`Win+Alt+Space / A / Z / X / Q`) anında aramanızı, kategoriye göre filtrelemenizi, dosya değişikliklerini yeniden başlatmadan canlı yenilemenizi ve tek tuşla aktif pencereye yapıştırmanızı sağlayan çevrimdışı masaüstü uygulamasıdır.
 
 ---
 
@@ -8,27 +8,26 @@
 
 Uygulama ilk kez çalıştırıldığında:
 - Yönetici izni veya kurulum sihirbazı olmadan doğrudan açılır.
-- Ekranın ortasında `720×520` piksel boyutunda katman penceresi görünür ve sağ alt köşede *"QTP hazır. Win+Z / Win+A / Win+X / Win+Q"* bildirimi 2,6 saniye süreyle gösterilir.
+- Ekranın ortasında `720×520` piksel boyutunda katman penceresi görünür ve sağ alt köşede etkin kısayolları gösteren *"QTP hazır. Win+Alt+Space / Win+Alt+A / Win+Alt+Z / Win+Alt+X / Win+Alt+Q"* bildirimi 2,6 saniye süreyle gösterilir.
+- Eski v2.0/v2.1 `qtp_settings.json` dosyanızda el değmemiş eski çakışmalı varsayılanlar (`Ctrl+Shift+Space`, `Win+A/Z/X/Q`) varsa QTP bunu algılayıp bir kez otomatik olarak yeni `recommended` (`Win+Alt+*`) profiline yükseltir; **özelleştirilmiş kısayollarınız hiçbir zaman üzerine yazılmaz**.
 - Sonraki açılışlarda katman gizliyken şu yollarla açabilirsiniz:
-  - **Global kısayollar:** `Win+A`, `Win+Z`, `Win+X`, `Win+Q` veya `Ctrl+Shift+Space`.
-  - **Sistem tepsisi:** Tepsi simgesine **çift tıklayın** veya sağ tıklayıp **Aç (Ctrl+Shift+Space)** seçin.
+  - **Global kısayollar:** `Win+Alt+Space`, `Win+Alt+A`, `Win+Alt+Z`, `Win+Alt+X`, `Win+Alt+Q` (veya özelleştirdiğiniz tüm 15 değiştirici bileşimi / özel yuvalar).
+  - **Sistem tepsisi:** Tepsi simgesine **çift tıklayın** veya sağ tıklayıp **Aç (Win+Alt+Space)** *(etkin `all` kısayoluyla dinamik güncellenir)* seçin.
   - **İkinci çalıştırma:** `qtp.exe` / `qtp.bin` tekrar çalıştırıldığında çalışan örnek otomatik olarak öne getirilir.
-
-> `[Ekran Görüntüsü Açıklaması: Aktif ekranın tam ortasında 12 px yuvarlatılmış köşeli, koyu #121216 yarı saydam arka planlı 720×520 px QTP katman penceresi. En üstte otomatik odaklanmış arama kutusu ve sağında "Ctrl+K" çipi; hemen altında mor-camgöbeği geçişli aktif kategori hapları; ortada 2 satırlı metin önizlemeli sanal liste ve her satırın sağında "A/Z/X/Q" rozeti ile "Kopyala" düğmesi; en altta klavye ipuçları ve kayıt sayacı yer alır.]`
 
 ---
 
 ## 2. Kategori Sekmeleri ve Hafıza
 
-Arama kutusunun hemen altında 5 adet kategori hapı bulunur:
+Arama kutusunun hemen altında 5 adet kategori hapı bulunur (`QuickTextPaste.ini` içindeki `L-Win+A/Z/X/Q/W/1` önekleri kayıpsız korunur):
 
-| Sekme Etiketi | İlişkili Global Kısayol | Açıklama |
+| Sekme Etiketi | Varsayılan Global Kısayol | Açıklama |
 | :--- | :--- | :--- |
-| **Tümü** | `Ctrl+Shift+Space` | Tüm kategorilerdeki hazır cevapları (`W` ve `1` kısayolları dahil) birlikte gösterir. |
-| **A · İş Ortağı** | `Win+A` | `L-Win+A` önekli Yemeksepeti İş Ortağı (Restoran) hazır cevaplarını listeler. |
-| **Z · Kurye** | `Win+Z` | `L-Win+Z` önekli Yemeksepeti Kurye hazır cevaplarını listeler. |
-| **X · Canlı Yardım** | `Win+X` | `L-Win+X` önekli Müşteri Canlı Yardım hazır cevaplarını listeler. |
-| **Q · Turkcell** | `Win+Q` | `L-Win+Q` önekli Turkcell destek hazır cevaplarını listeler. |
+| **Tümü** | `Win+Alt+Space` | Tüm kategorilerdeki hazır cevapları (`W` ve `1` kısayolları dahil) birlikte gösterir. |
+| **A · İş Ortağı** | `Win+Alt+A` | `L-Win+A` önekli Yemeksepeti İş Ortağı (Restoran) hazır cevaplarını listeler. |
+| **Z · Kurye** | `Win+Alt+Z` | `L-Win+Z` önekli Yemeksepeti Kurye hazır cevaplarını listeler. |
+| **X · Canlı Yardım** | `Win+Alt+X` | `L-Win+X` önekli Müşteri Canlı Yardım hazır cevaplarını listeler. |
+| **Q · Turkcell** | `Win+Alt+Q` | `L-Win+Q` önekli Turkcell destek hazır cevaplarını listeler. |
 
 Her kategori hapı üzerinde güncel kayıt sayısını parantez içinde gösterir (örneğin `A · İş Ortağı (110)`). QTP, hangi global kısayol ile hangi kategoriyi en son kullandığınızı `qtp_settings.json` içinde hatırlar.
 
@@ -38,7 +37,7 @@ Her kategori hapı üzerinde güncel kayıt sayısını parantez içinde göster
 
 Katman açılır açılmaz imleç otomatik olarak üstteki **"Ara… (mesaj, kategori, etiket)"** kutusundadır. Yazmaya başladığınız anda liste canlı olarak filtrelenir:
 
-- **Türkçe yerel harf uyumu:** `İ/i`, `I/ı`, `Ş/ş`, `Ğ/ğ`, `Ç/ç`, `Ö/ö`, `Ü/ü` harfleri Türkçe kurallarına göre eşleştirilir (örneğin `"şifre"` yazımı `"Şifrenizi"` kaydını bulur; `"ı"` ve `"i"` ayrımları korunur).
+- **Türkçe yerel harf uyumu:** `İ/i`, `I/ı`, `Ş/ş`, `Ğ/ğ`, `Ç/ç`, `Ö/ö`, `Ü/ü` harfleri Türkçe kurallarına göre eşleştirilir.
 - **Alt-dizi (Subsequence) arama:** Kelimeleri tam yazmanız gerekmez; harf sırasını koruyan kısaltmalar eşleşir ve eşleşen karakterler metin içinde camgöbeği/mor vurgu ile işaretlenir.
 - **Kapsam:** Arama metin içeriği, başlık (`label`), grup adı (`group`) ve kısayol rozeti üzerinde puanlama yapar.
 - **Boş arama:** Arama kutusu temizlendiğinde öğeler orijinal `QuickTextPaste.ini` sırasıyla gösterilir.
@@ -53,196 +52,97 @@ Katman açılır açılmaz imleç otomatik olarak üstteki **"Ara… (mesaj, kat
 2. `Enter` tuşuna basın.
 3. QTP katmanı gizler, odağı katman açılmadan önce önde olan uygulamaya (tarayıcı, sohbet paneli, not defteri vb.) geri verir, `120 ms` bekler ve seçili metni panoya kopyalayıp `Ctrl+V` (macOS'ta `Cmd+V`, Wayland'da `wtype`) gönderir.
 4. **`<E<N<D|` Bitiş İşareti:** Kayıt `QuickTextPaste.ini` içinde `<E<N<D|` ile bitiyorsa ve ayarlardan `enter_after_paste` etkinse, yapıştırmadan hemen sonra otomatik olarak bir `Enter` tuşu gönderilir.
-5. İşlem sonunda katman kapanmadan önceki pencerede metin yapışmış olur; katman yeniden açıldığında veya bildirim aktifken *"Yapıştırıldı ✔"* bildirimi gösterilir.
 
 ### 4.2 Yalnızca Panoya Kopyalama (`Ctrl+Enter`, `Shift+Tık`, Satır İçi Düğme)
-Katmanı kapatmadan metni yalnızca panoya almak için:
-- `Ctrl+Enter` (macOS'ta `⌘+Enter` da geçerlidir) tuşlayın, **veya**
-- Satıra `Shift` tuşunu basılı tutarak sol tıklayın, **veya**
-- Fareyi satırın üzerine getirdiğinizde sağda beliren **Kopyala** düğmesine tıklayın.
-
-Katman açık kalır ve sağ alt köşede 1,2 saniyelik *"Panoya kopyalandı ✔"* bildirimi görünür.
+- `Ctrl+Enter` (macOS'ta `⌘+Enter`), satıra `Shift+Sol Tık` veya satır üzerindeki **Kopyala** düğmesi katmanı kapatmadan metni panoya alır ve *"Panoya kopyalandı ✔"* bildirimini gösterir.
 
 ---
 
 ## 5. Sağ Tık Bağlam Menüsü
 
 Liste satırı üzerinde sağ tıkladığınızda önce kayıt panoya alınır ve dört seçenekli menü açılır:
-
-- **Yapıştır:** Seçili kaydı önceki aktif uygulamaya yapıştırır.
-- **Kopyala:** Metni yalnızca panoya kopyalar.
-- **INI'de Göster:** Seçili kaydın `QuickTextPaste.ini` içindeki `[list_text]`, `[list_order]` ve `[list_label]` ham satırlarını salt-okunur önizleme penceresinde gösterir.
-- **Yardım:** Uygulama içi Türkçe yardım penceresini (`F1`) açar.
+- **Yapıştır**, **Kopyala**, **INI'de Göster** (`[list_text]`, `[list_order]`, `[list_label]` ham görünümü) ve **Yardım** (`F1`).
 
 ---
 
 ## 6. Sistem Tepsisi Menüsü
 
 Sistem tepsisindeki mor şimşek simgesine sağ tıkladığınızda tüm platformlarda aynı Türkçe menü açılır:
-
-- **Aç (Ctrl+Shift+Space):** Katmanı ekrana getirir.
-- **Ayarlar…:** Ayarlar penceresini açar.
-- **INI Yeniden Yükle:** Diskteki `QuickTextPaste.ini` / `data.json` dosyasını yeniden okur ve listeyi günceller.
-- **data.json Aç:** Çalışma dizinindeki `data.json` dosyasını varsayılan sistem düzenleyicinizle açar (henüz yoksa oluşturur).
-- **Yedekler…:** Yedekleme ve geri yükleme penceresini açar.
-- **Yardım (F1):** Bu kullanım kılavuzunu, kısayollar tablosunu ve sorun giderme rehberini açar.
-- **Çıkış:** Global kısayolları serbest bırakır, `qtp.lock` kilit dosyasını temizler ve uygulamayı kapatır.
-
-> `[Ekran Görüntüsü Açıklaması: Sistem tepsisinden açılan 7 maddeli Türkçe menü; en üstte "Aç (Ctrl+Shift+Space)", ortada Ayarlar, INI Yeniden Yükle, data.json Aç, Yedekler…, altta Yardım (F1) ve Çıkış öğeleri.]`
+- **Aç (`Win+Alt+Space`):** Katmanı ekrana getirir (etkin `all` kısayoluna göre dinamik güncellenir).
+- **Ayarlar…**, **INI Yeniden Yükle**, **data.json Aç**, **Yedekler…**, **Yardım (F1)** ve **Çıkış**.
 
 ---
 
-## 7. Ayarlar Penceresi ve `qtp_settings.json`
+## 7. Ayarlar Penceresi, Esnek Kısayollar ve Canlı Yenileme (`qtp_settings.json`)
 
-Ayarlar penceresine katmandaki **Ayarlar** düğmesinden, `Ctrl+,` kısayolundan veya sistem tepsisi menüsünden ulaşabilirsiniz. Tüm alanlar `qtp_settings.json` dosyasında saklanır ve fareyle üzerine gelindiğinde Türkçe ipucu (tooltip) gösterir:
+Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerinden ulaşabilirsiniz:
+
+- **Hazır Profil ve Toplu Değiştirici:** Tek tıkla `Önerilen (Win+Alt)`, `Win+Ctrl`, `Ctrl+Alt`, `Üçlü Değiştirici (Ctrl+Alt+Shift)`, `Fonksiyon Tuşları (Ctrl+Shift+F1–F5)` veya `Klasik QuickTextPaste (Win)` profilini seçebilir ya da **Tümüne Değiştirici Uygula** ile mevcut yuvaların ön ekini topluca değiştirebilirsiniz.
+- **Esnek Kısayol Satırı (`HotkeyRow`):** Her kısayol için **4 değiştirici onay kutusu** (`Ctrl`, `Alt`, `Shift`, `Win`), klavyeden doğrudan kayıt yapabilen **Yakala / `HotkeyEdit`** kutusu (çift yönlü senkronize) ve **+ Özel Kısayol Ekle** / `×` düğmeleri sunulur.
+- **Canlı Çakışma Uyarıcısı:** Değişiklik yaptığınız anda Windows sistem kısayolları, Türkçe-Q `AltGr` tuşları (`Ctrl+Alt+Q/A/E/S/1..9`), Linux TTY geçişleri ve çift atamalar anında Türkçe olarak raporlanır. Çift QTP atamaları kaydetmede engellenir.
 
 | Ayar Alanı (`qtp_settings.json`) | Varsayılan | Açıklama |
 | :--- | :--- | :--- |
-| `theme` | `"dark"` | Arayüz teması: `auto` (işletim sistemi temasını izler), `dark` (koyu tema), `light` (açık tema). |
-| `hotkeys` | `all`, `A`, `Z`, `X`, `Q` | Global kısayol haritası (`Ctrl+Shift+Space`, `Win+A`, `Win+Z`, `Win+X`, `Win+Q`). Kaydedildiğinde eski kısayollar temizlenir ve yenileri anında atanır. |
-| `last_category` | `"ALL"` | Genel kısayolla açılışta seçilecek son kategori kodu (`ALL`, `A`, `Z`, `X`, `Q`). |
-| `last_category_by_hotkey` | `{}` | Her tetiklenen global kısayol için en son seçilen kategori sekmesini saklar. |
-| `window_size` | `[720, 520]` | Katman penceresinin piksel cinsinden `[genişlik, yükseklik]` boyutu. Pencere sağ alt köşeden yeniden boyutlandırıldığında otomatik kaydedilir. |
-| `paste_method` | `"auto"` | Yapıştırma yöntemi: `auto` (Windows/Linux `Ctrl+V`, macOS `Cmd+V`, Wayland `wtype`), `ctrl_v`, `shift_insert` veya `type` (tuş tuş yazma). |
-| `enter_after_paste` | `true` | Kayıt `<E<N<D|` ile bitiyorsa yapıştırmadan hemen sonra otomatik `Enter` gönderir. |
-| `start_minimized` | `false` | Etkinleştirilirse uygulama başlangıçta katmanı açmadan doğrudan sistem tepsisinde bekler. |
-| `tray_icon` | `true` | Sistem tepsisi simgesini gösterir veya gizler. |
-| `data_path` | `"./QuickTextPaste.ini"` | Okunacak ve güncellenecek `QuickTextPaste.ini` dosyasının konumu. |
-| `backup_count` | `15` | `backups/` dizininde saklanacak en fazla otomatik/manuel yedek sayısı (`1–100`). |
-| `log_level` | `"info"` | `qtp.log` günlük dosyası ayrıntı düzeyi (`debug`, `info`, `warn`, `error`). |
-| `language` | `"tr"` | Arayüz dili (yalnızca `"tr"`; gelecek sürümler için ayrılmıştır). |
-| `web.port` | `{"port": 8765}` | `--web` modunun yalnızca `127.0.0.1` üzerinde dinleyeceği yerel bağlantı noktası (`0–65535`). |
-
-Pencere altındaki **Kaydet**, **İptal**, **Varsayılana Sıfırla** ve **Yardım** düğmeleri ile ayarları güvenle yönetebilirsiniz.
-
-> `[Ekran Görüntüsü Açıklaması: Görünüm ve Davranış, Yapıştırma Ayarları, Global Kısayollar ve Veri/Yedekleme/Günlük gruplarına bölünmüş 560×610 px QTP Ayarlar penceresi. Alt kısımda Yardım, Varsayılana Sıfırla, İptal ve mor-camgöbeği vurgulu Kaydet düğmeleri bulunur.]`
+| `theme` | `"dark"` | Arayüz teması: `auto`, `dark` veya `light`. |
+| `hotkeys` | `Win+Alt+Space/A/Z/X/Q` | Global kısayol haritası (`all`, `A`, `Z`, `X`, `Q` ve isteğe bağlı özel yuvalar). |
+| `last_category` | `"ALL"` | Genel açılışta son seçili kategori (`ALL`, `A`, `Z`, `X`, `Q`). |
+| `last_category_by_hotkey` | `{}` | Her kısayol için en son seçilen sekme hafızası. |
+| `window_size` | `[720, 520]` | Katman penceresi piksel `[genişlik, yükseklik]` boyutu. |
+| `paste_method` | `"auto"` | `auto`, `ctrl_v`, `shift_insert` veya `type`. |
+| `enter_after_paste` | `true` | `<E<N<D|` sonrası otomatik `Enter`. |
+| `start_minimized` | `false` | Sistem tepsisinde küçültülmüş başlatma. |
+| `tray_icon` | `true` | Sistem tepsisi simgesi görünürlüğü. |
+| `data_path` | `"./QuickTextPaste.ini"` | İzlenen ve yüklenen `QuickTextPaste.ini` dosya yolu. |
+| `backup_count` | `15` | `backups/` dizinindeki en yeni yedek sayısı (`1–100`). |
+| `auto_reload` | `true` | `qtp_settings.json`, `QuickTextPaste.ini` ve `data.json` değişikliklerini yeniden başlatmadan canlı yeniler. |
+| `auto_reload_interval_ms` | `500` | Disk izleme denetim aralığı (`100–10000 ms`, `250 ms` debounce). |
+| `log_level` | `"info"` | `qtp.log` ayrıntı düzeyi (`debug`, `info`, `warn`, `error`). |
+| `language` | `"tr"` | Arayüz dili (`tr`). |
+| `web.port` | `{"port": 8765}` | `--web` sunucusu yerel `127.0.0.1` bağlantı noktası (`0–65535`). |
 
 ---
 
-## 8. INI ve JSON Dosyalarıyla Çalışma (Yükleme, İçe/Dışa Aktarma)
+## 8. Dinamik Canlı Otomatik Yenileme (`auto_reload`)
 
-- **Çoklu Kodlama Desteği:** QTP; `UTF-16 LE BOM` (QuickTextPaste yerel biçimi), `UTF-16 BE BOM`, BOM'suz `UTF-16`, `UTF-8 BOM`, `UTF-8` ve Türkçe `cp1254` kodlamalı `.ini` dosyalarını otomatik algılar ve bozulmadan okur.
-- **Kayıpsız Koruma:** `[Program]` içindeki tüm anahtarlar (`TestIni`, `m_show_tree`, `listcmd_count`, `WinRC`, `lng`, `start_tray`, özel anahtarlar), ek INI bölümleri, `/` alt menüleri ve `<E<N<D|` sonlandırıcıları korunur.
-- **Otomatik `.bak` Yedeği:** INI dosyası üzerine her yazma işleminde önceki sürüm `QuickTextPaste.ini.bak` olarak yedeklenir.
-- **Komut Satırı Dışa/İçe Aktarma:**
-  ```bash
-  qtp --export-ini yedek_cikti.ini
-  qtp --import-ini yeni_cevaplar.ini
-  ```
-  `--import-ini`, mevcut `data.json` kayıtlarınızı silmeden yeni kayıtları birleştirir ve otomatik yedek oluşturur.
+`--gui`, `--web` ve etkileşimli `--tui` modları çalışırken sıfır bağımlılıklı `ConfigFileWatcher` bileşeni diskteki `qtp_settings.json`, etkin `QuickTextPaste.ini` (`data_path`) ve `data.json` dosyalarını arka planda izler (`--selftest` / `--version` / `--completion` gibi tek seferlik CLI komutları arka plan iş parçacığı açmaz ve dosya oluşturmaz):
+- **Ayar Değişiklikleri:** Harici bir düzenleyiciyle `qtp_settings.json` değiştirildiğinde tema, pencere boyutu, `data_path`, günlük düzeyi (`log_level`) ve **işletim sistemine kayıtlı global kısayollar** yeniden başlatma olmadan anında güncellenir (eski kısayollar çözülür, yenileri `RegisterHotKey` / `pynput` ile bağlanır).
+- **Veri Değişiklikleri:** `QuickTextPaste.ini` veya `data.json` harici bir düzenleyici tarafından değiştirildiğinde (atomik `os.replace` dahil) liste canlı yenilenir.
+- **Kendi Yazımını Bastırma ve Bozuk Dosya Koruması:** QTP'nin kendi kaydettiği dosyalar yankı yenilemeye neden olmaz; harici yazım sırasında dosya bozuk/eksikse son geçerli ayar ve kayıt listesi korunur ve `qtp.log` / uyarı bildirimi yazılır.
 
 ---
 
-## 9. Yedeklemeler ve Günlük Kayıtları (`qtp.log`)
+## 9. INI ve JSON Dosyalarıyla Çalışma, Yedeklemeler ve Günlükler (`qtp.log`)
 
-- **Zaman Damgalı Yedekler (`backups/`):** İçe aktarma veya manuel yedekleme öncesinde `data.json`, `QuickTextPaste.ini` ve `.qtp_state.json` dosyaları `backups/<tarih>_<neden>/` klasörüne kopyalanır. En yeni `backup_count` (varsayılan 15) adet yedek saklanır.
-- **Tam Yedek (`qtp-tam-yedek-YYYY-MM-DD.json`):** Web PWA uygulamasıyla (`index.html`) %100 uyumlu `qtp-pwa-backup` v2 biçiminde tek dosya tam yedek üretir ve geri yükler.
-- **Dönen Günlükler (`qtp.log`):** İkili dosyanın yanında en fazla 1 MB boyutunda 3 adet dönen günlük dosyası tutulur (`qtp.log`, `qtp.log.1`, `qtp.log.2`, `qtp.log.3`). Katmanın açılması, yapıştırılan öğenin kategorisi ve ham anahtarı, INI yeniden yükleme, ayar değişiklikleri, kısayol kayıtları ve hata izleri kaydedilir.
-
----
-
-## 10. Komut Satırı (CLI) Seçenekleri
-
-Tüm platformlarda aynı komut satırı bayrakları desteklenir:
-
-| Seçenek | Açıklama |
-| :--- | :--- |
-| `-h`, `--help` | Türkçe komut satırı yardım özetini yazdırır ve çıkar. |
-| `--version` | Uygulama sürümünü, derleme tarihini ve varsa Git kısa özetini yazdırır. |
-| `--selftest` | Başsız (offscreen) arayüz duman testi ile gömülü `QuickTextPaste.ini` gidiş-dönüş testini çalıştırır; başarılıysa `0` ile çıkar. |
-| `--export-ini YOL` | Mevcut hazır cevapları UTF-16 LE BOM kodlamalı `QuickTextPaste.ini` olarak belirtilen yola yazar. |
-| `--import-ini YOL` | Belirtilen INI dosyasını mevcut listeyle birleştirir ve kaydeder. |
-| `--work-dir DIZIN` | Veri, ayar ve yedekleme işlemleri için özel bir çalışma dizini belirtir. |
+- **Çoklu Kodlama Desteği:** `UTF-16 LE BOM`, `UTF-16 BE BOM`, BOM'suz `UTF-16`, `UTF-8 BOM`, `UTF-8` ve Türkçe `cp1254` kodlamaları otomatik algılanır; `[Program]`, ek bölümler ve `<E<N<D|` işaretleri kayıpsız korunur.
+- **Zaman Damgalı Yedekler (`backups/`) ve Tam Yedek (`qtp-tam-yedek-*.json`):** Her kaydetme öncesinde otomatik yedek alınır; `.bak` yedeği ve 1 MB × 3 dönen `qtp.log` günlükleri tutulur.
 
 ---
 
-## 11. TUI Modu (`--tui`)
+## 10. Komut Satırı (CLI) Seçenekleri, Ayrıntı Düzeyi ve Otomatik Tamamlama
 
-`--tui` modu, Python standart kütüphanesi dışında hiçbir bağımlılık olmadan çalışan tam etkileşimli terminal arayüzüdür (Linux/macOS'ta `curses`, Windows'ta gömülü ANSI/VT100 + `msvcrt` katmanı):
-
-```bash
-qtp --tui
-# veya
-qtp --mode tui --work-dir ./veriler
-```
-
-- **Görsel Yerleşim (GUI ile birebir mantıksal yapı):**
-  - Üst satır: Arama kutusu (`/` tuşuyla arama moduna geçilir) ve eşleşen kayıt sayacı.
-  - İkinci satır: Kategori sekmeleri (`Tümü`, `A · İş Ortağı`, `Z · Kurye`, `X · Canlı Yardım`, `Q · Turkcell`) ve parantez içinde kayıt sayıları.
-  - Gövde: Numaralandırılmış sanallaştırılmış liste ve sağda kısayol rozeti (`[A]`, `[Z]`, `[X]`, `[Q]`).
-  - Alt durum satırı: İlk çalıştırmada `"QTP hazır. Win+Z / Win+A / Win+X / Win+Q"` bildirimi ve işlem sonuç mesajları.
-  - Alt ipucu çubuğu: `↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış`.
-- **Pano ve Çıkış Kodları:** `Enter` veya `c` seçili kaydı doğrudan sıfır bağımlılıklı yerel pano API'si (ve etkileşimli terminalde OSC 52) üzerinden panoya alır; tüm işlemler CLI ile aynı çıkış kodlarını ve Türkçe mesajları üretir. `F1` tuşu `docs/KULLANIM.md` ve `docs/KISAYOLLAR.md` içeriğini sayfalayıcıda açar.
-
-> `[Ekran Görüntüsü Açıklaması: Terminal penceresinde en üstte camgöbeği renkli "QTP v2.1.0 | Mod: TUI | Ara: \"\" [/ Ara]" başlığı, altında aktif kategori parantez içine alınmış kategori şeridi, ortada mor vurgu ile seçilmiş aktif satır, altta durum satırı ve kısayol ipucu şeridi yer alır.]`
+- **Etkileşimli Windows Konsolu:** Windows tek-dosya (`console=False`) ikilisinde `--help`, `--verbose`, `--completion`, `--cli` veya `--tui` çalıştırıldığında QTP üst süreç zincirini (`PowerShell`/`pwsh`/`cmd`/Terminal) yürüyerek UTF-8 konsol akışlarını `argparse`'dan hemen önce otomatik bağlar.
+- **Ayrıntı Bayrakları (`-v`/`--verbose`, `-vv`, `-q`/`--quiet`):**
+  - `qtp --verbose --help` / `qtp --cli --verbose --help`: Tüm bayraklar, profiller, ayar anahtarları, çıkış kodları ve kabuk tamamlama komutlarını basar.
+  - `-v` / `-vv`: `stderr` akışına çalışma klasörü, INI yolu ve kısayol tanılama günlüklerini basar.
+  - `-q` / `--quiet`: Bilgi banner'larını gizler, hataları `stderr` üzerinde korur.
+- **Kabuk Otomatik Tamamlama (`--completion [powershell|bash|zsh|fish]`):** Geçerli bayraklar ve ayar anahtarlarından dinamik tamamlama betiği üretir ve hiçbir yan etki dosyası oluşturmaz:
+  - PowerShell: `.\qtp.exe --completion powershell | Out-String | Invoke-Expression`
+  - Bash: `eval "$(./qtp.bin --completion bash)"`
+  - Zsh: `eval "$(./qtp.bin --completion zsh)"`
+  - Fish: `./qtp.bin --completion fish | source`
 
 ---
 
-## 12. CLI Modu (`--cli`)
+## 11. TUI Modu (`--tui`) ve Web Modu (`--web`)
 
-`--cli` modu (veya doğrudan komut satırı bayrakları) otomasyon ve CI boru hatları için etkileşimsiz UTF-8 metin ya da `--json` çıktısı üretir. Etkileşimsiz/CI ortamlarında komut verilmeden çağrıldığında güvenlik amacıyla açıkça `--mode` belirtilmesi istenir.
-
-| Komut | Davranış | Çıkış Kodları |
-| :--- | :--- | :--- |
-| `qtp --version` | Sürüm, derleme tarihi ve kısa SHA yazar | `0` |
-| `qtp --help` | Türkçe yardım özetini yazar | `0` |
-| `qtp --selftest` | Başsız duman testi + INI gidiş-dönüş testi | `0` / `1` |
-| `qtp --modes` | Desteklenen modları (`gui, tui, cli, web`) listeler | `0` |
-| `qtp --list-categories [--json]` | Kategorileri ve kayıt sayılarını listeler | `0` |
-| `qtp --list-items [--category X] [--query Q] [--json]` | Öğeleri filtreleyip listeler | `0` |
-| `qtp --search <q> [--json]` | Türkçe uyumlu bulanık arama sonuçlarını sıralar | `0` |
-| `qtp --show-ini <anahtar\|metin> [--json]` | Seçili öğenin ham INI bloklarını gösterir | `0` / `2` |
-| `qtp --copy <anahtar\|metin> [--json]` | Öğeyi panoya kopyalar | `0` / `2` (bulunamadı) / `3` (pano yok) |
-| `qtp --paste <anahtar\|metin> [--json]` | Panoya kopyalar ve yapay tuş gönderir | `0` / `2` / `3` / `4` (tuş gönderilemedi) |
-| `qtp --export-ini <yol>` | Kayıtları UTF-16 LE BOM INI olarak yazar | `0` / `1` |
-| `qtp --import-ini <yol> [--merge\|--replace]` | INI dosyasını birleştirir veya değiştirir | `0` / `1` / `2` |
-| `qtp --export-backup <yol>` | `qtp-tam-yedek-*.json` tam yedeği üretir | `0` / `1` |
-| `qtp --restore <yol\|id> [--merge\|--replace]` | Tam yedek, JSON veya `backups/` yedeğini geri yükler | `0` / `1` / `2` |
-| `qtp --backup [--keep N]` | Dönen `backups/` yedeği alır | `0` / `1` |
-| `qtp --reload` | Diskteki `QuickTextPaste.ini` / `data.json` dosyasını yeniden okur | `0` / `1` |
-| `qtp --get <anahtar> [--json]` | Belirtilen `qtp_settings.json` alanını okur | `0` / `2` |
-| `qtp --set <anahtar> <değer>` | Ayar alanını doğrulayıp günceller | `0` / `2` |
-
-Örnek çıktılar:
-```bash
-$ qtp --search "şifre" --json
-{
-  "ok": true,
-  "exit_code": 0,
-  "message": "Arama tamamlandı: 3 eşleşme.",
-  "data": { "count": 3, "items": [...] },
-  "error": null
-}
-```
+- **`--tui`:** Python standart kütüphanesi dışında bağımlılık gerektirmez; Linux/macOS'ta `curses` (veya `termios`/düz metin), Windows'ta VT100 veya Win32 Console API kullanır. Canlı oturumda dosya değişikliklerini otomatik yansıtır ve `k` (çakışma denetimi), `P` (önerilen profil), `C` (tamamlama) tuşlarını destekler.
+- **`--web`:** Yalnızca `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; **Kısayollar** modalı, canlı `/api/revision` yenilemesi ve `/api/hotkeys/*`, `/api/completion` uç noktalarını sunar (`POST /api/shutdown` ile zarifçe kapanır).
 
 ---
 
-## 13. Web Modu (`--web`)
+## 12. Modlar Arası Eşitlik Matrisi
 
-`--web` modu yalnızca `127.0.0.1` loopback arayüzünde çalışan, harici CDN/ağ çağrısı içermeyen gömülü HTTP sunucusu ve tek sayfa arayüz sunar:
-
-```bash
-qtp --web --port 8765 --open-browser
-# Çıktı: QTP Web Modu çalışıyor: http://127.0.0.1:8765/ (Kapatmak için Ctrl+C veya POST /api/shutdown)
-```
-
-- **Güvenlik Kuralı:** Sunucu yalnızca `127.0.0.1` (veya `localhost`) üzerinde dinler; `0.0.0.0` bağlama girişimleri reddedilir (`SSS.md` bölümüne bakın). Varsayılan bağlantı noktası `qtp_settings.json` içindeki `web.port` (`8765`) alanından okunur; `--port 0` ile rastgele boş port kullanılabilir ve `--shutdown-after N` ile otomatik kapatılabilir.
-- **JSON API Rotaları:**
-  - `GET /` ve `GET /theme.css` → Gömülü çevrimdışı arayüz (`ui/theme.py` renkleriyle birebir).
-  - `GET /api` → Tüm desteklenen işlem rotalarının listesi.
-  - `GET /api/version`, `/api/help`, `/api/selftest`, `/api/modes`, `/api/categories`, `/api/items?category=ALL&query=`, `/api/search?q=`, `/api/show-ini?target=`, `/api/settings?key=`, `/api/backups`.
-  - `POST /api/copy`, `/api/paste`, `/api/reload`, `/api/backup`, `/api/settings`, `/api/import-ini`, `/api/export-ini`, `/api/export-backup`, `/api/restore`, `/api/shutdown`.
-- **Örnek İstek/Yanıt:**
-  ```json
-  POST /api/copy  {"target": "text_000"}
-  -> HTTP 200 {"ok": true, "exit_code": 0, "message": "Panoya kopyalandı ✔", "data": {"raw_key": "text_000", ...}, "error": null}
-  ```
-
----
-
-## 14. Modlar arası eşitlik matrisi
-
-Tüm işlemler ortak `qtp_app/core/operations.py` kayıt defteri ve `qtp_app/core/engine.py` üzerinden çalıştırılır; hiçbir modda anlamsal fark veya eksik özellik bulunmaz:
+Tüm işlemler ortak [operations.py](../qtp_app/core/operations.py) kayıt defteri ve [engine.py](../qtp_app/core/engine.py) üzerinden çalıştırılır:
 
 | İşlem (`op_id`) | `--gui` | `--tui` | `--cli` | `--web` |
 | :--- | :--- | :--- | :--- | :--- |
@@ -250,6 +150,7 @@ Tüm işlemler ortak `qtp_app/core/operations.py` kayıt defteri ve `qtp_app/cor
 | `help` | `F1` / Tepsi → Yardım (F1) | `F1` | `--help` | `GET /api/help` |
 | `selftest` | Başlangıç Doğrulama | `T` | `--selftest` | `GET /api/selftest` |
 | `modes` | Yardım (F1) → Modlar | `M` | `--modes` | `GET /api/modes` |
+| `completion` | Yardım (F1) → Otomatik Tamamlama | `C` | `--completion` | `GET /api/completion` |
 | `list_categories` | Kategori Hapları (`Tümü` / `A` / `Z` / `X` / `Q`) | `Tab` / `1–5` | `--list-categories` | `GET /api/categories` |
 | `list_items` | Sanal Liste (`QListView`) | `↑` / `↓` | `--list-items` | `GET /api/items` |
 | `search` | `Ctrl+K` / Arama Kutusu | `/` | `--search <q>` | `GET /api/search?q=` |
@@ -264,4 +165,6 @@ Tüm işlemler ortak `qtp_app/core/operations.py` kayıt defteri ve `qtp_app/cor
 | `reload` | Tepsi → INI Yeniden Yükle | `r` | `--reload` | `POST /api/reload` |
 | `get_setting` | `Ctrl+,` / Ayarlar Penceresi | `s` | `--get <anahtar>` | `GET /api/settings` |
 | `set_setting` | `Ctrl+,` / Ayarlar → Kaydet | `s` | `--set <anahtar> <değer>` | `POST /api/settings` |
-
+| `check_hotkeys` | `Ctrl+,` / Ayarlar → Global Kısayollar | `k` | `--check-hotkeys` | `GET /api/hotkeys/check` |
+| `hotkey_preset` | `Ctrl+,` / Ayarlar → Kısayol Profili | `P` | `--hotkey-preset <profil>` | `POST /api/hotkeys/preset` |
+| `hotkey_modifiers` | `Ctrl+,` / Ayarlar → Tümüne Değiştirici Uygula | `O` | `--hotkey-modifiers <değ.>` | `POST /api/hotkeys/modifiers` |

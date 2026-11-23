@@ -1,28 +1,48 @@
 # QTP Klavye Kısayolları Rehberi
 
-QTP, **çapraz platform UI/UX eşitliği** ilkesiyle tasarlanmıştır. Varsayılan tüm global kısayollar ve katman içi klavye kısayolları Windows, Linux ve macOS üzerinde **birebir aynı** çalışır. macOS kullanıcıları için sistem alışkanlığı gereği ek `⌘` (`Cmd`) eş-kısayolları da **ek seçenek** olarak tanımlanmıştır; ancak standart `Ctrl+*` kısayolları hiçbir zaman kaldırılmaz veya değiştirilmez.
+QTP, **çapraz platform UI/UX eşitliği** ilkesiyle tasarlanmıştır. Varsayılan global kısayollar Windows 7–11 sistem kısayolları ve Türkçe-Q `AltGr` tuşu ile çakışmayacak şekilde `Win+Alt+*` olarak seçilmiştir ve **15 değiştirici bileşiminin tamamıyla** esnek biçimde özelleştirilebilir. macOS kullanıcıları için katman içinde ek `⌘` (`Cmd`) eş-kısayolları da **ek seçenek** olarak tanımlanmıştır; ancak standart `Ctrl+*` kısayolları hiçbir zaman kaldırılmaz veya değiştirilmez.
 
 ---
 
-## 1. Global (Sistem Geneli) Kısayollar
+## 1. Varsayılan Global (Sistem Geneli) Kısayollar
 
-Aşağıdaki kısayollar arka planda sistem genelinde dinlenir ve hangi uygulamada olursanız olun katmanı açar (`qtp_settings.json` içinden yeniden yapılandırılabilir):
+Aşağıdaki kısayollar arka planda sistem genelinde dinlenir (Windows 7–11'de yerel Win32 `RegisterHotKey` ile tuşları aktif uygulamaya sızdırmadan tüketir; Linux/macOS X11 üzerinde `pynput` kullanır) ve `qtp_settings.json` ya da **Ayarlar (`Ctrl+,`)** penceresinden dilediğiniz gibi değiştirilebilir:
 
 | Olay | Kısayol (Windows) | Kısayol (Linux) | Kısayol (macOS) | Açıklama |
 | :--- | :--- | :--- | :--- | :--- |
-| Tüm Kategorilerle Aç | `Ctrl+Shift+Space` | `Ctrl+Shift+Space` | `Ctrl+Shift+Space` | Katmanı açar ve tüm kategorileri (veya genel son kategoriyi) gösterir. |
-| İş Ortağı Kategorisiyle Aç | `Win+A` | `Win+A` (`Super+A`) | `Win+A` (`Cmd+A` değil, `Command/Meta` harita ayarı) | Katmanı **A · İş Ortağı** (`L-Win+A`) filtresiyle açar. |
-| Kurye Kategorisiyle Aç | `Win+Z` | `Win+Z` (`Super+Z`) | `Win+Z` | Katmanı **Z · Kurye** (`L-Win+Z`) filtresiyle açar. |
-| Canlı Yardım Kategorisiyle Aç | `Win+X` | `Win+X` (`Super+X`) | `Win+X` | Katmanı **X · Canlı Yardım** (`L-Win+X`) filtresiyle açar. |
-| Turkcell Kategorisiyle Aç | `Win+Q` | `Win+Q` (`Super+Q`) | `Win+Q` | Katmanı **Q · Turkcell** (`L-Win+Q`) filtresiyle açar. |
+| Tüm Kategorilerle Aç | `Win+Alt+Space` | `Win+Alt+Space` | `Win+Alt+Space` | Katmanı açar ve tüm kategorileri (veya genel son kategoriyi) gösterir. |
+| İş Ortağı Kategorisiyle Aç | `Win+Alt+A` | `Win+Alt+A` | `Win+Alt+A` | Katmanı **A · İş Ortağı** (`L-Win+A`) filtresiyle açar. |
+| Kurye Kategorisiyle Aç | `Win+Alt+Z` | `Win+Alt+Z` | `Win+Alt+Z` | Katmanı **Z · Kurye** (`L-Win+Z`) filtresiyle açar. |
+| Canlı Yardım Kategorisiyle Aç | `Win+Alt+X` | `Win+Alt+X` | `Win+Alt+X` | Katmanı **X · Canlı Yardım** (`L-Win+X`) filtresiyle açar. |
+| Turkcell Kategorisiyle Aç | `Win+Alt+Q` | `Win+Alt+Q` | `Win+Alt+Q` | Katmanı **Q · Turkcell** (`L-Win+Q`) filtresiyle açar. |
 
-> **Not (macOS):** `pynput` üzerinde `Win` tuşu Apple `Command (⌘)` tuşuna (`<cmd>`) karşılık gelir. macOS'ta `Cmd+A` (Tümünü Seç) veya `Cmd+Q` (Çıkış) ile çakışma yaşanmasını önlemek isterseniz **Ayarlar → Global Kısayollar** üzerinden bu tuşları `Ctrl+Alt+A` / `Ctrl+Shift+Q` gibi dilediğiniz bileşime değiştirebilirsiniz.
-
-> **Not (Windows):** Windows 11'de `Win+A` (Hızlı Ayarlar), `Win+X` (Hızlı Bağlantı) veya `Win+Q` (Arama) sistem kısayolları işletim sistemi tarafından tutuluyorsa, QTP otomatik olarak alternatif kanca (`keyboard`) geri dönüşünü dener; gerekirse ayarlardan `Ctrl+Alt+*` gibi çakışmasız bir kısayol atayabilirsiniz.
+### Neden `Win+A/Z/X/Q` ve `Ctrl+Alt+Q` Varsayılan Olarak Kullanılmaz?
+- **Windows 10/11 Sistem Çakışmaları:** `Win+A` (Hızlı Ayarlar), `Win+Z` (Snap Düzenleri), `Win+X` (Hızlı Bağlantı Menüsü) ve `Win+Q` (Windows Arama) doğrudan işletim sistemi tarafından ayrılmıştır.
+- **Türkçe-Q `AltGr` Tuzağı (`Ctrl+Alt+<harf>`):** Windows'ta Türkçe-Q klavyelerde `AltGr` tuşu sistem düzeyinde `Ctrl+Alt` üretir. Bu nedenle `Ctrl+Alt+Q` (`@`), `Ctrl+Alt+A` (`æ`), `Ctrl+Alt+E` (`€`), `Ctrl+Alt+S` (`ß`) ve `Ctrl+Alt+1..9` (`>`, `£`, `#`, `$`, `½`, `{`, `[`, `]`, `}`) atamaları Türkçe karakter ve e-posta adresi yazımını engelleyebilir. QTP ayar penceresinde ve `--check-hotkeys` çıktısında bu bileşimler için canlı uyarı verir.
+- **Klavye Dili ve TTY Çakışmaları:** Yalnız `Alt+Shift` / `Ctrl+Shift` dil değiştirme ve Linux/BSD'de `Ctrl+Alt+F1..F12` sanal konsol geçişleriyle çakışılmaz.
 
 ---
 
-## 2. Modlar Arası Etkileşim ve Katman Kısayolları (`--gui`, `--tui`, `--web`)
+## 2. Hazır Kısayol Profilleri, Serbest Değiştiriciler ve Özel Yuvalar
+
+**Ayarlar → Global Kısayollar** veya CLI (`--hotkey-preset`, `--hotkey-modifiers`) üzerinden aşağıdaki 6 hazır profil arasında anında geçiş yapabilir veya her kategori için `Ctrl`, `Alt`, `Shift`, `Win` onay kutularından oluşan **15 farklı değiştirici bileşimini** tek tek seçebilirsiniz (`Ctrl`, `Alt`, `Shift`, `Win`, `Ctrl+Alt`, `Ctrl+Shift`, `Alt+Shift`, `Win+Ctrl`, `Win+Alt`, `Win+Shift`, `Ctrl+Alt+Shift`, `Win+Ctrl+Alt`, `Win+Ctrl+Shift`, `Win+Alt+Shift`, `Win+Ctrl+Alt+Shift`):
+
+| Profil Kimliği (`--hotkey-preset`) | Atanan Kısayollar | Kullanım Önerisi |
+| :--- | :--- | :--- |
+| `recommended` *(Varsayılan)* | `Win+Alt+Space`, `Win+Alt+A/Z/X/Q` | Windows 7–11, Türkçe-Q, tarayıcı ve IDE çakışmasız varsayılan profil. |
+| `win_ctrl` | `Win+Ctrl+Space`, `Win+Ctrl+A/Z/X/Q` | Tek elle hızlı `Win+Ctrl` erişimi (`Win+Ctrl+D/Sol/Sağ` masaüstü tuşlarına dokunmaz). |
+| `ctrl_alt` | `Ctrl+Alt+Space`, `Ctrl+Alt+A/Z/X/Q` | `Win` tuşsuz; Türkçe-Q'da `@` (`AltGr+Q`) kullananlar için uyarı gösterir. |
+| `ctrl_shift_alt` *(takma ad: `triple_mod`)* | `Ctrl+Alt+Shift+Space`, `Ctrl+Alt+Shift+A/Z/X/Q` | RDP/VM ve `Win` tuşsuz ortamlarda A/Z/X/Q harf belleğini korur. |
+| `function_keys` | `Ctrl+Shift+F1` (`all`), `F2` (`A`), `F3` (`Z`), `F4` (`X`), `F5` (`Q`) | Windows, Linux, BSD ve **macOS** dahil tüm işletim sistemlerinde **sıfır çakışmalı** Win-tuşsuz profil. |
+| `legacy_win` | `Ctrl+Shift+Space`, `Win+A`, `Win+Z`, `Win+X`, `Win+Q` | Eski v2.0/v2.1 klasik eşlemesi (Windows 10/11 çakışma uyarısı verir). |
+
+- **Toplu Değiştirici Değiştirme:** Ayarlar penceresindeki **Tümüne Değiştirici Uygula** veya `qtp --hotkey-modifiers "Win+Ctrl"` ile tüm mevcut yuvaların değiştiricilerini tetik tuşlarını koruyarak tek adımda dönüştürebilirsiniz.
+- **Özel Kısayol Yuvaları:** `+ Özel Kısayol Ekle` düğmesiyle veya `qtp --set hotkeys.W "Ctrl+Shift+Alt+W"` komutuyla dilediğiniz ek kategori/önek yuvasını ekleyebilir, boş (`""`) veya `×` ile kaldırabilirsiniz.
+- **Desteklenen Tetik Tuşları:** `A–Z`, `0–9`, `F1–F24`, `Space`, `Tab`, `Enter`, `Esc`, `Backspace`, `Insert`, `Delete`, `Home`, `End`, `PageUp`, `PageDown`, `Up/Down/Left/Right`, `Numpad0–9` ve `- = [ ] ; ' , . / \ \``.
+
+---
+
+## 3. Modlar Arası Etkileşim ve Katman Kısayolları (`--gui`, `--tui`, `--web`)
 
 Aşağıdaki tuşların çekirdek gezinme ve işlem mantığı dört modda da aynıdır (`Enter`, `Esc`/`q`, `Ctrl+K`/`/`, `F1`):
 
@@ -37,15 +57,13 @@ Aşağıdaki tuşların çekirdek gezinme ve işlem mantığı dört modda da ay
 | INI'de Göster | Sağ Tık → INI'de Göster | `e` | `GET /api/show-ini` | Ham `[list_text]`/`[list_label]` satırlarını gösterir. |
 | Anlık Yedek / Tam Yedek | Tepsi → Yedekler… | `b` / `B` | Yedekle düğmesi | Dönen yedek veya `qtp-tam-yedek-*.json` oluşturur. |
 | INI Yeniden Yükle | Tepsi → INI Yeniden Yükle | `r` | Yenile düğmesi | Diskteki INI/JSON verisini yeniden yükler. |
-| Ayarları Aç | `Ctrl+,` (`⌘+,`) | `s` | `/api/settings` | Ayarları görüntüler veya düzenler. |
+| Ayarları Aç / Kısayol Kontrol | `Ctrl+,` (`⌘+,`) | `s` / `k` / `P` | `/api/settings`, `Kısayollar` | Ayarları, profilleri ve çakışma durumunu açar. |
 | Türkçe Yardım | `F1` | `F1` | `F1` | Uygulama içi Türkçe yardımı açar (**tüm modlarda aynı**). |
 | Kapat / Çık | `Esc` | `q` / `Esc` | `Esc` | Katmanı veya modal pencereyi kapatır (**tüm modlarda aynı**). |
 
-> Not: `Ctrl+K` / `Ctrl+Enter` / `Ctrl+,` tüm masaüstü işletim sistemlerinde (Windows, Linux, macOS) birincil standart olarak korunur; macOS'ta `⌘` eşdeğerleri yalnızca ek sunum kısayolu olarak eklenir. TUI modunda terminal sınırlamaları nedeniyle `c`, `/`, `e`, `b`, `r`, `s`, `q` tek tuş eşdeğerleri sağlanır.
-
 ---
 
-## 3. Fare Etkileşimleri
+## 4. Fare Etkileşimleri
 
 | Olay | Windows | Linux | macOS | Açıklama |
 | :--- | :--- | :--- | :--- | :--- |

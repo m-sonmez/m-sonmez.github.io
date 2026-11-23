@@ -17,35 +17,42 @@ Bu belge, QTP'nin üretebileceği **tüm Türkçe hata/uyarı mesajlarını bire
 | `INI dosyası biçimi geçersiz (satır N): Boş bölüm adı kullanılamaz.` | N. satırda `[]` biçiminde boş bölüm başlığı bulunuyor. | Geçerli bir bölüm adı yazın veya hatalı satırı silin. |
 | `INI dosyası biçimi geçersiz (satır N): Bölüm ([...]) başlığı dışında içerik bulundu.` | Dosyanın başında `[Program]` veya `[list_text]` başlığı olmadan düz metin/JSON bulunuyor. | Dosyanın ilk aktif satırının `[Program]` veya `[list_text]` olduğundan emin olun; JSON dosyası açıyorsanız `.json` uzantısı kullanın. |
 | `INI dosyası biçimi geçersiz (satır N): Anahtar=değer biçimi bekleniyor.` | Bölüm içindeki bir satırda `=` işareti eksik. | Satırı `anahtar=değer` biçimine getirin veya başına `;` koyarak yorum satırı yapın. |
-| `INI dosyası biçimi geçersiz (satır N): [list_text] satırı 'kimlik=kısayol=metin' biçiminde değil.` | `[list_text]` bölümündeki satırda iki adet `=` ayıracı yok (örneğin yalnızca `text_000=metin` yazılmış). | Satırı `text_000=L-Win+A=Metin<E<N<D|` biçimine düzeltin (kısayol yoksa `text_000==Metin<E<N<D|`). |
+| `INI dosyası biçimi geçersiz (satır N): [list_text] satırı 'kimlik=kısayol=metin' biçiminde değil.` | `[list_text]` bölümündeki satırda iki adet `=` ayıracı yok. | Satırı `text_000=L-Win+A=Metin<E<N<D|` biçimine düzeltin (kısayol yoksa `text_000==Metin<E<N<D|`). |
 | `INI dosyası biçimi geçersiz (satır N): Geçersiz öğe kimliği '...'.` | `[list_text]` içindeki satır kimliği boş veya geçersiz karakter içeriyor. | `text_000` biçiminde alfasayısal + `_` kimlik kullanın. |
 | `INI dosyası biçimi geçersiz (satır N): [list_order] sayısal değer bekliyor.` | `[list_order]` satırında `text_000=abc` gibi tamsayı olmayan bir değer var. | Sıra değerini tam sayıya (`1`, `2`, ...) çevirin. |
 
-### 1.2 JSON, Yedekleme ve Ayar Hataları
+### 1.2 JSON, Yedekleme, Ayar ve Canlı Yenileme Hataları
 
 | Birebir Mesaj | Olası Neden | Çözüm |
 | :--- | :--- | :--- |
-| `data.json çözümlenemedi: geçersiz JSON biçimi (...)` / `JSON dosyası ayrıştırılamadı: ...` | `data.json` veya tam yedek dosyasında sözdizimi hatası (eksik virgül, kapanmamış tırnak/parantez) var. | `backups/` klasöründeki son sağlıklı yedeği geri yükleyin veya JSON doğrulayıcı ile düzeltin. |
+| `data.json çözümlenemedi: geçersiz JSON biçimi (...)` / `JSON dosyası ayrıştırılamadı: ...` | `data.json` veya tam yedek dosyasında sözdizimi hatası var. | `backups/` klasöründeki son sağlıklı yedeği geri yükleyin veya JSON doğrulayıcı ile düzeltin. |
 | `data.json biçimi geçersiz: kök eleman bir JSON dizisi ([...]) olmalıdır.` | `data.json` nesne (`{...}`) veya metin içeriyor; dizi (`[...]`) bekleniyor. | Kök yapının `[{"keys": ..., "group": ..., "text": ...}]` dizisi olduğundan emin olun. |
 | `Desteklenmeyen dosya biçimi: Geçerli INI, JSON listesi ([...]) veya QTP Tam Yedek bekleniyor.` | Yüklenen JSON dosyası ne dizi ne de `type: "qtp-pwa-backup"` yapısında. | Doğru `data.json`, `qtp-tam-yedek-*.json` veya `QuickTextPaste.ini` dosyasını seçin. |
 | `Yedek bulunamadı: ...` | İstenen yedek kimliği `backups/` klasöründe mevcut değil. | Tepsi → `Yedekler…` listesinden güncel bir yedek kimliği seçin. |
-| `Bozuk ayar dosyası (...) algılandı; varsayılan ayarlarla yeniden oluşturuldu (...)` | `qtp_settings.json` bozulmuş veya geçersiz JSON içeriyor. | QTP otomatik olarak varsayılan ayarları geri yazar; özelleştirilmiş kısayollarınız varsa Ayarlar penceresinden yeniden girin. |
+| `Bozuk ayar dosyası (...) algılandı; varsayılan ayarlarla yeniden oluşturuldu (...)` | `qtp_settings.json` açılışta bozuk veya geçersiz JSON içeriyor. | QTP otomatik olarak varsayılan ayarları geri yazar; özelleştirilmiş kısayollarınız varsa Ayarlar penceresinden yeniden girin. |
+| `Otomatik ayar yenileme başarısız (mevcut ayarlar korundu): ...` | `auto_reload` etkin iken `qtp_settings.json` dışarıdan bozuk JSON biçiminde kaydedildi. | QTP çalışan ayarları bozmadan korur; `qtp_settings.json` içindeki sözdizimi hatasını düzeltip kaydedin. |
+| `Otomatik veri yenileme başarısız (önceki geçerli kayıtlar korundu): ...` | `auto_reload` etkin iken `QuickTextPaste.ini` veya `data.json` dışarıdan eksik/bozuk biçimde kaydedildi. | QTP bellekteki son geçerli listeyi korur ve çökmez; dosyayı geçerli biçime getirip kaydedin. |
 
-### 1.3 Platform, Yapıştırma, Kısayol ve CLI Hataları
+### 1.3 Platform, Yapıştırma, Kısayol, Tamamlama ve CLI Hataları
 
 | Birebir Mesaj | Olası Neden | Çözüm |
 | :--- | :--- | :--- |
-| `Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; yapay yapıştırma gerçekleştirilemedi.` | Linux Wayland üzerinde yapay tuş basımı için isteğe bağlı `wtype` veya `ydotool` kurulu değil. | Metin yine de panoya kopyalanır; otomatik `Ctrl+V` için `wtype`/`ydotool` kurabilir veya `Ctrl+V` ile elle yapıştırabilirsiniz (TUI/CLI/Web normal çalışmaya devam eder). |
-| `Wayland oturumunda global kısayollar kısıtlıdır (...); uygulama tepsi/TUI/CLI/Web ile kullanılabilir.` | Wayland güvenlik modeli arka plan X11 global tuş dinlemeyi engelledi. | Başlangıç bloklanmaz; sistem tepsisinden katmanı açabilir veya `--tui`/`--cli`/`--web` modlarını kullanabilirsiniz. |
-| `macOS Erişilebilirlik izni verilmemiş! Sistem Ayarları -> Gizlilik ve Güvenlik -> Erişilebilirlik altından QTP'ye izin verin.` | macOS güvenlik duvarı `qtp.bin` için klavye dinleme ve yapıştırma iznini henüz onaylamamış. | **Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik** içinden `qtp.bin` uygulamasına izin verip yeniden başlatın. |
-| `Global kısayol kaydedilemedi: ...` | Başka bir uygulama veya işletim sistemi (örneğin Windows `Win+A` / `Win+X`) aynı kısayolu kilitliyor. | Çakışan programı kapatın veya Ayarlar → Global Kısayollar altından alternatif tuş bileşimi (`Ctrl+Alt+A` vb.) tanımlayın. |
+| `Wayland oturumunda 'wtype' veya 'ydotool' bulunamadı; yapay yapıştırma gerçekleştirilemedi.` | Linux Wayland üzerinde yapay tuş basımı için isteğe bağlı `wtype` veya `ydotool` kurulu değil. | Metin yine de panoya kopyalanır; otomatik `Ctrl+V` için `wtype`/`ydotool` kurun. |
+| `Wayland oturumunda global kısayollar kısıtlıdır (...); uygulama tepsi/TUI/CLI/Web ile kullanılabilir.` | Wayland güvenlik modeli arka plan X11 global tuş dinlemeyi engelledi. | Başlangıç bloklanmaz; sistem tepsisinden veya `--tui`/`--cli`/`--web` ile kullanın. |
+| `macOS Erişilebilirlik izni verilmemiş! Sistem Ayarları -> Gizlilik ve Güvenlik -> Erişilebilirlik altından QTP'ye izin verin.` | macOS `qtp.bin` için klavye iznini henüz onaylamamış. | Sistem Ayarları → Gizlilik ve Güvenlik → Erişilebilirlik altından izin verip yeniden başlatın. |
+| `Global kısayol kaydedilemedi: ... (ERROR_HOTKEY_ALREADY_REGISTERED / 1409)` / `Global kısayol kaydedilemedi: ...` | Başka bir uygulama, ikinci bir QTP örneği veya Windows sistem kısayolu (`Win+A`, `Win+X` vb.) bu tuş bileşimini zaten kilitlemiş. | Çakışan programı kapatın veya **Ayarlar → Global Kısayollar** üzerinden `recommended` (`Win+Alt+*`) veya `function_keys` (`Ctrl+Shift+F1–F5`) seçin. |
+| `Türkçe-Q klavyede AltGr+Q (@ işareti) yazımını engelleyebilir.` / `Türkçe-Q klavyede AltGr+...` | Windows Türkçe-Q klavyede `Ctrl+Alt+<tuş>`, `AltGr` karakteriyle aynı tuş kodunu üretir. | `@`, `æ`, `€`, `ß` yazabilmek için `Win+Alt+*`, `Win+Ctrl+*` veya `Ctrl+Alt+Shift+*` bileşimlerini kullanın. |
+| `Çift atama: '...' başka bir kategoride de kullanılıyor` | İki ayrı yuvaya aynı kısayol bileşimi girilmiş. | Kısayollardan birini farklı bir tetik tuşuyla değiştirin. |
+| `Geçersiz kısayol profili: ...` / `Geçersiz değiştirici bileşimi` | `--hotkey-preset` veya `--hotkey-modifiers` için geçersiz ad verildi. | Profiller: `recommended`, `win_ctrl`, `ctrl_alt`, `ctrl_shift_alt`, `function_keys`, `legacy_win`. Değiştiriciler: `Win`, `Ctrl`, `Alt`, `Shift` bileşimleri. |
+| `Boş kısayol dizesi kullanılamaz.` / `Geçersiz kısayol tanımı (...): değiştirici tuşlar tek başına kullanılamaz; A–Z, F1–F12 veya Space gibi bir tetik tuşu ekleyin.` / `Geçersiz kısayol bileşeni (...): bilinmeyen tuş ...` / `Geçersiz kısayol tanımı (...): en az bir değiştirici tuş (Ctrl, Alt, Shift veya Win) gereklidir.` / `Geçersiz kısayol tanımı (...): birden fazla tetik tuşu kullanılamaz.` | `--set hotkeys.<yuva>` veya ayar penceresine tetik tuşsuz (`Ctrl+Alt`), değiştiricisiz (`A`) ya da tanınmayan tuş bileşimi girildi. | En az bir değiştirici (`Ctrl`, `Alt`, `Shift`, `Win`) ve tek bir geçerli tetik tuşu (`Win+Alt+A`, `Ctrl+Shift+F2` vb.) kullanın. |
+| `Desteklenmeyen kabuk türü: ...` | `--completion <kabuk>` veya `GET /api/completion?shell=...` için desteklenmeyen kabuk adı girildi. | `powershell`, `bash`, `zsh`, `fish` veya `auto` kullanın. |
 | `Pano erişimi başarısız: grafik oturumu veya pano desteği bulunamadı.` | Başsız Linux oturumunda DISPLAY/Qt/TTY yoksa panoya yazılamadı. | X11/GUI oturumu veya etkileşimli TTY (OSC 52) üzerinden çalıştırın. |
-| `Tuş simülasyonu başarısız (yalnızca panoya kopyalandı): ...` | Hedef pencereye tuş gönderimi işletim sistemi tarafından engellendi. | Metin panoya alınmıştır; hedef uygulamada `Ctrl+V` / `Cmd+V` ile yapıştırın. |
-| `Öğe bulunamadı: ...` | `--copy`, `--paste` veya `--show-ini` için verilen `raw_key` veya metin kayıtlar arasında yok. | `--list-items` veya `--search` çıktısındaki geçerli `text_NNN` anahtarını kullanın. |
-| `Geçersiz ayar anahtarı: ...` / `Geçersiz ayar değeri ...` | `--set` veya `--get` ile desteklenmeyen alan adı ya da aralık dışı değer girildi. | `theme` (`auto/dark/light`), `web.port` (`0-65535`), `backup_count` (`1-100`) gibi geçerli değerler kullanın. |
+| `Tuş simülasyonu başarısız (yalnızca panoya kopyalandı): ...` | Hedef pencereye tuş gönderimi işletim sistemi tarafından engellendi. | Metin panoya alınmıştır; `Ctrl+V` / `Cmd+V` ile yapıştırın. |
+| `Öğe bulunamadı: ...` | `--copy`, `--paste` veya `--show-ini` için verilen `raw_key` veya metin kayıtlar arasında yok. | `--list-items` çıktısındaki geçerli `text_NNN` anahtarını kullanın. |
+| `Geçersiz ayar anahtarı: ...` / `Geçersiz ayar değeri ...` | `--set` veya `--get` ile desteklenmeyen alan adı ya da aralık dışı değer girildi. | `theme`, `web.port`, `auto_reload`, `auto_reload_interval_ms` (`100–10000`), `hotkeys.*` için geçerli değerler kullanın. |
 | `HATA: Etkileşimsiz ortamda/CI içinde açıkça --mode {gui,tui,cli,web} belirtilmelidir.` | Pipe/CI ortamında hiçbir bayrak veya `--mode` verilmeden çalıştırıldı. | Betiklerde `--mode cli`, `--mode tui` veya `--mode web` belirtin. |
-| `Güvenlik kuralı: Web sunucusu yalnızca 127.0.0.1 üzerinde çalışabilir` | Yerel web sunucusu LAN/0.0.0.0 arayüzüne bağlanmaya çalışırsa reddedilir. | Yalnızca `127.0.0.1` veya `localhost` üzerinden bağlanın (LAN yayını güvenlik gereği desteklenmez). |
-| `HATA: Web sunucusu başlatılamadı (port kullanımda olabilir): ...` | Seçilen `web.port` (varsayılan `8765`) başka bir süreç tarafından kullanılıyor. | `--port 0` (otomatik port) veya başka bir port numarası (`--port 8877`) deneyin. |
+| `Güvenlik kuralı: Web sunucusu yalnızca 127.0.0.1 üzerinde çalışabilir` | Yerel web sunucusu LAN/0.0.0.0 arayüzüne bağlanmaya çalışırsa reddedilir. | Yalnızca `127.0.0.1` veya `localhost` üzerinden bağlanın. |
+| `HATA: Web sunucusu başlatılamadı (port kullanımda olabilir): ...` | Seçilen `web.port` başka bir süreç tarafından kullanılıyor. | `--port 0` veya farklı bir port numarası kullanın. |
 | `Bilinmeyen API uç noktası: ...` | `--web` modunda tanımsız bir `/api/...` rotası çağrıldı. | Geçerli rotalar için `GET /api` uç noktasını sorgulayın. |
 | `HATA: Yedek oluşturulamadı: ...` / `HATA: Tam yedek dışa aktarılamadı: ...` / `HATA: INI dışa aktarılamadı:` / `HATA: Kayıtlar yeniden yüklenemedi: ...` / `HATA: Yedek geri yüklenemedi: ...` / `HATA: Yedek okunamadı:` | Disk yazma izni yok veya kaynak yedek/INI dosyası bozuk. | Çalışma klasörünün yazılabilir olduğunu ve dosyanın geçerli JSON/INI olduğunu doğrulayın. |
 | `QTP zaten çalışıyor; mevcut pencere gösterildi ve ikinci örnek kapatıldı.` | Arka planda zaten bir QTP örneği açık (`qtp.lock`). | Normal davranıştır; çalışan katman otomatik olarak öne getirilir. |
@@ -61,21 +68,15 @@ Bu belge, QTP'nin üretebileceği **tüm Türkçe hata/uyarı mesajlarını bire
 
 ## 2. Sık Karşılaşılan Sorunlar ve Çözümler
 
-### Kısayollar Windows'ta Sistem Menüsünü Açıyor (`Win+A`, `Win+X`, `Win+Q`)
-Windows 10/11 üzerinde `Win+A` (Hızlı Ayarlar), `Win+X` (Hızlı Bağlantı) ve `Win+Q` (Arama) sistem tarafından ayrılmış olabilir. QTP `pynput` başarısız olduğunda `keyboard` geri dönüşünü dener; yine de sistem menüsü açılıyorsa:
-1. Ayarlar (`Ctrl+,`) penceresini açın.
-2. Global Kısayollar bölümünde ilgili kısayolu örneğin `Ctrl+Alt+A` veya `Ctrl+Shift+A` olarak güncelleyin.
+### Kısayollar Windows'ta Sistem Menüsünü Açıyorsa veya `1409` Hatası Alınıyorsa
+QTP varsayılan olarak çakışmasız **`Win+Alt+Space / A / Z / X / Q`** kısayollarını yerel Win32 `RegisterHotKey` üzerinden kaydeder ve basılan tuşları aktif pencereye sızdırmadan tüketir. Eski ayar dosyanızda `Win+A/Z/X/Q` kaldıysa veya başka bir araç kısayolu tutuyorsa:
+1. Ayarlar (`Ctrl+,`) penceresini açın (veya `qtp --hotkey-preset recommended` çalıştırın).
+2. `recommended` (`Win+Alt+*`) veya `Win` tuşsuz `function_keys` (`Ctrl+Shift+F1–F5`) / `ctrl_shift_alt` profilini seçip kaydedin; yeniden başlatma gerekmez.
 
-### Wayland Üzerinde Yapıştırma Çalışmıyor
-- Sway / Hyprland kullanıyorsanız `wtype` paketini kurun.
-- GNOME veya KDE Wayland kullanıyorsanız `ydotool` + `ydotoold` servisini etkinleştirin, ya da Ayarlar → Yapıştırma Yöntemi seçeneğini test edin.
-- Kopyalama (`Panoya kopyalandı ✔`) Wayland üzerinde doğrudan çalışmaya devam eder; `Ctrl+V` ile manuel yapıştırabilirsiniz.
+### PowerShell'de `--help` Çıktısı Neden Ekstra Bayrak Olmadan Önemlidir?
+Windows `qtp.exe` çift tıklandığında siyah komut penceresi açmamak için GUI alt sisteminde (`console=False`) paketlenir. `--help`, `-v --help`, `--completion`, `--cli` veya `--tui` gibi bir bayrakla çalıştırıldığında QTP üst süreç zincirini (`AttachConsole` ile PowerShell/cmd/Terminal) yürüyüp `UTF-8 (65001)` kod sayfasıyla `argparse` öncesinde bağlanır.
 
-### GNOME Üzerinde Sistem Tepsisi Simgesi Görünmüyor
-GNOME 40+ varsayılan olarak tepsi simgelerini gizler. Dağıtımınızdan `gnome-shell-extension-appindicator` paketini kurup etkinleştirin. Tepsi gizli olsa bile `Ctrl+Shift+Space` ile katmanı açabilir ve **Ayarlar** düğmesine erişebilirsiniz.
-
-### `qtp.lock` Kilit Dosyası Takılı Kaldı
-Uygulama elektrik kesintisi veya `kill -9` ile zorla sonlandırıldıysa `qtp.lock` dosyası diskte kalabilir. QTP bir sonraki açılışta eski portun yanıt vermediğini otomatik algılar, bayat kilit dosyasını siler ve normal şekilde açılır. Yine de sorun yaşarsanız `qtp.lock` dosyasını elinizle silebilirsiniz.
-
-### `QuickTextPaste.ini` Türkçe Karakterleri Bozuk Görünüyor
-Eski `QuickTextPaste.ini` dosyaları bazen `cp1254` (Windows Türkçe) veya BOM'suz `UTF-16` olabilir. QTP her açılışta kodlamayı otomatik algılar ve kayıt sırasında tüm Türkçe karakterler ile emojileri koruyan `UTF-16 LE BOM` biçimine dönüştürür.
+### Wayland / GNOME / `qtp.lock` / Türkçe INI Kodlamaları
+- **Wayland:** Yapay `Ctrl+V` için isteğe bağlı `wtype` (Sway/Hyprland) veya `ydotool` kurulabilir; kopyalama (`Ctrl+Enter` / `--copy`) yerleşik çalışır.
+- **GNOME Tepsisi:** Tepsi simgesi için `gnome-shell-extension-appindicator` etkinleştirin; gizliyken de global kısayollarla katmanı açabilirsiniz.
+- **`qtp.lock` & Türkçe Kodlama:** Bayat `qtp.lock` sonraki açılışta otomatik temizlenir; `cp1254` ve BOM'suz INI'ler kayıpsız `UTF-16 LE BOM` olarak okunur.
