@@ -279,20 +279,30 @@ def _sample_image_mean_luminance(image) -> tuple[float, bool]:
     h = image.height()
     total_lum = 0.0
     samples = 0
-    has_pure_black = False
-    step_x = max(1, w // 40)
-    step_y = max(1, h // 40)
-    for y in range(2, max(3, h - 2), step_y):
-        for x in range(2, max(3, w - 2), step_x):
+    rows: list[list[float]] = []
+    for y in range(2, max(3, h - 2)):
+        row_lums: list[float] = []
+        for x in range(2, max(3, w - 2)):
             c = image.pixelColor(x, y)
             if c.alpha() == 0:
+                row_lums.append(1.0)
                 continue
-            r, g, b = c.red(), c.green(), c.blue()
-            if r == 0 and g == 0 and b == 0:
-                has_pure_black = True
-            total_lum += (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+            lum = (0.2126 * c.red() + 0.7152 * c.green() + 0.0722 * c.blue()) / 255.0
+            row_lums.append(lum)
+            total_lum += lum
             samples += 1
-    return (total_lum / max(1, samples)), has_pure_black
+        rows.append(row_lums)
+    has_dark_block = False
+    gh = len(rows)
+    gw = len(rows[0]) if rows else 0
+    for y in range(0, max(0, gh - 6), 2):
+        for x in range(0, max(0, gw - 6), 2):
+            if all(rows[y + dy][x + dx] < 0.22 for dy in range(6) for dx in range(6)):
+                has_dark_block = True
+                break
+        if has_dark_block:
+            break
+    return (total_lum / max(1, samples)), has_dark_block
 
 
 def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot):
@@ -312,11 +322,11 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
     ov.show_overlay(category="ALL", animate=False)
     QApplication.processEvents()
 
-    light_card_lum, has_black_light = _sample_image_mean_luminance(ov.card.grab().toImage())
-    light_list_lum, has_black_list = _sample_image_mean_luminance(ov.list_view.viewport().grab().toImage())
+    light_card_lum, has_dark_card = _sample_image_mean_luminance(ov.card.grab().toImage())
+    light_list_lum, has_dark_list = _sample_image_mean_luminance(ov.list_view.viewport().grab().toImage())
     assert light_card_lum > 0.78, f"Açık tema kart parlaklığı düşük: {light_card_lum:.3f}"
     assert light_list_lum > 0.78, f"Açık tema liste parlaklığı düşük: {light_list_lum:.3f}"
-    assert not has_black_light and not has_black_list, "Açık tema içinde saf siyah (#000000) piksel sızıntısı bulundu"
+    assert not has_dark_card and not has_dark_list, "Açık tema içinde koyu blok sızıntısı bulundu"
 
     ov.toggle_theme()
     QApplication.processEvents()
@@ -345,10 +355,10 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
             opt.state = state_flag
             delegate.paint(painter, opt, ov.list_model.index(0, 0))
             painter.end()
-            lum, has_blk = _sample_image_mean_luminance(img)
+            lum, has_dark_blk = _sample_image_mean_luminance(img)
             if expect_light:
                 assert lum > 0.70, f"Açık delegate ({state_flag}) çok koyu: {lum:.3f}"
-                assert not has_blk
+                assert not has_dark_blk
             else:
                 assert lum < 0.30, f"Koyu delegate ({state_flag}) çok açık: {lum:.3f}"
 
@@ -361,10 +371,10 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
             qtbot.addWidget(dlg)
             dlg.show()
             QApplication.processEvents()
-            dlg_lum, dlg_blk = _sample_image_mean_luminance(dlg.grab().toImage())
+            dlg_lum, dlg_dark_blk = _sample_image_mean_luminance(dlg.grab().toImage())
             if expect_light:
                 assert dlg_lum > 0.78, f"Açık {type(dlg).__name__} parlaklığı düşük: {dlg_lum:.3f}"
-                assert not dlg_blk, f"Açık {type(dlg).__name__} içinde saf siyah piksel bulundu"
+                assert not dlg_dark_blk, f"Açık {type(dlg).__name__} içinde koyu blok sızıntısı bulundu"
             else:
                 assert dlg_lum < 0.25, f"Koyu {type(dlg).__name__} parlaklığı yüksek: {dlg_lum:.3f}"
             dlg.close()
