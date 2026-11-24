@@ -4,6 +4,15 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.4.3] - 2026-11-24
+
+### Windows Uyumluluğu, LF CSS Varlık Tutarlılığı & Sürüm Eşitleme
+- **`qtp/.gitattributes` (`*.css text eol=lf`):** Windows üzerinde `core.autocrlf=true` nedeniyle `qtp/theme.css` ve `qtp/standalone/qtp_app/web/theme.css` dosyalarının CRLF (`29.216` bayt) olarak çıkarılıp `qtp.exe` içine farklı baytlarla gömülmesi giderildi; CSS dosyaları tüm işletim sistemlerinde LF (`27.532` bayt) olarak korunur.
+- **Windows Test Eşitliği (`tests/test_smoke_ui.py`, `tests/test_web_ui.py`, `tests/test_mode_parity.py`):**
+  - `test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts` içinde Windows'a özgü `Win+Ctrl+Space` sistem kısayolu çakışma uyarısının (`QMessageBox.warning`) `offscreen` çalıştırmada engellenmesi için onay diyaloğu sahtelendi ve `test_overlay_focus_loss_initial_category_ipc_and_conflict_confirm` içinde `launch_gui` `QTimer` çıkışı `app.exec` sarmalayıcısına alındı.
+  - `test_web_ui.py` ve `test_mode_parity.py` içindeki uzun JavaScript VM doğrulamaları Windows `CreateProcess` `32.767` karakter komut satırı sınırına (`WinError 206`) takılmamak için geçici `.js` dosyası üzerinden çalıştırıldı.
+- **İmzalı Windows İkilisi & PWA Önbelleği:** İmzalı Windows x64 `qtp.exe` (`2.4.3.0`, `CN=Murat Sönmez`, RFC 3161 zaman damgalı) güncellendi ve `qtp/sw.js` önbellek adı `qtp-pwa-cache-v3.5.4` olarak artırıldı.
+
 ## [2.4.2] - 2026-11-24
 
 ### Web Arayüzü, Tasarım Sistemi ve Görünüm Tutarlılığı

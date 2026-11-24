@@ -12,6 +12,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtTest import QTest
+from PyQt6.QtWidgets import QMessageBox
 
 from qtp_app.core.engine import QtpEngine
 from qtp_app.core.ini_parser import parse_qtp_ini, read_text_auto
@@ -170,7 +171,8 @@ def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(q
     dlg.theme_cb.setCurrentText("dark")
     dlg.auto_reload_chk.setChecked(False)
     dlg.auto_reload_interval_spin.setValue(900)
-    dlg._save_and_accept()
+    with mock.patch.object(QMessageBox, "warning", return_value=QMessageBox.StandardButton.Yes):
+        dlg._save_and_accept()
 
     assert dlg.result_settings is not None
     assert dlg.result_settings["web"]["port"] == 9123
@@ -616,9 +618,15 @@ def test_overlay_focus_loss_initial_category_ipc_and_conflict_confirm(qtbot, tmp
     fake_hk = mock.Mock()
     fake_hk.register.return_value = {}
     fake_hk.conflicts = {}
-    QTimer.singleShot(50, app.quit)
+    orig_exec = app.exec
+
+    def _fake_exec():
+        QTimer.singleShot(50, app.quit)
+        return orig_exec()
+
     with mock.patch.object(OverlayWindow, "show_overlay", _spy_show), \
-         mock.patch("qtp_app.main.HotkeyManager", return_value=fake_hk):
+         mock.patch("qtp_app.main.HotkeyManager", return_value=fake_hk), \
+         mock.patch.object(app, "exec", side_effect=_fake_exec):
         rc = launch_gui(eng_stale, quiet=True)
     assert rc == 0
     assert shown_cats and shown_cats[0] == "ALL"

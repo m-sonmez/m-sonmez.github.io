@@ -415,7 +415,9 @@ def test_github_pages_sync_static_http_serving_and_js_syntax(tmp_path: Path):
             + "\nassert(conf.Q && conf.Q[0].includes('AltGr+Q'));"
             + "\nconsole.log('STATIC_SEARCH_AND_HOTKEY_OK');\n"
         )
-        proc_vm = subprocess.run([node, "-e", vm_script], capture_output=True, text=True, check=False)
+        vm_file = tmp_path / "vm_static_check.js"
+        vm_file.write_text(vm_script, encoding="utf-8")
+        proc_vm = subprocess.run([node, str(vm_file)], capture_output=True, text=True, check=False)
         assert proc_vm.returncode == 0, f"VM hatası: {proc_vm.stderr}\n{proc_vm.stdout}"
         assert "STATIC_SEARCH_AND_HOTKEY_OK" in proc_vm.stdout
 
@@ -620,7 +622,9 @@ function runSim(liveMode) {
             QTP_INDEX_HTML=str(qtp_root / "qtp.html"),
             QTP_DATA_JSON=str(qtp_root / "data.json"),
         )
-        proc_dual = subprocess.run([node, "-e", full_vm_script], capture_output=True, text=True, env=env, check=False)
+        dual_vm_file = tmp_path / "dual_vm_check.js"
+        dual_vm_file.write_text(full_vm_script, encoding="utf-8")
+        proc_dual = subprocess.run([node, str(dual_vm_file)], capture_output=True, text=True, env=env, check=False)
         assert proc_dual.returncode == 0, f"Dual VM hatası: {proc_dual.stderr}\n{proc_dual.stdout}"
         assert "DUAL_MODE_VM_OK" in proc_dual.stdout
 

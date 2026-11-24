@@ -728,7 +728,9 @@ def test_only_notes_filter_parity_across_engine_gui_and_static_js(tmp_path: Path
             + f"assert.deepStrictEqual(res.map(it => it.text), {json.dumps(eng_texts, ensure_ascii=False)});\n"
             + "console.log('NOTE_PARITY_OK');\n"
         )
-        proc = subprocess.run([node, "-e", vm_code], capture_output=True, text=True, check=False)
+        vm_file = work / "note_parity_check.js"
+        vm_file.write_text(vm_code, encoding="utf-8")
+        proc = subprocess.run([node, str(vm_file)], capture_output=True, text=True, check=False)
         assert proc.returncode == 0, f"JS note parity hatası: {proc.stderr}"
         assert "NOTE_PARITY_OK" in proc.stdout
 
