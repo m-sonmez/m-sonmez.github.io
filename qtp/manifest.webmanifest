@@ -4,7 +4,7 @@
   "short_name": "QTP Panel",
   "description": "Çevrimdışı çalışan yerel Hazır Cevaplar ve QuickTextPaste (.ini / .json) yönetim ve düzenleme uygulaması.",
   "lang": "tr",
-  "start_url": "./index.html",
+  "start_url": "./qtp.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
@@ -40,11 +40,6 @@
       "name": "Eski QuickTextPaste Yöneticisi",
       "short_name": "Yönetici",
       "url": "./index.html"
-    },
-    {
-      "name": "Hızlı Kopyalama Panosu",
-      "short_name": "Hızlı Pano",
-      "url": "./legacy/cevaplar.html"
     }
   ]
 }
