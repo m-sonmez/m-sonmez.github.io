@@ -10,6 +10,9 @@
       try {
         const savedTheme = localStorage.getItem('qtp_pwa_theme_v2');
         document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+        const savedDensity = localStorage.getItem('qtp_ui_density_v1');
+        const density = ['compact', 'default', 'metro'].includes(savedDensity) ? savedDensity : 'default';
+        document.documentElement.setAttribute('data-density', density);
       } catch (_) {}
     })();
   </script>
@@ -25,15 +28,100 @@
     };
   </script>
   <style>
-    :root { color-scheme: light; }
+    :root {
+      color-scheme: light;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --ctrl-h: 32px;
+      --card-pad: 12px;
+      --section-gap: 6px;
+      --row-py: 6px;
+      --row-px: 10px;
+      --row-gap: 8px;
+      --list-gap: 4px;
+      --grid-gap: 8px;
+      --table-py: 7px;
+      --table-px: 10px;
+      --font-row: 13.5px;
+      --font-meta: 11px;
+      --radius-ctrl: 8px;
+      --radius-row: 8px;
+      --radius-window: 12px;
+    }
+    :root[data-density="compact"] {
+      --ctrl-h: 28px;
+      --card-pad: 8px;
+      --section-gap: 4px;
+      --row-py: 4px;
+      --row-px: 8px;
+      --row-gap: 6px;
+      --list-gap: 2px;
+      --grid-gap: 6px;
+      --table-py: 4px;
+      --table-px: 8px;
+      --font-row: 12.5px;
+      --font-meta: 10.5px;
+      --radius-ctrl: 8px;
+      --radius-row: 8px;
+      --radius-window: 10px;
+    }
+    :root[data-density="default"] {
+      --ctrl-h: 32px;
+      --card-pad: 12px;
+      --section-gap: 6px;
+      --row-py: 6px;
+      --row-px: 10px;
+      --row-gap: 8px;
+      --list-gap: 4px;
+      --grid-gap: 8px;
+      --table-py: 7px;
+      --table-px: 10px;
+      --font-row: 13.5px;
+      --font-meta: 11px;
+      --radius-ctrl: 8px;
+      --radius-row: 8px;
+      --radius-window: 12px;
+    }
+    :root[data-density="metro"] {
+      --ctrl-h: 38px;
+      --card-pad: 16px;
+      --section-gap: 10px;
+      --row-py: 12px;
+      --row-px: 14px;
+      --row-gap: 10px;
+      --list-gap: 8px;
+      --grid-gap: 12px;
+      --table-py: 10px;
+      --table-px: 12px;
+      --font-row: 14.5px;
+      --font-meta: 12px;
+      --radius-ctrl: 4px;
+      --radius-row: 4px;
+      --radius-window: 6px;
+    }
     :root.dark { color-scheme: dark; }
     html, body { max-width: 100%; overflow-x: clip; }
     mark { background: #fde047; color: #0f172a; padding: 0 2px; border-radius: 3px; }
     .dark mark { background: #eab308; color: #0f172a; }
     .card-copied { box-shadow: 0 0 0 2px #10b981 !important; }
+    .qtp-hdr-inner { padding: var(--space-2) var(--card-pad); display: flex; flex-direction: column; gap: var(--space-2); }
+    .qtp-ctrl { min-height: var(--ctrl-h); border-radius: var(--radius-ctrl); }
+    .qtp-main { padding: var(--card-pad); display: flex; flex-direction: column; gap: var(--section-gap); }
+    .qtp-section { border-radius: var(--radius-window); }
+    .qtp-sec-hdr { padding: var(--row-py) var(--card-pad); }
+    .qtp-cards-grid { padding: var(--card-pad); gap: var(--grid-gap); }
+    .qtp-card { padding: var(--row-py) var(--row-px); border-radius: var(--radius-row); }
+    .qtp-card-text { font-size: var(--font-row); line-height: 1.4; }
+    .qtp-btn-sm { min-width: 24px; min-height: 24px; }
+    .qtp-card-meta { font-size: var(--font-meta); margin-top: var(--space-2); padding-top: var(--space-2); }
     @media (max-width: 768px) {
+      :root, :root[data-density="compact"], :root[data-density="default"] { --ctrl-h: 32px; }
       input, select, textarea { font-size: 16px; }
-      button, select, input:not([type="checkbox"]), header a, a.rounded-lg, a.rounded-xl { min-height: 36px; }
+      select.qtp-ctrl { font-size: 12px; }
+      button, select, input:not([type="checkbox"]), header a, a.rounded-lg, a.rounded-xl, .qtp-ctrl, .qtp-btn-sm { min-height: max(36px, var(--ctrl-h)); }
+      .qtp-btn-sm { min-width: 34px; }
     }
     .hidden { display: none !important; }
     @media print {
@@ -45,7 +133,7 @@
 <body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors">
 
   <header class="no-print sticky top-0 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-    <div id="headerInner" class="max-w-7xl mx-auto px-3 sm:px-4 py-2 space-y-2">
+    <div id="headerInner" class="max-w-7xl mx-auto qtp-hdr-inner">
 
       <div id="headerTopBar" class="flex flex-wrap items-center justify-between gap-2 min-w-0">
         <div class="flex flex-wrap items-center gap-2 min-w-0 max-w-full">
@@ -93,17 +181,17 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap md:flex-nowrap items-center gap-2 min-w-0">
+      <div class="flex flex-wrap lg:flex-nowrap items-center gap-2 min-w-0">
         <div class="relative flex-1 min-w-[min(200px,100%)]">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
           <input id="searchInput" type="text" placeholder="Metin, başlık, kategori veya kısayol ara (/)"
-            class="w-full pl-8 pr-9 py-1.5 rounded-xl text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button id="clearSearchBtn" type="button" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
+            class="qtp-ctrl w-full pl-8 pr-9 text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button id="clearSearchBtn" type="button" class="hidden qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
         </div>
 
         <div id="catDropdownWrap" class="relative shrink-0 max-w-full min-w-0 flex items-center">
-          <div class="inline-flex items-stretch max-w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-            <button id="catDropdownBtn" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0" title="Çoklu kategori filtrele">
+          <div class="inline-flex items-stretch max-w-full border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden" style="border-radius: var(--radius-ctrl);">
+            <button id="catDropdownBtn" type="button" class="qtp-ctrl inline-flex items-center gap-1.5 px-2.5 text-xs font-medium hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0" title="Çoklu kategori filtrele">
               <span id="catBtnLabel" class="truncate">📁 Kategoriler: Tümü (0)</span>
               <span id="catBtnCaret" class="text-[10px] opacity-70 shrink-0">▼</span>
             </button>
@@ -116,7 +204,7 @@
                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔎</span>
                 <input id="catSearchInput" type="text" placeholder="Kategori ara..."
                   class="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <button id="catSearchClearBtn" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                <button id="catSearchClearBtn" type="button" class="hidden qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
               </div>
               <div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
                 <div class="flex items-center gap-1">
@@ -131,12 +219,12 @@
           </div>
         </div>
 
-        <div id="expandedFilters" class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 max-w-full min-w-0">
-          <select id="hotkeyFilter" class="max-w-full min-w-0 px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div id="expandedFilters" class="flex flex-wrap lg:flex-nowrap items-center gap-1.5 max-w-full min-w-0">
+          <select id="hotkeyFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="ALL">⌨️ Tüm Kısayollar</option>
           </select>
 
-          <select id="scopeFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select id="scopeFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="all">🎯 Tümü</option>
             <option value="text">📝 Metin</option>
             <option value="label">🏷️ Başlık</option>
@@ -144,10 +232,16 @@
             <option value="keys">⌨️ Kısayol</option>
           </select>
 
-          <select id="sortFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select id="sortFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="default">↕️ Varsayılan</option>
             <option value="popular">🔥 Popüler</option>
             <option value="az">🔤 A → Z</option>
+          </select>
+
+          <select id="densitySelect" aria-label="Görünüm yoğunluğu" title="Arayüz yoğunluğu" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="compact">Sıkı</option>
+            <option value="default" selected>Varsayılan</option>
+            <option value="metro">Metro</option>
           </select>
         </div>
 
@@ -175,7 +269,7 @@
     </div>
   </div>
 
-  <main id="content" class="max-w-7xl mx-auto px-3 sm:px-4 py-4 space-y-4"></main>
+  <main id="content" class="max-w-7xl mx-auto qtp-main"></main>
 
   <div id="toast" class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-200 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2">
     <span id="toastIcon">✅</span><span id="toastMsg">Panoya kopyalandı!</span>
@@ -199,6 +293,7 @@
     const LS_META_KEY = 'qtp_pwa_meta_v2';
     const LS_SETTINGS_KEY = 'qtp_pwa_settings_v2';
     const LS_THEME_KEY = 'qtp_pwa_theme_v2';
+    const LS_DENSITY_KEY = 'qtp_ui_density_v1';
     const favKey = 'qtp_favorites_v1';
     const countKey = 'qtp_copy_counts_v1';
 
@@ -225,6 +320,7 @@
       hotkey: document.getElementById('hotkeyFilter'),
       scope: document.getElementById('scopeFilter'),
       sort: document.getElementById('sortFilter'),
+      densitySelect: document.getElementById('densitySelect'),
       catWrap: document.getElementById('catDropdownWrap'),
       catBtn: document.getElementById('catDropdownBtn'),
       catBtnLabel: document.getElementById('catBtnLabel'),
@@ -654,8 +750,9 @@
 
     function setHdrBottomFromEl(btnEl) {
       if (btnEl && typeof btnEl.getBoundingClientRect === 'function' && document.documentElement.style) {
-        const r = btnEl.getBoundingClientRect();
-        document.documentElement.style.setProperty('--hdr-bottom', `${Math.round(r.bottom + 6)}px`);
+        const hdr = typeof btnEl.closest === 'function' ? btnEl.closest('header') : null;
+        const r = (hdr || btnEl).getBoundingClientRect();
+        document.documentElement.style.setProperty('--hdr-bottom', `${Math.round(r.bottom + 4)}px`);
       }
     }
 
@@ -784,10 +881,10 @@
         const groupKeys = [...new Set(items.map(i => i.keys).filter(Boolean))];
 
         const section = document.createElement('section');
-        section.className = 'bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden';
+        section.className = 'qtp-section bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden';
 
         const header = document.createElement('div');
-        header.className = 'flex flex-wrap items-center justify-between gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 cursor-pointer select-none';
+        header.className = 'qtp-sec-hdr flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 cursor-pointer select-none';
         header.innerHTML = `
           <div class="flex items-center gap-2.5">
             <span class="text-xs text-slate-400 transition-transform ${isCollapsed ? '-rotate-90' : ''}">▼</span>
@@ -806,7 +903,7 @@
 
         if (!isCollapsed) {
           const grid = document.createElement('div');
-          grid.className = 'p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3';
+          grid.className = 'qtp-cards-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 content-start items-stretch';
 
           items.forEach(item => {
             const isNote = (item.text || '').startsWith('[DAHİLİ NOT]');
@@ -815,29 +912,29 @@
             const count = Math.max(Number(item.copyCount || 0), copyCounts[h] || 0);
 
             const card = document.createElement('article');
-            card.className = `min-w-0 group relative flex flex-col justify-between p-4 rounded-xl border transition cursor-pointer ${
+            card.className = `qtp-card min-w-0 group relative flex flex-col justify-between border transition cursor-pointer ${
               isNote
                 ? 'bg-amber-50/70 dark:bg-amber-950/25 border-amber-300 dark:border-amber-700/60 hover:border-amber-500'
                 : 'bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md'
             }`;
 
             card.innerHTML = `
-              <div>
-                <div class="flex items-start justify-between gap-2 mb-2">
-                  <div class="flex flex-wrap items-center gap-1.5">
+              <div class="min-w-0">
+                <div class="flex items-start justify-between gap-2 mb-2 min-w-0">
+                  <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                     ${item.keys ? `<kbd class="px-1.5 py-0.5 text-[11px] font-mono rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">${escapeHtml(item.keys)}</kbd>` : ''}
                     ${isNote ? `<span class="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-white">Dahili Not</span>` : ''}
-                    ${item.label ? `<span class="text-xs font-semibold text-slate-600 dark:text-slate-300">${highlightText(item.label, terms)}</span>` : ''}
+                    ${item.label ? `<span class="text-xs font-semibold text-slate-600 dark:text-slate-300 break-words">${highlightText(item.label, terms)}</span>` : ''}
                   </div>
-                  <button class="fav-btn no-print text-base leading-none opacity-75 hover:opacity-100 transition" title="Favorilere Ekle/Çıkar">
+                  <button class="fav-btn qtp-btn-sm no-print inline-flex items-center justify-center rounded-md text-base leading-none opacity-75 hover:opacity-100 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition shrink-0" title="Favorilere Ekle/Çıkar">
                     ${isFav ? '⭐' : '☆'}
                   </button>
                 </div>
-                <p class="text-sm leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-line break-words">${highlightText(item.text, terms)}</p>
+                <p class="qtp-card-text text-slate-800 dark:text-slate-200 whitespace-pre-line break-words overflow-hidden">${highlightText(item.text, terms)}</p>
               </div>
-              <div class="no-print flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-slate-200/70 dark:border-slate-800/80">
-                <span class="copy-count-badge text-[11px] text-slate-400">${count > 0 ? `${count}x kopyalandı` : 'Tıkla & kopyala'}</span>
-                <button class="copy-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
+              <div class="qtp-card-meta no-print shrink-0 flex items-center justify-between gap-2 border-t border-slate-200/70 dark:border-slate-800/80 min-w-0">
+                <span class="copy-count-badge text-[11px] text-slate-400 truncate min-w-0">${count > 0 ? `${count}x kopyalandı` : 'Tıkla & kopyala'}</span>
+                <button class="copy-btn qtp-btn-sm inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition shrink-0">
                   📋 Kopyala
                 </button>
               </div>`;
@@ -923,6 +1020,21 @@
     el.hotkey.addEventListener('change', render);
     el.scope.addEventListener('change', render);
     el.sort.addEventListener('change', render);
+    function applyDensityDom(val) {
+      const clean = ['compact', 'default', 'metro'].includes(val) ? val : 'default';
+      if (typeof document !== 'undefined' && document.documentElement && typeof document.documentElement.setAttribute === 'function') {
+        document.documentElement.setAttribute('data-density', clean);
+      }
+      if (el.densitySelect) el.densitySelect.value = clean;
+      return clean;
+    }
+    try { applyDensityDom(localStorage.getItem(LS_DENSITY_KEY) || 'default'); } catch (_) { applyDensityDom('default'); }
+    if (el.densitySelect) {
+      el.densitySelect.addEventListener('change', () => {
+        const d = applyDensityDom(el.densitySelect.value);
+        try { localStorage.setItem(LS_DENSITY_KEY, d); } catch (_) {}
+      });
+    }
     el.fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
     el.bannerPickFileBtn.addEventListener('click', () => el.fileInput.click());
 

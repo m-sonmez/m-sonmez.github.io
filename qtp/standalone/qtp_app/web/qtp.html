@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr" data-theme="light">
+<html lang="tr" data-theme="light" data-density="default">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,107 +8,112 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="stylesheet" href="./theme.css" />
 </head>
-<body>
-  <main id="overlayRoot" class="overlay-card" role="application" aria-label="QTP Hızlı Yapıştırma Katmanı">
-    <div class="top-row">
-      <input id="searchInput" class="search-input" type="text" placeholder="Ara… (mesaj, kategori, etiket, kısayol)" aria-label="Hazır cevaplarda ara" />
-      <button class="action-btn primary icon-only-btn" id="btnAddNew" title="Yeni hazır cevap ekle" aria-label="Yeni hazır cevap ekle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
-      <button class="action-btn icon-only-btn" id="btnSaveAll" title="Değişiklikleri kaydet (Ctrl+S)" aria-label="Değişiklikleri kaydet"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
-      <button class="action-btn icon-only-btn" id="btnUndo" title="Geri al (Ctrl+Z)" aria-label="Geri al" disabled><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
-      <button class="action-btn icon-only-btn" id="btnRedo" title="Yinele (Ctrl+Y)" aria-label="Yinele" disabled><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg></button>
-      <button class="action-btn icon-only-btn" id="btnThemeToggle" title="Açık / koyu tema değiştir" aria-label="Açık veya koyu temayı değiştir"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
-      <details class="tools-menu" id="toolsMenu">
-        <summary class="action-btn icon-only-btn" id="btnToolsSummary" title="Diğer araçlar" aria-label="Araçlar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></summary>
+<body class="bg-page text-ink flex items-stretch justify-center">
+  <main id="overlayRoot" class="overlay-card w-[min(1240px,100%)] h-[calc(100dvh-2*var(--page-pad))] min-h-0 bg-window border border-edge rounded-window p-card-pad flex flex-col gap-sec-gap shadow-overlay" role="application" aria-label="QTP Hızlı Yapıştırma Katmanı">
+    <div class="top-row relative flex flex-wrap items-center gap-1 min-w-0 shrink-0">
+      <input id="searchInput" class="search-input flex-1 basis-[140px] min-w-[120px] h-ctrl min-h-ctrl bg-input text-ink border border-input rounded-ctrl px-3 max-md:px-2 text-row placeholder:text-input-placeholder outline-none focus:border-focus" type="text" placeholder="Ara… (mesaj, kategori, etiket, kısayol)" aria-label="Hazır cevaplarda ara" />
+      <button class="action-btn primary icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-xs2 font-semibold cursor-pointer inline-flex items-center justify-center leading-none whitespace-nowrap" id="btnAddNew" title="Yeni hazır cevap ekle" aria-label="Yeni hazır cevap ekle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none whitespace-nowrap" id="btnSaveAll" title="Değişiklikleri kaydet (Ctrl+S)" aria-label="Değişiklikleri kaydet"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+      <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none whitespace-nowrap" id="btnUndo" title="Geri al (Ctrl+Z)" aria-label="Geri al" disabled><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+      <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none whitespace-nowrap" id="btnRedo" title="Yinele (Ctrl+Y)" aria-label="Yinele" disabled><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg></button>
+      <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none whitespace-nowrap" id="btnThemeToggle" title="Açık / koyu tema değiştir" aria-label="Açık veya koyu temayı değiştir"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      <details class="tools-menu inline-flex items-center max-w-full shrink-0" id="toolsMenu">
+        <summary class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none whitespace-nowrap" id="btnToolsSummary" title="Diğer araçlar" aria-label="Araçlar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></summary>
         <div class="tools-panel">
-          <button class="action-btn icon-only-btn" id="btnStripEmojiToggle" title="Kopyala/yapıştır sırasında emojileri temizle" aria-label="Emojileri temizle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><span class="tool-lbl">Emojili</span></button>
-          <button class="action-btn icon-only-btn" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi" aria-label="Global Kısayollar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h8M6 13h.01M18 13h.01"/></svg><span class="tool-lbl">Kısayollar</span></button>
-          <button class="action-btn icon-only-btn" id="btnGroups" title="Grup Yöneticisi" aria-label="Grup Yöneticisi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span class="tool-lbl">Gruplar</span></button>
-          <button class="action-btn icon-only-btn" id="btnImport" title="INI / JSON İçe Aktar" aria-label="İçe Aktar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="tool-lbl">İçe Aktar</span></button>
-          <button class="action-btn icon-only-btn" id="btnExport" title="Dışa Aktar (INI / JSON / Word / Yazdır)" aria-label="Dışa Aktar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="tool-lbl">Dışa Aktar</span></button>
-          <button class="action-btn icon-only-btn" id="btnSnapshots" title="Yerel ve Disk Anlık Kayıtları" aria-label="Yedek Geçmişi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg><span class="tool-lbl">Geçmiş</span></button>
-          <button class="action-btn icon-only-btn" id="btnReload" title="INI Yeniden Yükle" aria-label="INI Yeniden Yükle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span class="tool-lbl">Yenile</span></button>
-          <button class="action-btn icon-only-btn" id="btnBackup" title="Anlık Yedek Al / Dışa Aktar" aria-label="Yedekle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg><span class="tool-lbl">Yedekle</span></button>
-          <button class="action-btn icon-only-btn" id="btnHelp" title="Türkçe Yardım (F1)" aria-label="Türkçe Yardım (F1)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="tool-lbl">Yardım</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnStripEmojiToggle" title="Kopyala/yapıştır sırasında emojileri temizle" aria-label="Emojileri temizle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><span class="tool-lbl">Emojili</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi" aria-label="Global Kısayollar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h8M6 13h.01M18 13h.01"/></svg><span class="tool-lbl">Kısayollar</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnGroups" title="Grup Yöneticisi" aria-label="Grup Yöneticisi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span class="tool-lbl">Gruplar</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnImport" title="INI / JSON İçe Aktar" aria-label="İçe Aktar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="tool-lbl">İçe Aktar</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnExport" title="Dışa Aktar (INI / JSON / Word / Yazdır)" aria-label="Dışa Aktar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="tool-lbl">Dışa Aktar</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnSnapshots" title="Yerel ve Disk Anlık Kayıtları" aria-label="Yedek Geçmişi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg><span class="tool-lbl">Geçmiş</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnReload" title="INI Yeniden Yükle" aria-label="INI Yeniden Yükle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span class="tool-lbl">Yenile</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnBackup" title="Anlık Yedek Al / Dışa Aktar" aria-label="Yedekle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg><span class="tool-lbl">Yedekle</span></button>
+          <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnHelp" title="Türkçe Yardım (F1)" aria-label="Türkçe Yardım (F1)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="tool-lbl">Yardım</span></button>
         </div>
       </details>
     </div>
 
-    <div class="toolbar-row">
-      <div class="pills-row" id="categoryPills"></div>
-      <div class="toolbar-group">
-        <button class="pill active" id="btnScopeAll" data-scope="all" title="Tüm kayıtlar" aria-label="Tüm kayıtlar">Tümü</button>
-        <button class="pill icon-only-pill" id="btnScopeFav" data-scope="favorites" title="Yalnızca favoriler" aria-label="Yalnızca favoriler"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-        <button class="pill icon-only-pill" id="btnScopeNotes" data-scope="notes" title="Yalnızca kısayolsuz notlar" aria-label="Yalnızca notlar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></button>
-        <select id="groupFilterSelect" class="field-select compact-select" aria-label="Gruba göre filtrele" title="Gruba göre filtrele">
+    <div class="toolbar-row flex flex-col md:flex-row md:flex-wrap md:items-center md:justify-between gap-1 shrink-0 min-w-0">
+      <div class="pills-row flex items-center gap-1 min-w-0 flex-nowrap overflow-x-auto md:flex-wrap md:overflow-visible" id="categoryPills"></div>
+      <div class="toolbar-group flex flex-wrap items-center gap-1 min-w-0 w-full md:w-auto">
+        <button class="pill active shrink-0 bg-pill text-pill border border-edge rounded-pill px-3 max-md:px-2 h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="btnScopeAll" data-scope="all" title="Tüm kayıtlar" aria-label="Tüm kayıtlar">Tümü</button>
+        <button class="pill icon-only-pill shrink-0 bg-pill text-pill border border-edge rounded-pill p-0 w-ctrl min-w-ctrl h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center justify-center leading-none" id="btnScopeFav" data-scope="favorites" title="Yalnızca favoriler" aria-label="Yalnızca favoriler"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+        <button class="pill icon-only-pill shrink-0 bg-pill text-pill border border-edge rounded-pill p-0 w-ctrl min-w-ctrl h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center justify-center leading-none" id="btnScopeNotes" data-scope="notes" title="Yalnızca kısayolsuz notlar" aria-label="Yalnızca notlar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></button>
+        <select id="groupFilterSelect" class="field-select compact-select h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 bg-input text-ink border border-input w-auto max-w-[160px] max-md:flex-1 max-md:basis-[88px] max-md:max-w-full min-w-0 outline-none focus:border-focus" aria-label="Gruba göre filtrele" title="Gruba göre filtrele">
           <option value="">Tüm Gruplar</option>
         </select>
-        <select id="sortSelect" class="field-select compact-select" aria-label="Sıralama düzeni" title="Sıralama düzeni">
+        <select id="sortSelect" class="field-select compact-select h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 bg-input text-ink border border-input w-auto max-w-[160px] max-md:flex-1 max-md:basis-[88px] max-md:max-w-full min-w-0 outline-none focus:border-focus" aria-label="Sıralama düzeni" title="Sıralama düzeni">
           <option value="order">Varsayılan Sıra</option>
           <option value="usage">En Çok Kullanılan</option>
           <option value="alpha">A–Z (Başlık / Metin)</option>
           <option value="keys">Kısayola Göre</option>
           <option value="favorites">Önce Favoriler</option>
         </select>
-        <button class="action-btn icon-only-btn active-toggle" id="viewListBtn" title="Liste görünümü" aria-label="Liste görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
-        <button class="action-btn icon-only-btn" id="viewGridBtn" title="Kart / Izgara görünümü" aria-label="Kart görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></button>
-        <button class="action-btn icon-only-btn" id="viewTableBtn" title="Tablo görünümü" aria-label="Tablo görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="10" x2="9" y2="20"/></svg></button>
-        <button class="action-btn icon-btn" id="btnSelectAllVisible" title="Filtrelenen tüm kayıtları seç / kaldır" aria-label="Filtrelenen tüm kayıtları seç"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8 12 11 15 16 9"/></svg><span class="sel-count">0</span></button>
+        <select id="densitySelect" class="field-select compact-select h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 bg-input text-ink border border-input w-auto max-w-[160px] max-md:flex-1 max-md:basis-[88px] max-md:max-w-full min-w-0 outline-none focus:border-focus" aria-label="Görünüm yoğunluğu" title="Arayüz yoğunluğu (Sıkı / Varsayılan / Metro)">
+          <option value="compact">Sıkı</option>
+          <option value="default" selected>Varsayılan</option>
+          <option value="metro">Metro</option>
+        </select>
+        <button class="action-btn icon-only-btn active-toggle shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none" id="viewListBtn" title="Liste görünümü" aria-label="Liste görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+        <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none" id="viewGridBtn" title="Kart / Izgara görünümü" aria-label="Kart görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></button>
+        <button class="action-btn icon-only-btn shrink-0 w-ctrl h-ctrl min-w-ctrl min-h-ctrl p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none" id="viewTableBtn" title="Tablo görünümü" aria-label="Tablo görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="10" x2="9" y2="20"/></svg></button>
+        <button class="action-btn icon-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" id="btnSelectAllVisible" title="Filtrelenen tüm kayıtları seç / kaldır" aria-label="Filtrelenen tüm kayıtları seç"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8 12 11 15 16 9"/></svg><span class="sel-count text-[11px] font-bold">0</span></button>
       </div>
     </div>
 
-    <div class="bulk-bar" id="bulkBar">
-      <span class="bulk-count" id="bulkCountLabel">0 kayıt seçili</span>
-      <div class="toolbar-group">
-        <button class="action-btn primary" id="btnBulkEdit">✏️ Toplu Düzenle</button>
-        <button class="action-btn" id="btnBulkExport">📤 Seçileni Dışa Aktar</button>
-        <button class="action-btn danger" id="btnBulkDelete">🗑️ Seçileni Sil</button>
-        <button class="action-btn" id="btnBulkClear">✖ Seçimi Temizle</button>
+    <div class="bulk-bar shrink-0 bg-bulk border border-selected rounded-row p-2 flex-wrap items-center justify-between gap-2 min-w-0" id="bulkBar">
+      <span class="bulk-count text-xs2 font-bold text-heading" id="bulkCountLabel">0 kayıt seçili</span>
+      <div class="toolbar-group flex flex-wrap items-center gap-1 min-w-0">
+        <button class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="btnBulkEdit">✏️ Toplu Düzenle</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="btnBulkExport">📤 Seçileni Dışa Aktar</button>
+        <button class="action-btn danger shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="btnBulkDelete">🗑️ Seçileni Sil</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="btnBulkClear">✖ Seçimi Temizle</button>
       </div>
     </div>
 
-    <section class="snippet-list view-list" id="snippetList" tabindex="0"></section>
+    <section class="snippet-list view-list flex-1 min-h-0 overflow-y-auto min-w-0 flex flex-col gap-list-gap" id="snippetList" tabindex="0"></section>
 
-    <footer class="footer-bar">
-      <span class="footer-hints-span">↑↓ Gezin · ⏎ Yapıştır · Ctrl+⏎ Kopyala · Esc Kapat</span>
+    <footer class="footer-bar shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-2 border-t border-edge pt-1 text-meta text-muted min-w-0">
+      <span class="footer-hints-span hidden md:inline">↑↓ Gezin · ⏎ Yapıştır · Ctrl+⏎ Kopyala · Esc Kapat</span>
       <span><span class="footer-kbd">Ctrl+Z/Y · Ctrl+S · </span><strong id="itemCount">0 kayıt</strong></span>
     </footer>
 
-    <nav class="links-bar" aria-label="Sürümler ve Bağlantılar">
-      <span id="modeBadge" class="mode-badge">Mod algılanıyor…</span>
-      <div class="links-group">
-        <a id="osDownloadLink" class="link-chip primary" href="./qtp.exe" download="qtp.exe">⬇ qtp.exe</a>
-        <button id="btnInstallPwa" class="link-chip" type="button" style="display:none;">📲 Kur</button>
-        <details class="links-more" id="linksMoreMenu">
-          <summary class="link-chip" aria-label="Diğer indirme ve sayfa bağlantıları">Bağlantılar</summary>
+    <nav class="links-bar shrink-0 relative flex flex-wrap items-center justify-between gap-1 border-t border-edge pt-1 text-meta min-w-0" aria-label="Sürümler ve Bağlantılar">
+      <span id="modeBadge" class="mode-badge bg-badge text-badge border border-edge rounded-full px-2 min-h-[24px] max-md:min-h-ctrl text-meta font-semibold inline-flex items-center min-w-0 max-w-full truncate">Mod algılanıyor…</span>
+      <div class="links-group flex flex-wrap items-center gap-1 min-w-0 max-w-full">
+        <a id="osDownloadLink" class="link-chip primary shrink-0 bg-btn text-btn border border-btn rounded-full px-2.5 min-h-[24px] max-md:min-h-ctrl text-meta font-semibold no-underline cursor-pointer inline-flex items-center leading-none whitespace-nowrap" href="./qtp.exe" download="qtp.exe">⬇ qtp.exe</a>
+        <button id="btnInstallPwa" class="link-chip shrink-0 bg-btn text-btn border border-btn rounded-full px-2.5 min-h-[24px] max-md:min-h-ctrl text-meta font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" type="button" style="display:none;">📲 Kur</button>
+        <details class="links-more relative shrink-0" id="linksMoreMenu">
+          <summary class="link-chip shrink-0 bg-btn text-btn border border-btn rounded-full px-2.5 min-h-[24px] max-md:min-h-ctrl text-meta font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" aria-label="Diğer indirme ve sayfa bağlantıları">Bağlantılar</summary>
           <div class="links-secondary">
-            <a class="link-chip" href="./qtp.exe" download="qtp.exe">Windows (qtp.exe)</a>
-            <a class="link-chip" href="./qtp.bin" download="qtp.bin">Linux (qtp.bin)</a>
-            <a class="link-chip" href="./index.html">Eski Sistem (index.html)</a>
-            <a class="link-chip" href="./legacy/cevaplar.html">Hızlı Pano</a>
+            <a class="link-chip shrink-0 bg-btn text-btn border border-btn rounded-full px-2.5 min-h-[24px] max-md:min-h-ctrl text-meta font-semibold no-underline cursor-pointer inline-flex items-center leading-none whitespace-nowrap" href="./qtp.exe" download="qtp.exe">Windows (qtp.exe)</a>
+            <a class="link-chip shrink-0 bg-btn text-btn border border-btn rounded-full px-2.5 min-h-[24px] max-md:min-h-ctrl text-meta font-semibold no-underline cursor-pointer inline-flex items-center leading-none whitespace-nowrap" href="./qtp.bin" download="qtp.bin">Linux (qtp.bin)</a>
+            <a class="link-chip shrink-0 bg-btn text-btn border border-btn rounded-full px-2.5 min-h-[24px] max-md:min-h-ctrl text-meta font-semibold no-underline cursor-pointer inline-flex items-center leading-none whitespace-nowrap" href="./index.html">Eski Sistem (index.html)</a>
+            <a class="link-chip shrink-0 bg-btn text-btn border border-btn rounded-full px-2.5 min-h-[24px] max-md:min-h-ctrl text-meta font-semibold no-underline cursor-pointer inline-flex items-center leading-none whitespace-nowrap" href="./legacy/cevaplar.html">Hızlı Pano</a>
           </div>
         </details>
       </div>
     </nav>
   </main>
 
-  <div class="toast" id="toastBox"></div>
+  <div class="toast pointer-events-none fixed right-6 bottom-6 max-md:left-2 max-md:right-2 max-md:bottom-3 bg-toast text-toast border border-toast rounded-lg px-3.5 py-2 text-xs2 font-semibold z-50 shadow-overlay max-md:text-center" id="toastBox"></div>
 
-  <div class="modal" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-card">
-      <div class="modal-head-row modal-head-row-sm">
+  <div class="modal fixed inset-0 bg-scrim items-center justify-center p-4 max-md:p-2 z-40" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card w-[740px] max-w-full max-h-[92dvh] flex flex-col overflow-hidden bg-surface text-ink border border-edge rounded-window p-4 max-md:p-3 gap-2 shadow-overlay min-w-0">
+      <div class="modal-head-row shrink-0 flex flex-wrap gap-2 items-center justify-between min-w-0">
         <strong id="modalTitle">Bilgi</strong>
-        <button class="action-btn" id="modalClose">Kapat (Esc)</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="modalClose">Kapat (Esc)</button>
       </div>
-      <div id="helpTabs" class="pills-row help-tabs-row" style="display:none;">
-        <button class="pill active" data-section="genel">Genel &amp; Web</button>
-        <button class="pill" data-section="gui">GUI (Masaüstü)</button>
-        <button class="pill" data-section="tui">TUI (Terminal)</button>
-        <button class="pill" data-section="usage_verbose">CLI &amp; Parametreler</button>
-        <button class="pill" data-section="kisayollar">Kısayollar</button>
-        <button class="pill" data-section="kurulum_sss">Kurulum &amp; SSS</button>
+      <div id="helpTabs" class="pills-row help-tabs-row shrink-0 flex flex-wrap gap-1 min-w-0" style="display:none;">
+        <button class="pill active shrink-0 bg-pill text-pill border border-edge rounded-pill px-3 max-md:px-2 h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" data-section="genel">Genel &amp; Web</button>
+        <button class="pill shrink-0 bg-pill text-pill border border-edge rounded-pill px-3 max-md:px-2 h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" data-section="gui">GUI (Masaüstü)</button>
+        <button class="pill shrink-0 bg-pill text-pill border border-edge rounded-pill px-3 max-md:px-2 h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" data-section="tui">TUI (Terminal)</button>
+        <button class="pill shrink-0 bg-pill text-pill border border-edge rounded-pill px-3 max-md:px-2 h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" data-section="usage_verbose">CLI &amp; Parametreler</button>
+        <button class="pill shrink-0 bg-pill text-pill border border-edge rounded-pill px-3 max-md:px-2 h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" data-section="kisayollar">Kısayollar</button>
+        <button class="pill shrink-0 bg-pill text-pill border border-edge rounded-pill px-3 max-md:px-2 h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" data-section="kurulum_sss">Kurulum &amp; SSS</button>
       </div>
-      <div id="hotkeyControls" class="modal-sub-controls" style="display:none;">
-        <select id="presetSelect" class="action-btn" aria-label="Kısayol profili seç">
+      <div id="hotkeyControls" class="modal-sub-controls shrink-0 flex-wrap gap-2 items-center min-w-0" style="display:none;">
+        <select id="presetSelect" class="action-btn h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 bg-input text-ink border border-input max-w-full min-w-0" aria-label="Kısayol profili seç">
           <option value="recommended">Önerilen (Win+Alt)</option>
           <option value="win_ctrl">Win+Ctrl</option>
           <option value="ctrl_alt">Ctrl+Alt</option>
@@ -116,8 +121,8 @@
           <option value="function_keys">Ctrl+Shift+F1–F5</option>
           <option value="legacy_win">Klasik (Win)</option>
         </select>
-        <button class="action-btn" id="btnApplyPreset">Profil Uygula</button>
-        <select id="modSelect" class="action-btn" aria-label="Değiştirici seç">
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnApplyPreset">Profil Uygula</button>
+        <select id="modSelect" class="action-btn h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 bg-input text-ink border border-input max-w-full min-w-0" aria-label="Değiştirici seç">
           <option value="Win+Alt">Win+Alt</option>
           <option value="Win+Ctrl">Win+Ctrl</option>
           <option value="Ctrl+Alt">Ctrl+Alt</option>
@@ -134,268 +139,276 @@
           <option value="Shift">Shift</option>
           <option value="Win">Win</option>
         </select>
-        <button class="action-btn" id="btnApplyMods">Değiştirici Uygula</button>
-        <button class="action-btn primary" id="btnDownloadSettings" style="display:none;">Ayarları İndir (qtp_settings.json)</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnApplyMods">Değiştirici Uygula</button>
+        <button class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnDownloadSettings" style="display:none;">Ayarları İndir (qtp_settings.json)</button>
       </div>
-      <div id="backupControls" class="modal-sub-controls modal-sub-controls-lg" style="display:none;">
-        <button class="action-btn primary" id="btnDownloadBackupJson">Tam Yedek İndir (.json v2)</button>
-        <button class="action-btn" id="btnDownloadIniUtf16">QuickTextPaste.ini İndir (UTF-16 LE BOM)</button>
+      <div id="backupControls" class="modal-sub-controls modal-sub-controls-lg shrink-0 flex-wrap gap-2 items-center min-w-0" style="display:none;">
+        <button class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnDownloadBackupJson">Tam Yedek İndir (.json v2)</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnDownloadIniUtf16">QuickTextPaste.ini İndir (UTF-16 LE BOM)</button>
       </div>
-      <div id="modalBody" class="modal-body-scroll"></div>
+      <div id="modalBody" class="modal-body-scroll flex-1 min-h-0 overflow-y-auto overflow-x-auto bg-surface-alt text-ink border border-edge rounded-row px-3.5 py-3 text-sm min-w-0"></div>
     </div>
   </div>
 
-  <div class="modal" id="crudModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="crudModalTitle">
-    <div class="modal-card modal-card-lg">
-      <div class="modal-head-row">
+  <div class="modal fixed inset-0 bg-scrim items-center justify-center p-4 max-md:p-2 z-40" id="crudModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="crudModalTitle">
+    <div class="modal-card modal-card-lg w-[660px] max-w-full max-h-[92dvh] flex flex-col overflow-hidden bg-surface text-ink border border-edge rounded-window p-4 max-md:p-3 gap-2 shadow-overlay min-w-0">
+      <div class="modal-head-row shrink-0 flex flex-wrap gap-2 items-center justify-between min-w-0">
         <strong id="crudModalTitle">Yeni Hazır Cevap Ekle</strong>
-        <button class="action-btn" id="crudClose">İptal (Esc)</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="crudClose">İptal (Esc)</button>
       </div>
-      <div id="crudQuickActionsBar" class="crud-quick-actions" style="display:none;">
-        <button type="button" class="action-btn" id="crudActCopy" title="Panoya kopyala">📋 Kopyala</button>
-        <button type="button" class="action-btn primary" id="crudActPaste" title="3 saniye sonra aktif pencereye yapıştır">⏎ Yapıştır (3 sn)</button>
-        <button type="button" class="action-btn" id="crudActFav" title="Favori durumunu değiştir">⭐ Favori</button>
-        <button type="button" class="action-btn" id="crudActDup" title="Kaydı çoğalt">📑 Çoğalt</button>
-        <button type="button" class="action-btn" id="crudActUp" title="Yukarı taşı">⬆️ Yukarı</button>
-        <button type="button" class="action-btn" id="crudActDown" title="Aşağı taşı">⬇️ Aşağı</button>
-        <button type="button" class="action-btn" id="crudActIni" title="INI kaydını göster">INI Göster</button>
-        <button type="button" class="action-btn danger" id="crudActDelete" title="Kaydı sil">🗑️ Sil</button>
-      </div>
-      <div class="field-grid">
-        <div class="field-col">
-          <label class="field-label" for="crudKeys">Kategori Kısayolu</label>
-          <select id="crudKeys" class="field-select">
-            <option value="L-Win+A">L-Win+A (İş Ortağı)</option>
-            <option value="L-Win+Z">L-Win+Z (Kurye)</option>
-            <option value="L-Win+X">L-Win+X (Canlı Yardım)</option>
-            <option value="L-Win+Q">L-Win+Q (Turkcell)</option>
-            <option value="L-Win+W">L-Win+W</option>
-            <option value="L-Win+1">L-Win+1</option>
-            <option value="">Kısayolsuz (Not)</option>
-          </select>
+      <div class="modal-scroll-area flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col gap-2 pr-0.5 min-w-0">
+        <div id="crudQuickActionsBar" class="crud-quick-actions shrink-0 flex flex-wrap gap-1 p-2 bg-surface-alt border border-edge rounded-ctrl min-w-0" style="display:none;">
+          <button type="button" class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="crudActCopy" title="Panoya kopyala">📋 Kopyala</button>
+          <button type="button" class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="crudActPaste" title="3 saniye sonra aktif pencereye yapıştır">⏎ Yapıştır (3 sn)</button>
+          <button type="button" class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="crudActFav" title="Favori durumunu değiştir">⭐ Favori</button>
+          <button type="button" class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="crudActDup" title="Kaydı çoğalt">📑 Çoğalt</button>
+          <button type="button" class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="crudActUp" title="Yukarı taşı">⬆️ Yukarı</button>
+          <button type="button" class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="crudActDown" title="Aşağı taşı">⬇️ Aşağı</button>
+          <button type="button" class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="crudActIni" title="INI kaydını göster">INI Göster</button>
+          <button type="button" class="action-btn danger shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="crudActDelete" title="Kaydı sil">🗑️ Sil</button>
         </div>
-        <div class="field-col">
-          <label class="field-label" for="crudGroup">Grup</label>
-          <input id="crudGroup" class="field-input" list="crudGroupList" placeholder="Örn. Müşteri - Ödeme" />
-          <datalist id="crudGroupList"></datalist>
+        <div class="field-grid grid grid-cols-1 md:grid-cols-2 gap-2 min-w-0">
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="crudKeys">Kategori Kısayolu</label>
+            <select id="crudKeys" class="field-select w-full h-ctrl min-h-ctrl px-2 rounded-ctrl text-sm bg-input text-ink border border-input outline-none focus:border-focus">
+              <option value="L-Win+A">L-Win+A (İş Ortağı)</option>
+              <option value="L-Win+Z">L-Win+Z (Kurye)</option>
+              <option value="L-Win+X">L-Win+X (Canlı Yardım)</option>
+              <option value="L-Win+Q">L-Win+Q (Turkcell)</option>
+              <option value="L-Win+W">L-Win+W</option>
+              <option value="L-Win+1">L-Win+1</option>
+              <option value="">Kısayolsuz (Not)</option>
+            </select>
+          </div>
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="crudGroup">Grup</label>
+            <input id="crudGroup" class="field-input w-full h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" list="crudGroupList" placeholder="Örn. Müşteri - Ödeme" />
+            <datalist id="crudGroupList"></datalist>
+          </div>
+        </div>
+        <div class="field-col flex flex-col gap-1 min-w-0">
+          <label class="field-label text-xs2 font-semibold text-ink-2" for="crudLabel">Etiket / Başlık</label>
+          <input id="crudLabel" class="field-input w-full h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" placeholder="Kısa başlık (isteğe bağlı)" />
+        </div>
+        <div class="field-col flex flex-col gap-1 min-w-0">
+          <div class="flex flex-wrap gap-2 items-center justify-between min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="crudText">Hazır Cevap Metni</label>
+            <button type="button" class="action-btn icon-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap" id="btnCrudStripEmojis" title="Metindeki tüm emojileri temizle" aria-label="Metindeki tüm emojileri temizle">🚫 Emojileri Temizle</button>
+          </div>
+          <div class="emoji-chips flex flex-wrap gap-1 mt-1 min-w-0" id="crudEmojiChips"></div>
+          <textarea id="crudText" class="field-textarea w-full p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" rows="5" placeholder="Hazır cevap metnini girin…"></textarea>
+          <div class="char-counter text-meta text-muted flex flex-wrap justify-between items-center gap-2 min-w-0">
+            <span id="crudCharCount">0 karakter</span>
+            <span id="crudIniPreview" class="mono-preview font-mono break-all"></span>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center justify-between min-w-0">
+          <label class="field-check inline-flex items-center gap-1.5 text-xs2 text-ink-2 cursor-pointer min-h-[24px] max-md:min-h-ctrl">
+            <input id="crudEndMarker" type="checkbox" checked class="w-4 h-4 cursor-pointer" />
+            <span>Yapıştırma sonrası Enter gönder (&lt;E&lt;N&lt;D|)</span>
+          </label>
+          <label class="field-check inline-flex items-center gap-1.5 text-xs2 text-ink-2 cursor-pointer min-h-[24px] max-md:min-h-ctrl">
+            <input id="crudFavorite" type="checkbox" class="w-4 h-4 cursor-pointer" />
+            <span>⭐ Favori olarak işaretle</span>
+          </label>
         </div>
       </div>
-      <div class="field-col">
-        <label class="field-label" for="crudLabel">Etiket / Başlık</label>
-        <input id="crudLabel" class="field-input" placeholder="Kısa başlık (isteğe bağlı)" />
-      </div>
-      <div class="field-col">
-        <div class="modal-head-row zero-mb">
-          <label class="field-label" for="crudText">Hazır Cevap Metni</label>
-          <button type="button" class="action-btn icon-btn" id="btnCrudStripEmojis" title="Metindeki tüm emojileri temizle" aria-label="Metindeki tüm emojileri temizle">🚫 Emojileri Temizle</button>
-        </div>
-        <div class="emoji-chips" id="crudEmojiChips"></div>
-        <textarea id="crudText" class="field-textarea" rows="5" placeholder="Hazır cevap metnini girin…"></textarea>
-        <div class="char-counter">
-          <span id="crudCharCount">0 karakter</span>
-          <span id="crudIniPreview" class="mono-preview"></span>
-        </div>
-      </div>
-      <div class="modal-head-row modal-head-row-sm">
-        <label class="field-check zero-mb">
-          <input id="crudEndMarker" type="checkbox" checked />
-          <span>Yapıştırma sonrası Enter gönder (&lt;E&lt;N&lt;D|)</span>
-        </label>
-        <label class="field-check zero-mb">
-          <input id="crudFavorite" type="checkbox" />
-          <span>⭐ Favori olarak işaretle</span>
-        </label>
-      </div>
-      <div class="modal-foot-row">
-        <button class="action-btn" id="crudCancel">İptal</button>
-        <button class="action-btn primary" id="crudSave">Kaydet</button>
+      <div class="modal-foot-row shrink-0 flex flex-wrap gap-2 items-center justify-end pt-2 border-t border-edge min-w-0">
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="crudCancel">İptal</button>
+        <button class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="crudSave">Kaydet</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="bulkModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="bulkModalTitle">
-    <div class="modal-card modal-card-lg">
-      <div class="modal-head-row">
+  <div class="modal fixed inset-0 bg-scrim items-center justify-center p-4 max-md:p-2 z-40" id="bulkModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="bulkModalTitle">
+    <div class="modal-card modal-card-lg w-[660px] max-w-full max-h-[92dvh] flex flex-col overflow-hidden bg-surface text-ink border border-edge rounded-window p-4 max-md:p-3 gap-2 shadow-overlay min-w-0">
+      <div class="modal-head-row shrink-0 flex flex-wrap gap-2 items-center justify-between min-w-0">
         <strong id="bulkModalTitle">Toplu Düzenleme</strong>
-        <button class="action-btn" id="bulkClose">İptal (Esc)</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="bulkClose">İptal (Esc)</button>
       </div>
-      <div class="field-grid">
-        <div class="field-col">
-          <label class="field-label" for="bulkKeysMode">Kısayol İşlemi</label>
-          <select id="bulkKeysMode" class="field-select">
-            <option value="keep">Mevcut kısayolu koru</option>
-            <option value="set">Yeni kısayol ata</option>
-            <option value="clear">Kısayolsuz yap (Not)</option>
-          </select>
+      <div class="modal-scroll-area flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col gap-2 pr-0.5 min-w-0">
+        <div class="field-grid grid grid-cols-1 md:grid-cols-2 gap-2 min-w-0">
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkKeysMode">Kısayol İşlemi</label>
+            <select id="bulkKeysMode" class="field-select w-full h-ctrl min-h-ctrl px-2 rounded-ctrl text-sm bg-input text-ink border border-input outline-none focus:border-focus">
+              <option value="keep">Mevcut kısayolu koru</option>
+              <option value="set">Yeni kısayol ata</option>
+              <option value="clear">Kısayolsuz yap (Not)</option>
+            </select>
+          </div>
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkKeys">Hedef Kısayol</label>
+            <select id="bulkKeys" class="field-select w-full h-ctrl min-h-ctrl px-2 rounded-ctrl text-sm bg-input text-ink border border-input outline-none focus:border-focus">
+              <option value="L-Win+A">L-Win+A (İş Ortağı)</option>
+              <option value="L-Win+Z">L-Win+Z (Kurye)</option>
+              <option value="L-Win+X">L-Win+X (Canlı Yardım)</option>
+              <option value="L-Win+Q">L-Win+Q (Turkcell)</option>
+              <option value="L-Win+W">L-Win+W</option>
+              <option value="L-Win+1">L-Win+1</option>
+            </select>
+          </div>
         </div>
-        <div class="field-col">
-          <label class="field-label" for="bulkKeys">Hedef Kısayol</label>
-          <select id="bulkKeys" class="field-select">
-            <option value="L-Win+A">L-Win+A (İş Ortağı)</option>
-            <option value="L-Win+Z">L-Win+Z (Kurye)</option>
-            <option value="L-Win+X">L-Win+X (Canlı Yardım)</option>
-            <option value="L-Win+Q">L-Win+Q (Turkcell)</option>
-            <option value="L-Win+W">L-Win+W</option>
-            <option value="L-Win+1">L-Win+1</option>
-          </select>
+        <div class="field-grid grid grid-cols-1 md:grid-cols-2 gap-2 min-w-0">
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkGroup">Grup (boş = değiştirme)</label>
+            <input id="bulkGroup" class="field-input w-full h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" list="crudGroupList" placeholder="Yeni grup adı" />
+          </div>
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkFavAction">Favori Durumu</label>
+            <select id="bulkFavAction" class="field-select w-full h-ctrl min-h-ctrl px-2 rounded-ctrl text-sm bg-input text-ink border border-input outline-none focus:border-focus">
+              <option value="keep">Değiştirme</option>
+              <option value="add">⭐ Favorilere ekle</option>
+              <option value="remove">Favorilerden çıkar</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-grid grid grid-cols-1 md:grid-cols-2 gap-2 min-w-0">
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkFind">Metinde Bul</label>
+            <input id="bulkFind" class="field-input w-full h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" placeholder="Aranacak ifade" />
+          </div>
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkReplace">Şununla Değiştir</label>
+            <input id="bulkReplace" class="field-input w-full h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" placeholder="Yeni metin" />
+          </div>
+        </div>
+        <label class="field-check inline-flex items-center gap-1.5 text-xs2 text-ink-2 cursor-pointer min-h-[24px] max-md:min-h-ctrl">
+          <input id="bulkIgnoreCase" type="checkbox" class="w-4 h-4 cursor-pointer" />
+          <span>Büyük/küçük harf duyarsız (Türkçe uyumlu)</span>
+        </label>
+        <div class="field-grid grid grid-cols-1 md:grid-cols-2 gap-2 min-w-0">
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkPrefix">Başına Ekle (Önek)</label>
+            <input id="bulkPrefix" class="field-input w-full h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" placeholder="Metnin başına eklenecek" />
+          </div>
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkSuffix">Sonuna Ekle (Sonek)</label>
+            <input id="bulkSuffix" class="field-input w-full h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" placeholder="Metnin sonuna eklenecek" />
+          </div>
+        </div>
+        <div class="field-col flex flex-col gap-1 min-w-0">
+          <div class="flex flex-wrap gap-2 items-center justify-between min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="bulkAddEmoji">Sonuna Emoji Ekle</label>
+            <label class="field-check inline-flex items-center gap-1.5 text-xs2 text-ink-2 cursor-pointer min-h-[24px] max-md:min-h-ctrl">
+              <input id="bulkStripEmojis" type="checkbox" class="w-4 h-4 cursor-pointer" />
+              <span>🚫 Emojileri toplu temizle</span>
+            </label>
+          </div>
+          <input id="bulkAddEmoji" class="field-input w-full h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input placeholder:text-input-placeholder outline-none focus:border-focus" placeholder="Örn. 😊 veya ✅" />
+          <div class="emoji-chips flex flex-wrap gap-1 mt-1 min-w-0" id="bulkEmojiChips"></div>
         </div>
       </div>
-      <div class="field-grid">
-        <div class="field-col">
-          <label class="field-label" for="bulkGroup">Grup (boş = değiştirme)</label>
-          <input id="bulkGroup" class="field-input" list="crudGroupList" placeholder="Yeni grup adı" />
-        </div>
-        <div class="field-col">
-          <label class="field-label" for="bulkFavAction">Favori Durumu</label>
-          <select id="bulkFavAction" class="field-select">
-            <option value="keep">Değiştirme</option>
-            <option value="add">⭐ Favorilere ekle</option>
-            <option value="remove">Favorilerden çıkar</option>
-          </select>
-        </div>
-      </div>
-      <div class="field-grid">
-        <div class="field-col">
-          <label class="field-label" for="bulkFind">Metinde Bul</label>
-          <input id="bulkFind" class="field-input" placeholder="Aranacak ifade" />
-        </div>
-        <div class="field-col">
-          <label class="field-label" for="bulkReplace">Şununla Değiştir</label>
-          <input id="bulkReplace" class="field-input" placeholder="Yeni metin" />
-        </div>
-      </div>
-      <label class="field-check">
-        <input id="bulkIgnoreCase" type="checkbox" />
-        <span>Büyük/küçük harf duyarsız (Türkçe uyumlu)</span>
-      </label>
-      <div class="field-grid">
-        <div class="field-col">
-          <label class="field-label" for="bulkPrefix">Başına Ekle (Önek)</label>
-          <input id="bulkPrefix" class="field-input" placeholder="Metnin başına eklenecek" />
-        </div>
-        <div class="field-col">
-          <label class="field-label" for="bulkSuffix">Sonuna Ekle (Sonek)</label>
-          <input id="bulkSuffix" class="field-input" placeholder="Metnin sonuna eklenecek" />
-        </div>
-      </div>
-      <div class="field-col">
-        <div class="modal-head-row zero-mb">
-          <label class="field-label" for="bulkAddEmoji">Sonuna Emoji Ekle</label>
-          <label class="field-check zero-mb">
-            <input id="bulkStripEmojis" type="checkbox" />
-            <span>🚫 Emojileri toplu temizle</span>
-          </label>
-        </div>
-        <input id="bulkAddEmoji" class="field-input" placeholder="Örn. 😊 veya ✅" />
-        <div class="emoji-chips" id="bulkEmojiChips"></div>
-      </div>
-      <div class="modal-foot-row">
-        <button class="action-btn" id="bulkCancel">İptal</button>
-        <button class="action-btn primary" id="bulkApplyBtn">Seçili Kayıtlara Uygula</button>
+      <div class="modal-foot-row shrink-0 flex flex-wrap gap-2 items-center justify-end pt-2 border-t border-edge min-w-0">
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="bulkCancel">İptal</button>
+        <button class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="bulkApplyBtn">Seçili Kayıtlara Uygula</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="groupsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="groupsModalTitle">
-    <div class="modal-card modal-card-lg">
-      <div class="modal-head-row">
+  <div class="modal fixed inset-0 bg-scrim items-center justify-center p-4 max-md:p-2 z-40" id="groupsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="groupsModalTitle">
+    <div class="modal-card modal-card-lg w-[660px] max-w-full max-h-[92dvh] flex flex-col overflow-hidden bg-surface text-ink border border-edge rounded-window p-4 max-md:p-3 gap-2 shadow-overlay min-w-0">
+      <div class="modal-head-row shrink-0 flex flex-wrap gap-2 items-center justify-between min-w-0">
         <strong id="groupsModalTitle">📁 Grup Yöneticisi</strong>
-        <button class="action-btn" id="groupsClose">Kapat (Esc)</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="groupsClose">Kapat (Esc)</button>
       </div>
-      <div id="groupsListBody" class="manager-list"></div>
+      <div id="groupsListBody" class="manager-list flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col gap-1.5 min-w-0"></div>
     </div>
   </div>
 
-  <div class="modal" id="importModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
-    <div class="modal-card modal-card-md">
-      <div class="modal-head-row">
+  <div class="modal fixed inset-0 bg-scrim items-center justify-center p-4 max-md:p-2 z-40" id="importModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
+    <div class="modal-card modal-card-md w-[580px] max-w-full max-h-[92dvh] flex flex-col overflow-hidden bg-surface text-ink border border-edge rounded-window p-4 max-md:p-3 gap-2 shadow-overlay min-w-0">
+      <div class="modal-head-row shrink-0 flex flex-wrap gap-2 items-center justify-between min-w-0">
         <strong id="importModalTitle">📥 İçe Aktar (.ini / .json / .txt)</strong>
-        <button class="action-btn" id="importClose">Kapat (Esc)</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="importClose">Kapat (Esc)</button>
       </div>
-      <div id="importDropZone" class="dropzone-box">
-        Dosyayı buraya sürükleyip bırakın veya bilgisayarınızdan seçin (.ini, .json, .txt)
-        <div class="dropzone-input-wrap">
-          <input id="importFileInput" type="file" accept=".ini,.json,.txt" aria-label="İçe aktarılacak dosya seç" />
+      <div class="modal-scroll-area flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col gap-2 pr-0.5 min-w-0">
+        <div id="importDropZone" class="dropzone-box border-2 border-dashed border-drop rounded-row p-4 text-center bg-surface-alt text-ink-2 text-sm cursor-pointer max-w-full overflow-hidden min-w-0">
+          Dosyayı buraya sürükleyip bırakın veya bilgisayarınızdan seçin (.ini, .json, .txt)
+          <div class="mt-2 max-w-full overflow-hidden">
+            <input id="importFileInput" type="file" accept=".ini,.json,.txt" aria-label="İçe aktarılacak dosya seç" class="min-h-ctrl" />
+          </div>
         </div>
+        <div class="field-grid grid grid-cols-1 md:grid-cols-2 gap-2 min-w-0">
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="importModeSelect">Aktarım Modu</label>
+            <select id="importModeSelect" class="field-select w-full h-ctrl min-h-ctrl px-2 rounded-ctrl text-sm bg-input text-ink border border-input outline-none focus:border-focus">
+              <option value="merge">Birleştir (Mevcutlara ekle)</option>
+              <option value="replace">Üzerine Yaz (Tümünü değiştir)</option>
+            </select>
+          </div>
+          <div class="field-col flex flex-col gap-1 justify-end min-w-0">
+            <label class="field-check inline-flex items-center gap-1.5 text-xs2 text-ink-2 cursor-pointer min-h-[24px] max-md:min-h-ctrl">
+              <input id="importSkipDuplicates" type="checkbox" checked class="w-4 h-4 cursor-pointer" />
+              <span>Aynı metne sahip kopyaları atla</span>
+            </label>
+          </div>
+        </div>
+        <div id="importPreviewBox" class="modal-body-scroll bg-surface-alt text-ink border border-edge rounded-row px-3.5 py-2.5 text-sm min-h-[48px] max-h-[140px] overflow-y-auto">Henüz dosya seçilmedi.</div>
       </div>
-      <div class="field-grid">
-        <div class="field-col">
-          <label class="field-label" for="importModeSelect">Aktarım Modu</label>
-          <select id="importModeSelect" class="field-select">
-            <option value="merge">Birleştir (Mevcutlara ekle)</option>
-            <option value="replace">Üzerine Yaz (Tümünü değiştir)</option>
-          </select>
-        </div>
-        <div class="field-col dropzone-col-end">
-          <label class="field-check">
-            <input id="importSkipDuplicates" type="checkbox" checked />
-            <span>Aynı metne sahip kopyaları atla</span>
-          </label>
-        </div>
-      </div>
-      <div id="importPreviewBox" class="modal-body-scroll import-preview">Henüz dosya seçilmedi.</div>
-      <div class="modal-foot-row">
-        <button class="action-btn" id="importCancel">İptal</button>
-        <button class="action-btn primary" id="importConfirmBtn" disabled>İçe Aktar</button>
+      <div class="modal-foot-row shrink-0 flex flex-wrap gap-2 items-center justify-end pt-2 border-t border-edge min-w-0">
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="importCancel">İptal</button>
+        <button class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="importConfirmBtn" disabled>İçe Aktar</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="exportModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
-    <div class="modal-card modal-card-md">
-      <div class="modal-head-row">
+  <div class="modal fixed inset-0 bg-scrim items-center justify-center p-4 max-md:p-2 z-40" id="exportModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+    <div class="modal-card modal-card-md w-[580px] max-w-full max-h-[92dvh] flex flex-col overflow-hidden bg-surface text-ink border border-edge rounded-window p-4 max-md:p-3 gap-2 shadow-overlay min-w-0">
+      <div class="modal-head-row shrink-0 flex flex-wrap gap-2 items-center justify-between min-w-0">
         <strong id="exportModalTitle">📤 Dışa Aktar ve Yazdır</strong>
-        <button class="action-btn" id="exportClose">Kapat (Esc)</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="exportClose">Kapat (Esc)</button>
       </div>
-      <div class="field-grid">
-        <div class="field-col">
-          <label class="field-label" for="exportScopeSelect">Kapsam</label>
-          <select id="exportScopeSelect" class="field-select">
-            <option value="all">Tüm Kayıtlar</option>
-            <option value="selected">Yalnızca Seçili Kayıtlar</option>
-            <option value="filtered">Filtrelenmiş Görünen Kayıtlar</option>
-          </select>
+      <div class="modal-scroll-area flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col gap-2 pr-0.5 min-w-0">
+        <div class="field-grid grid grid-cols-1 md:grid-cols-2 gap-2 min-w-0">
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" for="exportScopeSelect">Kapsam</label>
+            <select id="exportScopeSelect" class="field-select w-full h-ctrl min-h-ctrl px-2 rounded-ctrl text-sm bg-input text-ink border border-input outline-none focus:border-focus">
+              <option value="all">Tüm Kayıtlar</option>
+              <option value="selected">Yalnızca Seçili Kayıtlar</option>
+              <option value="filtered">Filtrelenmiş Görünen Kayıtlar</option>
+            </select>
+          </div>
+          <div class="field-col flex flex-col gap-1 min-w-0">
+            <label class="field-label text-xs2 font-semibold text-ink-2" id="exportCountHint">Kayıt sayısı</label>
+            <div class="usage-pill bg-surface-alt text-ink-2 border border-edge rounded-full px-2.5 py-1.5 text-meta font-semibold inline-flex items-center h-ctrl min-h-ctrl" id="exportScopeCount">0 kayıt</div>
+          </div>
         </div>
-        <div class="field-col">
-          <label class="field-label" id="exportCountHint">Kayıt sayısı</label>
-          <div class="usage-pill export-scope-pill" id="exportScopeCount">0 kayıt</div>
+        <div class="top-row flex flex-wrap gap-2 items-center pt-1 min-w-0">
+          <button class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnExportIniUtf16">QuickTextPaste.ini (UTF-16 LE BOM)</button>
+          <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnExportIniUtf8">QuickTextPaste.ini (UTF-8 BOM)</button>
+          <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnExportIniAnsi">QuickTextPaste.ini (ANSI cp1254)</button>
+          <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnExportDataJson">data.json</button>
+          <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnExportFullJson">Tam Yedek (.json v2)</button>
+          <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnExportWordDoc">Word Belgesi (.doc)</button>
+          <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnPrintItems">Yazdır (A4)</button>
         </div>
-      </div>
-      <div class="top-row export-btns-row">
-        <button class="action-btn primary" id="btnExportIniUtf16">QuickTextPaste.ini (UTF-16 LE BOM)</button>
-        <button class="action-btn" id="btnExportIniUtf8">QuickTextPaste.ini (UTF-8 BOM)</button>
-        <button class="action-btn" id="btnExportIniAnsi">QuickTextPaste.ini (ANSI cp1254)</button>
-        <button class="action-btn" id="btnExportDataJson">data.json</button>
-        <button class="action-btn" id="btnExportFullJson">Tam Yedek (.json v2)</button>
-        <button class="action-btn" id="btnExportWordDoc">Word Belgesi (.doc)</button>
-        <button class="action-btn" id="btnPrintItems">Yazdır (A4)</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="snapshotsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="snapshotsModalTitle">
-    <div class="modal-card modal-card-lg">
-      <div class="modal-head-row">
+  <div class="modal fixed inset-0 bg-scrim items-center justify-center p-4 max-md:p-2 z-40" id="snapshotsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="snapshotsModalTitle">
+    <div class="modal-card modal-card-lg w-[660px] max-w-full max-h-[92dvh] flex flex-col overflow-hidden bg-surface text-ink border border-edge rounded-window p-4 max-md:p-3 gap-2 shadow-overlay min-w-0">
+      <div class="modal-head-row shrink-0 flex flex-wrap gap-2 items-center justify-between min-w-0">
         <strong id="snapshotsModalTitle">🕒 Anlık Kayıtlar &amp; Yedek Geçmişi</strong>
-        <div class="toolbar-group">
-          <button class="action-btn primary" id="btnCreateSnapshot">+ Anlık Kayıt Oluştur</button>
-          <button class="action-btn" id="snapshotsClose">Kapat (Esc)</button>
+        <div class="toolbar-group flex flex-wrap items-center gap-1 min-w-0">
+          <button class="action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="btnCreateSnapshot">+ Anlık Kayıt Oluştur</button>
+          <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="snapshotsClose">Kapat (Esc)</button>
         </div>
       </div>
-      <div id="snapshotsListBody" class="manager-list"></div>
+      <div id="snapshotsListBody" class="manager-list flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col gap-1.5 min-w-0"></div>
     </div>
   </div>
 
-  <div class="modal" id="deleteConfirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="delConfirmTitle">
-    <div class="modal-card modal-card-sm">
-      <div class="modal-head-row">
+  <div class="modal fixed inset-0 bg-scrim items-center justify-center p-4 max-md:p-2 z-40" id="deleteConfirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="delConfirmTitle">
+    <div class="modal-card modal-card-sm w-[460px] max-w-full max-h-[92dvh] flex flex-col overflow-hidden bg-surface text-ink border border-edge rounded-window p-4 max-md:p-3 gap-2 shadow-overlay min-w-0">
+      <div class="modal-head-row shrink-0 flex flex-wrap gap-2 items-center justify-between min-w-0">
         <strong id="delConfirmTitle">Kaydı Sil</strong>
-        <button class="action-btn" id="delCancelTop">Kapat</button>
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="delCancelTop">Kapat</button>
       </div>
-      <p id="delConfirmMsg" class="del-confirm-msg"></p>
-      <div class="modal-foot-row">
-        <button class="action-btn" id="delCancelBtn">Vazgeç</button>
-        <button class="action-btn danger" id="delConfirmBtn">Evet, Sil</button>
+      <p id="delConfirmMsg" class="text-sm leading-relaxed m-0"></p>
+      <div class="modal-foot-row shrink-0 flex flex-wrap gap-2 items-center justify-end pt-2 border-t border-edge min-w-0">
+        <button class="action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="delCancelBtn">Vazgeç</button>
+        <button class="action-btn danger shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap" id="delConfirmBtn">Evet, Sil</button>
       </div>
     </div>
   </div>
@@ -473,7 +486,7 @@
     };
 
     const CLI_HELP_STATIC_TEXT = [
-      'QTP v2.4.1 — Komut Satırı Kullanımı',
+      'QTP v2.4.2 — Komut Satırı Kullanımı',
       '',
       'Kullanım:',
       '  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]',
@@ -512,6 +525,7 @@
     ].join('\n');
 
     const LS_PREFS_KEY = 'qtp_unified_prefs_v1';
+    const LS_DENSITY_KEY = 'qtp_ui_density_v1';
     const LS_SNAPS_KEY = 'qtp_snapshots_v1';
     const QUICK_EMOJIS = ['😊', '👍', '🎉', '🚀', '✅', '⚠️', '🙏', '💳', '📦', '🛵', '📞', '❤️', '🔥', '⭐', '💡', '📌'];
 
@@ -529,6 +543,7 @@
     const state = {
       isStatic: false,
       theme: 'light',
+      density: 'default',
       viewMode: 'list',
       stripEmoji: false,
       sortBy: 'order',
@@ -569,6 +584,7 @@
       overlayRoot: document.getElementById('overlayRoot'),
       search: document.getElementById('searchInput'),
       toolsMenu: document.getElementById('toolsMenu'),
+      linksMoreMenu: document.getElementById('linksMoreMenu'),
       pills: document.getElementById('categoryPills'),
       list: document.getElementById('snippetList'),
       btnSelectAllVisible: document.getElementById('btnSelectAllVisible'),
@@ -591,6 +607,7 @@
       btnScopeNotes: document.getElementById('btnScopeNotes'),
       groupFilterSelect: document.getElementById('groupFilterSelect'),
       sortSelect: document.getElementById('sortSelect'),
+      densitySelect: document.getElementById('densitySelect'),
       viewListBtn: document.getElementById('viewListBtn'),
       viewGridBtn: document.getElementById('viewGridBtn'),
       viewTableBtn: document.getElementById('viewTableBtn'),
@@ -1417,18 +1434,37 @@
     function loadPrefsLocal() {
       try {
         const raw = localStorage.getItem(LS_PREFS_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (parsed && ['list', 'grid', 'table'].includes(parsed.viewMode)) {
-          state.viewMode = parsed.viewMode;
-        }
-        if (parsed && typeof parsed.stripEmoji === 'boolean') {
-          state.stripEmoji = parsed.stripEmoji;
-        }
-        if (parsed && ['order', 'usage', 'alpha', 'keys', 'favorites'].includes(parsed.sortBy)) {
-          state.sortBy = parsed.sortBy;
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && ['list', 'grid', 'table'].includes(parsed.viewMode)) {
+            state.viewMode = parsed.viewMode;
+          }
+          if (parsed && typeof parsed.stripEmoji === 'boolean') {
+            state.stripEmoji = parsed.stripEmoji;
+          }
+          if (parsed && ['order', 'usage', 'alpha', 'keys', 'favorites'].includes(parsed.sortBy)) {
+            state.sortBy = parsed.sortBy;
+          }
         }
       } catch (_err) {
+      }
+      try {
+        const d = localStorage.getItem(LS_DENSITY_KEY);
+        if (['compact', 'default', 'metro'].includes(d)) {
+          state.density = d;
+        }
+      } catch (_err) {
+      }
+    }
+
+    function applyDensityDom(densityName) {
+      const clean = ['compact', 'default', 'metro'].includes(densityName) ? densityName : 'default';
+      state.density = clean;
+      if (document.documentElement && document.documentElement.setAttribute) {
+        document.documentElement.setAttribute('data-density', clean);
+      }
+      if (els.densitySelect) {
+        els.densitySelect.value = clean;
       }
     }
 
@@ -1436,7 +1472,16 @@
       if (els.viewListBtn) els.viewListBtn.classList.toggle('active-toggle', state.viewMode === 'list');
       if (els.viewGridBtn) els.viewGridBtn.classList.toggle('active-toggle', state.viewMode === 'grid');
       if (els.viewTableBtn) els.viewTableBtn.classList.toggle('active-toggle', state.viewMode === 'table');
-      if (els.list) els.list.className = `snippet-list view-${state.viewMode}`;
+      if (els.list) {
+        const listBase = 'snippet-list flex-1 min-h-0 overflow-y-auto min-w-0';
+        if (state.viewMode === 'grid') {
+          els.list.className = `${listBase} view-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-grid-gap content-start items-stretch`;
+        } else if (state.viewMode === 'table') {
+          els.list.className = `${listBase} view-table block overflow-x-auto border border-edge rounded-row bg-surface`;
+        } else {
+          els.list.className = `${listBase} view-list flex flex-col gap-list-gap`;
+        }
+      }
       if (els.btnStripEmojiToggle) {
         const emIcon = state.stripEmoji ? ICONS.emojiOff : ICONS.emojiOn;
         const emText = state.stripEmoji ? 'Emojisiz' : 'Emojili';
@@ -1450,6 +1495,7 @@
       if (els.btnScopeFav) els.btnScopeFav.classList.toggle('active', state.scopeFilter === 'favorites');
       if (els.btnScopeNotes) els.btnScopeNotes.classList.toggle('active', state.scopeFilter === 'notes');
       if (els.sortSelect) els.sortSelect.value = state.sortBy;
+      if (els.densitySelect) els.densitySelect.value = state.density;
       syncHistoryButtons();
     }
 
@@ -1790,7 +1836,7 @@
       for (const emo of QUICK_EMOJIS) {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'emoji-chip';
+        b.className = 'emoji-chip action-btn inline-flex items-center justify-center min-w-[28px] min-h-[28px] max-md:min-h-ctrl px-1.5 py-0.5 bg-btn text-ink border border-btn rounded-[6px] text-sm cursor-pointer';
         b.textContent = emo;
         b.onclick = () => onPick(emo);
         container.appendChild(b);
@@ -2112,7 +2158,7 @@
       els.pills.innerHTML = '';
       for (const cat of state.categories) {
         const b = document.createElement('button');
-        b.className = 'pill' + (cat.code === state.category ? ' active' : '');
+        b.className = 'pill shrink-0 bg-pill text-pill border border-edge rounded-pill px-3 max-md:px-2 h-ctrl min-h-ctrl text-xs font-semibold cursor-pointer inline-flex items-center gap-1 leading-none whitespace-nowrap' + (cat.code === state.category ? ' active' : '');
         b.textContent = cat.code === 'ALL' ? `Tümü ${cat.count}` : `${cat.code} ${cat.count}`;
         b.title = `${cat.label} (${cat.count})`;
         if (typeof b.setAttribute === 'function') b.setAttribute('aria-label', `${cat.label} (${cat.count})`);
@@ -2495,8 +2541,9 @@
     }
 
     function appendRowActions(container, it, _idx) {
+      const btnCls = 'shrink-0 w-row-btn h-row-btn min-w-row-btn min-h-row-btn p-0 rounded-ctrl bg-btn text-btn border border-btn font-semibold cursor-pointer inline-flex items-center justify-center leading-none';
       const copyBtn = document.createElement('button');
-      copyBtn.className = 'action-btn icon-only-btn row-act-copy';
+      copyBtn.className = `action-btn icon-only-btn row-act-copy ${btnCls}`;
       copyBtn.innerHTML = ICONS.copy;
       copyBtn.title = 'Panoya kopyala';
       copyBtn.setAttribute('aria-label', 'Kopyala');
@@ -2505,7 +2552,7 @@
 
       if (!state.isStatic) {
         const pasteBtn = document.createElement('button');
-        pasteBtn.className = 'action-btn primary icon-only-btn row-act-paste';
+        pasteBtn.className = `action-btn primary icon-only-btn row-act-paste ${btnCls}`;
         pasteBtn.setAttribute('data-action', 'paste');
         pasteBtn.innerHTML = ICONS.paste;
         pasteBtn.title = '3 saniye sonra aktif pencereye yapıştır';
@@ -2515,7 +2562,7 @@
       }
 
       const editBtn = document.createElement('button');
-      editBtn.className = 'action-btn icon-only-btn row-act-edit';
+      editBtn.className = `action-btn icon-only-btn row-act-edit ${btnCls}`;
       editBtn.innerHTML = ICONS.edit;
       editBtn.title = 'Görüntüle / Düzenle / İşlemler';
       editBtn.setAttribute('aria-label', 'Görüntüle ve düzenle');
@@ -2532,10 +2579,10 @@
 
       const tdCheck = document.createElement('td');
       const chkWrap = document.createElement('label');
-      chkWrap.className = 'row-check-wrap';
+      chkWrap.className = 'row-check-wrap inline-flex items-center justify-center min-w-[24px] min-h-[24px] max-md:min-w-ctrl max-md:min-h-ctrl cursor-pointer';
       const chk = document.createElement('input');
       chk.type = 'checkbox';
-      chk.className = 'row-check';
+      chk.className = 'row-check w-[15px] h-[15px] cursor-pointer';
       chk.checked = isChecked;
       chk.setAttribute('aria-label', 'Kaydı seç');
       chk.onclick = (ev) => {
@@ -2548,7 +2595,7 @@
 
       const tdStar = document.createElement('td');
       const starBtn = document.createElement('button');
-      starBtn.className = 'star-btn' + (it.favorite ? ' active' : '');
+      starBtn.className = 'star-btn shrink-0 bg-transparent border border-transparent rounded-ctrl text-muted cursor-pointer text-sm leading-none px-1 min-w-row-btn min-h-row-btn inline-flex items-center justify-center' + (it.favorite ? ' active' : '');
       starBtn.textContent = it.favorite ? '★' : '☆';
       starBtn.title = it.favorite ? 'Favoriden çıkar' : 'Favoriye ekle';
       starBtn.setAttribute('aria-label', 'Favori');
@@ -2557,7 +2604,9 @@
 
       const tdKey = document.createElement('td');
       const badge = document.createElement('span');
-      badge.className = it.keys ? 'badge' : 'note-pill';
+      badge.className = it.keys
+        ? 'badge shrink-0 bg-badge text-badge rounded-ctrl px-2 py-1 text-meta font-bold leading-none whitespace-nowrap'
+        : 'note-pill shrink-0 bg-note text-ink border border-note rounded-ctrl px-2 py-1 text-meta font-bold leading-none whitespace-nowrap';
       badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
       tdKey.appendChild(badge);
 
@@ -2575,7 +2624,7 @@
 
       const tdAct = document.createElement('td');
       const actWrap = document.createElement('div');
-      actWrap.className = 'row-actions';
+      actWrap.className = 'row-actions shrink-0 flex flex-nowrap gap-1 items-center';
       appendRowActions(actWrap, it, idx);
       tdAct.appendChild(actWrap);
 
@@ -2599,11 +2648,14 @@
     }
 
     function createCardRowEl(it, idx) {
+      const isGrid = state.viewMode === 'grid';
       const row = document.createElement('div');
       const isChecked = state.selectedKeys.has(it.raw_key);
       const isNote = isNoteItem(it);
-      row.className = 'snippet-row'
-        + (state.viewMode === 'grid' ? ' grid-card' : '')
+      const layoutCls = isGrid
+        ? 'grid-card h-auto flex-col items-stretch justify-between gap-2'
+        : 'flex-row flex-nowrap items-center justify-between gap-row-gap max-md:gap-1';
+      row.className = `snippet-row shrink-0 min-w-0 max-w-full bg-surface text-ink border border-edge rounded-row px-row-px py-row-py flex cursor-pointer ${layoutCls}`
         + (idx === state.selected ? ' selected' : '')
         + (isChecked ? ' checked' : '')
         + (isNote ? ' is-note' : '');
@@ -2611,12 +2663,12 @@
       row.setAttribute('data-raw-key', String(it.raw_key || ''));
 
       const leading = document.createElement('div');
-      leading.className = 'row-leading';
+      leading.className = 'row-leading shrink-0 flex items-center gap-1';
       const chkWrap = document.createElement('label');
-      chkWrap.className = 'row-check-wrap';
+      chkWrap.className = 'row-check-wrap inline-flex items-center justify-center min-w-[24px] min-h-[24px] max-md:min-w-ctrl max-md:min-h-ctrl cursor-pointer';
       const chk = document.createElement('input');
       chk.type = 'checkbox';
-      chk.className = 'row-check';
+      chk.className = 'row-check w-[15px] h-[15px] cursor-pointer';
       chk.checked = isChecked;
       chk.setAttribute('aria-label', 'Kaydı seç');
       chk.onclick = (ev) => {
@@ -2626,7 +2678,7 @@
       chkWrap.onclick = (ev) => { ev.stopPropagation(); };
       chkWrap.appendChild(chk);
       const starBtn = document.createElement('button');
-      starBtn.className = 'star-btn' + (it.favorite ? ' active' : '');
+      starBtn.className = 'star-btn shrink-0 bg-transparent border border-transparent rounded-ctrl text-muted cursor-pointer text-sm leading-none px-1 min-w-row-btn min-h-row-btn inline-flex items-center justify-center' + (it.favorite ? ' active' : '');
       starBtn.title = it.favorite ? 'Favoriden çıkar' : 'Favoriye ekle';
       starBtn.setAttribute('aria-label', 'Favori');
       starBtn.textContent = it.favorite ? '★' : '☆';
@@ -2635,12 +2687,18 @@
       leading.appendChild(starBtn);
 
       const left = document.createElement('div');
-      left.className = 'snippet-main';
+      left.className = isGrid
+        ? 'snippet-main block flex-1 min-w-0 max-w-full'
+        : 'snippet-main block md:flex flex-1 min-w-0 max-w-full md:items-center md:gap-row-gap';
       const txt = document.createElement('div');
-      txt.className = 'snippet-text';
+      txt.className = isGrid
+        ? 'snippet-text text-row text-ink line-clamp-3 whitespace-normal break-words overflow-hidden min-w-0 w-full'
+        : 'snippet-text text-row text-ink md:flex-1 md:truncate max-md:line-clamp-2 max-md:whitespace-normal break-words overflow-hidden min-w-0 w-full';
       renderHighlightedText(txt, String(it.text || '').replace(/\r?\n/g, ' '), it.matched_indices);
       const meta = document.createElement('div');
-      meta.className = 'snippet-meta';
+      meta.className = isGrid
+        ? 'snippet-meta block text-meta text-muted text-left mt-1 truncate min-w-0 max-w-full'
+        : 'snippet-meta text-meta text-muted md:shrink md:basis-auto md:max-w-[200px] md:text-right max-md:block max-md:mt-0.5 max-md:text-left truncate min-w-0 max-w-full';
       if (typeof meta.setAttribute === 'function') {
         meta.setAttribute('data-mobile-tag', `${it.keys ? hotkeyBadge(it.keys) : 'Not'}${it.favorite ? ' ★' : ''} · `);
       }
@@ -2651,25 +2709,26 @@
       left.appendChild(meta);
 
       const right = document.createElement('div');
-      right.className = 'row-actions';
+      right.className = isGrid
+        ? 'row-actions shrink-0 flex flex-wrap gap-1 items-center justify-end pt-1 border-t border-edge min-w-0'
+        : 'row-actions shrink-0 flex flex-nowrap gap-1 items-center min-w-0';
       appendRowActions(right, it, idx);
 
-      if (state.viewMode === 'grid') {
+      const badge = document.createElement('span');
+      badge.className = it.keys
+        ? 'badge shrink-0 bg-badge text-badge rounded-ctrl px-2 py-1 text-meta font-bold leading-none whitespace-nowrap'
+        : 'note-pill shrink-0 bg-note text-ink border border-note rounded-ctrl px-2 py-1 text-meta font-bold leading-none whitespace-nowrap';
+      badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
+
+      if (isGrid) {
         const topHead = document.createElement('div');
-        topHead.className = 'top-row';
-        topHead.style.justifyContent = 'space-between';
+        topHead.className = 'top-row shrink-0 flex flex-wrap gap-1 items-center justify-between min-w-0';
         topHead.appendChild(leading);
-        const badge = document.createElement('span');
-        badge.className = it.keys ? 'badge' : 'note-pill';
-        badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
         topHead.appendChild(badge);
         row.appendChild(topHead);
         row.appendChild(left);
         row.appendChild(right);
       } else {
-        const badge = document.createElement('span');
-        badge.className = it.keys ? 'badge' : 'note-pill';
-        badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
         leading.appendChild(badge);
         row.appendChild(leading);
         row.appendChild(left);
@@ -2700,7 +2759,7 @@
       const btn = document.createElement('button');
       btn.id = 'btnShowMore';
       btn.type = 'button';
-      btn.className = 'action-btn show-more-btn';
+      btn.className = 'action-btn show-more-btn shrink-0 w-full h-ctrl min-h-ctrl justify-center px-3.5 py-2 mt-1 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none';
       btn.textContent = `Daha fazla göster (+100) — ${remaining} kalan`;
       btn.onclick = (ev) => {
         ev.stopPropagation();
@@ -2750,7 +2809,7 @@
       updateBulkBar();
       if (!visible.length) {
         const empty = document.createElement('div');
-        empty.className = 'empty-state';
+        empty.className = 'empty-state text-center text-muted py-7 px-3 text-sm';
         empty.textContent = 'Eşleşen hazır cevap bulunamadı.';
         els.list.appendChild(empty);
         return;
@@ -2812,21 +2871,22 @@
       }
       els.groupsListBody.innerHTML = '';
       if (!groups.length) {
-        els.groupsListBody.innerHTML = '<div class="empty-state">Henüz grup yok.</div>';
+        els.groupsListBody.innerHTML = '<div class="empty-state text-center text-muted py-7 px-3 text-sm">Henüz grup yok.</div>';
       } else {
         for (const grp of groups) {
           const row = document.createElement('div');
-          row.className = 'manager-row';
+          row.className = 'manager-row shrink-0 bg-surface-alt border border-edge rounded-row px-2.5 py-2 flex flex-wrap items-center justify-between gap-2 min-w-0 max-w-full';
           const info = document.createElement('div');
-          info.innerHTML = `<strong>${escapeHtml(grp.name)}</strong> <span class="usage-pill">${grp.count} kayıt</span>`;
+          info.className = 'min-w-0 max-w-full flex flex-wrap items-center gap-1.5';
+          info.innerHTML = `<strong>${escapeHtml(grp.name)}</strong> <span class="usage-pill bg-surface text-ink-2 border border-edge rounded-full px-2 py-0.5 text-meta font-semibold leading-none">${grp.count} kayıt</span>`;
           const controls = document.createElement('div');
-          controls.className = 'toolbar-group';
+          controls.className = 'toolbar-group flex flex-wrap items-center gap-1 min-w-0 max-w-full w-full md:w-auto';
           const renameInput = document.createElement('input');
-          renameInput.className = 'field-input rename-input';
+          renameInput.className = 'field-input rename-input flex-1 basis-[140px] min-w-0 h-ctrl min-h-ctrl p-2 max-md:text-[16px] rounded-ctrl text-sm bg-input text-ink border border-input outline-none focus:border-focus';
           renameInput.value = grp.name;
           renameInput.setAttribute('aria-label', `${grp.name} için yeni ad`);
           const renameBtn = document.createElement('button');
-          renameBtn.className = 'action-btn';
+          renameBtn.className = 'action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap';
           renameBtn.textContent = 'Yeniden Adlandır';
           renameBtn.onclick = async () => {
             const newName = String(renameInput.value || '').trim();
@@ -2847,7 +2907,7 @@
             await openGroupsModal();
           };
           const expIniBtn = document.createElement('button');
-          expIniBtn.className = 'action-btn';
+          expIniBtn.className = 'action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap';
           expIniBtn.textContent = 'INI Dışa Aktar';
           expIniBtn.onclick = async () => {
             const source = state.isStatic ? state.allItems : (await api('/api/items')).data.items;
@@ -2857,7 +2917,7 @@
             showToast(`Grup dışa aktarıldı (${grpItems.length} kayıt) ✔`);
           };
           const delGrpBtn = document.createElement('button');
-          delGrpBtn.className = 'action-btn danger';
+          delGrpBtn.className = 'action-btn danger shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap';
           delGrpBtn.textContent = 'Grubu Sil';
           delGrpBtn.onclick = async () => {
             if (state.isStatic) {
@@ -3058,16 +3118,16 @@
       if (state.isStatic) {
         const snaps = loadStaticSnapshots();
         if (!snaps.length) {
-          els.snapshotsListBody.innerHTML = '<div class="empty-state">Henüz yerel anlık kayıt yok.</div>';
+          els.snapshotsListBody.innerHTML = '<div class="empty-state text-center text-muted py-7 px-3 text-sm">Henüz yerel anlık kayıt yok.</div>';
         } else {
           for (const snap of snaps) {
             const row = document.createElement('div');
-            row.className = 'manager-row';
-            row.innerHTML = `<div><strong>${escapeHtml(snap.createdAt)}</strong> · ${escapeHtml(snap.note || '')} <span class="usage-pill">${snap.count} kayıt</span></div>`;
+            row.className = 'manager-row shrink-0 bg-surface-alt border border-edge rounded-row px-2.5 py-2 flex flex-wrap items-center justify-between gap-2 min-w-0 max-w-full';
+            row.innerHTML = `<div class="min-w-0 max-w-full"><strong>${escapeHtml(snap.createdAt)}</strong> · ${escapeHtml(snap.note || '')} <span class="usage-pill bg-surface text-ink-2 border border-edge rounded-full px-2 py-0.5 text-meta font-semibold leading-none">${snap.count} kayıt</span></div>`;
             const btns = document.createElement('div');
-            btns.className = 'toolbar-group';
+            btns.className = 'toolbar-group flex flex-wrap items-center gap-1 min-w-0';
             const resBtn = document.createElement('button');
-            resBtn.className = 'action-btn primary';
+            resBtn.className = 'action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap';
             resBtn.textContent = 'Geri Yükle';
             resBtn.onclick = async () => {
               pushStaticUndoSnapshot();
@@ -3078,13 +3138,13 @@
               showToast(`Anlık kayıt geri yüklendi ✔ (${state.allItems.length} kayıt)`);
             };
             const dlBtn = document.createElement('button');
-            dlBtn.className = 'action-btn';
+            dlBtn.className = 'action-btn shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl bg-btn text-btn border border-btn text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap';
             dlBtn.textContent = 'İndir (.json)';
             dlBtn.onclick = () => {
               downloadBytes(JSON.stringify(snap.items || [], null, 2) + '\n', `qtp-snapshot-${snap.id}.json`, 'application/json;charset=utf-8');
             };
             const delBtn = document.createElement('button');
-            delBtn.className = 'action-btn danger';
+            delBtn.className = 'action-btn danger shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap';
             delBtn.textContent = 'Sil';
             delBtn.onclick = () => {
               const next = loadStaticSnapshots().filter((s) => s.id !== snap.id);
@@ -3102,15 +3162,15 @@
         const res = await api('/api/backups');
         const backups = res.ok && res.data && Array.isArray(res.data.backups) ? res.data.backups : [];
         if (!backups.length) {
-          els.snapshotsListBody.innerHTML = '<div class="empty-state">Disk yedek geçmişi boş.</div>';
+          els.snapshotsListBody.innerHTML = '<div class="empty-state text-center text-muted py-7 px-3 text-sm">Disk yedek geçmişi boş.</div>';
         } else {
           for (const bk of backups) {
             const name = typeof bk === 'string' ? bk : (bk.name || bk.filename || String(bk));
             const row = document.createElement('div');
-            row.className = 'manager-row';
-            row.innerHTML = `<div><strong>${escapeHtml(name)}</strong></div>`;
+            row.className = 'manager-row shrink-0 bg-surface-alt border border-edge rounded-row px-2.5 py-2 flex flex-wrap items-center justify-between gap-2 min-w-0 max-w-full';
+            row.innerHTML = `<div class="min-w-0 max-w-full truncate"><strong>${escapeHtml(name)}</strong></div>`;
             const resBtn = document.createElement('button');
-            resBtn.className = 'action-btn primary';
+            resBtn.className = 'action-btn primary shrink-0 h-ctrl min-h-ctrl px-2 rounded-ctrl text-xs2 font-semibold cursor-pointer inline-flex items-center leading-none whitespace-nowrap';
             resBtn.textContent = 'Geri Yükle';
             resBtn.onclick = async () => {
               const r = await api('/api/restore', 'POST', { target: name, mode: 'replace' });
@@ -3347,6 +3407,13 @@
       else await saveLiveSetting('sort_by', state.sortBy);
       await loadItems({ resetSelection: true });
     };
+    if (els.densitySelect) {
+      els.densitySelect.onchange = () => {
+        applyDensityDom(els.densitySelect.value);
+        try { localStorage.setItem(LS_DENSITY_KEY, state.density); } catch (_err) {}
+        savePrefsLocal();
+      };
+    }
 
     els.exportScopeSelect.onchange = updateExportScopeCountLabel;
     document.getElementById('btnExportIniUtf16').onclick = async () => {
@@ -3633,11 +3700,19 @@
     }
 
     async function initWebUi() {
+      loadPrefsLocal();
+      applyDensityDom(state.density);
       setupOsDownloadButton();
       const syncToolsMenu = () => {
-        if (!els.toolsMenu) return;
-        if (isDesktopWide()) els.toolsMenu.setAttribute('open', '');
-        else els.toolsMenu.removeAttribute('open');
+        const wide = isDesktopWide();
+        if (els.toolsMenu) {
+          if (wide) els.toolsMenu.setAttribute('open', '');
+          else els.toolsMenu.removeAttribute('open');
+        }
+        if (els.linksMoreMenu) {
+          if (wide) els.linksMoreMenu.setAttribute('open', '');
+          else els.linksMoreMenu.removeAttribute('open');
+        }
       };
       syncToolsMenu();
       if (els.toolsMenu && typeof els.toolsMenu.querySelectorAll === 'function') {

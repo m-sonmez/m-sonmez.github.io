@@ -354,7 +354,7 @@ class TestHtmlJsParity(unittest.TestCase):
         self.assertLess(len(idx_scripts[2].encode("utf-8")), 105_000)
 
         sw_js = (ROOT_DIR / "sw.js").read_text(encoding="utf-8")
-        self.assertIn("qtp-pwa-cache-v3.5.1", sw_js)
+        self.assertIn("qtp-pwa-cache-v3.5.3", sw_js)
         self.assertIn("/api/", sw_js)
         self.assertIn("data.json", sw_js)
         self.assertIn("./theme.css", sw_js)
@@ -563,9 +563,12 @@ function createHarness({ proto = 'https:', host = 'm-sonmez.github.io', lsInit =
 
   await h2.app.toggleHeaderCollapsed(true);
   assert.strictEqual(h2.app.headerCollapsed, true);
+  await h2.app.setDensity('metro');
+  assert.strictEqual(h2.ls.qtp_ui_density_v1, 'metro');
   const h3 = createHarness({ lsInit: h2.ls });
   await h3.app.init();
   assert.strictEqual(h3.app.headerCollapsed, true);
+  assert.strictEqual(h3.app.density, 'metro');
   assert.strictEqual(h3.app.items.length, dataJsonArr.length);
 
   const hFile = createHarness({ proto: 'file:', host: '', failFetch: true });

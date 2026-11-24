@@ -4,6 +4,14 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.4.2] - 2026-11-24
+
+### Web Arayüzü, Tasarım Sistemi ve Görünüm Tutarlılığı
+- **Çevrimdışı Derlenmiş Tailwind CSS v3.4.19 (`theme.css`):** `qtp.html` yerleşim, esnek/ızgara düzen, boşluk, tipografi ve duyarlı stilleri elle yazılmış ~1.400 satırlık `@media` kurallarından sıfır CDN ve sıfır `!important` içeren gerçek derlenmiş Tailwind CSS (`theme.css`, Light/Dark `:root` renk değişkenleri korunarak) altyapısına geçirildi ve `qtp/theme.css` ile bayt-özdeş eşitlendi.
+- **4 px Boşluk Ölçeği ve Kalıcı Yoğunluk Tercihi (`compact` / `default` / `metro`):** `qtp_ui_density_v1` anahtarıyla tüm 3 web görünümünde (`qtp.html`, `index.html`, `legacy/cevaplar.html`) Sıkı (`compact`), Standart (`default`) ve Rahat (`metro`) yoğunluk kipleri ile tek tip kontrol yüksekliği standartlaştırıldı; mobil (`320×568`) başlık katlanması ve kompakt alt çubuk düzenlendi.
+- **Kart Eylem Düğmeleri ve 3 Bölümlü Pencereler:** Grid görünümündeki `.row-actions` kesilmesi giderildi; tüm modal pencereler sabit başlık / kaydırılabilir gövde / sabit alt çubuk düzenine geçirildi, `toast` üzerine `pointer-events-none` eklendi ve masaüstü/mobil tüm görünümlerde Chromium ve Firefox Playwright Ata-Kırpma / `elementFromPoint` denetimleri sıfır hata ile doğrulandı.
+- **Klasik PWA Önbellek Güncellemesi:** `qtp/sw.js` önbellek adı `qtp-pwa-cache-v3.5.3` olarak güncellendi.
+
 ## [2.4.1] - 2026-11-24
 
 ### Linux/KDE Wayland Katman Davranışı, KDE Kısayol Çakışma Algılama & Yüksek Yoğunluklu Spotlight Web/GUI Arayüzü

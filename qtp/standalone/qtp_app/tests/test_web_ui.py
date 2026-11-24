@@ -87,6 +87,11 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         assert "@media (max-width: 768px)" in css
         assert "@media (max-width: 520px)" in css
         assert "flex-direction: column;" in css
+        assert "--space-1: 4px;" in css
+        assert ':root[data-density="compact"]' in css
+        assert ':root[data-density="default"]' in css
+        assert ':root[data-density="metro"]' in css
+        assert "!important" not in css
         qtp_root = Path(__file__).resolve().parent.parent.parent.parent
         assert qtp_root.is_dir()
         assert (qtp_root / "qtp.html").read_text(encoding="utf-8") == html
@@ -576,6 +581,14 @@ function runSim(liveMode) {
   await st.elsById.get('btnThemeToggle').onclick();
   assert.strictEqual(st.htmlRoot.attributes['data-theme'], 'dark');
   assert.strictEqual(st.ls.qtp_unified_theme_v1, 'dark');
+
+  assert.strictEqual(st.htmlRoot.attributes['data-density'], 'default');
+  st.elsById.get('densitySelect').value = 'metro';
+  st.elsById.get('densitySelect').onchange();
+  assert.strictEqual(st.htmlRoot.attributes['data-density'], 'metro');
+  assert.strictEqual(st.ls.qtp_ui_density_v1, 'metro');
+  st.ctx.applyDensityDom('invalid_density');
+  assert.strictEqual(st.htmlRoot.attributes['data-density'], 'default');
 
   const lv = await runSim(true);
   const lvState = lv.getState();

@@ -16,8 +16,12 @@
         const savedTheme = localStorage.getItem('qtp_pwa_theme_v2');
         const theme = savedTheme === 'dark' ? 'dark' : 'light';
         document.documentElement.classList.toggle('dark', theme === 'dark');
+        const savedDensity = localStorage.getItem('qtp_ui_density_v1');
+        const density = ['compact', 'default', 'metro'].includes(savedDensity) ? savedDensity : 'default';
+        document.documentElement.setAttribute('data-density', density);
       } catch (_) {
         document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-density', 'default');
       }
     })();
   </script>
@@ -37,16 +41,103 @@
   </script>
 
   <style>
-    :root { color-scheme: light; }
+    :root {
+      color-scheme: light;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --ctrl-h: 32px;
+      --card-pad: 12px;
+      --section-gap: 6px;
+      --row-py: 6px;
+      --row-px: 10px;
+      --row-gap: 8px;
+      --list-gap: 4px;
+      --grid-gap: 8px;
+      --table-py: 7px;
+      --table-px: 10px;
+      --font-row: 13.5px;
+      --font-meta: 11px;
+      --radius-ctrl: 8px;
+      --radius-row: 8px;
+      --radius-window: 12px;
+    }
+    :root[data-density="compact"] {
+      --ctrl-h: 28px;
+      --card-pad: 8px;
+      --section-gap: 4px;
+      --row-py: 4px;
+      --row-px: 8px;
+      --row-gap: 6px;
+      --list-gap: 2px;
+      --grid-gap: 6px;
+      --table-py: 4px;
+      --table-px: 8px;
+      --font-row: 12.5px;
+      --font-meta: 10.5px;
+      --radius-ctrl: 8px;
+      --radius-row: 8px;
+      --radius-window: 10px;
+    }
+    :root[data-density="default"] {
+      --ctrl-h: 32px;
+      --card-pad: 12px;
+      --section-gap: 6px;
+      --row-py: 6px;
+      --row-px: 10px;
+      --row-gap: 8px;
+      --list-gap: 4px;
+      --grid-gap: 8px;
+      --table-py: 7px;
+      --table-px: 10px;
+      --font-row: 13.5px;
+      --font-meta: 11px;
+      --radius-ctrl: 8px;
+      --radius-row: 8px;
+      --radius-window: 12px;
+    }
+    :root[data-density="metro"] {
+      --ctrl-h: 38px;
+      --card-pad: 16px;
+      --section-gap: 10px;
+      --row-py: 12px;
+      --row-px: 14px;
+      --row-gap: 10px;
+      --list-gap: 8px;
+      --grid-gap: 12px;
+      --table-py: 10px;
+      --table-px: 12px;
+      --font-row: 14.5px;
+      --font-meta: 12px;
+      --radius-ctrl: 4px;
+      --radius-row: 4px;
+      --radius-window: 6px;
+    }
     :root.dark { color-scheme: dark; }
     html, body { max-width: 100%; overflow-x: clip; }
     [x-cloak] { display: none !important; }
     mark { background: #fde047; color: #0f172a; padding: 0 2px; border-radius: 3px; }
     .dark mark { background: #eab308; color: #0f172a; }
     .card-copied { box-shadow: 0 0 0 2px #10b981 !important; border-color: #10b981 !important; }
+    .qtp-hdr-inner { padding: var(--space-2) var(--card-pad); display: flex; flex-direction: column; gap: var(--space-2); }
+    .qtp-ctrl { min-height: var(--ctrl-h); border-radius: var(--radius-ctrl); }
+    .qtp-main { padding: var(--card-pad); display: flex; flex-direction: column; gap: var(--section-gap); }
+    .qtp-sections { display: flex; flex-direction: column; gap: var(--section-gap); }
+    .qtp-section { border-radius: var(--radius-window); }
+    .qtp-sec-hdr { padding: var(--row-py) var(--card-pad); }
+    .qtp-cards-grid { padding: var(--card-pad); gap: var(--grid-gap); }
+    .qtp-card { padding: var(--row-py) var(--row-px); border-radius: var(--radius-row); }
+    .qtp-card-text { font-size: var(--font-row); line-height: 1.4; }
+    .qtp-card-meta { font-size: var(--font-meta); margin-top: var(--space-2); padding-top: var(--space-2); }
+    .qtp-btn-sm { min-width: 24px; min-height: 24px; }
+    .qtp-table th, .qtp-table td { padding: var(--table-py) var(--table-px); font-size: var(--font-row); }
     @media (max-width: 768px) {
+      :root, :root[data-density="compact"], :root[data-density="default"] { --ctrl-h: 32px; }
       input, select, textarea { font-size: 16px; }
-      button, select, input:not([type="checkbox"]), header a, a.rounded-lg, a.rounded-xl { min-height: 36px; }
+      select.qtp-ctrl { font-size: 12px; }
+      button, select, input:not([type="checkbox"]), header a, a.rounded-lg, a.rounded-xl, .qtp-ctrl, .qtp-btn-sm { min-height: max(36px, var(--ctrl-h)); }
+      .qtp-btn-sm { min-width: 34px; }
     }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -82,6 +173,7 @@
     const LS_META_KEY = 'qtp_pwa_meta_v2';
     const LS_SETTINGS_KEY = 'qtp_pwa_settings_v2';
     const LS_THEME_KEY = 'qtp_pwa_theme_v2';
+    const LS_DENSITY_KEY = 'qtp_ui_density_v1';
 
     const QtpStorage = {
       _dbPromise: null,
@@ -550,12 +642,13 @@
         redoStack: [],
         snapshots: [],
         theme: 'light',
+        density: 'default',
         viewMode: 'cards',
         stripEmoji: false,
         onlyFavorites: false,
         onlyNotes: false,
         collapsedGroups: [],
-        headerCollapsed: false,
+        headerCollapsed: (typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 640),
         qtpPrefs: { ...DEFAULT_QTP_PREFS },
         programMeta: {},
         extraSections: [],
@@ -694,12 +787,17 @@
           this.theme = (s.theme === 'light' || s.theme === 'dark') ? s.theme : (lsTheme === 'dark' ? 'dark' : 'light');
           this.applyThemeDom();
 
+          const lsDensity = (() => { try { return localStorage.getItem(LS_DENSITY_KEY); } catch (_) { return null; } })();
+          const candDensity = ['compact', 'default', 'metro'].includes(lsDensity) ? lsDensity : (['compact', 'default', 'metro'].includes(s.density) ? s.density : 'default');
+          this.density = candDensity;
+          this.applyDensityDom();
+
           this.viewMode = s.viewMode === 'table' ? 'table' : 'cards';
           this.stripEmoji = Boolean(s.stripEmoji);
           this.collapsedGroups = Array.isArray(s.collapsedGroups) ? s.collapsedGroups : [];
           const hasSavedHeader = Object.prototype.hasOwnProperty.call(s, 'headerCollapsed');
-          const narrowStart = typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 640;
-          this.headerCollapsed = narrowStart ? true : (hasSavedHeader ? Boolean(s.headerCollapsed) : false);
+          const narrowNow = typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 640;
+          this.headerCollapsed = this._userToggledHeader ? this.headerCollapsed : (narrowNow ? true : (hasSavedHeader ? Boolean(s.headerCollapsed) : false));
           this.qtpReadyConfirmed = Boolean(s.qtpReadyConfirmed);
           this.bridgeAutoConnect = Boolean(s.bridgeAutoConnect);
           this.autoReloadQtp = s.autoReloadQtp !== false;
@@ -1287,6 +1385,7 @@
         async persistSettings() {
           await QtpStorage.saveSettings({
             theme: this.theme,
+            density: this.density,
             viewMode: this.viewMode,
             stripEmoji: this.stripEmoji,
             collapsedGroups: this.collapsedGroups,
@@ -1371,9 +1470,26 @@
         },
 
         applyThemeDom() {
-          document.documentElement.classList.toggle('dark', this.theme === 'dark');
-          const meta = document.querySelector('meta[name="theme-color"]');
+          if (typeof document !== 'undefined' && document.documentElement && document.documentElement.classList) {
+            document.documentElement.classList.toggle('dark', this.theme === 'dark');
+          }
+          const meta = typeof document !== 'undefined' && typeof document.querySelector === 'function' ? document.querySelector('meta[name="theme-color"]') : null;
           if (meta) meta.setAttribute('content', this.theme === 'dark' ? '#0f172a' : '#4f46e5');
+        },
+
+        applyDensityDom() {
+          const clean = ['compact', 'default', 'metro'].includes(this.density) ? this.density : 'default';
+          this.density = clean;
+          if (typeof document !== 'undefined' && document.documentElement && typeof document.documentElement.setAttribute === 'function') {
+            document.documentElement.setAttribute('data-density', clean);
+          }
+        },
+
+        async setDensity(val) {
+          this.density = ['compact', 'default', 'metro'].includes(val) ? val : 'default';
+          this.applyDensityDom();
+          try { localStorage.setItem(LS_DENSITY_KEY, this.density); } catch (_) {}
+          await this.persistSettings();
         },
 
         async toggleTheme() {
@@ -1540,8 +1656,9 @@
 
         setHdrBottomFromEl(btnEl) {
           if (btnEl && typeof btnEl.getBoundingClientRect === 'function' && document.documentElement.style) {
-            const rect = btnEl.getBoundingClientRect();
-            document.documentElement.style.setProperty('--hdr-bottom', `${Math.round(rect.bottom + 6)}px`);
+            const hdr = typeof btnEl.closest === 'function' ? btnEl.closest('header') : null;
+            const rect = (hdr || btnEl).getBoundingClientRect();
+            document.documentElement.style.setProperty('--hdr-bottom', `${Math.round(rect.bottom + 4)}px`);
           }
         },
 
@@ -2515,9 +2632,9 @@
   </div>
 
   <header class="no-print sticky top-0 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-    <div class="max-w-7xl mx-auto px-3 sm:px-4" :class="headerCollapsed ? 'py-1.5 space-y-1.5' : 'py-2 space-y-2'">
+    <div class="max-w-7xl mx-auto qtp-hdr-inner" :class="headerCollapsed ? '!py-1.5 !gap-1.5' : ''">
 
-      <div x-show="!headerCollapsed" x-transition.opacity.duration.150ms class="space-y-1.5">
+      <div x-show="!headerCollapsed" x-cloak class="space-y-1.5">
         <div class="flex flex-wrap items-center justify-between gap-2 min-w-0">
           <div class="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full">
             <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center font-bold text-sm shadow shrink-0">⚡</div>
@@ -2734,20 +2851,19 @@
             x-model="search"
             type="text"
             placeholder="Metin, başlık, kategori veya kısayol ara (/)"
-            class="w-full pl-8 pr-9 rounded-xl text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            :class="headerCollapsed ? 'py-1.5' : 'py-1.5'"
+            class="qtp-ctrl w-full pl-8 pr-9 text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-          <button x-show="search" x-cloak @click="search = ''; $refs.searchInput.focus()" class="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
+          <button x-show="search" x-cloak @click="search = ''; $refs.searchInput.focus()" class="qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
         </div>
 
         <div class="relative shrink-0 max-w-full min-w-0 flex items-center" @click.outside="categoryDropdownOpen = false">
-          <div class="inline-flex items-stretch max-w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+          <div class="inline-flex items-stretch max-w-full border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden" style="border-radius: var(--radius-ctrl);">
             <button
               x-ref="catToggleBtn"
               type="button"
               @click="toggleCategoryDropdown($event)"
               :class="selectedGroups.length ? 'text-indigo-700 dark:text-indigo-300 font-semibold' : 'text-slate-700 dark:text-slate-200 font-medium'"
-              class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0"
+              class="qtp-ctrl inline-flex items-center gap-1.5 px-2.5 text-xs hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0"
               title="Çoklu kategori filtrele"
             >
               <span class="truncate" x-text="categorySummaryLabel"></span>
@@ -2779,7 +2895,7 @@
                   placeholder="Kategori ara..."
                   class="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-                <button x-show="categorySearch" x-cloak @click="categorySearch = ''; $refs.catSearchInput.focus()" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                <button x-show="categorySearch" x-cloak @click="categorySearch = ''; $refs.catSearchInput.focus()" class="qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
               </div>
 
               <div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
@@ -2850,14 +2966,14 @@
         </div>
 
         <div x-show="!headerCollapsed" class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 min-w-0 max-w-full">
-          <select x-model="hotkeyFilter" class="max-w-full min-w-0 px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select x-model="hotkeyFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="ALL">⌨️ Kısayollar</option>
             <template x-for="hk in allHotkeys" :key="hk">
               <option :value="hk" x-text="hk"></option>
             </template>
           </select>
 
-          <select x-model="scopeFilter" class="max-w-full min-w-0 px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select x-model="scopeFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="all">🎯 Tümü</option>
             <option value="text">📝 Metin</option>
             <option value="label">🏷️ Başlık</option>
@@ -2865,14 +2981,20 @@
             <option value="keys">⌨️ Kısayol</option>
           </select>
 
-          <select x-model="sortFilter" class="max-w-full min-w-0 px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select x-model="sortFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="default">↕️ Varsayılan</option>
             <option value="favorites">⭐ Favoriler</option>
             <option value="popular">🔥 Popüler</option>
             <option value="az">🔤 A → Z</option>
           </select>
 
-          <button @click="toggleSelectAllFiltered()" class="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition" :title="allFilteredSelected ? 'Görünenlerin seçimini kaldır' : 'Görünenlerin tümünü seç'">
+          <select id="densitySelect" x-model="density" @change="setDensity($event.target.value)" aria-label="Görünüm yoğunluğu" title="Arayüz yoğunluğu" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="compact">Sıkı</option>
+            <option value="default">Varsayılan</option>
+            <option value="metro">Metro</option>
+          </select>
+
+          <button @click="toggleSelectAllFiltered()" class="qtp-ctrl px-2.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition" :title="allFilteredSelected ? 'Görünenlerin seçimini kaldır' : 'Görünenlerin tümünü seç'">
             <span x-text="allFilteredSelected ? '☑️' : '⬜ Seç'"></span>
           </button>
         </div>
@@ -2906,7 +3028,7 @@
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 space-y-4">
+  <main class="max-w-7xl mx-auto qtp-main">
 
     <div x-show="!serverConnected && !linkedFileName && items.length === 0" x-cloak class="p-6 rounded-2xl border-2 border-dashed border-indigo-400/60 bg-white dark:bg-slate-900 text-center space-y-3">
       <div class="text-4xl">📂</div>
@@ -2937,24 +3059,24 @@
       </div>
     </div>
 
-    <div x-show="viewMode === 'cards' && filteredItems.length > 0" class="space-y-5">
+    <div x-show="viewMode === 'cards' && filteredItems.length > 0" class="qtp-sections">
       <template x-for="grp in groupedFiltered" :key="grp.name">
-        <section class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div @click="toggleGroupCollapse(grp.name)" class="flex flex-wrap items-center justify-between gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 cursor-pointer select-none">
+        <section class="qtp-section bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div @click="toggleGroupCollapse(grp.name)" class="qtp-sec-hdr flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 cursor-pointer select-none">
             <div class="flex items-center gap-2.5">
               <span class="text-xs text-slate-400 transition-transform duration-150" :class="isGroupCollapsed(grp.name) ? '-rotate-90' : ''">▼</span>
               <h2 class="font-bold text-sm sm:text-base" x-text="grp.name"></h2>
               <span class="px-2 py-0.5 text-xs rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-semibold" x-text="grp.items.length"></span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button @click.stop="openGroupsModal(grp.name)" class="no-print px-2 py-0.5 rounded-md text-[11px] text-slate-500 hover:text-indigo-500 hover:bg-slate-200/70 dark:hover:bg-slate-700" title="Grubu yeniden adlandır / dışa aktar">✏️</button>
+              <button @click.stop="openGroupsModal(grp.name)" class="no-print qtp-btn-sm inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[11px] text-slate-500 hover:text-indigo-500 hover:bg-slate-200/70 dark:hover:bg-slate-700" title="Grubu yeniden adlandır / dışa aktar">✏️</button>
               <template x-for="k in grp.hotkeys" :key="k">
                 <kbd class="px-2 py-0.5 text-xs font-mono rounded-md bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-indigo-300" x-text="k"></kbd>
               </template>
             </div>
           </div>
 
-          <div x-show="!isGroupCollapsed(grp.name)" class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div x-show="!isGroupCollapsed(grp.name)" class="qtp-cards-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 content-start items-stretch">
             <template x-for="item in grp.items" :key="item.id">
               <article
                 @click="copyText(item, true)"
@@ -2965,42 +3087,42 @@
                     ? 'bg-amber-50/75 dark:bg-amber-950/25 border-amber-300 dark:border-amber-700/60 hover:border-amber-500'
                     : 'bg-slate-50/80 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md'
                 ]"
-                class="min-w-0 group relative flex flex-col justify-between p-4 rounded-xl border transition cursor-pointer"
+                class="qtp-card min-w-0 group relative flex flex-col justify-between border transition cursor-pointer"
               >
-                <div>
-                  <div class="flex items-start justify-between gap-2 mb-2">
-                    <div class="flex flex-wrap items-center gap-1.5">
+                <div class="min-w-0">
+                  <div class="flex items-start justify-between gap-2 mb-2 min-w-0">
+                    <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                       <input
                         type="checkbox"
                         :checked="isSelected(item.id)"
                         @click.stop="toggleSelect(item.id, $event)"
-                        class="no-print w-4 h-4 rounded accent-indigo-600 cursor-pointer"
+                        class="no-print w-4 h-4 rounded accent-indigo-600 cursor-pointer shrink-0"
                         title="Toplu işlem için seç (Shift+Tık aralık seçer)"
                       />
                       <kbd x-show="item.keys" class="px-1.5 py-0.5 text-[11px] font-mono rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" x-text="item.keys"></kbd>
                       <span x-show="item.text.startsWith('[DAHİLİ NOT]')" class="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-white">Dahili Not</span>
-                      <span x-show="item.label" class="text-xs font-semibold text-slate-600 dark:text-slate-300" x-html="highlight(item.label)"></span>
+                      <span x-show="item.label" class="text-xs font-semibold text-slate-600 dark:text-slate-300 break-words" x-html="highlight(item.label)"></span>
                     </div>
 
                     <button
                       @click.stop="toggleFavorite(item)"
-                      class="no-print text-base leading-none hover:scale-110 transition shrink-0"
+                      class="no-print qtp-btn-sm inline-flex items-center justify-center rounded-md text-base leading-none hover:bg-slate-200/70 dark:hover:bg-slate-800 hover:scale-110 transition shrink-0"
                       :title="item.favorite ? 'Favoriden çıkar' : 'Favorilere ekle'"
                     >
                       <span x-text="item.favorite ? '⭐' : '☆'"></span>
                     </button>
                   </div>
 
-                  <p class="text-sm leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-line break-words" x-html="highlight(item.text)"></p>
+                  <p class="qtp-card-text text-slate-800 dark:text-slate-200 whitespace-pre-line break-words overflow-hidden" x-html="highlight(item.text)"></p>
                 </div>
 
-                <div class="no-print flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-slate-200/70 dark:border-slate-800/80">
-                  <span class="text-[11px] text-slate-400" x-text="item.copyCount > 0 ? item.copyCount + 'x kopyalandı' : 'Tıkla & kopyala'"></span>
-                  <div class="flex items-center gap-1">
-                    <button @click.stop="openEditModal(item)" class="p-1.5 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" title="Düzenle">✏️</button>
-                    <button @click.stop="duplicateItem(item)" class="p-1.5 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" title="Çoğalt">📑</button>
-                    <button @click.stop="deleteItem(item)" class="p-1.5 rounded-lg text-xs text-slate-500 hover:text-red-500 hover:bg-red-100/60 dark:hover:bg-red-950/60 transition" title="Sil">🗑️</button>
-                    <button @click.stop="copyText(item)" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
+                <div class="qtp-card-meta no-print shrink-0 flex items-center justify-between gap-2 border-t border-slate-200/70 dark:border-slate-800/80 min-w-0">
+                  <span class="text-[11px] text-slate-400 truncate min-w-0" x-text="item.copyCount > 0 ? item.copyCount + 'x kopyalandı' : 'Tıkla & kopyala'"></span>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button @click.stop="openEditModal(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" title="Düzenle">✏️</button>
+                    <button @click.stop="duplicateItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" title="Çoğalt">📑</button>
+                    <button @click.stop="deleteItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-red-500 hover:bg-red-100/60 dark:hover:bg-red-950/60 transition" title="Sil">🗑️</button>
+                    <button @click.stop="copyText(item)" class="qtp-btn-sm inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition shrink-0">
                       📋 Kopyala
                     </button>
                   </div>
@@ -3012,20 +3134,20 @@
       </template>
     </div>
 
-    <div x-show="viewMode === 'table' && filteredItems.length > 0" x-cloak class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm border-collapse">
+    <div x-show="viewMode === 'table' && filteredItems.length > 0" x-cloak class="qtp-section bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div class="table-wrap overflow-x-auto">
+        <table class="qtp-table w-full text-left border-collapse">
           <thead class="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
             <tr>
-              <th class="p-3 w-10 text-center">
+              <th class="w-9 text-center">
                 <input type="checkbox" :checked="allFilteredSelected" @change="toggleSelectAllFiltered()" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
               </th>
-              <th class="p-3 w-10 text-center">⭐</th>
-              <th class="p-3 w-28">Kısayol</th>
-              <th class="p-3 w-48">Grup</th>
-              <th class="p-3 w-48">Başlık</th>
-              <th class="p-3">Hazır Cevap Metni</th>
-              <th class="p-3 w-44 text-right">İşlemler</th>
+              <th class="w-9 text-center">⭐</th>
+              <th class="w-24">Kısayol</th>
+              <th class="w-36">Grup</th>
+              <th class="w-36">Başlık</th>
+              <th>Hazır Cevap Metni</th>
+              <th class="w-40 text-right">İşlemler</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
@@ -3034,28 +3156,28 @@
                 :class="isSelected(item.id) ? 'bg-indigo-50/70 dark:bg-indigo-950/35' : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'"
                 class="transition"
               >
-                <td class="p-3 text-center">
+                <td class="text-center">
                   <input type="checkbox" :checked="isSelected(item.id)" @click="toggleSelect(item.id, $event)" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
                 </td>
-                <td class="p-3 text-center">
-                  <button @click="toggleFavorite(item)" class="text-base hover:scale-110 transition" x-text="item.favorite ? '⭐' : '☆'"></button>
+                <td class="text-center">
+                  <button @click="toggleFavorite(item)" class="qtp-btn-sm inline-flex items-center justify-center rounded text-base hover:scale-110 transition" x-text="item.favorite ? '⭐' : '☆'"></button>
                 </td>
-                <td class="p-3 whitespace-nowrap">
+                <td class="whitespace-nowrap">
                   <kbd class="px-1.5 py-0.5 text-xs font-mono rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" x-text="item.keys || '-'"></kbd>
                 </td>
-                <td class="p-3 text-xs font-medium text-slate-600 dark:text-slate-300" x-text="item.group"></td>
-                <td class="p-3 text-xs font-semibold" x-html="highlight(item.label || '-')"></td>
-                <td @click="copyText(item, true)" class="p-3 text-xs leading-relaxed cursor-pointer max-w-xl">
+                <td class="text-xs font-medium text-slate-600 dark:text-slate-300" x-text="item.group"></td>
+                <td class="text-xs font-semibold" x-html="highlight(item.label || '-')"></td>
+                <td @click="copyText(item, true)" class="leading-relaxed cursor-pointer max-w-md">
                   <div class="line-clamp-3 whitespace-pre-line" x-html="highlight(item.text)"></div>
                 </td>
-                <td class="p-3 text-right whitespace-nowrap">
-                  <div class="inline-flex items-center gap-1">
-                    <button @click="moveItem(item, -1)" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Yukarı Taşı">⬆️</button>
-                    <button @click="moveItem(item, 1)" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Aşağı Taşı">⬇️</button>
-                    <button @click="openEditModal(item)" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Düzenle">✏️</button>
-                    <button @click="duplicateItem(item)" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Çoğalt">📑</button>
-                    <button @click="copyText(item, true)" class="px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium" title="Kopyala">📋</button>
-                    <button @click="deleteItem(item)" class="p-1 rounded hover:bg-red-100 dark:hover:bg-red-950 text-xs" title="Sil">🗑️</button>
+                <td class="text-right whitespace-nowrap">
+                  <div class="row-actions inline-flex items-center gap-1">
+                    <button @click="moveItem(item, -1)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Yukarı Taşı">⬆️</button>
+                    <button @click="moveItem(item, 1)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Aşağı Taşı">⬇️</button>
+                    <button @click="openEditModal(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Düzenle">✏️</button>
+                    <button @click="duplicateItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Çoğalt">📑</button>
+                    <button @click="copyText(item, true)" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium" title="Kopyala">📋</button>
+                    <button @click="deleteItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-red-100 dark:hover:bg-red-950 text-xs" title="Sil">🗑️</button>
                   </div>
                 </td>
               </tr>
@@ -3066,14 +3188,14 @@
     </div>
   </main>
 
-  <div x-show="editorOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4" @click.self="editorOpen = false">
-    <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
-        <h3 class="font-bold text-base" x-text="editorMode === 'add' ? '➕ Yeni Hazır Cevap Ekle' : '✏️ Hazır Cevabı Düzenle'"></h3>
-        <button @click="editorOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
+  <div x-show="editorOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" @click.self="editorOpen = false">
+    <div class="qtp-modal-panel w-full max-w-2xl max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+      <div class="qtp-modal-head shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+        <h3 class="font-bold text-base truncate" x-text="editorMode === 'add' ? '➕ Yeni Hazır Cevap Ekle' : '✏️ Hazır Cevabı Düzenle'"></h3>
+        <button @click="editorOpen = false" class="qtp-btn-sm inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 text-lg shrink-0">✕</button>
       </div>
 
-      <div class="p-5 space-y-4 max-h-[78vh] overflow-y-auto">
+      <div class="modal-body-scroll flex-1 min-h-0 p-4 sm:p-5 space-y-4 overflow-y-auto">
         <div>
           <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Kısayol (QuickTextPaste keys)</label>
           <div class="flex flex-wrap gap-2">
@@ -3142,21 +3264,21 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+      <div class="qtp-modal-foot shrink-0 flex items-center justify-end gap-2 px-4 sm:px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
         <button @click="editorOpen = false" class="px-4 py-2 rounded-xl text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700">İptal</button>
         <button @click="saveEditor()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow">✅ Kaydet (Ctrl+S)</button>
       </div>
     </div>
   </div>
 
-  <div x-show="bulkOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4" @click.self="bulkOpen = false">
-    <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
-        <h3 class="font-bold text-base">✏️ Toplu Düzenle (<span x-text="selectedIds.length"></span> Seçili Kayıt)</h3>
-        <button @click="bulkOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
+  <div x-show="bulkOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" @click.self="bulkOpen = false">
+    <div class="qtp-modal-panel w-full max-w-lg max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+      <div class="qtp-modal-head shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+        <h3 class="font-bold text-base truncate">✏️ Toplu Düzenle (<span x-text="selectedIds.length"></span> Seçili Kayıt)</h3>
+        <button @click="bulkOpen = false" class="qtp-btn-sm inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 text-lg shrink-0">✕</button>
       </div>
 
-      <div class="p-5 space-y-3 text-sm max-h-[75vh] overflow-y-auto">
+      <div class="modal-body-scroll flex-1 min-h-0 p-4 sm:p-5 space-y-3 text-sm overflow-y-auto">
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-2">
           <label class="inline-flex items-center gap-2 font-medium cursor-pointer">
             <input type="checkbox" x-model="bulkForm.useGroup" class="accent-indigo-600" /> Grubu Değiştir
@@ -3213,21 +3335,21 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+      <div class="qtp-modal-foot shrink-0 flex items-center justify-end gap-2 px-4 sm:px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
         <button @click="bulkOpen = false" class="px-4 py-2 rounded-xl text-xs font-medium bg-slate-200 dark:bg-slate-800">İptal</button>
         <button @click="applyBulkEdit()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow">✅ Tüm Seçililere Uygula</button>
       </div>
     </div>
   </div>
 
-  <div x-show="importOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4" @click.self="importOpen = false">
-    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
-        <h3 class="font-bold text-base">📥 İçe Aktarma Seçenekleri</h3>
-        <button @click="importOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
+  <div x-show="importOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" @click.self="importOpen = false">
+    <div class="qtp-modal-panel w-full max-w-md max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+      <div class="qtp-modal-head shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+        <h3 class="font-bold text-base truncate">📥 İçe Aktarma Seçenekleri</h3>
+        <button @click="importOpen = false" class="qtp-btn-sm inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 text-lg shrink-0">✕</button>
       </div>
 
-      <div class="p-5 space-y-4 text-sm">
+      <div class="modal-body-scroll flex-1 min-h-0 p-4 sm:p-5 space-y-4 text-sm overflow-y-auto">
         <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-1">
           <p class="font-semibold text-indigo-800 dark:text-indigo-200">
             <span x-text="importSummary.filesCount"></span> dosyadan <span x-text="importSummary.records.length"></span> kayıt • <span x-text="importSummary.groupCount"></span> grup okundu
@@ -3274,23 +3396,23 @@
         </label>
       </div>
 
-      <div class="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+      <div class="qtp-modal-foot shrink-0 flex items-center justify-end gap-2 px-4 sm:px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
         <button @click="importOpen = false" class="px-4 py-2 rounded-xl text-xs font-medium bg-slate-200 dark:bg-slate-800">İptal</button>
         <button @click="confirmImport()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow">✅ İçe Aktar ve Kaydet</button>
       </div>
     </div>
   </div>
 
-  <div x-show="iniModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4" @click.self="iniModalOpen = false">
-    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
-        <h3 class="font-bold text-base">
+  <div x-show="iniModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" @click.self="iniModalOpen = false">
+    <div class="qtp-modal-panel w-full max-w-md max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+      <div class="qtp-modal-head shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+        <h3 class="font-bold text-base truncate">
           ⚙️ QuickTextPaste.ini Dışa Aktar (<span x-text="iniExportOnlySelected ? selectedIds.length : items.length"></span> Kayıt)
         </h3>
-        <button @click="iniModalOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
+        <button @click="iniModalOpen = false" class="qtp-btn-sm inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 text-lg shrink-0">✕</button>
       </div>
 
-      <div class="p-5 space-y-4 text-sm">
+      <div class="modal-body-scroll flex-1 min-h-0 p-4 sm:p-5 space-y-4 text-sm overflow-y-auto">
         <div class="space-y-2">
           <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">Karakter Kodlaması</div>
           <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 cursor-pointer">
@@ -3325,22 +3447,22 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+      <div class="qtp-modal-foot shrink-0 flex items-center justify-end gap-2 px-4 sm:px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
         <button @click="iniModalOpen = false" class="px-4 py-2 rounded-xl text-xs font-medium bg-slate-200 dark:bg-slate-800">İptal</button>
         <button @click="confirmIniExport()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow">📤 QuickTextPaste.ini İndir</button>
       </div>
     </div>
   </div>
 
-  <div x-show="settingsOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4" @click.self="settingsOpen = false">
-    <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
-        <h3 class="font-bold text-base">⚙️ Yedekler, Depolama & PWA Ayarları</h3>
-        <button @click="settingsOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
+  <div x-show="settingsOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" @click.self="settingsOpen = false">
+    <div class="qtp-modal-panel w-full max-w-lg max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+      <div class="qtp-modal-head shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+        <h3 class="font-bold text-base truncate">⚙️ Yedekler, Depolama & PWA Ayarları</h3>
+        <button @click="settingsOpen = false" class="qtp-btn-sm inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 text-lg shrink-0">✕</button>
       </div>
 
-      <div class="p-5 space-y-4 text-xs max-h-[78vh] overflow-y-auto">
-        <div class="grid grid-cols-2 gap-2.5">
+      <div class="modal-body-scroll flex-1 min-h-0 p-4 sm:p-5 space-y-4 text-xs overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
             <div class="text-slate-400">Depolama Motoru</div>
             <div class="font-bold text-sm mt-0.5" x-text="storageEngine"></div>
@@ -3418,8 +3540,8 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-          <button @click="clearAllItems()" class="py-2 rounded-xl font-medium bg-amber-600/15 hover:bg-amber-600/25 text-amber-600 dark:text-amber-400 transition">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+          <button @click="clearAllItems()" class="py-2 px-2 rounded-xl font-medium bg-amber-600/15 hover:bg-amber-600/25 text-amber-600 dark:text-amber-400 transition">
             🗑️ Listeyi Temizle (Boşalt)
           </button>
           <button @click="resetToDefaults()" class="py-2 px-2 rounded-xl font-medium bg-indigo-600/15 hover:bg-indigo-600/25 text-indigo-600 dark:text-indigo-300 transition">
@@ -3430,14 +3552,14 @@
     </div>
   </div>
 
-  <div x-show="qtpModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4" @click.self="qtpModalOpen = false">
-    <div class="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
-        <h3 class="font-bold text-base">⚡ QuickTextPaste Gereksinimi & Full-Stack Köprü</h3>
-        <button @click="qtpModalOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
+  <div x-show="qtpModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" @click.self="qtpModalOpen = false">
+    <div class="qtp-modal-panel w-full max-w-xl max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+      <div class="qtp-modal-head shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+        <h3 class="font-bold text-base truncate">⚡ QuickTextPaste Gereksinimi & Full-Stack Köprü</h3>
+        <button @click="qtpModalOpen = false" class="qtp-btn-sm inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 text-lg shrink-0">✕</button>
       </div>
 
-      <div class="p-5 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
+      <div class="modal-body-scroll flex-1 min-h-0 p-4 sm:p-5 space-y-4 text-xs overflow-y-auto">
         <div class="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-1.5">
           <div class="font-bold text-indigo-800 dark:text-indigo-200 text-sm">
             Bu uygulamanın tam verimle yüklenip çalışması için QuickTextPaste'in de kurulu ve çalışıyor olması gerekir.
@@ -3537,7 +3659,7 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+      <div class="qtp-modal-foot shrink-0 flex items-center justify-end gap-2 px-4 sm:px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
         <button @click="qtpModalOpen = false; pendingPwaInstall = false" class="px-4 py-2 rounded-xl text-xs font-medium bg-slate-200 dark:bg-slate-800">Kapat</button>
         <button x-show="pendingPwaInstall && deferredPrompt" @click="confirmQtpAndInstallPwa()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow">
           📲 QuickTextPaste Hazır — PWA Yükle
@@ -3546,14 +3668,14 @@
     </div>
   </div>
 
-  <div x-show="groupsModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4" @click.self="groupsModalOpen = false">
-    <div class="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
-        <h3 class="font-bold text-base">📁 Grup Yönetimi (<span x-text="allGroups.length"></span> Grup)</h3>
-        <button @click="groupsModalOpen = false" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 text-lg">✕</button>
+  <div x-show="groupsModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4" @click.self="groupsModalOpen = false">
+    <div class="qtp-modal-panel w-full max-w-lg max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden">
+      <div class="qtp-modal-head shrink-0 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+        <h3 class="font-bold text-base truncate">📁 Grup Yönetimi (<span x-text="allGroups.length"></span> Grup)</h3>
+        <button @click="groupsModalOpen = false" class="qtp-btn-sm inline-flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 text-lg shrink-0">✕</button>
       </div>
 
-      <div class="p-5 space-y-4 text-xs max-h-[75vh] overflow-y-auto">
+      <div class="modal-body-scroll flex-1 min-h-0 p-4 sm:p-5 space-y-4 text-xs overflow-y-auto">
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-2 min-w-0">
           <div class="font-semibold">Grup Adını Değiştir veya Birleştir</div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
@@ -3574,17 +3696,17 @@
                 <span class="font-semibold truncate" x-text="g.name"></span>
                 <span class="shrink-0 px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-500 font-semibold" x-text="g.count"></span>
               </div>
-              <div class="flex items-center gap-1">
-                <button @click="exportSingleGroup(g.name, 'ini')" class="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu INI olarak indir">INI</button>
-                <button @click="exportSingleGroup(g.name, 'json')" class="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu JSON olarak indir">JSON</button>
-                <button @click="deleteGroupItems(g.name)" class="px-2 py-1 rounded-lg bg-red-500/15 text-red-500 hover:bg-red-500 hover:text-white" title="Grubu sil">🗑️</button>
+              <div class="flex items-center gap-1 shrink-0">
+                <button @click="exportSingleGroup(g.name, 'ini')" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu INI olarak indir">INI</button>
+                <button @click="exportSingleGroup(g.name, 'json')" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu JSON olarak indir">JSON</button>
+                <button @click="deleteGroupItems(g.name)" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-red-500/15 text-red-500 hover:bg-red-500 hover:text-white" title="Grubu sil">🗑️</button>
               </div>
             </div>
           </template>
         </div>
       </div>
 
-      <div class="flex items-center justify-end px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+      <div class="qtp-modal-foot shrink-0 flex items-center justify-end px-4 sm:px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
         <button @click="groupsModalOpen = false" class="px-4 py-2 rounded-xl text-xs font-medium bg-slate-200 dark:bg-slate-800">Kapat</button>
       </div>
     </div>
