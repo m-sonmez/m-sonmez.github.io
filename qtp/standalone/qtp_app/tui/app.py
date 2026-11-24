@@ -725,6 +725,10 @@ class QtpTui:
             self.only_favorites = not self.only_favorites
             self._refresh_view_data()
             self.status_message = "Yalnızca favoriler" if self.only_favorites else "Tüm kayıtlar"
+        elif key == "N":
+            self.only_notes = not self.only_notes
+            self._refresh_view_data()
+            self.status_message = "Yalnızca notlar" if self.only_notes else "Tüm kayıtlar"
         elif key == "m":
             self.strip_emoji = not self.strip_emoji
             self.engine.op_set_setting("strip_emoji", self.strip_emoji)

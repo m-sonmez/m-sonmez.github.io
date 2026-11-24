@@ -1,6 +1,6 @@
 # QTP Klavye Kısayolları Rehberi
 
-QTP v2.4.3, Windows 10/11 ve Linux (KDE Plasma `~/.config/kglobalshortcutsrc` / GNOME) sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama + kaydetme öncesi onay uyarısı ve tüm arayüzlerde çoklu seçim / toplu işlem / geri al-yinele destekli tam klavye kontrolü sunar.
+QTP v2.4.4, Windows 10/11 ve Linux (KDE Plasma `~/.config/kglobalshortcutsrc` / GNOME) sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama + kaydetme öncesi onay uyarısı ve tüm arayüzlerde çoklu seçim / toplu işlem / geri al-yinele destekli tam klavye kontrolü sunar.
 
 ---
 
@@ -61,7 +61,7 @@ Varsayılan `all`, `A`, `Z`, `X`, `Q` yuvalarına ek olarak `qtp_settings.json` 
 | **Seçili Cevabı Sil (`delete_item`)** | Sağ Tık → `Sil` | `d` | Satır içi `Sil` düğmesi |
 | **Çoklu Seçim / Toplu İşlemler** | `Space` / Kutucuk / `Shift+Tık`, `✏️ Toplu`, `🗑️` | `Space`, `U`, `X` | Kutucuk / `Shift+Tık` / Üst Toplu Çubuğu |
 | **Çoğalt / Sıra Taşı (`duplicate_item`, `move_item`)** | Sağ Tık → `📑 Çoğalt` / `⬆️` / `⬇️` | `D`, `K`, `J` | Satır içi `📑`, `⬆️`, `⬇️` düğmeleri |
-| **Favori / Emoji Temizle / Görünüm** | `⭐`, `😊/🚫`, `☰/▦/▤` düğmeleri | `f`, `F`, `m` | `⭐`, `😊 Emojili / 🚫 Emojisiz`, `Liste/Kart/Tablo` |
+| **Favori / Notlar / Emoji / Görünüm** | `⭐`, `📝`, `😊/🚫`, `☰/▦/▤` düğmeleri | `f`, `F`, `N`, `m` | `⭐`, `Notlar`, `😊 Emojili / 🚫 Emojisiz`, `Liste/Kart/Tablo` |
 | **Grup Yöneticisi (`rename_group`, `delete_group`)** | Üst çubuk `📁` düğmesi | `g`, `G` | Üst çubuk `📁 Gruplar` düğmesi |
 | **Geri Al / Yinele / Kaydet** | `Ctrl+Z` / `Ctrl+Y` / `Ctrl+S` | `u`, `y`, `w` | `Ctrl+Z` / `Ctrl+Y` / `Ctrl+S` |
 | **Ham INI Satırını Göster** | Sağ Tık → `INI'de Göster` | `e` | Satır içi `INI'de Göster` düğmesi |
@@ -76,5 +76,5 @@ Varsayılan `all`, `A`, `Z`, `X`, `Q` yuvalarına ek olarak `qtp_settings.json` 
 
 - **Sol Tık (`--gui`):** Öğeyi kopyalar, katmanı gizler ve aktif pencereye `Ctrl+V` (ve istenirse `Enter`) gönderir; Wayland'de yalnızca kopyalama yapılırsa bildirim tepsi/katman üzerinden gösterilir (terminal ağırlıklı kullanımda `paste_method=ctrl_shift_v` seçilebilir).
 - **Shift + Sol Tık (`--gui`):** Yapıştırma simülasyonu yapmadan yalnızca panoya kopyalar.
-- **Sağ Tık (`--gui`):** Bağlam menüsünü açar (`Yapıştır`, `Yalnızca Panoya Kopyala`, `Düzenle`, `Sil`, `INI'de Göster`).
+- **Sağ Tık (`--gui`):** Bağlam menüsünü açar (`Yapıştır`, `Kopyala`, `Favoriye Ekle / Çıkar`, `Düzenle`, `Çoğalt`, `Yukarı Taşı`, `Aşağı Taşı`, `Sil`, `INI'de Göster`, `Yardım`).
 - **Sistem Tepsisi Simgesi:** Sol tık ile katmanı açar/kapatır; sağ tık ile tüm hızlı işlemleri (`Katmanı Aç`, `Ayarlar`, `Yedekler…`, `INI İçe/Dışa Aktar`, `INI Yeniden Yükle`, `Yardım (F1)`, `Çıkış`) açar. KDE Plasma Wayland üzerinde özel sistem kısayoluna `./qtp.bin --gui` atayarak çalışan pencereyi IPC `SHOW` ile tek tuşla açabilirsiniz.

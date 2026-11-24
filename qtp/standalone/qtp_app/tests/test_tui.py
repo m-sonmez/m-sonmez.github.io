@@ -105,3 +105,41 @@ def test_tui_sets_escdelay_and_handles_curses_resize(tmp_path: Path, monkeypatch
          mock.patch.dict("sys.modules", {"curses": fake_curses}):
         rc = run_tui(eng)
     assert rc == 0
+
+
+def test_tui_toggle_only_favorites_and_only_notes(tmp_path: Path):
+    from qtp_app.core.json_store import save_state
+
+    work = tmp_path / "tui_notes"
+    work.mkdir()
+    save_state(
+        work,
+        [
+            {"keys": "L-Win+A", "group": "Genel", "label": "Normal", "text": "Normal cevap", "favorite": True},
+            {"keys": "", "group": "Genel", "label": "Not1", "text": "Kısayolsuz not", "favorite": False},
+            {"keys": "L-Win+Z", "group": "Genel", "label": "Not2", "text": "[DAHİLİ NOT] İç kural", "favorite": False},
+        ],
+        create_backup_flag=False,
+    )
+    eng = QtpEngine(work_dir=work, seed_defaults=False)
+
+    tui = QtpTui(eng, term_size=(100, 20), use_color=False)
+    assert len(tui._visible_items) == 3
+
+    tui.handle_key("F")
+    assert tui.only_favorites is True
+    assert tui.status_message == "Yalnızca favoriler"
+    assert [it["text"] for it in tui._visible_items] == ["Normal cevap"]
+    tui.handle_key("F")
+    assert tui.only_favorites is False
+    assert tui.status_message == "Tüm kayıtlar"
+    assert len(tui._visible_items) == 3
+
+    tui.handle_key("N")
+    assert tui.only_notes is True
+    assert tui.status_message == "Yalnızca notlar"
+    assert [it["text"] for it in tui._visible_items] == ["Kısayolsuz not", "[DAHİLİ NOT] İç kural"]
+    tui.handle_key("N")
+    assert tui.only_notes is False
+    assert tui.status_message == "Tüm kayıtlar"
+    assert len(tui._visible_items) == 3

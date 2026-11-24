@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from qtp_app.ui.search import FuzzyMatcher, tr_lower
+from qtp_app.ui.search import FuzzyMatcher, tr_lower, tr_sort_key
 
 
 def test_turkish_locale_case_matching():
@@ -81,4 +81,10 @@ def test_fuzzy_subsequence_highlights_case_sensitive_and_edge_cases():
     cs = FuzzyMatcher(case_sensitive=True)
     assert cs.match_text("Merhaba", "Merhaba") is not None
     assert cs.match_text("merhaba", "Merhaba") is None
+
+
+def test_tr_sort_key_turkish_collation_order():
+    words = ["Şifre", "Cem", "Çözüm", "Sakla", "Işık", "İade", "[NOT]", "18 Yaş", "🚀 Roket", "αβ"]
+    ordered = sorted(words, key=tr_sort_key)
+    assert ordered == ["[NOT]", "🚀 Roket", "18 Yaş", "Cem", "Çözüm", "Işık", "İade", "Sakla", "Şifre", "αβ"]
 

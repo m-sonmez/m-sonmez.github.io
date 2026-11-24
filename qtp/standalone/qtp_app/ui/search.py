@@ -16,6 +16,9 @@ _TR_UPPER_TO_LOWER = str.maketrans({
     "Ç": "ç",
 })
 
+_TR_ALPHABET_ORDER = "abcçdefgğhıijklmnoöpqrsştuüvwxyz"
+_TR_CHAR_RANK = {ch: (2, idx + 1) for idx, ch in enumerate(_TR_ALPHABET_ORDER)}
+
 
 def tr_lower(text: str) -> str:
     """
@@ -25,6 +28,23 @@ def tr_lower(text: str) -> str:
     if not text:
         return ""
     return text.translate(_TR_UPPER_TO_LOWER).replace("\u0307", "").lower()
+
+
+def tr_sort_key(text: str) -> tuple[tuple[int, int], ...]:
+    """Türkçe alfabe sırası (a..z + ç,ğ,ı,ö,ş,ü) ve noktalama/rakam önceliği için sıralama anahtarı üretir."""
+    norm = tr_lower(text or "")
+    out: list[tuple[int, int]] = []
+    for ch in norm:
+        rank = _TR_CHAR_RANK.get(ch)
+        if rank is not None:
+            out.append(rank)
+        elif ch.isdigit():
+            out.append((1, int(ch)))
+        elif ch.isspace() or not ch.isalnum():
+            out.append((0, ord(ch)))
+        else:
+            out.append((3, ord(ch)))
+    return tuple(out)
 
 
 def _hotkey_badge(keys: str) -> str:

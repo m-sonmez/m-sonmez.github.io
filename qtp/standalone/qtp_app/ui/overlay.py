@@ -72,7 +72,7 @@ from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.paster import bring_window_to_top, capture_previous_app, copy_to_clipboard, is_posix_desktop
 from qtp_app.ui.flow_layout import FlowLayout
 from qtp_app.ui.icons import make_svg_icon
-from qtp_app.ui.search import FuzzyMatcher, tr_lower
+from qtp_app.ui.search import FuzzyMatcher, tr_lower, tr_sort_key
 from qtp_app.ui.theme import (
     ANIMATION_DURATION_MS,
     ANIMATION_SLIDE_OFFSET_PX,
@@ -1909,9 +1909,9 @@ class OverlayWindow(QWidget):
         if self._sort_by == "usage":
             rows.sort(key=lambda r: (-int(r[1].get("copyCount", 0) or 0), r[0]))
         elif self._sort_by == "alpha":
-            rows.sort(key=lambda r: (tr_lower(str(r[1].get("label") or r[1].get("text") or "")), r[0]))
+            rows.sort(key=lambda r: (tr_sort_key(str(r[1].get("label") or r[1].get("text") or "")), r[0]))
         elif self._sort_by == "keys":
-            rows.sort(key=lambda r: (0 if str(r[1].get("keys", "")).strip() else 1, tr_lower(str(r[1].get("keys", ""))), r[0]))
+            rows.sort(key=lambda r: (0 if str(r[1].get("keys", "")).strip() else 1, tr_sort_key(str(r[1].get("keys", ""))), r[0]))
         elif self._sort_by == "favorites":
             rows.sort(key=lambda r: (0 if bool(r[1].get("favorite", False)) else 1, r[0]))
         self.list_model.set_rows(rows)

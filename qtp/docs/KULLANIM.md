@@ -12,7 +12,7 @@ Uygulama ilk kez çalıştırıldığında:
 - Eski v2.0/v2.1 `qtp_settings.json` dosyanızda el değmemiş eski çakışmalı varsayılanlar (`Ctrl+Shift+Space`, `Win+A/Z/X/Q`) varsa QTP bunu algılayıp bir kez otomatik olarak yeni `recommended` (`Win+Alt+*`) profiline yükseltir; **özelleştirilmiş kısayollarınız hiçbir zaman üzerine yazılmaz**.
 - Sonraki açılışlarda katman gizliyken şu yollarla açabilirsiniz:
   - **Global kısayollar:** `Win+Alt+Space`, `Win+Alt+A`, `Win+Alt+Z`, `Win+Alt+X`, `Win+Alt+Q` (veya özelleştirdiğiniz tüm 15 değiştirici bileşimi / özel yuvalar).
-  - **Sistem tepsisi:** Tepsi simgesine **çift tıklayın** veya sağ tıklayıp **Aç (Win+Alt+Space)** *(etkin `all` kısayoluyla dinamik güncellenir)* seçin.
+  - **Sistem tepsisi:** Tepsi simgesine **sol tek tıklayarak** katmanı açıp kapatabilir, **çift tıklayarak** öne getirebilir veya sağ tıklayıp **Aç (Win+Alt+Space)** *(etkin `all` kısayoluyla dinamik güncellenir)* seçebilirsiniz.
   - **İkinci çalıştırma:** `qtp.exe` / `qtp.bin` tekrar çalıştırıldığında çalışan örnek otomatik olarak öne getirilir.
 
 ---
@@ -60,8 +60,8 @@ Katman açılır açılmaz imleç otomatik olarak üstteki **"Ara… (mesaj, kat
 
 ## 5. Sağ Tık Bağlam Menüsü
 
-Liste satırı üzerinde sağ tıkladığınızda önce kayıt panoya alınır ve dört seçenekli menü açılır:
-- **Yapıştır**, **Kopyala**, **INI'de Göster** (`[list_text]`, `[list_order]`, `[list_label]` ham görünümü) ve **Yardım** (`F1`).
+Liste satırı üzerinde sağ tıkladığınızda **10 seçenekli** bağlam menüsü açılır:
+- **Yapıştır**, **Kopyala**, **Favoriye Ekle / Favoriden Çıkar**, **Düzenle**, **Çoğalt**, **Yukarı Taşı**, **Aşağı Taşı**, **Sil**, **INI'de Göster** (`[list_text]`, `[list_order]`, `[list_label]` ham görünümü) ve **Yardım** (`F1`).
 
 ---
 
@@ -84,12 +84,16 @@ Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerind
 | Ayar Alanı (`qtp_settings.json`) | Varsayılan | Açıklama |
 | :--- | :--- | :--- |
 | `theme` | `"light"` | Arayüz teması: `auto`, `dark` veya `light`. |
+| `view_mode` | `"list"` | Liste görünüm düzeni: `list`, `grid` veya `table`. |
+| `strip_emoji` | `false` | Kopyalama/yapıştırma sırasında Unicode emojileri temizler (özgün kayıt korunur). |
+| `sort_by` | `"order"` | Sıralama ölçütü: `order`, `usage`, `alpha`, `keys` veya `favorites`. |
 | `hotkeys` | `Win+Alt+Space/A/Z/X/Q` | Global kısayol haritası (`all`, `A`, `Z`, `X`, `Q` ve isteğe bağlı özel yuvalar). |
 | `last_category` | `"ALL"` | Genel açılışta son seçili kategori (`ALL`, `A`, `Z`, `X`, `Q`). |
 | `last_category_by_hotkey` | `{}` | Her kısayol için en son seçilen sekme hafızası. |
 | `window_size` | `[720, 520]` | Katman penceresi piksel `[genişlik, yükseklik]` boyutu. |
 | `paste_method` | `"auto"` | `auto`, `ctrl_v`, `ctrl_shift_v`, `shift_insert` veya `type`. |
 | `enter_after_paste` | `true` | `<E<N<D|` sonrası otomatik `Enter`. |
+| `hide_on_blur` | `true` | Odak başka pencereye geçtiğinde katmanı otomatik gizler. |
 | `start_minimized` | `false` | Sistem tepsisinde küçültülmüş başlatma. |
 | `tray_icon` | `true` | Sistem tepsisi simgesi görünürlüğü. |
 | `data_path` | `"./QuickTextPaste.ini"` | İzlenen ve yüklenen `QuickTextPaste.ini` dosya yolu. |
@@ -137,9 +141,9 @@ Ayarlar penceresine **Ayarlar** düğmesi, `Ctrl+,` veya sistem tepsisi üzerind
 ## 11. TUI Modu (`--tui`) ve Web Modu (`--web`)
 
 - **`--tui`:** Python standart kütüphanesi dışında bağımlılık gerektirmez; Linux/macOS'ta `curses` (veya `termios`/düz metin), Windows'ta VT100 veya Win32 Console API kullanır. Canlı oturumda dosya değişikliklerini otomatik yansıtır; `F1` yardım modalında eksiksiz dört bölümlü içeriği (`CLI & Parametreler`, `Kullanım`, `Kısayollar`, `SSS`) `↑`/`↓` ve `PageUp`/`PageDown` kaydırmasıyla sunar ve `k` (çakışma denetimi), `P` (önerilen profil), `C` (tamamlama) tuşlarını destekler.
-- **`--gui` Ana Katmanı (v2.4.3):** Varsayılan **Açık (Light)** tema ile açılır ve her yeni başlatmada ya da `all` kısayolu / tepsi / IPC açılışında deterministik olarak **`ALL` (Tümü)** kategorisini gösterir (`hide_on_blur: true` varsayılan ayarı ile dışarı tıklandığında otomatik gizlenir). Üst çubuktaki gömülü SVG simgeli tema/yardım/ayar düğmeleriyle tek tıkla tema değişimi veya `Ctrl+,` **Ayarlar → Tema** açılır; sistem tepsisinde sol tık katmanı açıp kapatır. Çerçevesiz katman penceresi 8 kenar/köşeden (`QSizeGrip` + `startSystemResize`), üst başlık çubuğundan sürükleme (`startSystemMove`) ve Büyüt/Küçült düğmesiyle Windows, Linux (X11 & Wayland) ve macOS üzerinde serbestçe boyutlandırılır (pencere boyutu 400 ms gecikmeyle `qtp_settings.json` içine saklanır). Görünüm seçiciyle **Liste / Kart / Tablo** modları arasında geçiş yapabilir, çoklu seçim onay kutularıyla **Toplu Düzenle** veya **Seçileni Sil** uygulayabilir, **Grup Yöneticisi** ile grupları yönetebilir, **Emoji Temizle** anahtarıyla kopyalama/yapıştırma sırasında emojileri gizleyebilir ve `Ctrl+Z` / `Ctrl+Y` / `Ctrl+S` ile değişiklikleri yönetebilirsiniz (`QuickTextPaste.ini` ve `data.json` otomatik yedeklenerek güncellenir; Wayland üzerinde `./qtp.bin --gui` KDE/GNOME özel kısayolu ile `XDG_ACTIVATION_TOKEN` + IPC üzerinden anında en öne getirilir ve `Ctrl+C`/`SIGINT` ile temiz kapanır).
+- **`--gui` Ana Katmanı (v2.4.4):** Varsayılan **Açık (Light)** tema ile açılır ve her yeni başlatmada ya da `all` kısayolu / tepsi / IPC açılışında deterministik olarak **`ALL` (Tümü)** kategorisini gösterir (`hide_on_blur: true` varsayılan ayarı ile dışarı tıklandığında otomatik gizlenir). Üst çubuktaki gömülü SVG simgeli tema/yardım/ayar düğmeleriyle tek tıkla tema değişimi veya `Ctrl+,` **Ayarlar → Tema** açılır; sistem tepsisinde sol tık katmanı açıp kapatır. Çerçevesiz katman penceresi 8 kenar/köşeden (`QSizeGrip` + `startSystemResize`), üst başlık çubuğundan sürükleme (`startSystemMove`) ve Büyüt/Küçült düğmesiyle Windows, Linux (X11 & Wayland) ve macOS üzerinde serbestçe boyutlandırılır (pencere boyutu 400 ms gecikmeyle `qtp_settings.json` içine saklanır). Görünüm seçiciyle **Liste / Kart / Tablo** modları arasında geçiş yapabilir, çoklu seçim onay kutularıyla **Toplu Düzenle** veya **Seçileni Sil** uygulayabilir, **Grup Yöneticisi** ile grupları yönetebilir, **Emoji Temizle** anahtarıyla kopyalama/yapıştırma sırasında emojileri gizleyebilir ve `Ctrl+Z` / `Ctrl+Y` / `Ctrl+S` ile değişiklikleri yönetebilirsiniz (`QuickTextPaste.ini` ve `data.json` otomatik yedeklenerek güncellenir; Wayland üzerinde `./qtp.bin --gui` KDE/GNOME özel kısayolu ile `XDG_ACTIVATION_TOKEN` + IPC üzerinden anında en öne getirilir ve `Ctrl+C`/`SIGINT` ile temiz kapanır).
 - **`--gui` `F1` Yardım Penceresi (5 Sekme):** `Kullanım (Web/GUI/TUI/CLI)`, `Kurulum & İndirme`, `Kısayollar & Profiller`, `Sorun Giderme (SSS)` ve birebir `--verbose --help` başvurusunu gösteren `CLI & Parametreler` sekmelerini içerir.
-- **`--tui` Etkileşimli Uçbirim:** Liste gezintisi yanında `a` (**Yeni Cevap Ekle**), `E` (**Düzenle**), `d` (**Sil**), `Space` (çoklu seçim), `U`/`X` (toplu düzenle/sil), `D` (çoğalt), `K`/`J` (yukarı/aşağı taşı), `f`/`F` (favori değiştir/filtrele), `m` (emoji temizle), `g`/`G` (grup yöneticisi), `u`/`y` (geri al/yinele), `w` (kaydet), `P`/`O` (kısayol profili), `k` (çakışma tarama) ve `F1` destekler.
+- **`--tui` Etkileşimli Uçbirim:** Liste gezintisi yanında `a` (**Yeni Cevap Ekle**), `E` (**Düzenle**), `d` (**Sil**), `Space` (çoklu seçim), `U`/`X` (toplu düzenle/sil), `D` (çoğalt), `K`/`J` (yukarı/aşağı taşı), `f`/`F` (favori değiştir/filtrele), `N` (yalnızca notları filtrele), `m` (emoji temizle), `g`/`G` (grup yöneticisi), `u`/`y` (geri al/yinele), `w` (kaydet), `P`/`O` (kısayol profili), `k` (çakışma tarama) ve `F1` destekler.
 - **`--web` ve GitHub Pages (`qtp.html`):** Yerelde `127.0.0.1` loopback üzerinde çalışan çevrimdışı HTTP/JSON arayüzüdür; çevrimdışı derlenmiş **Tailwind CSS v3.4.19 (`theme.css`, sıfır CDN)**, 4 px boşluk ölçeği, kalıcı **Yoğunluk Kipleri (`compact` Sıkı / `default` Standart / `metro` Rahat — `qtp_ui_density_v1`)**, **Açık / Koyu Tema**, **Liste / Kart / Tablo** görünümleri, **Toplu Düzenle / Sil**, **Grup Yöneticisi**, **Sürükle-Bırak İçe Aktarım**, **UTF-16 LE / UTF-8 / ANSI / JSON / Word `.doc` / Yazdır Dışa Aktarım**, **Emoji Yongaları & Emojisiz Kopyalama**, **Favoriler & Kullanım Sıralaması**, **30 Adımlı Geri Al/Yinele (`Ctrl+Z`/`Ctrl+Y`)**, **Anlık Kayıt Geçmişi** ve **6 sekmeli `F1` Yardım** sunar (`POST /api/shutdown` ile zarifçe kapanır). Canlı web modunda bir satıra tıklamak veya `Enter` basmak yalnızca tarayıcı panosuna kopyalar (`POST /api/copy` sayacı günceller); aktif pencereye tuş göndermek için yalnızca her satırdaki **Yapıştır** düğmesi kullanılır (hedef pencereye geçebilmeniz için `delay_s: 3` saniye bekler).
   - **Statik GitHub Pages Dual-Mode:** Aynı `qtp.html` + `theme.css` çifti `https://m-sonmez.github.io/qtp/qtp.html` adresinde sıfır arka uçla çalışır (`localhost` dışında `/api/revision` yoklaması yapmaz); eklenen/düzenlenen/silinen kayıtları tarayıcının `localStorage` hafızasında saklar, işletim sistemine göre tek tık **İndir (`qtp.exe` / `qtp.bin`)**, **📲 PWA Yükle** ve klasik `index.html` / `legacy/cevaplar.html` geçiş düğmeleri sunar.
 - **Klasik PWA Rehberi (`index.html` & `legacy/cevaplar.html`):** `https://m-sonmez.github.io/qtp/` kök URL'sinde klasik QuickTextPaste PWA arayüzü korunur ve üst çubukta OS indirme + `🌐 Yeni Web Arayüzü (qtp.html)` bağlantıları yer alır.

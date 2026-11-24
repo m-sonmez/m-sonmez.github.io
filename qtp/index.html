@@ -2851,6 +2851,7 @@
             x-model="search"
             type="text"
             placeholder="Metin, başlık, kategori veya kısayol ara (/)"
+            aria-label="Hazır cevaplarda ara"
             class="qtp-ctrl w-full pl-8 pr-9 text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button x-show="search" x-cloak @click="search = ''; $refs.searchInput.focus()" class="qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
@@ -3098,6 +3099,7 @@
                         @click.stop="toggleSelect(item.id, $event)"
                         class="no-print w-4 h-4 rounded accent-indigo-600 cursor-pointer shrink-0"
                         title="Toplu işlem için seç (Shift+Tık aralık seçer)"
+                        aria-label="Kaydı seç"
                       />
                       <kbd x-show="item.keys" class="px-1.5 py-0.5 text-[11px] font-mono rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" x-text="item.keys"></kbd>
                       <span x-show="item.text.startsWith('[DAHİLİ NOT]')" class="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-white">Dahili Not</span>
@@ -3140,7 +3142,7 @@
           <thead class="bg-slate-50 dark:bg-slate-800/70 text-xs uppercase text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
             <tr>
               <th class="w-9 text-center">
-                <input type="checkbox" :checked="allFilteredSelected" @change="toggleSelectAllFiltered()" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
+                <input type="checkbox" :checked="allFilteredSelected" @change="toggleSelectAllFiltered()" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" aria-label="Görünen tüm kayıtları seç" title="Görünen tüm kayıtları seç" />
               </th>
               <th class="w-9 text-center">⭐</th>
               <th class="w-24">Kısayol</th>
@@ -3157,10 +3159,10 @@
                 class="transition"
               >
                 <td class="text-center">
-                  <input type="checkbox" :checked="isSelected(item.id)" @click="toggleSelect(item.id, $event)" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
+                  <input type="checkbox" :checked="isSelected(item.id)" @click="toggleSelect(item.id, $event)" class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" aria-label="Kaydı seç" title="Kaydı seç" />
                 </td>
                 <td class="text-center">
-                  <button @click="toggleFavorite(item)" class="qtp-btn-sm inline-flex items-center justify-center rounded text-base hover:scale-110 transition" x-text="item.favorite ? '⭐' : '☆'"></button>
+                  <button @click="toggleFavorite(item)" class="qtp-btn-sm inline-flex items-center justify-center rounded text-base hover:scale-110 transition" x-text="item.favorite ? '⭐' : '☆'" aria-label="Favori" :title="item.favorite ? 'Favoriden çıkar' : 'Favoriye ekle'"></button>
                 </td>
                 <td class="whitespace-nowrap">
                   <kbd class="px-1.5 py-0.5 text-xs font-mono rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" x-text="item.keys || '-'"></kbd>

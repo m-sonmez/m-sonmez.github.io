@@ -4,6 +4,21 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.4.4] - 2026-11-24
+
+### Sıralama Eşitliği, TUI Not Filtresi, Çevrimdışı PWA Sorgu Yönlendirmesi, Erişilebilirlik & Belge Güncellemesi
+- **Çapraz Mod `sort_by="keys"` & `"alpha"` Sıralama Eşitliği (`ui/search.py`, `core/engine.py`, `ui/overlay.py`):**
+  - Ortak `tr_sort_key()` yardımcı işlevi eklenerek `--cli`/`--tui`/`--web` (`QtpEngine.op_list_items`), `--gui` (`OverlayWindow._refresh_list`) ve statik `qtp.html` arasında Türkçe alfabe sıralaması (`a..z + ç,ğ,ı,ö,ş,ü`) eşitlendi ve `sort_by="keys"` kipinde kısayolsuz notların (`keys=""`) tüm modlarda deterministik olarak sona konması sağlandı.
+- **TUI Yalnızca Notlar Anahtarı (`tui/app.py`):**
+  - `N` tuşu `self.only_notes` filtresini açıp kapatacak şekilde bağlandı (`F` favori filtresiyle eşlenik).
+- **PWA Çevrimdışı Sorgu Parametresi Yönlendirmesi (`sw.js` `qtp-pwa-cache-v3.5.5`):**
+  - `caches.match(req, { ignoreSearch: true })` ve `pathname.endsWith('/qtp.html')` / `'/cevaplar.html'` gezinme yedeği eklenerek çevrimdışı `/qtp/qtp.html?category=A` açılışlarının yanlışlıkla klasik `index.html`'e düşmesi giderildi.
+- **Erişilebilirlik & Belge Senkronizasyonu (`web/qtp.html`, `qtp.html`, `index.html`, `docs/KULLANIM.md`, `docs/KISAYOLLAR.md`):**
+  - Açık modallarda `Tab` / `Shift+Tab` odak tuzağı eklendi ve klasik `index.html` arama/onay/favori kontrollerine `aria-label` öznitelikleri tamamlandı.
+  - `docs/KULLANIM.md` Bölüm 1 (tepsi sol tek tık), Bölüm 5 (10 eylemli sağ tık menüsü) ve Bölüm 7 (`view_mode`, `strip_emoji`, `sort_by`, `hide_on_blur` ayarları) ile `docs/KISAYOLLAR.md` güncellendi; `qtp/.gitattributes` içine `.gitattributes text eol=lf` eklendi.
+
+---
+
 ## [2.4.3] - 2026-11-24
 
 ### Windows Uyumluluğu, LF CSS Varlık Tutarlılığı & Sürüm Eşitleme

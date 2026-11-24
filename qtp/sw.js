@@ -1,4 +1,4 @@
-const CACHE_NAME = 'qtp-pwa-cache-v3.5.4';
+const CACHE_NAME = 'qtp-pwa-cache-v3.5.5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -75,9 +75,13 @@ self.addEventListener('fetch', (event) => {
           }
           return res;
         })
-        .catch(() => caches.match(req).then((cached) => {
+        .catch(() => caches.match(req, { ignoreSearch: true }).then((cached) => {
           if (cached) return cached;
-          if (req.mode === 'navigate') return caches.match('./index.html');
+          if (req.mode === 'navigate') {
+            if (url.pathname.endsWith('/qtp.html')) return caches.match('./qtp.html');
+            if (url.pathname.endsWith('/cevaplar.html')) return caches.match('./legacy/cevaplar.html');
+            return caches.match('./index.html');
+          }
           return new Response('', { status: 503, statusText: 'Offline' });
         }))
     );

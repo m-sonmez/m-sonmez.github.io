@@ -73,7 +73,7 @@ from qtp_app.core.settings import (
     set_setting_value,
 )
 from qtp_app.core.watcher import ConfigFileWatcher, FileChange, ReloadEvent
-from qtp_app.ui.search import FuzzyMatcher, tr_lower
+from qtp_app.ui.search import FuzzyMatcher, tr_lower, tr_sort_key
 
 _EMOJI_RE = re.compile(
     "["
@@ -1262,10 +1262,17 @@ class QtpEngine:
         elif eff_sort == "alpha":
             matched = sorted(
                 matched,
-                key=lambda r: (tr_lower(str(r[1].get("label") or r[1].get("text") or "")), r[0]),
+                key=lambda r: (tr_sort_key(str(r[1].get("label") or r[1].get("text") or "")), r[0]),
             )
         elif eff_sort == "keys":
-            matched = sorted(matched, key=lambda r: (str(r[1].get("keys", "")).lower(), r[0]))
+            matched = sorted(
+                matched,
+                key=lambda r: (
+                    0 if str(r[1].get("keys", "")).strip() else 1,
+                    tr_sort_key(str(r[1].get("keys", ""))),
+                    r[0],
+                ),
+            )
         elif eff_sort == "favorites":
             matched = sorted(matched, key=lambda r: (0 if r[1].get("favorite") else 1, r[0]))
 

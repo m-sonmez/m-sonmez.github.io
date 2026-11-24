@@ -735,6 +735,66 @@ def test_only_notes_filter_parity_across_engine_gui_and_static_js(tmp_path: Path
         assert "NOTE_PARITY_OK" in proc.stdout
 
 
+def test_sort_keys_and_alpha_parity_across_engine_gui_and_static_js(tmp_path: Path):
+    import re
+    import subprocess
+    from PyQt6.QtWidgets import QApplication
+    from qtp_app.core.json_store import save_state
+    from qtp_app.ui.overlay import OverlayWindow
+
+    work = tmp_path / "sort_parity"
+    work.mkdir()
+    sample_items = [
+        {"keys": "", "group": "Genel", "label": "Not Kayıt", "text": "Kısayolsuz not"},
+        {"keys": "L-Win+Z", "group": "Kurye", "label": "Şifre", "text": "Şifre metni"},
+        {"keys": "L-Win+A", "group": "Restoran", "label": "Cem", "text": "Cem metni"},
+        {"keys": "L-Win+A", "group": "Restoran", "label": "Çözüm", "text": "Çözüm metni"},
+        {"keys": "L-Win+1", "group": "Ortak", "label": "18 Yaş", "text": "18 Yaş metni"},
+        {"keys": "L-Win+Z", "group": "Kurye", "label": "[NOT] Kural", "text": "Dahili"},
+    ]
+    save_state(work, sample_items, create_backup_flag=False)
+    eng = QtpEngine(work_dir=work, seed_defaults=False)
+
+    app = QApplication.instance() or QApplication([])
+    overlay = OverlayWindow(eng.items, theme="light")
+    try:
+        for sort_mode in ("keys", "alpha"):
+            eng_texts = [it["text"] for it in eng.op_list_items(sort_by=sort_mode).data["items"]]
+            overlay.apply_settings(sort_by=sort_mode)
+            gui_texts = [overlay.list_model.item_at(i)["text"] for i in range(overlay.list_model.rowCount())]
+            assert gui_texts == eng_texts, f"sort_by={sort_mode} GUI != Engine"
+            if sort_mode == "keys":
+                assert eng_texts[-1] == "Kısayolsuz not"
+            if sort_mode == "alpha":
+                assert eng_texts.index("Cem metni") < eng_texts.index("Çözüm metni")
+                assert eng_texts.index("Dahili") < eng_texts.index("18 Yaş metni")
+
+            node = shutil.which("node")
+            if node:
+                html_path = Path(__file__).resolve().parent.parent / "web" / "qtp.html"
+                html = html_path.read_text(encoding="utf-8")
+                scripts = re.findall(r"<script>([\s\S]*?)</script>", html)
+                start_pure = scripts[0].index("function trLower(text) {")
+                end_pure = scripts[0].index("function downloadBytes(")
+                pure_js = scripts[0].split("const state = {", 1)[0] + "\n" + scripts[0][start_pure:end_pure]
+                vm_code = (
+                    "const assert = require('assert');\n"
+                    + pure_js
+                    + f"\nconst sample = {json.dumps(sample_items, ensure_ascii=False)};\n"
+                    + f"const res = filterAndSortItemsStatic(sample, {{ sortBy: {json.dumps(sort_mode)} }});\n"
+                    + f"assert.deepStrictEqual(res.map(it => it.text), {json.dumps(eng_texts, ensure_ascii=False)});\n"
+                    + "console.log('SORT_PARITY_OK');\n"
+                )
+                vm_file = work / f"sort_{sort_mode}_parity.js"
+                vm_file.write_text(vm_code, encoding="utf-8")
+                proc = subprocess.run([node, str(vm_file)], capture_output=True, text=True, check=False)
+                assert proc.returncode == 0, f"JS sort={sort_mode} parity hatası: {proc.stderr}"
+                assert "SORT_PARITY_OK" in proc.stdout
+    finally:
+        overlay.close()
+        overlay.deleteLater()
+
+
 @pytest.mark.parametrize("mode", ["cli", "web", "tui", "gui"])
 def test_cross_mode_verbose_quiet_and_initial_filters_parity(mode: str, tmp_path: Path, capsys, monkeypatch):
     import io

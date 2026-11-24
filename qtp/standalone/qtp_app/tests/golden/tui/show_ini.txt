@@ -1,4 +1,4 @@
-QTP v2.4.3 | Mod: TUI | Ara: "" [/ Ara] | Kayıt: 2/2
+QTP v2.4.4 | Mod: TUI | Ara: "" [/ Ara] | Kayıt: 2/2
 Kategoriler: [Tümü(2)] A(1) Z(1) X(0) Q(0)
 ------------------------------------------------------------------------------------------------
 === INI Kaydı (text_000) (Kapatmak için Esc/q) ===
