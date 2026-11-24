@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 import html
 from typing import Any, Callable
 
@@ -22,6 +23,7 @@ from PyQt6.QtCore import (
 )
 from PyQt6.QtGui import (
     QAction,
+    QBrush,
     QColor,
     QCursor,
     QFont,
@@ -42,7 +44,6 @@ from PyQt6.QtWidgets import (
     QDialog,
     QFormLayout,
     QFrame,
-    QGraphicsDropShadowEffect,
     QGraphicsOpacityEffect,
     QHBoxLayout,
     QHeaderView,
@@ -55,17 +56,20 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizeGrip,
+    QSizePolicy,
     QStackedWidget,
     QStyledItemDelegate,
     QStyle,
     QTableView,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
-from qtp_app.core.engine import format_ini_preview, item_matches_category, strip_emojis
+from qtp_app.core.engine import format_ini_preview, is_note_item, item_matches_category, strip_emojis
 from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.paster import capture_previous_app, copy_to_clipboard, is_posix_desktop
+from qtp_app.ui.flow_layout import FlowLayout
 from qtp_app.ui.icons import make_svg_icon
 from qtp_app.ui.search import FuzzyMatcher, tr_lower
 from qtp_app.ui.theme import (
@@ -233,6 +237,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
     COPY_BTN_HEIGHT = 24
     BADGE_WIDTH = 28
     BADGE_HEIGHT = 24
+    _DOC_CACHE_MAX = 256
 
     def __init__(
         self,
@@ -246,9 +251,20 @@ class SnippetItemDelegate(QStyledItemDelegate):
         self.hovered_row: int = -1
         self.checked_keys: set[str] = set()
         self.grid_mode: bool = False
+        self._doc_cache: OrderedDict[tuple[Any, ...], QTextDocument] = OrderedDict()
+        self._build_font_cache()
+
+    def _build_font_cache(self) -> None:
+        self._text_font = create_app_font(self.font_family, FONT_SIZE_TEXT)
+        self._bold_text_font = create_app_font(self.font_family, FONT_SIZE_TEXT, bold=True)
+        self._meta_font = create_app_font(self.font_family, FONT_SIZE_META)
+        self._badge_font = create_app_font(self.font_family, FONT_SIZE_META, bold=True)
+        self._text_fm = QFontMetrics(self._text_font)
+        self._meta_fm = QFontMetrics(self._meta_font)
 
     def set_palette(self, palette: ThemePalette) -> None:
         self.palette = palette
+        self._doc_cache.clear()
 
     def check_box_rect(self, row_rect: QRect) -> QRect:
         card_rect = row_rect.adjusted(2, 3, -2, -3)
@@ -260,16 +276,20 @@ class SnippetItemDelegate(QStyledItemDelegate):
         chk = self.check_box_rect(row_rect)
         return QRect(chk.right() + 6, chk.top() - 2, 18, 20)
 
-    def copy_button_rect(self, row_rect: QRect) -> QRect:
-        """Satır içi 'Kopyala' düğmesinin dikdörtgen alanını döndürür."""
+    def copy_button_visible(self, option: Any, index: QModelIndex) -> bool:
+        """Liste satırında 'Kopyala' düğmesinin o an görünür olup olmadığını döndürür."""
         if self.grid_mode:
-            card_rect = row_rect.adjusted(2, 3, -2, -3)
-            return QRect(
-                card_rect.right() - PADDING_ROW_H - self.COPY_BTN_WIDTH,
-                card_rect.bottom() - self.COPY_BTN_HEIGHT - 6,
-                self.COPY_BTN_WIDTH,
-                self.COPY_BTN_HEIGHT,
-            )
+            return False
+        return (
+            bool(option.state & QStyle.StateFlag.State_Selected)
+            or bool(option.state & QStyle.StateFlag.State_MouseOver)
+            or (index.row() == self.hovered_row)
+        )
+
+    def copy_button_rect(self, row_rect: QRect) -> QRect:
+        """Satır içi 'Kopyala' düğmesinin dikdörtgen alanını döndürür (kart görünümünde boş QRect)."""
+        if self.grid_mode:
+            return QRect()
         badge_x = row_rect.right() - PADDING_ROW_H - self.BADGE_WIDTH
         copy_x = badge_x - 8 - self.COPY_BTN_WIDTH
         copy_y = row_rect.top() + (row_rect.height() - self.COPY_BTN_HEIGHT) // 2
@@ -279,6 +299,38 @@ class SnippetItemDelegate(QStyledItemDelegate):
         if self.grid_mode:
             return QSize(self.GRID_WIDTH, self.GRID_HEIGHT)
         return QSize(option.rect.width() or 600, self.ROW_HEIGHT)
+
+    def _get_cached_doc(
+        self,
+        clipped: str,
+        matched_indices: tuple[int, ...],
+        text_width: int,
+    ) -> QTextDocument:
+        key = (
+            clipped,
+            matched_indices,
+            text_width,
+            self.palette.name,
+            self.palette.text_primary,
+            self.palette.highlight_bg,
+            self.palette.highlight_text,
+        )
+        doc = self._doc_cache.get(key)
+        if doc is not None:
+            self._doc_cache.move_to_end(key)
+            return doc
+        doc = QTextDocument()
+        doc.setDocumentMargin(0)
+        doc.setDefaultFont(self._text_font)
+        doc.setTextWidth(float(text_width))
+        html_body = self._build_highlighted_html(clipped, matched_indices)
+        doc.setHtml(
+            f'<div style="color:{self.palette.text_primary};line-height:1.3;">{html_body}</div>'
+        )
+        self._doc_cache[key] = doc
+        if len(self._doc_cache) > self._DOC_CACHE_MAX:
+            self._doc_cache.popitem(last=False)
+        return doc
 
     def _build_highlighted_html(self, display_text: str, matched_indices: tuple[int, ...]) -> str:
         if not matched_indices:
@@ -361,7 +413,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
 
         st_rect = self.star_rect(option.rect)
         is_fav = bool(item.get("favorite", False))
-        painter.setFont(create_app_font(self.font_family, FONT_SIZE_TEXT, bold=True))
+        painter.setFont(self._bold_text_font)
         painter.setPen(parse_qcolor(self.palette.selected_border if is_fav else self.palette.text_muted))
         painter.drawText(st_rect, Qt.AlignmentFlag.AlignCenter, "★" if is_fav else "☆")
 
@@ -389,13 +441,12 @@ class SnippetItemDelegate(QStyledItemDelegate):
             float(BADGE_RADIUS),
         )
         painter.fillPath(badge_path, parse_qcolor(self.palette.badge_bg))
-        badge_font = create_app_font(self.font_family, FONT_SIZE_META, bold=True)
-        painter.setFont(badge_font)
+        painter.setFont(self._badge_font)
         painter.setPen(parse_qcolor(self.palette.badge_text))
         painter.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, _extract_badge(str(item.get("keys", ""))))
 
         right_reserved = 10 if self.grid_mode else (self.BADGE_WIDTH + PADDING_ROW_H + 14)
-        if not self.grid_mode and (is_hovered or is_selected):
+        if self.copy_button_visible(option, index):
             copy_rect = self.copy_button_rect(option.rect)
             copy_path = QPainterPath()
             copy_path.addRoundedRect(
@@ -410,7 +461,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
             painter.setPen(QPen(parse_qcolor(self.palette.btn_border), 1.0))
             painter.drawPath(copy_path)
             painter.setPen(parse_qcolor(self.palette.btn_text))
-            painter.setFont(create_app_font(self.font_family, FONT_SIZE_META, bold=True))
+            painter.setFont(self._badge_font)
             painter.drawText(copy_rect, Qt.AlignmentFlag.AlignCenter, "Kopyala")
             right_reserved += self.COPY_BTN_WIDTH + 8
 
@@ -427,19 +478,10 @@ class SnippetItemDelegate(QStyledItemDelegate):
 
         main_rect = QRect(text_left, text_top, text_width, text_height)
         raw_text = str(item.get("text", "")).replace("\r\n", " ").replace("\n", " ")
-        text_font = create_app_font(self.font_family, FONT_SIZE_TEXT)
-        fm = QFontMetrics(text_font)
-        max_chars = max(32, int((text_width * 1.95) / max(6, fm.averageCharWidth())))
+        max_chars = max(32, int((text_width * 1.95) / max(6, self._text_fm.averageCharWidth())))
         clipped = raw_text[: max_chars - 1] + "…" if len(raw_text) > max_chars else raw_text
 
-        doc = QTextDocument()
-        doc.setDocumentMargin(0)
-        doc.setDefaultFont(text_font)
-        doc.setTextWidth(float(text_width))
-        html_body = self._build_highlighted_html(clipped, matched_indices)
-        doc.setHtml(
-            f'<div style="color:{self.palette.text_primary};line-height:1.3;">{html_body}</div>'
-        )
+        doc = self._get_cached_doc(clipped, matched_indices, text_width)
         painter.save()
         painter.translate(float(main_rect.left()), float(main_rect.top()))
         painter.setClipRect(0, 0, main_rect.width(), main_rect.height())
@@ -458,10 +500,9 @@ class SnippetItemDelegate(QStyledItemDelegate):
         meta_text = f"{grp}  ·  {lbl}" if lbl else grp
         if cc > 0:
             meta_text = f"{meta_text}  ·  {cc} kez"
-        meta_font = create_app_font(self.font_family, FONT_SIZE_META)
-        painter.setFont(meta_font)
+        painter.setFont(self._meta_font)
         painter.setPen(parse_qcolor(self.palette.text_muted))
-        elided_meta = QFontMetrics(meta_font).elidedText(
+        elided_meta = self._meta_fm.elidedText(
             meta_text, Qt.TextElideMode.ElideRight, meta_rect.width()
         )
         painter.drawText(meta_rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, elided_meta)
@@ -481,7 +522,24 @@ class SnippetListView(QListView):
     def __init__(self, delegate: SnippetItemDelegate, parent: QWidget | None = None):
         super().__init__(parent)
         self._delegate = delegate
+        self._press_row: int = -1
+        self._press_copy_visible: bool = False
         self.setMouseTracking(True)
+
+    def mousePressEvent(self, event: Any) -> None:
+        idx = self.indexAt(event.pos())
+        if event.button() == Qt.MouseButton.LeftButton and idx.isValid():
+            row = idx.row()
+            prev_current = self.currentIndex()
+            was_selected = prev_current.isValid() and prev_current.row() == row
+            self._press_row = row
+            self._press_copy_visible = (not self._delegate.grid_mode) and (
+                was_selected or row == self._delegate.hovered_row
+            )
+        else:
+            self._press_row = -1
+            self._press_copy_visible = False
+        super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: Any) -> None:
         idx = self.indexAt(event.pos())
@@ -500,8 +558,17 @@ class SnippetListView(QListView):
     def mouseReleaseEvent(self, event: Any) -> None:
         idx = self.indexAt(event.pos())
         if idx.isValid():
-            self.setCurrentIndex(idx)
             row = idx.row()
+            copy_visible = (
+                (not self._delegate.grid_mode)
+                and (
+                    (row == self._press_row and self._press_copy_visible)
+                    or (self._press_row == -1 and row == self._delegate.hovered_row)
+                )
+            )
+            self._press_row = -1
+            self._press_copy_visible = False
+            self.setCurrentIndex(idx)
             if event.button() == Qt.MouseButton.RightButton:
                 self.item_context_requested.emit(row, event.globalPosition().toPoint())
                 return
@@ -513,7 +580,8 @@ class SnippetListView(QListView):
                 if self._delegate.star_rect(row_rect).contains(event.pos()):
                     self.item_favorite_toggled.emit(row)
                     return
-                if self._delegate.copy_button_rect(row_rect).contains(event.pos()):
+                copy_rect = self._delegate.copy_button_rect(row_rect)
+                if copy_visible and not copy_rect.isEmpty() and copy_rect.contains(event.pos()):
                     self.item_copy_requested.emit(row)
                     return
                 if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
@@ -537,6 +605,7 @@ class IniSnippetViewerDialog(QDialog):
     ):
         super().__init__(parent)
         self.setWindowTitle("INI Kaydını Göster")
+        self.setMinimumSize(440, 280)
         self.resize(560, 320)
         self.setPalette(build_qpalette(palette))
         self.setStyleSheet(build_dialog_stylesheet(palette))
@@ -547,6 +616,7 @@ class IniSnippetViewerDialog(QDialog):
 
         info = QLabel(f"Kaynak dosya: {ini_path}")
         info.setProperty("class", "MutedHint")
+        info.setWordWrap(True)
         layout.addWidget(info)
 
         preview_lines = format_ini_preview(item, index)
@@ -578,6 +648,7 @@ class SnippetEditorDialog(QDialog):
         super().__init__(parent)
         is_edit = item is not None
         self.setWindowTitle("Hazır Cevap Düzenle" if is_edit else "Yeni Hazır Cevap Ekle")
+        self.setMinimumSize(480, 380)
         self.resize(580, 480)
         self.setPalette(build_qpalette(palette))
         self.setStyleSheet(build_dialog_stylesheet(palette))
@@ -587,24 +658,25 @@ class SnippetEditorDialog(QDialog):
         lay.setContentsMargins(16, 16, 16, 16)
         lay.setSpacing(10)
 
-        top_fields = QHBoxLayout()
-        top_fields.setSpacing(8)
+        top_fields = FlowLayout(margin=0, spacing=8)
         self.keys_cb = QComboBox(self)
+        self.keys_cb.setMinimumWidth(140)
         self.keys_cb.setEditable(True)
         self.keys_cb.addItems(["L-Win+A", "L-Win+Z", "L-Win+X", "L-Win+Q", "L-Win+W", "L-Win+1", ""])
         cur_keys = str((item or {}).get("keys", "L-Win+A"))
         self.keys_cb.setCurrentText(cur_keys)
 
         self.group_cb = QComboBox(self)
+        self.group_cb.setMinimumWidth(160)
         self.group_cb.setEditable(True)
         uniq_groups = sorted({g for g in groups if g} | {"Genel"})
         self.group_cb.addItems(uniq_groups)
         self.group_cb.setCurrentText(str((item or {}).get("group", "Genel")) or "Genel")
 
         top_fields.addWidget(QLabel("Kategori Kısayolu:"))
-        top_fields.addWidget(self.keys_cb, 1)
+        top_fields.addWidget(self.keys_cb)
         top_fields.addWidget(QLabel("Grup:"))
-        top_fields.addWidget(self.group_cb, 2)
+        top_fields.addWidget(self.group_cb)
         lay.addLayout(top_fields)
 
         lbl_row = QHBoxLayout()
@@ -624,14 +696,12 @@ class SnippetEditorDialog(QDialog):
         txt_head.addWidget(self.strip_emoji_btn)
         lay.addLayout(txt_head)
 
-        chip_row = QHBoxLayout()
-        chip_row.setSpacing(4)
+        chip_row = FlowLayout(margin=0, spacing=4)
         for emo in QUICK_EMOJIS[:10]:
             eb = QPushButton(emo, self)
             eb.setObjectName("EmojiChipBtn")
             eb.clicked.connect(lambda _c=False, e=emo: self.text_edit.insertPlainText(e))
             chip_row.addWidget(eb)
-        chip_row.addStretch()
         lay.addLayout(chip_row)
 
         self.text_edit = QPlainTextEdit(self)
@@ -643,7 +713,7 @@ class SnippetEditorDialog(QDialog):
         self.char_count_label.setProperty("class", "MutedHint")
         lay.addWidget(self.char_count_label)
 
-        checks_row = QHBoxLayout()
+        checks_row = FlowLayout(margin=0, spacing=8)
         self.end_marker_chk = QCheckBox("Yapıştırma sonrası Enter gönder (<E<N<D|)", self)
         term_now = (item or {}).get("terminator", "<E<N<D|")
         self.end_marker_chk.setChecked(term_now == "<E<N<D|" or item is None)
@@ -651,7 +721,6 @@ class SnippetEditorDialog(QDialog):
         self.favorite_chk = QCheckBox("Favori olarak işaretle", self)
         self.favorite_chk.setChecked(bool((item or {}).get("favorite", False)))
         checks_row.addWidget(self.favorite_chk)
-        checks_row.addStretch()
         lay.addLayout(checks_row)
 
         self._update_char_count()
@@ -702,7 +771,8 @@ class BulkEditDialog(QDialog):
     ):
         super().__init__(parent)
         self.setWindowTitle(f"Toplu Düzenleme ({selected_count} kayıt)")
-        self.resize(560, 480)
+        self.setMinimumSize(460, 420)
+        self.resize(560, 520)
         self.setPalette(build_qpalette(palette))
         self.setStyleSheet(build_dialog_stylesheet(palette))
         self.result_payload: dict[str, Any] | None = None
@@ -711,7 +781,17 @@ class BulkEditDialog(QDialog):
         lay.setContentsMargins(16, 16, 16, 16)
         lay.setSpacing(10)
 
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        body = QWidget(self)
+        body.setObjectName("DialogScrollContainer")
+        body_lay = QVBoxLayout(body)
+        body_lay.setContentsMargins(0, 0, 0, 0)
+        body_lay.setSpacing(10)
+
         form = QFormLayout()
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         form.setSpacing(8)
 
         self.keys_mode_cb = QComboBox(self)
@@ -759,12 +839,11 @@ class BulkEditDialog(QDialog):
         self.add_emoji_edit = QLineEdit(self)
         self.add_emoji_edit.setPlaceholderText("Örn. 😊 veya ✅")
         form.addRow("Sonuna Emoji Ekle:", self.add_emoji_edit)
-        lay.addLayout(form)
+        body_lay.addLayout(form)
 
-        chip_row = QHBoxLayout()
-        chip_row.setSpacing(4)
+        chip_row = FlowLayout(margin=0, spacing=4)
         for emo in QUICK_EMOJIS[:10]:
-            eb = QPushButton(emo, self)
+            eb = QPushButton(emo, body)
             eb.setObjectName("EmojiChipBtn")
             eb.clicked.connect(
                 lambda _c=False, e=emo: self.add_emoji_edit.setText(
@@ -772,8 +851,10 @@ class BulkEditDialog(QDialog):
                 )
             )
             chip_row.addWidget(eb)
-        chip_row.addStretch()
-        lay.addLayout(chip_row)
+        body_lay.addLayout(chip_row)
+        body_lay.addStretch()
+        scroll.setWidget(body)
+        lay.addWidget(scroll, 1)
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
@@ -819,6 +900,7 @@ class GroupManagerDialog(QDialog):
     ):
         super().__init__(parent)
         self.setWindowTitle("Grup Yöneticisi")
+        self.setMinimumSize(460, 320)
         self.resize(560, 400)
         self._palette = palette
         self._groups_provider = groups_provider
@@ -858,11 +940,21 @@ class GroupManagerDialog(QDialog):
                 w.deleteLater()
         for grp_name, cnt in self._groups_provider():
             row_w = QWidget(self.container)
-            row_lay = QHBoxLayout(row_w)
-            row_lay.setContentsMargins(4, 4, 4, 4)
+            row_lay = QVBoxLayout(row_w)
+            row_lay.setContentsMargins(4, 6, 4, 6)
             row_lay.setSpacing(6)
+
+            top_line = QHBoxLayout()
+            top_line.setContentsMargins(0, 0, 0, 0)
+            top_line.setSpacing(8)
             lbl = QLabel(f"{grp_name} ({cnt})", row_w)
             edit = QLineEdit(grp_name, row_w)
+            edit.setMinimumWidth(140)
+            top_line.addWidget(lbl)
+            top_line.addWidget(edit, 1)
+            row_lay.addLayout(top_line)
+
+            act_flow = FlowLayout(margin=0, spacing=6)
             btn_ren = QPushButton("Yeniden Adlandır", row_w)
             btn_exp = QPushButton("INI Dışa Aktar", row_w)
             btn_del = QPushButton("Sil", row_w)
@@ -876,11 +968,10 @@ class GroupManagerDialog(QDialog):
             )
             btn_del.clicked.connect(lambda _c=False, g=grp_name: self._handle_delete(g))
 
-            row_lay.addWidget(lbl, 1)
-            row_lay.addWidget(edit, 2)
-            row_lay.addWidget(btn_ren)
-            row_lay.addWidget(btn_exp)
-            row_lay.addWidget(btn_del)
+            act_flow.addWidget(btn_ren)
+            act_flow.addWidget(btn_exp)
+            act_flow.addWidget(btn_del)
+            row_lay.addLayout(act_flow)
             self.rows_layout.addWidget(row_w)
         self.rows_layout.addStretch()
 
@@ -997,6 +1088,7 @@ class OverlayWindow(QWidget):
         self._drag_origin = QPoint()
         self._drag_start_geom = QRect()
         self._drag_start_pos = QPoint()
+        self._shadow_layers: list[tuple[int, int, QBrush]] = []
 
         base_flags = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
         if is_posix_desktop():
@@ -1040,22 +1132,18 @@ class OverlayWindow(QWidget):
 
     def _build_ui(self) -> None:
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(12, 12, 12, 12)
+        outer.setContentsMargins(6, 6, 6, 6)
         self._outer_layout = outer
 
         self.card = QFrame(self)
         self.card.setObjectName("OverlayCard")
         self.card.setMouseTracking(True)
-        self._card_shadow = QGraphicsDropShadowEffect(self.card)
-        self._card_shadow.setBlurRadius(28)
-        self._card_shadow.setOffset(0, 8)
-        self._card_shadow.setColor(parse_qcolor(self._palette.shadow_color))
-        self.card.setGraphicsEffect(self._card_shadow)
         outer.addWidget(self.card)
 
         card_layout = QVBoxLayout(self.card)
-        card_layout.setContentsMargins(PADDING_OUTER, 8, PADDING_OUTER, 10)
-        card_layout.setSpacing(8)
+        card_layout.setContentsMargins(PADDING_OUTER, 8, PADDING_OUTER, 8)
+        card_layout.setSpacing(6)
+        self._card_layout = card_layout
 
         self.drag_header = QFrame(self.card)
         self.drag_header.setObjectName("DragHeader")
@@ -1086,7 +1174,7 @@ class OverlayWindow(QWidget):
         card_layout.addWidget(self.drag_header)
 
         top_row = QHBoxLayout()
-        top_row.setSpacing(8)
+        top_row.setSpacing(6)
 
         search_wrap = QFrame(self.card)
         search_wrap_layout = QHBoxLayout(search_wrap)
@@ -1095,6 +1183,7 @@ class OverlayWindow(QWidget):
 
         self.search_input = QLineEdit(search_wrap)
         self.search_input.setObjectName("SearchInput")
+        self.search_input.setMinimumWidth(160)
         self.search_input.setPlaceholderText(SEARCH_PLACEHOLDER)
         self.search_input.setFont(create_app_font(self._font_family, FONT_SIZE_TEXT))
         self.search_input.setAccessibleName("Hazır Cevap Arama Kutusu")
@@ -1118,47 +1207,51 @@ class OverlayWindow(QWidget):
         self.add_btn.clicked.connect(self._open_add_dialog)
         top_row.addWidget(self.add_btn)
 
-        self.theme_btn = QPushButton("Koyu", self.card)
+        self.theme_btn = QPushButton("", self.card)
         self.theme_btn.setObjectName("HeaderActionBtn")
-        self.theme_btn.setIconSize(QSize(14, 14))
+        self.theme_btn.setFixedSize(34, 34)
+        self.theme_btn.setIconSize(QSize(16, 16))
         self.theme_btn.setToolTip("Açık / koyu temayı değiştir")
+        self.theme_btn.setAccessibleName("Açık veya koyu temayı değiştir")
         self.theme_btn.clicked.connect(self.toggle_theme)
         top_row.addWidget(self.theme_btn)
 
-        self.help_btn = QPushButton("Yardım (F1)", self.card)
+        self.help_btn = QPushButton("", self.card)
         self.help_btn.setObjectName("HeaderActionBtn")
-        self.help_btn.setIconSize(QSize(14, 14))
+        self.help_btn.setFixedSize(34, 34)
+        self.help_btn.setIconSize(QSize(16, 16))
         self.help_btn.setToolTip("Türkçe kullanım kılavuzu ve kısayolları aç (F1)")
+        self.help_btn.setAccessibleName("Yardım ve kullanım kılavuzu (F1)")
         self.help_btn.clicked.connect(self.help_requested.emit)
         top_row.addWidget(self.help_btn)
 
-        self.settings_btn = QPushButton("Ayarlar", self.card)
+        self.settings_btn = QPushButton("", self.card)
         self.settings_btn.setObjectName("HeaderActionBtn")
-        self.settings_btn.setIconSize(QSize(14, 14))
+        self.settings_btn.setFixedSize(34, 34)
+        self.settings_btn.setIconSize(QSize(16, 16))
         self.settings_btn.setToolTip("Uygulama ve kısayol ayarlarını aç (Ctrl+,)")
+        self.settings_btn.setAccessibleName("Uygulama ve kısayol ayarları")
         self.settings_btn.clicked.connect(self.settings_requested.emit)
         top_row.addWidget(self.settings_btn)
 
         card_layout.addLayout(top_row)
 
-        pills_row = QHBoxLayout()
-        pills_row.setSpacing(6)
+        pills_row = FlowLayout(margin=0, spacing=5)
         self.category_buttons: dict[str, QPushButton] = {}
         for code, title, _prefix in CATEGORY_TABS:
             btn = QPushButton(title, self.card)
             btn.setProperty("class", "CategoryPill")
             btn.setProperty("category_code", code)
             btn.setProperty("item_count", 0)
+            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setAccessibleName(f"Kategori: {title}")
             btn.clicked.connect(lambda _chk=False, c=code: self.set_category(c))
             pills_row.addWidget(btn)
             self.category_buttons[code] = btn
-        pills_row.addStretch()
         card_layout.addLayout(pills_row)
 
-        manage_row = QHBoxLayout()
-        manage_row.setSpacing(4)
+        manage_row = FlowLayout(margin=0, spacing=4)
 
         self.view_list_btn = QPushButton("", self.card)
         self.view_list_btn.setObjectName("HeaderActionBtn")
@@ -1261,6 +1354,34 @@ class OverlayWindow(QWidget):
         self.redo_btn.setAccessibleName("Yinele")
         self.redo_btn.clicked.connect(self._trigger_redo)
 
+        self.more_btn = QToolButton(self.card)
+        self.more_btn.setObjectName("HeaderActionBtn")
+        self.more_btn.setText("⋯")
+        self.more_btn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        self.more_btn.setToolTip("Diğer toplu işlemler ve araçlar")
+        self.more_btn.setAccessibleName("Diğer toplu işlemler ve araçlar")
+        self.more_menu = QMenu(self.more_btn)
+        self._more_act_emoji = QAction("Emojileri Temizle", self.more_menu)
+        self._more_act_emoji.setCheckable(True)
+        self._more_act_emoji.triggered.connect(self.toggle_strip_emoji)
+        self._more_act_select_all = QAction("Görünen Tümünü Seç", self.more_menu)
+        self._more_act_select_all.triggered.connect(self.select_all_visible)
+        self._more_act_bulk_edit = QAction("Toplu Düzenle", self.more_menu)
+        self._more_act_bulk_edit.triggered.connect(self.open_bulk_edit_dialog)
+        self._more_act_bulk_del = QAction("Seçili Kayıtları Sil", self.more_menu)
+        self._more_act_bulk_del.triggered.connect(self._confirm_bulk_delete)
+        self._more_act_groups = QAction("Grup Yöneticisi", self.more_menu)
+        self._more_act_groups.triggered.connect(self.open_group_manager_dialog)
+        for act in (
+            self._more_act_emoji,
+            self._more_act_select_all,
+            self._more_act_bulk_edit,
+            self._more_act_bulk_del,
+            self._more_act_groups,
+        ):
+            self.more_menu.addAction(act)
+        self.more_btn.setMenu(self.more_menu)
+
         for b in (
             self.view_list_btn,
             self.view_grid_btn,
@@ -1273,12 +1394,12 @@ class OverlayWindow(QWidget):
             self.bulk_edit_btn,
             self.bulk_del_btn,
             self.groups_btn,
+            self.more_btn,
             self.save_btn,
             self.undo_btn,
             self.redo_btn,
         ):
             manage_row.addWidget(b)
-        manage_row.addStretch()
         card_layout.addLayout(manage_row)
 
         self.list_model = SnippetListModel(self)
@@ -1325,13 +1446,15 @@ class OverlayWindow(QWidget):
         footer = QFrame(self.card)
         footer.setObjectName("FooterBar")
         footer_layout = QHBoxLayout(footer)
-        footer_layout.setContentsMargins(2, 8, 2, 0)
+        footer_layout.setContentsMargins(2, 2, 2, 0)
         footer_layout.setSpacing(8)
 
         self.footer_hints = QLabel(FOOTER_HINTS_TEXT, footer)
         self.footer_hints.setObjectName("FooterHints")
-        footer_layout.addWidget(self.footer_hints)
-        footer_layout.addStretch()
+        self.footer_hints.setMinimumWidth(0)
+        self.footer_hints.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.footer_hints.setToolTip(FOOTER_HINTS_TEXT)
+        footer_layout.addWidget(self.footer_hints, 1)
 
         self.count_label = QLabel("0 kayıt", footer)
         self.count_label.setObjectName("ItemCountLabel")
@@ -1349,6 +1472,7 @@ class OverlayWindow(QWidget):
         self._toast_opacity = QGraphicsOpacityEffect(self.toast_label)
         self._toast_opacity.setOpacity(1.0)
         self.toast_label.setGraphicsEffect(self._toast_opacity)
+        self._update_responsive_chrome()
 
     def _bind_shortcuts(self) -> None:
         for seq in ("Ctrl+K", "Meta+K"):
@@ -1391,11 +1515,21 @@ class OverlayWindow(QWidget):
             btn.style().polish(btn)
 
         sel_cnt = len(self._selected_keys)
-        self.bulk_edit_btn.setText(f"Toplu ({sel_cnt})" if sel_cnt else "Toplu")
+        bulk_lbl = f"Toplu ({sel_cnt})" if sel_cnt else "Toplu"
+        self.bulk_edit_btn.setText(bulk_lbl)
         self.bulk_edit_btn.setIcon(make_svg_icon("edit", normal_col, size=14))
         self.select_all_btn.setIcon(make_svg_icon("check_all", normal_col, size=15))
         self.bulk_del_btn.setIcon(make_svg_icon("trash", normal_col, size=15))
         self.groups_btn.setIcon(make_svg_icon("folder", normal_col, size=15))
+        self.more_btn.setIcon(make_svg_icon("grid", normal_col, size=14))
+        self.more_btn.setText("⋯")
+        self._more_act_emoji.setChecked(self._strip_emoji)
+        self._more_act_emoji.setIcon(make_svg_icon("no_emoji" if self._strip_emoji else "emoji", self._palette.menu_text, size=14))
+        self._more_act_select_all.setIcon(make_svg_icon("check_all", self._palette.menu_text, size=14))
+        self._more_act_bulk_edit.setText(f"Toplu Düzenle ({sel_cnt})" if sel_cnt else "Toplu Düzenle")
+        self._more_act_bulk_edit.setIcon(make_svg_icon("edit", self._palette.menu_text, size=14))
+        self._more_act_bulk_del.setIcon(make_svg_icon("trash", self._palette.menu_text, size=14))
+        self._more_act_groups.setIcon(make_svg_icon("folder", self._palette.menu_text, size=14))
         self.save_btn.setIcon(make_svg_icon("save", normal_col, size=15))
         self.undo_btn.setEnabled(self._can_undo)
         self.redo_btn.setEnabled(self._can_redo)
@@ -1409,9 +1543,14 @@ class OverlayWindow(QWidget):
         if self._view_mode == "grid":
             self.list_delegate.grid_mode = True
             self.list_view.setViewMode(QListView.ViewMode.IconMode)
+            self.list_view.setMovement(QListView.Movement.Static)
+            self.list_view.setDragEnabled(False)
+            self.list_view.setDragDropMode(QAbstractItemView.DragDropMode.NoDragDrop)
+            self.list_view.setSelectionRectVisible(False)
             self.list_view.setWrapping(True)
             self.list_view.setResizeMode(QListView.ResizeMode.Adjust)
             self.list_view.setUniformItemSizes(False)
+            self.list_view.setGridSize(QSize(SnippetItemDelegate.GRID_WIDTH + 6, SnippetItemDelegate.GRID_HEIGHT + 6))
             self.list_view.setSpacing(6)
             self.view_stack.setCurrentWidget(self.list_view)
         elif self._view_mode == "table":
@@ -1420,10 +1559,73 @@ class OverlayWindow(QWidget):
         else:
             self.list_delegate.grid_mode = False
             self.list_view.setViewMode(QListView.ViewMode.ListMode)
+            self.list_view.setMovement(QListView.Movement.Static)
+            self.list_view.setDragEnabled(False)
             self.list_view.setWrapping(False)
             self.list_view.setUniformItemSizes(True)
+            self.list_view.setGridSize(QSize())
             self.list_view.setSpacing(0)
             self.view_stack.setCurrentWidget(self.list_view)
+
+    def _rebuild_shadow_cache(self) -> None:
+        base = parse_qcolor(self._palette.shadow_color)
+        base_alpha = max(16, base.alpha())
+        layers: list[tuple[int, int, QBrush]] = []
+        for step in range(5, 0, -1):
+            spread = step
+            y_off = 1 if step >= 2 else 0
+            layer_col = QColor(base)
+            layer_col.setAlpha(max(2, min(255, int(round(base_alpha * (0.28 / (step + 0.5)))))))
+            layers.append((spread, y_off, QBrush(layer_col)))
+        inner_col = QColor(base)
+        inner_col.setAlpha(max(4, min(255, int(round(base_alpha * 0.34)))))
+        layers.append((1, 2, QBrush(inner_col)))
+        self._shadow_layers = layers
+
+    def paintEvent(self, event: Any) -> None:
+        if not self.isMaximized() and hasattr(self, "card") and self._shadow_layers:
+            card_rect = self.card.geometry()
+            if not card_rect.isEmpty():
+                painter = QPainter(self)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+                painter.setPen(Qt.PenStyle.NoPen)
+                for spread, y_off, brush in self._shadow_layers:
+                    r = card_rect.adjusted(-spread, -spread + y_off, spread, spread + y_off)
+                    painter.setBrush(brush)
+                    painter.drawRoundedRect(
+                        r,
+                        float(WINDOW_CORNER_RADIUS + spread),
+                        float(WINDOW_CORNER_RADIUS + spread),
+                    )
+                painter.end()
+        super().paintEvent(event)
+
+    def _update_responsive_chrome(self) -> None:
+        w = self.width()
+        h = self.height()
+        compact_w = w < 640
+        compact_h = h < 440
+        for btn in (
+            self.emoji_strip_btn,
+            self.select_all_btn,
+            self.bulk_edit_btn,
+            self.bulk_del_btn,
+            self.groups_btn,
+        ):
+            btn.setVisible(not compact_w)
+        self.more_btn.setVisible(compact_w)
+        if compact_w or compact_h:
+            self._card_layout.setContentsMargins(10, 4, 10, 4)
+            self._card_layout.setSpacing(2)
+        else:
+            self._card_layout.setContentsMargins(PADDING_OUTER, 8, PADDING_OUTER, 8)
+            self._card_layout.setSpacing(7)
+
+    def _elide_footer_hints(self) -> None:
+        card_w = self.card.width() if hasattr(self, "card") and self.card.width() > 0 else self.width() - 12
+        avail = max(40, card_w - self.count_label.sizeHint().width() - self.size_grip.width() - 48)
+        fm = QFontMetrics(self.footer_hints.font())
+        self.footer_hints.setText(fm.elidedText(FOOTER_HINTS_TEXT, Qt.TextElideMode.ElideRight, avail))
 
     def _apply_theme(self) -> None:
         self._palette = resolve_palette(self._theme_setting, os_is_dark=self._detect_os_dark())
@@ -1432,17 +1634,22 @@ class OverlayWindow(QWidget):
         if app is not None:
             app.setPalette(qpal)
         self.setPalette(qpal)
-        self._card_shadow.setColor(parse_qcolor(self._palette.shadow_color))
-        self.setStyleSheet(build_overlay_stylesheet(self._palette, translucent=False))
+        self._rebuild_shadow_cache()
+        qss = build_overlay_stylesheet(self._palette, translucent=False)
+        self.setStyleSheet(qss)
         is_dark = self._palette.name == "dark"
-        self.theme_btn.setText("Açık" if is_dark else "Koyu")
-        self.theme_btn.setToolTip("Açık temaya geç" if is_dark else "Koyu temaya geç")
+        self.theme_btn.setText("")
+        theme_tip = "Açık temaya geç" if is_dark else "Koyu temaya geç"
+        self.theme_btn.setToolTip(theme_tip)
+        self.theme_btn.setAccessibleName(theme_tip)
         btn_col = self._palette.btn_text
         self.add_btn.setIcon(make_svg_icon("plus", btn_col, size=14))
-        self.theme_btn.setIcon(make_svg_icon("sun" if is_dark else "moon", btn_col, size=14))
-        self.help_btn.setIcon(make_svg_icon("help", btn_col, size=14))
-        self.settings_btn.setIcon(make_svg_icon("settings", btn_col, size=14))
+        self.theme_btn.setIcon(make_svg_icon("sun" if is_dark else "moon", btn_col, size=16))
+        self.help_btn.setIcon(make_svg_icon("help", btn_col, size=16))
+        self.settings_btn.setIcon(make_svg_icon("settings", btn_col, size=16))
         self.list_delegate.set_palette(self._palette)
+        self.more_menu.setPalette(qpal)
+        self.more_menu.setStyleSheet(qss)
         for w in (
             self.card,
             self.drag_header,
@@ -1466,6 +1673,7 @@ class OverlayWindow(QWidget):
             self.bulk_edit_btn,
             self.bulk_del_btn,
             self.groups_btn,
+            self.more_btn,
             self.save_btn,
             self.undo_btn,
             self.redo_btn,
@@ -1677,7 +1885,7 @@ class OverlayWindow(QWidget):
                 continue
             if self._only_favorites and not bool(it.get("favorite", False)):
                 continue
-            if self._only_notes and str(it.get("keys", "")).strip():
+            if self._only_notes and not is_note_item(it):
                 continue
             cat_items.append(it)
         query = self.search_input.text()
@@ -1916,6 +2124,10 @@ class OverlayWindow(QWidget):
         pname = (QGuiApplication.platformName() or "").strip().lower()
         return not (pname.startswith("wayland") or pname == "offscreen")
 
+    def _supports_raise(self) -> bool:
+        pname = (QGuiApplication.platformName() or "").strip().lower()
+        return not (pname.startswith("wayland") or pname == "offscreen")
+
     def _hit_test_edges(self, pos: QPoint) -> Any:
         if self.isMaximized():
             return Qt.Edge(0)
@@ -2003,11 +2215,12 @@ class OverlayWindow(QWidget):
         """Katman penceresini ekranı kaplama ve normal boyut arasında geçiş yaptırır."""
         if self.isMaximized():
             self.showNormal()
-            self._outer_layout.setContentsMargins(12, 12, 12, 12)
+            self._outer_layout.setContentsMargins(6, 6, 6, 6)
         else:
             self._outer_layout.setContentsMargins(0, 0, 0, 0)
             self.showMaximized()
         self._sync_toolbar_widgets()
+        self._elide_footer_hints()
 
     def event(self, ev: Any) -> bool:
         if ev.type() == QEvent.Type.HoverMove and not (self._resize_edges or self._moving_window):
@@ -2144,6 +2357,8 @@ class OverlayWindow(QWidget):
             self._anim_group.stop()
 
         supports_opacity = self._supports_window_opacity()
+        supports_raise = self._supports_raise()
+        self._update_responsive_chrome()
         if animate:
             start_pos = QPoint(target_pos.x(), target_pos.y() + ANIMATION_SLIDE_OFFSET_PX)
             if not self.isMaximized():
@@ -2151,7 +2366,11 @@ class OverlayWindow(QWidget):
             if supports_opacity:
                 self.setWindowOpacity(0.0)
             self.show()
-            self.raise_()
+            if supports_raise:
+                self.raise_()
+            handle = self.windowHandle()
+            if handle is not None:
+                handle.requestActivate()
             self.activateWindow()
             self.focus_search()
 
@@ -2177,10 +2396,15 @@ class OverlayWindow(QWidget):
             if supports_opacity:
                 self.setWindowOpacity(1.0)
             self.show()
-            self.raise_()
+            if supports_raise:
+                self.raise_()
+            handle = self.windowHandle()
+            if handle is not None:
+                handle.requestActivate()
             self.activateWindow()
             QApplication.setActiveWindow(self)
             self.focus_search()
+        self._elide_footer_hints()
 
         logger.info("Katman açıldı (kategori=%s, kayıt=%d).", self._active_category, self.list_model.rowCount())
 
@@ -2247,6 +2471,8 @@ class OverlayWindow(QWidget):
 
     def resizeEvent(self, event: Any) -> None:
         super().resizeEvent(event)
+        self._update_responsive_chrome()
+        self._elide_footer_hints()
         if self.toast_label.isVisible():
             self._position_toast()
         self.window_resized.emit(self.width(), self.height())

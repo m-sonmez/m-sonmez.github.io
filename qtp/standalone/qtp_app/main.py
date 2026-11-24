@@ -159,6 +159,150 @@ def apply_reload_event_gui(
         overlay.show_toast("Ayarlar otomatik yenilendi ✔", duration_ms=2000)
 
 
+def create_resize_persister(
+    engine: QtpEngine,
+    overlay: Any,
+    *,
+    delay_ms: int = 400,
+) -> tuple[Callable[[int, int], None], Callable[[], None], Any]:
+    """Pencere yeniden boyutlandırma kayıtlarını 400 ms gecikmeyle tek seferde diske yazar."""
+    from PyQt6.QtCore import QTimer
+
+    timer = QTimer(overlay)
+    timer.setSingleShot(True)
+    timer.setInterval(delay_ms)
+    pending: list[int] = [0, 0]
+
+    def _flush() -> None:
+        w, h = pending[0], pending[1]
+        if w <= 0 or h <= 0 or overlay.isMaximized():
+            return
+        if engine.settings.get("window_size") != [w, h]:
+            engine.settings["window_size"] = [w, h]
+            try:
+                engine.save_current_settings(engine.settings)
+            except Exception:
+                pass
+
+    def _on_resized(w: int, h: int) -> None:
+        if overlay.isMaximized() or not overlay.isVisible():
+            return
+        pending[0] = int(w)
+        pending[1] = int(h)
+        timer.start()
+
+    timer.timeout.connect(_flush)
+    return _on_resized, _flush, timer
+
+
+def build_backups_dialog(
+    engine: QtpEngine,
+    palette: Any,
+    *,
+    on_restored: Callable[[Any], None] | None = None,
+    on_imported: Callable[[Any], None] | None = None,
+    parent: Any = None,
+) -> Any:
+    """Esnek düzenlenmiş yedekleme, INI/Tam Yedek dışa/içe aktarma ve geri yükleme penceresi."""
+    from PyQt6.QtWidgets import QDialog, QFileDialog, QLabel, QListWidget, QMessageBox, QPushButton, QVBoxLayout
+    from qtp_app.ui.flow_layout import FlowLayout
+    from qtp_app.ui.theme import build_dialog_stylesheet, build_qpalette
+
+    dlg = QDialog(parent)
+    dlg.setWindowTitle("Yedekleme ve Geri Yükleme")
+    dlg.setMinimumSize(480, 360)
+    dlg.resize(560, 420)
+    dlg.setPalette(build_qpalette(palette))
+    dlg.setStyleSheet(build_dialog_stylesheet(palette))
+
+    lay = QVBoxLayout(dlg)
+    lay.setContentsMargins(16, 16, 16, 16)
+    lay.setSpacing(10)
+
+    dir_label = QLabel(f"Yedek Klasörü: {engine.work_dir / 'backups'}", dlg)
+    dir_label.setWordWrap(True)
+    lay.addWidget(dir_label)
+
+    lst = QListWidget(dlg)
+    lay.addWidget(lst, 1)
+
+    def _refresh() -> None:
+        lst.clear()
+        for b in engine.op_list_backups().data["backups"]:
+            lst.addItem(f"{b.get('id')}  —  {b.get('count', 0)} kayıt ({b.get('reason', '')})")
+
+    _refresh()
+    btns = FlowLayout(margin=0, spacing=6)
+    btn_now = QPushButton("Anlık Yedek Al", dlg)
+    btn_full = QPushButton("Tam Yedek Dışa Aktar", dlg)
+    btn_exp_ini = QPushButton("INI Dışa Aktar…", dlg)
+    btn_imp_ini = QPushButton("INI İçe Aktar…", dlg)
+    btn_restore = QPushButton("Seçileni Geri Yükle", dlg)
+    btn_restore.setObjectName("PrimaryBtn")
+    btn_close = QPushButton("Kapat", dlg)
+
+    def _do_backup() -> None:
+        engine.op_backup()
+        _refresh()
+
+    def _do_full() -> None:
+        path, _ = QFileDialog.getSaveFileName(
+            dlg,
+            "Tam Yedek Dışa Aktar",
+            str(engine.work_dir / "qtp-tam-yedek.json"),
+            "JSON Dosyaları (*.json);;Tüm Dosyalar (*.*)",
+        )
+        if path:
+            res = engine.op_export_backup(path)
+            QMessageBox.information(dlg, "Tam Yedek", res.message)
+
+    def _do_export_ini() -> None:
+        path, _ = QFileDialog.getSaveFileName(
+            dlg,
+            "QuickTextPaste.ini Dışa Aktar",
+            str(engine.work_dir / "QuickTextPaste_export.ini"),
+            "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
+        )
+        if path:
+            res = engine.op_export_ini(path)
+            QMessageBox.information(dlg, "INI Dışa Aktar", res.message)
+
+    def _do_import_ini() -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            dlg,
+            "QuickTextPaste.ini İçe Aktar",
+            str(engine.work_dir),
+            "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
+        )
+        if path:
+            res = engine.op_import_ini(path, mode="merge")
+            if on_imported is not None:
+                on_imported(res)
+            _refresh()
+            QMessageBox.information(dlg, "INI İçe Aktar", res.message)
+
+    def _do_restore() -> None:
+        cur = lst.currentItem()
+        if not cur:
+            return
+        bid = cur.text().split("  —  ", 1)[0].strip()
+        res = engine.op_restore(bid)
+        if on_restored is not None:
+            on_restored(res)
+        dlg.accept()
+
+    btn_now.clicked.connect(_do_backup)
+    btn_full.clicked.connect(_do_full)
+    btn_exp_ini.clicked.connect(_do_export_ini)
+    btn_imp_ini.clicked.connect(_do_import_ini)
+    btn_restore.clicked.connect(_do_restore)
+    btn_close.clicked.connect(dlg.accept)
+    for btn in (btn_now, btn_full, btn_exp_ini, btn_imp_ini, btn_restore, btn_close):
+        btns.addWidget(btn)
+    lay.addLayout(btns)
+    return dlg
+
+
 def launch_gui(
     engine: QtpEngine,
     *,
@@ -187,6 +331,7 @@ def launch_gui(
             QListWidget,
             QMessageBox,
             QPushButton,
+            QSystemTrayIcon,
             QVBoxLayout,
         )
         from qtp_app.ui.help_dialog import HelpDialog
@@ -222,6 +367,19 @@ def launch_gui(
 
     bridge = UiBridge()
 
+    tray_ref: list[QtpTrayIcon] = []
+
+    def notify(msg: str, *, duration_ms: int = 3500, warning: bool = False) -> None:
+        if overlay.isVisible():
+            overlay.show_toast(msg, duration_ms=duration_ms)
+            return
+        if tray_ref and tray_ref[0].isVisible():
+            icon_kind = QSystemTrayIcon.MessageIcon.Warning if warning else QSystemTrayIcon.MessageIcon.Information
+            tray_ref[0].showMessage("QTP", msg, icon_kind, duration_ms)
+            return
+        overlay.show_overlay(animate=False)
+        overlay.show_toast(msg, duration_ms=duration_ms)
+
     def _sync_overlay_after_mutation(res: Any) -> Any:
         if getattr(res, "ok", False):
             overlay.set_items(engine.items)
@@ -231,11 +389,18 @@ def launch_gui(
     def handle_paste(item: dict[str, Any], prev_app: Any) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
         pre_copied = overlay.consume_pre_copied()
-        return engine.op_paste(target, previous_app=prev_app, already_copied=pre_copied)
+        res = engine.op_paste(target, previous_app=prev_app, already_copied=pre_copied)
+        paste_data = (res.data or {}).get("paste_result", {}) if hasattr(res, "data") and res.data else {}
+        if not res.ok or bool(paste_data.get("warning")):
+            notify(res.message, duration_ms=4000, warning=True)
+        return res
 
     def handle_copy(item: dict[str, Any]) -> Any:
         target = str(item.get("raw_key") or item.get("text") or "")
-        return engine.op_copy(target)
+        res = engine.op_copy(target)
+        if not res.ok:
+            notify(res.message, duration_ms=4000, warning=True)
+        return res
 
     def handle_add(payload: dict[str, Any]) -> Any:
         res = engine.op_add_item(
@@ -378,17 +543,8 @@ def launch_gui(
         initial_query,
     )
 
-    def persist_window_size(w: int, h: int) -> None:
-        if overlay.isMaximized():
-            return
-        if engine.settings.get("window_size") != [w, h]:
-            engine.settings["window_size"] = [w, h]
-            try:
-                engine.save_current_settings(engine.settings)
-            except Exception:
-                pass
-
-    overlay.window_resized.connect(persist_window_size)
+    on_window_resized, flush_window_size, _resize_timer = create_resize_persister(engine, overlay, delay_ms=400)
+    overlay.window_resized.connect(on_window_resized)
 
     def current_palette() -> Any:
         return resolve_palette(str(engine.settings.get("theme", "light")), os_is_dark=overlay._detect_os_dark())
@@ -472,87 +628,13 @@ def launch_gui(
 
     def open_backups() -> None:
         pal = current_palette()
-        dlg = QDialog(overlay if overlay.isVisible() else None)
-        dlg.setWindowTitle("Yedekleme ve Geri Yükleme")
-        dlg.resize(520, 400)
-        dlg.setPalette(build_qpalette(pal))
-        dlg.setStyleSheet(build_dialog_stylesheet(pal))
-        lay = QVBoxLayout(dlg)
-        lay.addWidget(QLabel(f"Yedek Klasörü: {engine.work_dir / 'backups'}"))
-        lst = QListWidget(dlg)
-        lay.addWidget(lst, 1)
-
-        def _refresh() -> None:
-            lst.clear()
-            for b in engine.op_list_backups().data["backups"]:
-                lst.addItem(f"{b.get('id')}  —  {b.get('count', 0)} kayıt ({b.get('reason', '')})")
-
-        _refresh()
-        btns = QHBoxLayout()
-        btn_now = QPushButton("Anlık Yedek Al")
-        btn_full = QPushButton("Tam Yedek Dışa Aktar")
-        btn_exp_ini = QPushButton("INI Dışa Aktar…")
-        btn_imp_ini = QPushButton("INI İçe Aktar…")
-        btn_restore = QPushButton("Seçileni Geri Yükle")
-        btn_restore.setObjectName("PrimaryBtn")
-        btn_close = QPushButton("Kapat")
-
-        def _do_backup() -> None:
-            engine.op_backup()
-            _refresh()
-
-        def _do_full() -> None:
-            res = engine.op_export_backup(engine.work_dir)
-            QMessageBox.information(dlg, "Tam Yedek", res.message)
-
-        def _do_export_ini() -> None:
-            path, _ = QFileDialog.getSaveFileName(
-                dlg,
-                "QuickTextPaste.ini Dışa Aktar",
-                str(engine.work_dir / "QuickTextPaste_export.ini"),
-                "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
-            )
-            if path:
-                res = engine.op_export_ini(path)
-                QMessageBox.information(dlg, "INI Dışa Aktar", res.message)
-
-        def _do_import_ini() -> None:
-            path, _ = QFileDialog.getOpenFileName(
-                dlg,
-                "QuickTextPaste.ini İçe Aktar",
-                str(engine.work_dir),
-                "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
-            )
-            if path:
-                res = engine.op_import_ini(path, mode="merge")
-                overlay.set_items(engine.items)
-                _refresh()
-                QMessageBox.information(dlg, "INI İçe Aktar", res.message)
-
-        def _do_restore() -> None:
-            cur = lst.currentItem()
-            if not cur:
-                return
-            bid = cur.text().split("  —  ", 1)[0].strip()
-            res = engine.op_restore(bid)
-            overlay.set_items(engine.items)
-            overlay.show_toast(res.message)
-            dlg.accept()
-
-        btn_now.clicked.connect(_do_backup)
-        btn_full.clicked.connect(_do_full)
-        btn_exp_ini.clicked.connect(_do_export_ini)
-        btn_imp_ini.clicked.connect(_do_import_ini)
-        btn_restore.clicked.connect(_do_restore)
-        btn_close.clicked.connect(dlg.accept)
-        btns.addWidget(btn_now)
-        btns.addWidget(btn_full)
-        btns.addWidget(btn_exp_ini)
-        btns.addWidget(btn_imp_ini)
-        btns.addWidget(btn_restore)
-        btns.addStretch()
-        btns.addWidget(btn_close)
-        lay.addLayout(btns)
+        dlg = build_backups_dialog(
+            engine,
+            pal,
+            on_restored=lambda res: (overlay.set_items(engine.items), overlay.show_toast(res.message)),
+            on_imported=lambda _res: overlay.set_items(engine.items),
+            parent=overlay if overlay.isVisible() else None,
+        )
         dlg.exec()
 
     lifecycle_state = {"quitting": False, "cleaned": False}
@@ -569,6 +651,7 @@ def launch_gui(
         if lifecycle_state["quitting"]:
             return
         lifecycle_state["quitting"] = True
+        flush_window_size()
         engine.settings["last_category"] = overlay.active_category
         engine.settings["last_category_by_hotkey"] = overlay.last_category_by_hotkey
         try:
@@ -582,9 +665,16 @@ def launch_gui(
     overlay.settings_requested.connect(open_settings)
     overlay.help_requested.connect(open_help)
 
+    def toggle_overlay_visibility() -> None:
+        if overlay.isVisible():
+            overlay.hide_overlay()
+        else:
+            overlay.show_overlay(category="ALL", hotkey_key="all")
+
     open_hk = str((engine.settings.get("hotkeys") or {}).get("all", ""))
     tray = QtpTrayIcon(
         on_open=lambda: overlay.show_overlay(category="ALL", hotkey_key="all"),
+        on_toggle=toggle_overlay_visibility,
         on_settings=open_settings,
         on_reload_ini=reload_ini,
         on_open_json=open_data_json,
@@ -594,6 +684,7 @@ def launch_gui(
         open_hotkey=open_hk,
         palette=current_palette(),
     )
+    tray_ref.append(tray)
     overlay.theme_toggle_requested.connect(lambda _t: tray.apply_palette(current_palette()))
     tray.setVisible(bool(engine.settings.get("tray_icon", True)))
 
@@ -621,13 +712,16 @@ def launch_gui(
     elif engine.first_run and tray.isVisible() and not eff_quiet:
         tray.showMessage("QTP", toast_msg)
 
-    if engine.settings_warning:
-        overlay.show_toast("Bozuk ayar dosyası varsayılanlarla yenilendi", duration_ms=2400)
+    if getattr(engine, "startup_warning", None):
+        notify(str(engine.startup_warning), duration_ms=4000, warning=True)
+    elif engine.settings_warning:
+        notify("Bozuk ayar dosyası varsayılanlarla yenilendi", duration_ms=2400, warning=True)
     elif conflicts:
         ckeys = ", ".join(f"{k} ({engine.settings.get('hotkeys', {}).get(k, '')})" for k in conflicts)
-        overlay.show_toast(
+        notify(
             f"Kısayol çakışması: {ckeys} — Ayarlar → Global Kısayollar'dan değiştirin",
             duration_ms=3400,
+            warning=True,
         )
 
     wakeup_timer = QTimer()

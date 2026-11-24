@@ -115,7 +115,7 @@ def test_all_required_turkish_docs_exist_and_have_no_placeholders():
 
 
 def test_markdown_docs_have_no_local_paths_or_todos_and_links_valid():
-    skip_parts = {".venv", ".pytest_cache", "build", "dist", "__pycache__"}
+    skip_parts = {".venv", ".venv-linux", ".pytest_cache", "build", "dist", "__pycache__"}
     forbidden_tokens = ("file:///", "C:/Users", "C:\\Users", "TODO", "FIXME")
     link_re = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
@@ -512,7 +512,7 @@ def test_zero_hardcoded_colors_outside_theme_definitions():
     hex_re = re.compile(r"#[0-9a-fA-F]{3,8}\b")
     qcolor_num_re = re.compile(r"QColor\(\s*\d+")
     rgba_re = re.compile(r"rgba?\(\s*\d+")
-    for rel in ("ui/overlay.py", "ui/settings_window.py", "ui/help_dialog.py", "main.py"):
+    for rel in ("ui/overlay.py", "ui/settings_window.py", "ui/help_dialog.py", "ui/icons.py", "main.py"):
         src = (app_dir / rel).read_text(encoding="utf-8")
         assert not hex_re.findall(src), f"{rel} içinde sabit hex rengi bulundu: {hex_re.findall(src)}"
         assert not qcolor_num_re.findall(src), f"{rel} içinde sabit QColor(r,g,b) bulundu"

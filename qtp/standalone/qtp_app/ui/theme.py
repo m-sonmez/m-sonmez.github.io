@@ -538,7 +538,8 @@ def build_overlay_stylesheet(palette: ThemePalette, *, translucent: bool = False
         font-size: {FONT_SIZE_HINT}px;
         font-weight: 600;
     }}
-    QPushButton#HeaderActionBtn {{
+    QPushButton#HeaderActionBtn,
+    QToolButton#HeaderActionBtn {{
         background-color: {palette.btn_bg};
         color: {palette.btn_text};
         border: 1px solid {palette.btn_border};
@@ -547,18 +548,26 @@ def build_overlay_stylesheet(palette: ThemePalette, *, translucent: bool = False
         font-size: {FONT_SIZE_META}px;
         font-weight: 600;
     }}
-    QPushButton#HeaderActionBtn:hover {{
+    QToolButton#HeaderActionBtn::menu-indicator {{
+        image: none;
+        width: 0px;
+    }}
+    QPushButton#HeaderActionBtn:hover,
+    QToolButton#HeaderActionBtn:hover {{
         background-color: {palette.btn_hover};
         color: {palette.text_primary};
         border: 1px solid {palette.selected_border};
     }}
-    QPushButton#HeaderActionBtn:disabled {{
+    QPushButton#HeaderActionBtn:disabled,
+    QToolButton#HeaderActionBtn:disabled {{
         background-color: {palette.surface_alt};
         color: {palette.text_muted};
         border: 1px solid {palette.border};
     }}
     QPushButton#HeaderActionBtn[active="true"],
-    QPushButton#HeaderActionBtn:checked {{
+    QPushButton#HeaderActionBtn:checked,
+    QToolButton#HeaderActionBtn[active="true"],
+    QToolButton#HeaderActionBtn:checked {{
         background: {ACCENT_GRADIENT_QSS};
         color: {palette.pill_active_text};
         border: 1px solid {palette.selected_border};

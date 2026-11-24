@@ -58,10 +58,38 @@ def markdown_to_html(md_text: str, palette: ThemePalette) -> str:
     table_header_done = False
 
     def _inline(text: str) -> str:
-        esc = html.escape(text)
-        esc = re.sub(r"`([^`]+)`", r"<code>\1</code>", esc)
+        placeholders: dict[str, str] = {}
+
+        def _put(fragment: str) -> str:
+            tok = f"\x00QTP{len(placeholders)}\x00"
+            placeholders[tok] = fragment
+            return tok
+
+        def _code_repl(m: re.Match[str]) -> str:
+            return _put(f"<code>{html.escape(m.group(1))}</code>")
+
+        def _link_repl(m: re.Match[str]) -> str:
+            label_raw = m.group(1)
+            url_raw = m.group(2).strip()
+            low = url_raw.lower()
+            head = url_raw.split("/", 1)[0]
+            if low.startswith(("http://", "https://", "mailto:", "#")) or (
+                ":" not in head and not url_raw.startswith("//")
+            ):
+                href = html.escape(url_raw, quote=True)
+                lbl = html.escape(label_raw)
+                lbl = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", lbl)
+                lbl = re.sub(r"\*([^*]+)\*", r"<i>\1</i>", lbl)
+                return _put(f'<a href="{href}">{lbl}</a>')
+            return html.escape(m.group(0))
+
+        staged = re.sub(r"`([^`]+)`", _code_repl, text)
+        staged = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", _link_repl, staged)
+        esc = html.escape(staged)
         esc = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", esc)
         esc = re.sub(r"\*([^*]+)\*", r"<i>\1</i>", esc)
+        for tok, frag in placeholders.items():
+            esc = esc.replace(html.escape(tok), frag).replace(tok, frag)
         return esc
 
     def _close_blocks() -> None:
@@ -158,7 +186,9 @@ class HelpDialog(QDialog):
     ):
         super().__init__(parent)
         self.setWindowTitle("QTP Yardım ve Kullanım Kılavuzu")
-        self.setFixedSize(HELP_WIDTH, HELP_HEIGHT)
+        self.setMinimumSize(520, 380)
+        self.resize(HELP_WIDTH, HELP_HEIGHT)
+        self.setSizeGripEnabled(True)
         self._palette = palette
         self._font_family = load_bundled_fonts()
         self.setFont(create_app_font(self._font_family, 13))

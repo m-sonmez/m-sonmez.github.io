@@ -16,19 +16,22 @@ _TRAY_ICON_SIZES = (16, 22, 24, 32, 48, 64)
 
 
 def load_tray_icon() -> QIcon:
-    """icon.svg dosyasını çoklu çözünürlüklerde (16–64 px) yüksek netlikle QIcon olarak yükler."""
+    """icon.svg dosyasını çoklu çözünürlüklerde ve HiDPI DPR oranlarında QIcon olarak yükler."""
     svg_path = get_asset_path("icon.svg")
     if svg_path.is_file():
         icon = QIcon()
         renderer = QSvgRenderer(str(svg_path))
         if renderer.isValid():
             for size in _TRAY_ICON_SIZES:
-                pixmap = QPixmap(size, size)
-                pixmap.fill(Qt.GlobalColor.transparent)
-                painter = QPainter(pixmap)
-                renderer.render(painter, QRectF(0.0, 0.0, float(size), float(size)))
-                painter.end()
-                icon.addPixmap(pixmap)
+                for scale in (1.0, 2.0):
+                    px_size = max(1, int(round(size * scale)))
+                    pixmap = QPixmap(px_size, px_size)
+                    pixmap.fill(Qt.GlobalColor.transparent)
+                    painter = QPainter(pixmap)
+                    renderer.render(painter, QRectF(0.0, 0.0, float(px_size), float(px_size)))
+                    painter.end()
+                    pixmap.setDevicePixelRatio(scale)
+                    icon.addPixmap(pixmap)
             return icon
     png_path = get_asset_path("icon-192.png")
     if png_path.is_file():
@@ -56,6 +59,7 @@ class QtpTrayIcon(QSystemTrayIcon):
         self,
         *,
         on_open: Callable[[], None],
+        on_toggle: Callable[[], None] | None = None,
         on_settings: Callable[[], None],
         on_reload_ini: Callable[[], None],
         on_open_json: Callable[[], None],
@@ -69,6 +73,7 @@ class QtpTrayIcon(QSystemTrayIcon):
         super().__init__(load_tray_icon(), parent)
 
         self._on_open = on_open
+        self._on_toggle = on_toggle
         self.menu = QMenu(parent)
 
         self.act_open = QAction("", self.menu)
@@ -124,5 +129,8 @@ class QtpTrayIcon(QSystemTrayIcon):
             self.setToolTip("QTP — Hazır Cevaplar")
 
     def _handle_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
-        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
+            cb = self._on_toggle or self._on_open
+            cb()
+        elif reason == QSystemTrayIcon.ActivationReason.DoubleClick:
             self._on_open()

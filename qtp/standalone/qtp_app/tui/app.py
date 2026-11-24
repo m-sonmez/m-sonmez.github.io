@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 import threading
+import unicodedata
 from typing import Any, Callable, Iterable, TextIO
 
 from qtp_app import __version__
@@ -22,6 +23,40 @@ TUI_FOOTER_HINTS = (
 )
 
 _CATEGORY_CODES = [code for code, _lbl, _pref in CATEGORY_DEFINITIONS]
+
+
+def _char_display_width(ch: str) -> int:
+    if unicodedata.combining(ch) or unicodedata.category(ch) in ("Mn", "Me", "Cf"):
+        return 0
+    if unicodedata.east_asian_width(ch) in ("W", "F") or (0x1F300 <= ord(ch) <= 0x1FAFF):
+        return 2
+    return 1
+
+
+def display_width(text: str) -> int:
+    """Metnin uçbirim görsel sütun genişliğini (geniş emoji/CJK = 2, birleştirme = 0) döndürür."""
+    return sum(_char_display_width(ch) for ch in text)
+
+
+def clip_to_width(text: str, width: int, ellipsis: str = "…") -> str:
+    """Metni görsel sütun genişliğine göre kırpar ve taşma varsa sonuna '…' ekler."""
+    if width <= 0:
+        return ""
+    if display_width(text) <= width:
+        return text
+    el_w = display_width(ellipsis)
+    if width <= el_w:
+        return ellipsis if el_w == width else ""
+    limit = width - el_w
+    out: list[str] = []
+    used = 0
+    for ch in text:
+        cw = _char_display_width(ch)
+        if used + cw > limit:
+            break
+        out.append(ch)
+        used += cw
+    return "".join(out) + ellipsis
 
 
 class QtpTui:
@@ -55,7 +90,9 @@ class QtpTui:
         self.modal_title: str = ""
         self.modal_lines: list[str] = []
         self.modal_scroll: int = 0
-        if self.quiet:
+        if getattr(engine, "startup_warning", None):
+            self.status_message = str(engine.startup_warning)
+        elif self.quiet:
             self.status_message = f"{len(engine.items)} kayıt"
         else:
             self.status_message = (
@@ -133,12 +170,15 @@ class QtpTui:
         """Altın anlık görüntü (golden snapshot) ve düz metin doğrulaması için deterministik ekran."""
         with self._reload_lock:
             width, height = self.term_size
-            inner_w = max(50, width)
+            inner_w = max(40, width)
             lines: list[str] = []
 
             search_state = "[YAZIYOR]" if self.search_mode else "[/ Ara]"
             lines.append(
-                f"QTP v{__version__} | Mod: TUI | Ara: \"{self.query}\" {search_state} | Kayıt: {len(self._visible_items)}/{len(self.engine.items)}"
+                clip_to_width(
+                    f"QTP v{__version__} | Mod: TUI | Ara: \"{self.query}\" {search_state} | Kayıt: {len(self._visible_items)}/{len(self.engine.items)}",
+                    inner_w,
+                )
             )
 
             pills: list[str] = []
@@ -150,7 +190,21 @@ class QtpTui:
                     pills.append(f"[{label} ({cnt})]")
                 else:
                     pills.append(f"{label} ({cnt})")
-            lines.append("Kategoriler: " + " | ".join(pills))
+            full_cat_line = "Kategoriler: " + " | ".join(pills)
+            if inner_w < 100 or display_width(full_cat_line) > inner_w:
+                compact_pills: list[str] = []
+                for cat in self._categories_cache:
+                    code = cat["code"]
+                    cnt = cat["count"]
+                    short = "Tümü" if code == "ALL" else code
+                    if code == self.category:
+                        compact_pills.append(f"[{short}({cnt})]")
+                    else:
+                        compact_pills.append(f"{short}({cnt})")
+                cat_line = clip_to_width("Kategoriler: " + " ".join(compact_pills), inner_w)
+            else:
+                cat_line = full_cat_line
+            lines.append(cat_line)
             lines.append("-" * min(inner_w, 96))
 
             body_rows = max(5, height - 6)
@@ -160,12 +214,15 @@ class QtpTui:
                 self.modal_scroll = max(0, min(self.modal_scroll, max_scroll))
                 if max_scroll > 0:
                     lines.append(
-                        f"=== {self.modal_title} [{self.modal_scroll + 1}/{len(self.modal_lines)}] (↑↓ Kaydır · Kapatmak için Esc/q) ==="
+                        clip_to_width(
+                            f"=== {self.modal_title} [{self.modal_scroll + 1}/{len(self.modal_lines)}] (↑↓ Kaydır · Kapatmak için Esc/q) ===",
+                            inner_w,
+                        )
                     )
                 else:
-                    lines.append(f"=== {self.modal_title} (Kapatmak için Esc/q) ===")
+                    lines.append(clip_to_width(f"=== {self.modal_title} (Kapatmak için Esc/q) ===", inner_w))
                 for mline in self.modal_lines[self.modal_scroll : self.modal_scroll + vis_rows]:
-                    lines.append(mline[:inner_w])
+                    lines.append(clip_to_width(mline, inner_w))
                 while len(lines) < 3 + body_rows:
                     lines.append("")
             else:
@@ -185,11 +242,9 @@ class QtpTui:
                     chk_pfx = "[x] " if rk in self.checked_keys else ""
                     fav_pfx = "★ " if item.get("favorite") else ""
                     row_txt = f"{pointer} {abs_idx + 1:>3}. {chk_pfx}{fav_pfx}[{badge}] {snippet}"
-                    if len(row_txt) > inner_w:
-                        row_txt = row_txt[: inner_w - 1] + "…"
-                    lines.append(row_txt)
+                    lines.append(clip_to_width(row_txt, inner_w))
                 if not slice_items:
-                    lines.append("  (Eşleşen hazır cevap bulunamadı)")
+                    lines.append(clip_to_width("  (Eşleşen hazır cevap bulunamadı)", inner_w))
                 while len(lines) < 3 + body_rows:
                     lines.append("")
 
@@ -209,10 +264,10 @@ class QtpTui:
             elif self.prompt_mode == "delete_group":
                 status_line = f"Grup silinsin mi [{self.prompt_target}]? (⏎/e Onayla · Esc İptal)"
             else:
-                status_line = f"Durum: {self.status_message[:inner_w - 7]}"
-            lines.append(status_line[:inner_w])
-            lines.append(TUI_FOOTER_HINTS[:inner_w])
-            return lines
+                status_line = f"Durum: {self.status_message}"
+            lines.append(clip_to_width(status_line, inner_w))
+            lines.append(clip_to_width(TUI_FOOTER_HINTS, inner_w))
+            return [clip_to_width(ln, inner_w) for ln in lines]
 
     def render_ansi_lines(self) -> list[str]:
         """Renkli 256/TrueColor ANSI terminal görünümü üretir (ui/theme.py renkleriyle uyumlu)."""
@@ -948,17 +1003,25 @@ def run_tui(
             tui_logger.info("TUI başlatıldı (arka_uç=termios, kategori=%s, sorgu=%r).", tui.category, tui.query)
             return _run_posix_termios_fallback(tui, out)
 
+        os.environ.setdefault("ESCDELAY", "25")
+
         def _curses_loop(stdscr: Any) -> None:
             curses.curs_set(0)
             stdscr.keypad(True)
             while tui.running:
                 max_y, max_x = stdscr.getmaxyx()
+                if max_x <= 1 or max_y <= 1:
+                    continue
                 tui.term_size = (max(40, max_x), max(14, max_y))
                 stdscr.erase()
+                avail_cols = max(1, max_x - 1)
                 for row_i, line in enumerate(tui.render_plain_lines()[: max_y - 1]):
-                    stdscr.addnstr(row_i, 0, line, max_x - 1)
+                    clipped = clip_to_width(line, avail_cols)
+                    stdscr.addnstr(row_i, 0, clipped, len(clipped))
                 stdscr.refresh()
                 ch = stdscr.get_wch()
+                if ch == getattr(curses, "KEY_RESIZE", -1):
+                    continue
                 if ch in ("\n", "\r", curses.KEY_ENTER):
                     tui.handle_key("ENTER")
                 elif ch == curses.KEY_UP:

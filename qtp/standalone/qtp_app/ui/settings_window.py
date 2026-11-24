@@ -6,6 +6,7 @@ import copy
 from typing import Any, Callable
 
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -45,6 +46,7 @@ from qtp_app.core.settings import (
     VALID_VIEW_MODES,
     _sanitize_settings,
 )
+from qtp_app.ui.flow_layout import FlowLayout
 from qtp_app.ui.help_dialog import HelpDialog
 from qtp_app.ui.icons import make_svg_icon
 from qtp_app.ui.theme import (
@@ -147,10 +149,13 @@ class HotkeyEdit(QLineEdit):
             return
 
         qt_mods = event.modifiers()
+        is_cocoa = (QGuiApplication.platformName() or "").strip().lower() == "cocoa"
+        win_flag = Qt.KeyboardModifier.ControlModifier if is_cocoa else Qt.KeyboardModifier.MetaModifier
+        ctrl_flag = Qt.KeyboardModifier.MetaModifier if is_cocoa else Qt.KeyboardModifier.ControlModifier
         mods: list[str] = []
-        if qt_mods & Qt.KeyboardModifier.MetaModifier:
+        if qt_mods & win_flag:
             mods.append("Win")
-        if qt_mods & Qt.KeyboardModifier.ControlModifier:
+        if qt_mods & ctrl_flag:
             mods.append("Ctrl")
         if qt_mods & Qt.KeyboardModifier.AltModifier:
             mods.append("Alt")
@@ -168,7 +173,8 @@ class HotkeyEdit(QLineEdit):
             return
 
         key_name = _QT_KEY_NAMES.get(key_code)
-        is_edit_chord = (mods == ["Ctrl"] and key_name in ("A", "C", "V", "X", "Z")) and not self.capture_mode
+        edit_mod = "Win" if is_cocoa else "Ctrl"
+        is_edit_chord = (mods == [edit_mod] and key_name in ("A", "C", "V", "X", "Z")) and not self.capture_mode
         if mods and key_name and not is_edit_chord:
             combo = normalize_hotkey("+".join([*mods, key_name]))
             self.setText(combo)
@@ -197,9 +203,11 @@ class HotkeyRow(QWidget):
         self._on_changed = on_changed
         self._syncing = False
 
-        row = QHBoxLayout(self)
-        row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(6)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 2, 0, 2)
+        outer.setSpacing(4)
+
+        mods_flow = FlowLayout(margin=0, spacing=8)
 
         self.chk_ctrl = QCheckBox("Ctrl", self)
         self.chk_alt = QCheckBox("Alt", self)
@@ -214,9 +222,15 @@ class HotkeyRow(QWidget):
         for chk in (self.chk_ctrl, self.chk_alt, self.chk_shift, self.chk_win):
             chk.setToolTip("Bu değiştiriciyi kısayola ekle veya kaldır")
             chk.toggled.connect(self._on_checkbox_toggled)
-            row.addWidget(chk)
+            mods_flow.addWidget(chk)
+        outer.addLayout(mods_flow)
+
+        row = QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(6)
 
         self.edit = HotkeyEdit(self)
+        self.edit.setMinimumWidth(140)
         if tooltip:
             self.edit.setToolTip(tooltip)
         self.edit.textChanged.connect(self._on_edit_text_changed)
@@ -236,6 +250,7 @@ class HotkeyRow(QWidget):
             btn.clicked.connect(lambda: on_remove(slot) if on_remove else None)
             row.addWidget(btn)
             self.remove_btn = btn
+        outer.addLayout(row)
 
     def _on_capture_toggled(self, checked: bool) -> None:
         self.edit.capture_mode = checked
@@ -322,6 +337,7 @@ class SettingsWindow(QDialog):
     ):
         super().__init__(parent)
         self.setWindowTitle("QTP Ayarları")
+        self.setMinimumSize(520, 420)
         self.resize(680, 700)
         self._palette = palette
         self._base_settings = copy.deepcopy(current_settings)
@@ -356,6 +372,7 @@ class SettingsWindow(QDialog):
 
         gen_group = QGroupBox("Görünüm ve Davranış", container)
         gen_form = QFormLayout(gen_group)
+        gen_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         gen_form.setSpacing(8)
 
         lbl, tip = self._desc("theme")
@@ -420,6 +437,7 @@ class SettingsWindow(QDialog):
 
         paste_group = QGroupBox("Yapıştırma Ayarları", container)
         paste_form = QFormLayout(paste_group)
+        paste_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         paste_form.setSpacing(8)
 
         lbl, tip = self._desc("paste_method")
@@ -441,31 +459,34 @@ class SettingsWindow(QDialog):
         _, self._hk_tip = self._desc("hotkeys")
         hk_group.setToolTip(self._hk_tip)
 
-        preset_bar = QHBoxLayout()
+        preset_bar = FlowLayout(margin=0, spacing=6)
         preset_bar.addWidget(QLabel("Kısayol Profili:"))
         self.preset_cb = QComboBox()
+        self.preset_cb.setMinimumWidth(160)
         for pid in HOTKEY_PRESETS:
             self.preset_cb.addItem(HOTKEY_PRESET_LABELS.get(pid, pid), pid)
         self.preset_cb.setToolTip("Hazır kısayol şablonunu seçin ve uygulayın")
         self.preset_cb.activated.connect(self._on_preset_activated)
         self.apply_preset_btn = QPushButton("Profili Uygula")
         self.apply_preset_btn.clicked.connect(self._apply_selected_preset)
-        preset_bar.addWidget(self.preset_cb, 1)
+        preset_bar.addWidget(self.preset_cb)
         preset_bar.addWidget(self.apply_preset_btn)
         hk_outer.addLayout(preset_bar)
 
-        mod_bar = QHBoxLayout()
+        mod_bar = FlowLayout(margin=0, spacing=6)
         mod_bar.addWidget(QLabel("Tümüne Değiştirici Uygula:"))
         self.bulk_mod_cb = QComboBox()
+        self.bulk_mod_cb.setMinimumWidth(150)
         self.bulk_mod_cb.addItems(list(_MODIFIER_BULK_CHOICES))
         self.bulk_mod_cb.setToolTip("Tüm etkin kısayolların değiştirici ön ekini tek tıkla günceller")
         self.apply_mod_btn = QPushButton("Değiştirici Uygula")
         self.apply_mod_btn.clicked.connect(self._apply_bulk_modifiers)
-        mod_bar.addWidget(self.bulk_mod_cb, 1)
+        mod_bar.addWidget(self.bulk_mod_cb)
         mod_bar.addWidget(self.apply_mod_btn)
         hk_outer.addLayout(mod_bar)
 
         self.hk_form = QFormLayout()
+        self.hk_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         self.hk_form.setSpacing(6)
         hk_outer.addLayout(self.hk_form)
 
@@ -487,6 +508,7 @@ class SettingsWindow(QDialog):
 
         data_group = QGroupBox("Veri, Yedekleme, Otomatik Yenileme ve Günlük", container)
         data_form = QFormLayout(data_group)
+        data_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         data_form.setSpacing(8)
 
         lbl, tip = self._desc("data_path")
@@ -536,7 +558,7 @@ class SettingsWindow(QDialog):
         scroll.setWidget(container)
         root.addWidget(scroll, 1)
 
-        btn_row = QHBoxLayout()
+        btn_row = FlowLayout(margin=0, spacing=6)
         help_btn = QPushButton("Yardım")
         help_btn.setIcon(make_svg_icon("help", self._palette.btn_text, size=14))
         help_btn.clicked.connect(self._open_help)
@@ -552,7 +574,6 @@ class SettingsWindow(QDialog):
 
         btn_row.addWidget(help_btn)
         btn_row.addWidget(reset_btn)
-        btn_row.addStretch()
         btn_row.addWidget(cancel_btn)
         btn_row.addWidget(save_btn)
         root.addLayout(btn_row)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PyQt6.QtCore import QByteArray, QRectF, Qt
-from PyQt6.QtGui import QIcon, QPainter, QPixmap
+from PyQt6.QtGui import QGuiApplication, QIcon, QPainter, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
 
 _SVG_PATHS: dict[str, str] = {
@@ -133,16 +133,30 @@ def build_svg_markup(name: str, color: str) -> str:
     )
 
 
-def render_svg_pixmap(name: str, color: str, size: int = 16) -> QPixmap:
-    """SVG vektör simgesini verilen boyutta şeffaf QPixmap olarak çizer."""
+def _resolve_dpr(dpr: float | None) -> float:
+    if dpr is not None and dpr > 0:
+        return float(dpr)
+    app = QGuiApplication.instance()
+    if isinstance(app, QGuiApplication):
+        screen = app.primaryScreen()
+        if screen is not None:
+            return max(1.0, float(screen.devicePixelRatio()))
+    return 1.0
+
+
+def render_svg_pixmap(name: str, color: str, size: int = 16, dpr: float | None = None) -> QPixmap:
+    """SVG vektör simgesini verilen mantıksal boyutta ve HiDPI DPR oranında QPixmap olarak çizer."""
     svg_xml = build_svg_markup(name, color)
     renderer = QSvgRenderer(QByteArray(svg_xml.encode("utf-8")))
-    pixmap = QPixmap(size, size)
+    eff_dpr = _resolve_dpr(dpr)
+    px_size = max(1, int(round(size * eff_dpr)))
+    pixmap = QPixmap(px_size, px_size)
     pixmap.fill(Qt.GlobalColor.transparent)
     if renderer.isValid():
         painter = QPainter(pixmap)
-        renderer.render(painter, QRectF(0.0, 0.0, float(size), float(size)))
+        renderer.render(painter, QRectF(0.0, 0.0, float(px_size), float(px_size)))
         painter.end()
+    pixmap.setDevicePixelRatio(eff_dpr)
     return pixmap
 
 
@@ -153,12 +167,17 @@ def make_svg_icon(
     active_color: str | None = None,
     size: int = 16,
 ) -> QIcon:
-    """Tema rengine göre boyanmış vektör SVG QIcon nesnesi üretir."""
+    """Tema rengine göre boyanmış çoklu çözünürlüklü HiDPI vektör SVG QIcon nesnesi üretir."""
     icon = QIcon()
-    px = render_svg_pixmap(name, color, size=size)
-    icon.addPixmap(px, QIcon.Mode.Normal, QIcon.State.Off)
-    if active_color:
-        act_px = render_svg_pixmap(name, active_color, size=size)
-        icon.addPixmap(act_px, QIcon.Mode.Normal, QIcon.State.On)
-        icon.addPixmap(act_px, QIcon.Mode.Active, QIcon.State.On)
+    scales: list[float] = [1.0, 2.0]
+    screen_dpr = _resolve_dpr(None)
+    if screen_dpr not in scales:
+        scales.append(screen_dpr)
+    for scale in scales:
+        px = render_svg_pixmap(name, color, size=size, dpr=scale)
+        icon.addPixmap(px, QIcon.Mode.Normal, QIcon.State.Off)
+        if active_color:
+            act_px = render_svg_pixmap(name, active_color, size=size, dpr=scale)
+            icon.addPixmap(act_px, QIcon.Mode.Normal, QIcon.State.On)
+            icon.addPixmap(act_px, QIcon.Mode.Active, QIcon.State.On)
     return icon
