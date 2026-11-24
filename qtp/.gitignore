@@ -25,6 +25,7 @@ qtp.log*
 qtp.lock
 backups/
 .qtp_state.json
+.qtp_history.json
 .qtp_tmp_*
 *.bak
 *.exe

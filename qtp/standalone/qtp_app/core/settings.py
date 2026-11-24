@@ -224,8 +224,8 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
     win_size = raw.get("window_size")
     if isinstance(win_size, (list, tuple)) and len(win_size) == 2:
         try:
-            w = max(480, min(2400, int(win_size[0])))
-            h = max(360, min(1600, int(win_size[1])))
+            w = max(560, min(2400, int(win_size[0])))
+            h = max(400, min(1600, int(win_size[1])))
             merged["window_size"] = [w, h]
         except (TypeError, ValueError):
             pass
@@ -383,7 +383,7 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
             w, h = int(parts[0]), int(parts[1])
         except (TypeError, ValueError) as exc:
             raise SettingValidationError(f"Geçersiz ayar değeri ('window_size'): '{value}'.") from exc
-        if not (480 <= w <= 2400 and 360 <= h <= 1600):
+        if not (560 <= w <= 2400 and 400 <= h <= 1600):
             raise SettingValidationError("Geçersiz ayar değeri ('window_size'): aralık dışı.")
         updated["window_size"] = [w, h]
     elif norm == "web.port":

@@ -8,18 +8,30 @@ import os
 import posixpath
 import sys
 import threading
+import time
 import urllib.parse
-import webbrowser
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+import webbrowser
 
 from qtp_app.core.engine import OperationResult, QtpEngine, get_bundled_docs_dir
 from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.operations import OPERATIONS
 
 ALLOWED_LOOPBACK_HOSTS = ("127.0.0.1", "localhost")
+MAX_REQUEST_BODY_BYTES = 25 * 1024 * 1024
+_HTML_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob:; "
+    "connect-src 'self'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'none'; "
+    "form-action 'none'"
+)
 web_logger = get_logger("web")
 
 _EXIT_TO_HTTP_STATUS = {
@@ -28,7 +40,15 @@ _EXIT_TO_HTTP_STATUS = {
     2: HTTPStatus.NOT_FOUND,
     3: HTTPStatus.SERVICE_UNAVAILABLE,
     4: HTTPStatus.CONFLICT,
+    5: HTTPStatus.FORBIDDEN,
+    6: HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
 }
+
+
+class _RequestBodyError(Exception):
+    def __init__(self, result: OperationResult) -> None:
+        super().__init__(result.message)
+        self.result = result
 
 
 def _read_web_asset(filename: str) -> bytes:
@@ -78,7 +98,7 @@ class QtpWebServer(ThreadingHTTPServer):
 
 
 class QtpWebRequestHandler(BaseHTTPRequestHandler):
-    server_version = "QTPWeb/2.3.1"
+    server_version = "QTPWeb/2.4.0"
 
     @staticmethod
     def _parse_qs_bool(val: str) -> bool:
@@ -109,6 +129,11 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        if content_type.split(";", 1)[0].strip().lower() == "text/html":
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", _HTML_CSP)
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
         self.wfile.write(content)
@@ -118,18 +143,99 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         body = json.dumps(result.to_api_dict(), ensure_ascii=False).encode("utf-8")
         self._send_bytes(body, "application/json; charset=utf-8", status=status)
 
+    def _reject_forbidden(self) -> None:
+        msg = "Güvenlik kuralı: Geçersiz istek kaynağı reddedildi."
+        self.close_connection = True
+        self._send_result(OperationResult(ok=False, exit_code=5, message=msg, error=msg))
+
+    def _validate_request_origin(self) -> bool:
+        port = self.server.server_address[1]
+        allowed_hosts = {
+            f"127.0.0.1:{port}",
+            f"localhost:{port}",
+            "127.0.0.1",
+            "localhost",
+        }
+        host_val = (self.headers.get("Host") or "").strip().lower()
+        if host_val not in allowed_hosts:
+            self._reject_forbidden()
+            return False
+        origin_raw = self.headers.get("Origin")
+        if origin_raw is not None:
+            origin_val = origin_raw.strip().lower()
+            allowed_origins = (
+                f"http://127.0.0.1:{port}",
+                f"http://localhost:{port}",
+            )
+            if origin_val not in allowed_origins:
+                self._reject_forbidden()
+                return False
+        sec_fetch_raw = self.headers.get("Sec-Fetch-Site")
+        if sec_fetch_raw is not None:
+            sec_fetch_val = sec_fetch_raw.strip().lower()
+            if sec_fetch_val not in ("same-origin", "none"):
+                self._reject_forbidden()
+                return False
+        return True
+
     def _read_json_body(self) -> dict[str, Any]:
-        length = int(self.headers.get("Content-Length", "0") or "0")
-        if length <= 0:
+        raw_hdr = self.headers.get("Content-Length")
+        if raw_hdr is None or raw_hdr == "":
             return {}
-        raw = self.rfile.read(length)
+        try:
+            length = int(str(raw_hdr).strip())
+        except (TypeError, ValueError):
+            raise _RequestBodyError(
+                OperationResult(
+                    ok=False,
+                    exit_code=1,
+                    message="Geçersiz Content-Length başlığı.",
+                    error="Geçersiz Content-Length başlığı.",
+                )
+            )
+        if length < 0:
+            raise _RequestBodyError(
+                OperationResult(
+                    ok=False,
+                    exit_code=1,
+                    message="Geçersiz Content-Length başlığı.",
+                    error="Geçersiz Content-Length başlığı.",
+                )
+            )
+        if length > MAX_REQUEST_BODY_BYTES:
+            raise _RequestBodyError(
+                OperationResult(
+                    ok=False,
+                    exit_code=6,
+                    message="İstek boyutu çok büyük (25 MB sınırı).",
+                    error="İstek boyutu çok büyük (25 MB sınırı).",
+                )
+            )
+        if length == 0:
+            return {}
+        try:
+            raw = self.rfile.read(length)
+        except Exception:
+            raise _RequestBodyError(
+                OperationResult(
+                    ok=False,
+                    exit_code=1,
+                    message="Geçersiz Content-Length başlığı.",
+                    error="Geçersiz Content-Length başlığı.",
+                )
+            )
         try:
             parsed = json.loads(raw.decode("utf-8"))
             return parsed if isinstance(parsed, dict) else {}
         except Exception:
             return {}
 
+    def do_OPTIONS(self) -> None:
+        self._reject_forbidden()
+
     def do_GET(self) -> None:
+        if not self._validate_request_origin():
+            return
         parsed = urllib.parse.urlparse(self.path)
         raw_path = parsed.path or "/"
         path = posixpath.normpath(raw_path)
@@ -144,6 +250,25 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/theme.css":
             self._send_bytes(_read_web_asset("theme.css"), "text/css; charset=utf-8")
+            return
+        if path == "/manifest.webmanifest":
+            manifest_payload = {
+                "name": "QTP — Hazır Cevaplar",
+                "short_name": "QTP",
+                "start_url": "./",
+                "display": "standalone",
+                "icons": [
+                    {
+                        "src": "./icon.svg",
+                        "sizes": "any",
+                        "type": "image/svg+xml",
+                    }
+                ],
+            }
+            self._send_bytes(
+                json.dumps(manifest_payload, ensure_ascii=False).encode("utf-8"),
+                "application/manifest+json; charset=utf-8",
+            )
             return
         if path in ("/icon.svg", "/favicon.ico"):
             try:
@@ -256,6 +381,7 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
                     "can_redo": bool(self.engine._redo_stack),
                     "initial_category": self.server.initial_category,
                     "initial_query": self.server.initial_query,
+                    "warning": getattr(self.engine, "startup_warning", None),
                 },
             )
             self._send_result(res)
@@ -265,16 +391,50 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
         self._send_result(OperationResult(ok=False, exit_code=2, message=err, error=err))
 
     def do_POST(self) -> None:
+        if not self._validate_request_origin():
+            return
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
-        body = self._read_json_body()
+        try:
+            body = self._read_json_body()
+        except _RequestBodyError as exc:
+            self.close_connection = True
+            self._send_result(exc.result)
+            return
 
         if path == "/api/copy":
             strip_flag = self._parse_opt_bool(body, "strip_emoji")
-            self._send_result(self.engine.op_copy(str(body.get("target", "")), strip_emoji=strip_flag))
+            browser_copied = bool(self._parse_opt_bool(body, "browser_copied"))
+            target_key = str(body.get("target", ""))
+            res = self.engine.op_copy(target_key, strip_emoji=strip_flag)
+            if not res.ok and res.exit_code == 3 and browser_copied:
+                found = self.engine.resolve_item(target_key)
+                if found is not None:
+                    idx, it = found
+                    it["copyCount"] = int(it.get("copyCount", 0) or 0) + 1
+                    self.engine._persist_copy_count()
+                    rk = str(it.get("raw_key") or f"text_{idx:03d}")
+                    res = OperationResult(
+                        ok=True,
+                        exit_code=0,
+                        message="Panoya kopyalandı ✔",
+                        data={"raw_key": rk, "keys": it.get("keys", ""), "copyCount": it["copyCount"]},
+                    )
+            self._send_result(res)
             return
         if path == "/api/paste":
             strip_flag = self._parse_opt_bool(body, "strip_emoji")
+            raw_delay = body.get("delay_s", 0)
+            try:
+                delay_s = max(0.0, min(10.0, float(raw_delay if raw_delay is not None else 0)))
+            except (TypeError, ValueError):
+                delay_s = 0.0
+            if delay_s > 0.0:
+                ev = getattr(self.server, "shutdown_event", None)
+                if ev is not None:
+                    ev.wait(delay_s)
+                else:
+                    time.sleep(delay_s)
             self._send_result(self.engine.op_paste(str(body.get("target", "")), strip_emoji=strip_flag))
             return
         if path == "/api/reload":
@@ -285,7 +445,12 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/backup":
             keep = body.get("keep")
-            self._send_result(self.engine.op_backup(keep=int(keep) if keep is not None else None))
+            if keep is not None:
+                try:
+                    keep = int(keep)
+                except (TypeError, ValueError):
+                    keep = None
+            self._send_result(self.engine.op_backup(keep=keep))
             return
         if path == "/api/settings":
             key = str(body.get("key", ""))

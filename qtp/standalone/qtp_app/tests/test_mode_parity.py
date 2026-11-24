@@ -681,6 +681,58 @@ def test_cross_mode_help_flag_and_order_parity(mode: str, tmp_path: Path, capsys
         assert list(work_dir.iterdir()) == []
 
 
+def test_only_notes_filter_parity_across_engine_gui_and_static_js(tmp_path: Path):
+    import re
+    import subprocess
+    from PyQt6.QtWidgets import QApplication
+    from qtp_app.core.json_store import save_state
+    from qtp_app.ui.overlay import OverlayWindow
+
+    work = tmp_path / "notes_parity"
+    work.mkdir()
+    sample_items = [
+        {"keys": "L-Win+Z", "group": "Kurye", "label": "Not", "text": "[DAHİLİ NOT] Dahili kural"},
+        {"keys": "", "group": "Genel", "label": "Düz", "text": "Kısayolsuz plain not"},
+        {"keys": "L-Win+A", "group": "Restoran", "label": "Normal", "text": "Normal hazır cevap"},
+    ]
+    save_state(work, sample_items, create_backup_flag=False)
+    eng = QtpEngine(work_dir=work, seed_defaults=False)
+
+    eng_texts = [it["text"] for it in eng.op_list_items(only_notes=True).data["items"]]
+    assert eng_texts == ["[DAHİLİ NOT] Dahili kural", "Kısayolsuz plain not"]
+
+    app = QApplication.instance() or QApplication([])
+    overlay = OverlayWindow(eng.items, theme="light")
+    try:
+        overlay.scope_notes_btn.click()
+        app.processEvents()
+        gui_texts = [overlay.list_model.item_at(i)["text"] for i in range(overlay.list_model.rowCount())]
+        assert gui_texts == eng_texts
+    finally:
+        overlay.close()
+        overlay.deleteLater()
+
+    node = shutil.which("node")
+    if node:
+        html_path = Path(__file__).resolve().parent.parent / "web" / "qtp.html"
+        html = html_path.read_text(encoding="utf-8")
+        scripts = re.findall(r"<script>([\s\S]*?)</script>", html)
+        start_pure = scripts[0].index("function trLower(text) {")
+        end_pure = scripts[0].index("function downloadBytes(")
+        pure_js = scripts[0].split("const state = {", 1)[0] + "\n" + scripts[0][start_pure:end_pure]
+        vm_code = (
+            "const assert = require('assert');\n"
+            + pure_js
+            + f"\nconst sample = {json.dumps(sample_items, ensure_ascii=False)};\n"
+            + "const res = filterAndSortItemsStatic(sample, { onlyNotes: true });\n"
+            + f"assert.deepStrictEqual(res.map(it => it.text), {json.dumps(eng_texts, ensure_ascii=False)});\n"
+            + "console.log('NOTE_PARITY_OK');\n"
+        )
+        proc = subprocess.run([node, "-e", vm_code], capture_output=True, text=True, check=False)
+        assert proc.returncode == 0, f"JS note parity hatası: {proc.stderr}"
+        assert "NOTE_PARITY_OK" in proc.stdout
+
+
 @pytest.mark.parametrize("mode", ["cli", "web", "tui", "gui"])
 def test_cross_mode_verbose_quiet_and_initial_filters_parity(mode: str, tmp_path: Path, capsys, monkeypatch):
     import io

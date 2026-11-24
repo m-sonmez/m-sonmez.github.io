@@ -94,11 +94,17 @@ def load_data_json(filepath: str | Path) -> list[dict[str, Any]]:
 def save_data_json(filepath: str | Path, items: list[dict[str, Any]], *, create_bak: bool = False) -> Path:
     """Kayıt listesini standart data.json şemasıyla diske yazar."""
     path = Path(filepath)
-    if create_bak and path.is_file():
-        shutil.copy2(path, path.with_name(path.name + ".bak"))
     clean = strip_for_data_json(items)
     payload = json.dumps(clean, ensure_ascii=False, indent=2) + "\n"
-    atomic_write_text(path, payload, encoding="utf-8")
+    raw_bytes = payload.encode("utf-8")
+    try:
+        if path.is_file() and path.read_bytes() == raw_bytes:
+            return path
+    except OSError:
+        pass
+    if create_bak and path.is_file():
+        shutil.copy2(path, path.with_name(path.name + ".bak"))
+    atomic_write_bytes(path, raw_bytes)
     return path
 
 
@@ -273,20 +279,23 @@ def load_state(
 
     json_items: list[dict[str, Any]] = []
     json_valid = False
+    errors: list[str] = []
     if data_json_path.is_file():
         try:
             json_items = load_data_json(data_json_path)
             json_valid = True
         except Exception as exc:
             logger.warning("data.json okunamadı (%s): %s", data_json_path, exc)
+            errors.append(f"data.json: {exc}")
             json_valid = False
 
     parsed_doc = None
     if ini_file.is_file():
         try:
             parsed_doc = parse_qtp_ini(read_text_auto(ini_file))
-        except IniParseError as exc:
+        except Exception as exc:
             logger.error("QuickTextPaste.ini ayrıştırma hatası (%s): %s", ini_file, exc)
+            errors.append(f"QuickTextPaste.ini: {exc}")
             parsed_doc = None
 
     use_ini = False
@@ -354,6 +363,7 @@ def load_state(
         "source": source,
         "iniMtime": ini_mtime,
         "jsonMtime": json_mtime,
+        "errors": errors,
     }
 
 

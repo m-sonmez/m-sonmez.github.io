@@ -38,12 +38,19 @@ class ReloadEvent:
     warning: str | None = None
 
 
-def compute_file_fingerprint(path: Path) -> tuple[bool, int, int, str]:
+def compute_file_fingerprint(
+    path: Path,
+    cached: tuple[bool, int, int, str] | None = None,
+) -> tuple[bool, int, int, str]:
     """Dosya varlığı, mtime_ns, boyut ve SHA-256 özetinden deterministik parmak izi döndürür."""
     try:
-        st = path.stat()
         if not path.is_file():
             return (False, 0, 0, "")
+        st = path.stat()
+        mtime_ns = int(getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000)))
+        size = int(st.st_size)
+        if cached is not None and cached[0] and cached[1] == mtime_ns and cached[2] == size and cached[3]:
+            return cached
         h = hashlib.sha256()
         with path.open("rb") as fh:
             while True:
@@ -51,8 +58,7 @@ def compute_file_fingerprint(path: Path) -> tuple[bool, int, int, str]:
                 if not chunk:
                     break
                 h.update(chunk)
-        mtime_ns = getattr(st, "st_mtime_ns", int(st.st_mtime * 1_000_000_000))
-        return (True, int(mtime_ns), int(st.st_size), h.hexdigest())
+        return (True, mtime_ns, size, h.hexdigest())
     except OSError:
         return (False, 0, 0, "")
 
@@ -166,8 +172,8 @@ class ConfigFileWatcher:
             for kind, path in list(self._targets.items()):
                 if path in self._active_internal_paths:
                     continue
-                new_fp = compute_file_fingerprint(path)
                 old_fp = self._fingerprints.get(kind)
+                new_fp = compute_file_fingerprint(path, cached=old_fp)
                 if old_fp is None:
                     self._fingerprints[kind] = new_fp
                     continue

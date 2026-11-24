@@ -174,3 +174,78 @@ def test_load_state_ini_newer_and_parse_any_content_branches(tmp_path: Path):
     with pytest.raises(JsonStoreError):
         parse_any_content("{bozuk", "data.json")
 
+
+def test_corrupt_data_never_resurrects_bundled_defaults_and_empty_stays_empty(tmp_path: Path):
+    import http.client
+    import threading
+    from qtp_app.core.engine import QtpEngine
+    from qtp_app.tui.app import QtpTui
+    from qtp_app.web import create_web_server
+
+    empty_dir = tmp_path / "empty_saved"
+    empty_dir.mkdir()
+    save_state(empty_dir, [{"keys": "L-Win+A", "group": "G", "label": "L", "text": "Tek kayıt"}], create_backup_flag=False)
+    eng_emp = QtpEngine(work_dir=empty_dir, seed_defaults=False)
+    assert len(eng_emp.items) == 1
+    assert eng_emp.op_delete_item("text_000").ok is True
+    assert eng_emp.op_save_all().ok is True
+    eng_emp_reloaded = QtpEngine(work_dir=empty_dir, seed_defaults=False)
+    assert len(eng_emp_reloaded.items) == 0
+    assert eng_emp_reloaded.startup_warning is None
+    rel_empty = eng_emp_reloaded.reload_data()
+    assert rel_empty.ok is True and rel_empty.data["count"] == 0
+
+    bad_dir = tmp_path / "corrupt_ini"
+    bad_dir.mkdir()
+    (bad_dir / "QuickTextPaste.ini").write_text("[bozuk_ini\r\n", encoding="utf-8")
+    eng_bad = QtpEngine(work_dir=bad_dir, seed_defaults=False)
+    assert eng_bad.items == []
+    assert eng_bad.startup_warning is not None
+    assert "HATA: Kayıtlar yeniden yüklenemedi:" in eng_bad.startup_warning
+    assert len(list_backups(bad_dir)) == 1
+    assert list_backups(bad_dir)[0]["reason"] == "corrupt_load"
+
+    res_rel = eng_bad.reload_data()
+    assert res_rel.ok is False and res_rel.exit_code == 1
+    assert "HATA: Kayıtlar yeniden yüklenemedi:" in res_rel.message
+    assert len(list_backups(bad_dir)) == 1
+
+    tui_bad = QtpTui(eng_bad, term_size=(100, 20))
+    assert tui_bad.status_message == eng_bad.startup_warning
+
+    srv = create_web_server(eng_bad, host="127.0.0.1", port=0)
+    port = srv.server_address[1]
+    th = threading.Thread(target=srv.serve_forever, daemon=True)
+    th.start()
+    try:
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+        conn.request("GET", "/api/revision")
+        rev = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert rev["data"]["warning"] == eng_bad.startup_warning
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_persist_copy_count_and_update_ini_false_skip_identical_data_json_write(tmp_path: Path):
+    import os
+    import time
+    from qtp_app.core.engine import QtpEngine
+
+    work = tmp_path / "copy_noop"
+    work.mkdir()
+    save_state(work, [{"keys": "L-Win+A", "group": "G", "label": "L", "text": "Merhaba"}], create_backup_flag=False)
+    eng = QtpEngine(work_dir=work, seed_defaults=False, clipboard_fn=lambda _t: True)
+    assert eng.op_save_all().ok is True
+
+    json_path = work / "data.json"
+    mtime_before = json_path.stat().st_mtime_ns
+    time.sleep(0.02)
+
+    assert eng.op_copy("text_000").ok is True
+    assert json_path.stat().st_mtime_ns == mtime_before
+
+    save_state(work, eng.items, update_ini=False, create_backup_flag=False)
+    assert json_path.stat().st_mtime_ns == mtime_before
+    os.utime(json_path, None)
+

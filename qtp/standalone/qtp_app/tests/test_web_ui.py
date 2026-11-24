@@ -476,7 +476,7 @@ function runSim(liveMode) {
     TextEncoder, TextDecoder, ArrayBuffer, DataView, Uint8Array, URLSearchParams,
     Blob: class FakeBlob { constructor(parts, opts) { this.parts = parts; this.type = opts?.type || ''; } },
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} },
-    location: { protocol: 'https:', search: liveMode ? '' : '?category=Z' },
+    location: { protocol: 'https:', hostname: liveMode ? '127.0.0.1' : 'm-sonmez.github.io', search: liveMode ? '' : '?category=Z' },
     navigator: { onLine: true, platform: 'Win32', userAgent: 'Windows NT 10.0', clipboard: { writeText: async () => {} } },
     window: { addEventListener() {}, matchMedia: () => ({ matches: false }) },
     localStorage: { getItem: (k) => (k in ls ? ls[k] : null), setItem: (k, v) => { ls[k] = String(v); } },
@@ -582,6 +582,23 @@ function runSim(liveMode) {
   assert.strictEqual(lvState.isStatic, false);
   assert.strictEqual(lvState.category, 'A');
   assert(lv.elsById.get('modeBadge').textContent.includes('Canlı Mod'));
+
+  st.ctx.toggleSelectRow('text_000', 0, true, false);
+  st.ctx.toggleSelectRow('text_001', 1, true, false);
+  st.ctx.toggleSelectRow('text_002', 2, true, false);
+  assert.strictEqual(st.getState().selectedKeys.size, 3);
+  await st.ctx.handleMoveItem(st.getState().allItems[1], 'up');
+  assert.strictEqual(st.getState().selectedKeys.size, 0);
+
+  st.getState().category = 'ALL';
+  st.ctx.updateStaticItems({ resetSelection: true });
+  assert.strictEqual(st.getState().renderLimit, 100);
+  st.ctx.selectAllVisible();
+  assert.strictEqual(st.getState().selectedKeys.size, st.getState().items.length);
+  assert(st.getState().items.length > 200);
+  st.ctx.clearSelection();
+  assert.strictEqual(st.getState().selectedKeys.size, 0);
+
   console.log('DUAL_MODE_VM_OK');
 })();
 """
@@ -619,6 +636,159 @@ function runSim(liveMode) {
             body = resp.read()
             assert resp.status == 200, f"Statik HTTP hatası {req_path} -> {resp.status}"
             assert len(body) > 100
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_web_request_guard_blocks_cross_site_and_rebinding(tmp_path: Path):
+    eng = QtpEngine(
+        work_dir=tmp_path,
+        clipboard_fn=lambda _t: True,
+        paste_fn=lambda _t, **_kw: mock.Mock(
+            ok=True,
+            copied=True,
+            pasted=True,
+            enter_sent=False,
+            method="mock",
+            warning=None,
+            exit_code=0,
+        ),
+    )
+    srv = create_web_server(eng, host="127.0.0.1", port=0)
+    port = srv.server_address[1]
+    th = threading.Thread(target=srv.serve_forever, daemon=True)
+    th.start()
+    try:
+        def _req(method: str, path: str, *, headers: dict[str, str] | None = None, body: bytes | str | None = None):
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+            try:
+                conn.putrequest(method, path, skip_host=True)
+                hdrs = headers or {}
+                if not any(k.lower() == "host" for k in hdrs):
+                    conn.putheader("Host", f"127.0.0.1:{port}")
+                for k, v in hdrs.items():
+                    conn.putheader(k, v)
+                raw_body = body.encode("utf-8") if isinstance(body, str) else body
+                if raw_body is not None and not any(k.lower() == "content-length" for k in hdrs):
+                    conn.putheader("Content-Length", str(len(raw_body)))
+                conn.endheaders(raw_body)
+                resp = conn.getresponse()
+                data = resp.read()
+                return resp.status, dict(resp.getheaders()), data
+            finally:
+                conn.close()
+
+        st_get_rebinding, _, body_get_reb = _req("GET", "/api/version", headers={"Host": "evil.example:1234"})
+        assert st_get_rebinding == 403
+        assert json.loads(body_get_reb)["message"] == "Güvenlik kuralı: Geçersiz istek kaynağı reddedildi."
+
+        st_del_reb, _, _ = _req(
+            "POST",
+            "/api/items/delete",
+            headers={"Host": "evil.example:1234"},
+            body=json.dumps({"target": "text_000"}),
+        )
+        assert st_del_reb == 403
+
+        st_origin, _, _ = _req(
+            "POST",
+            "/api/save",
+            headers={"Origin": "https://evil.example"},
+            body="{}",
+        )
+        assert st_origin == 403
+
+        st_sec, _, _ = _req(
+            "GET",
+            "/api/version",
+            headers={"Sec-Fetch-Site": "cross-site"},
+        )
+        assert st_sec == 403
+
+        st_opt, _, _ = _req("OPTIONS", "/api/save")
+        assert st_opt == 403
+
+        st_same, _, _ = _req(
+            "GET",
+            "/api/version",
+            headers={"Origin": f"http://127.0.0.1:{port}", "Sec-Fetch-Site": "same-origin"},
+        )
+        assert st_same == 200
+
+        st_no_origin, _, _ = _req("GET", "/api/version")
+        assert st_no_origin == 200
+
+        st_bad_len, _, _ = _req("POST", "/api/save", headers={"Content-Length": "abc"})
+        assert st_bad_len == 400
+
+        st_neg_len, _, _ = _req("POST", "/api/save", headers={"Content-Length": "-1"})
+        assert st_neg_len == 400
+
+        st_huge_len, _, body_huge = _req(
+            "POST",
+            "/api/save",
+            headers={"Content-Length": str(25 * 1024 * 1024 + 1)},
+        )
+        assert st_huge_len == 413
+        assert json.loads(body_huge)["message"] == "İstek boyutu çok büyük (25 MB sınırı)."
+
+        st_root, hdr_root, _ = _req("GET", "/")
+        assert st_root == 200
+        root_hdrs_l = {k.lower(): v for k, v in hdr_root.items()}
+        assert root_hdrs_l.get("x-content-type-options") == "nosniff"
+        assert root_hdrs_l.get("referrer-policy") == "no-referrer"
+        assert root_hdrs_l.get("x-frame-options") == "DENY"
+        assert "default-src 'self'" in root_hdrs_l.get("content-security-policy", "")
+        assert "frame-ancestors 'none'" in root_hdrs_l.get("content-security-policy", "")
+
+        st_api, hdr_api, _ = _req("GET", "/api/version")
+        assert st_api == 200
+        api_hdrs_l = {k.lower(): v for k, v in hdr_api.items()}
+        assert api_hdrs_l.get("x-content-type-options") == "nosniff"
+        assert api_hdrs_l.get("referrer-policy") == "no-referrer"
+
+        st_man, hdr_man, body_man = _req("GET", "/manifest.webmanifest")
+        assert st_man == 200
+        man_hdrs_l = {k.lower(): v for k, v in hdr_man.items()}
+        assert "application/manifest+json" in man_hdrs_l.get("content-type", "")
+        man_json = json.loads(body_man)
+        assert man_json["start_url"] == "./"
+        assert man_json["display"] == "standalone"
+        assert isinstance(man_json["icons"], list) and man_json["icons"]
+
+        st_paste, _, body_paste = _req(
+            "POST",
+            "/api/paste",
+            body=json.dumps({"target": "text_000", "delay_s": 0}),
+        )
+        assert st_paste == 200
+        assert json.loads(body_paste)["ok"] is True
+
+        st_null_origin, _, _ = _req("POST", "/api/save", headers={"Origin": "null"}, body="{}")
+        assert st_null_origin == 403
+
+        st_paste_delay, _, body_paste_delay = _req(
+            "POST",
+            "/api/paste",
+            body=json.dumps({"target": "text_000", "delay_s": 0.05}),
+        )
+        assert st_paste_delay == 200
+        assert json.loads(body_paste_delay)["ok"] is True
+
+        st_paste_bad_delay, _, _ = _req(
+            "POST",
+            "/api/paste",
+            body=json.dumps({"target": "text_000", "delay_s": "abc"}),
+        )
+        assert st_paste_bad_delay == 200
+
+        st_bak_bad_keep, _, _ = _req(
+            "POST",
+            "/api/backup",
+            body=json.dumps({"keep": "abc"}),
+        )
+        assert st_bak_bad_keep == 200
     finally:
         srv.shutdown()
         srv.server_close()

@@ -234,6 +234,8 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
         ("window_size", "100"),
         ("window_size", "bad,size"),
         ("window_size", "100,100"),
+        ("window_size", "559x400"),
+        ("window_size", "560x399"),
         ("web.port", "abc"),
         ("web.port", "70000"),
         ("hotkeys.A", "Ctrl+Alt"),
@@ -244,3 +246,27 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
     ):
         with pytest.raises(SettingValidationError):
             set_setting_value(cfg, k, v)
+
+
+def test_window_size_clamped_to_560x400_and_log_level_noop_skips_setup_logging(tmp_path: Path):
+    from qtp_app.core.engine import QtpEngine
+    from qtp_app.core.settings import _sanitize_settings
+
+    sanitized = _sanitize_settings({"window_size": [480, 360]})
+    assert sanitized["window_size"] == [560, 400]
+
+    cfg = copy.deepcopy(DEFAULT_SETTINGS)
+    cfg = set_setting_value(cfg, "window_size", "560x400")
+    assert cfg["window_size"] == [560, 400]
+
+    eng = QtpEngine(work_dir=tmp_path, seed_defaults=False)
+    with mock.patch("qtp_app.core.engine.setup_logging") as spy_setup:
+        unchanged = copy.deepcopy(eng.settings)
+        unchanged["theme"] = "dark"
+        eng.save_current_settings(unchanged)
+        spy_setup.assert_not_called()
+
+        changed = copy.deepcopy(eng.settings)
+        changed["log_level"] = "debug"
+        eng.save_current_settings(changed)
+        spy_setup.assert_called_once()

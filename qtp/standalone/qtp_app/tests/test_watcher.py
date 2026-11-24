@@ -164,3 +164,25 @@ def test_ephemeral_engine_never_starts_watcher_and_unit_watcher_branches(tmp_pat
     assert len(changes) == 1 and changes[0].kind == "u"
     w.set_interval(250)
     assert "u" in w.targets
+
+
+def test_watcher_stat_first_short_circuits_sha256(tmp_path: Path):
+    import hashlib
+    from unittest import mock
+    from qtp_app.core.watcher import compute_file_fingerprint
+
+    missing = compute_file_fingerprint(tmp_path / "yok.txt")
+    assert missing == (False, 0, 0, "")
+
+    target = tmp_path / "big.json"
+    target.write_text('[{"text": "alfa"}]', encoding="utf-8")
+    watcher = ConfigFileWatcher({"u": target}, lambda _c: None, interval_ms=100, debounce_ms=50)
+
+    with mock.patch.object(hashlib, "sha256", wraps=hashlib.sha256) as sha_spy:
+        for _ in range(5):
+            assert watcher.poll_once() == []
+        assert sha_spy.call_count == 0
+
+        target.write_text('[{"text": "beta daha uzun metin"}]', encoding="utf-8")
+        watcher.poll_once()
+        assert sha_spy.call_count >= 1

@@ -447,6 +447,13 @@ def item_matches_category(item: dict[str, Any], category_code: str) -> bool:
     return keys.endswith(f"+{code}") or keys == code
 
 
+def is_note_item(item: dict[str, Any]) -> bool:
+    """Kısayolsuz kayıtları ve [DAHİLİ NOT] ön ekli dahili notları tanımlar."""
+    keys = str(item.get("keys", item.get("hotkey_prefix", ""))).strip()
+    text = str(item.get("text", ""))
+    return (not keys) or text.startswith("[DAHİLİ NOT]")
+
+
 def format_ini_preview(item: dict[str, Any], index: int) -> str:
     """Seçili kaydın [list_text], [list_order] ve [list_label] ham INI önizlemesini oluşturur."""
     tid = str(item.get("raw_key") or f"text_{index:03d}")
@@ -577,6 +584,9 @@ class QtpEngine:
         self.verbose: int = max(0, int(verbose))
         self.quiet: bool = bool(quiet) and self.verbose <= 0
         self._diag_emitted: bool = False
+        self.startup_warning: str | None = None
+        self._corrupt_backup_created: bool = False
+        self._applied_log_level: str = "info"
         if self.ephemeral:
             self.config_dir = requested_dir
             self.portable = True
@@ -600,14 +610,18 @@ class QtpEngine:
             self.first_run = not (self.config_dir / SETTINGS_FILENAME).is_file()
 
             setup_logging(self.config_dir, level="info", verbose=self.verbose)
+            self._applied_log_level = "info"
             self.logger = get_logger("engine")
 
             self.settings, self.settings_path, self.settings_warning = load_settings(self.config_dir)
-            setup_logging(
-                self.config_dir,
-                level=str(self.settings.get("log_level", "info")),
-                verbose=self.verbose,
-            )
+            cfg_level = str(self.settings.get("log_level", "info"))
+            if cfg_level != self._applied_log_level:
+                setup_logging(
+                    self.config_dir,
+                    level=cfg_level,
+                    verbose=self.verbose,
+                )
+                self._applied_log_level = cfg_level
 
         self._matcher = FuzzyMatcher()
         self._clipboard_fn = clipboard_fn
@@ -776,11 +790,13 @@ class QtpEngine:
                         )
                         self.settings = new_settings
                         if ev.log_level_changed:
+                            new_level = str(new_settings.get("log_level", "info"))
                             setup_logging(
                                 self.config_dir,
-                                level=str(new_settings.get("log_level", "info")),
+                                level=new_level,
                                 verbose=self.verbose,
                             )
+                            self._applied_log_level = new_level
                         if ev.data_path_changed:
                             self.ini_path = resolve_data_path(self.settings, self.work_dir)
                             if self._watcher is not None:
@@ -863,11 +879,14 @@ class QtpEngine:
         with self._suppress_write(self.settings_path):
             saved = save_settings(new_settings, self.settings_path)
         self.settings = _sanitize_settings(new_settings)
-        setup_logging(
-            self.config_dir,
-            level=str(self.settings.get("log_level", "info")),
-            verbose=self.verbose,
-        )
+        new_level = str(self.settings.get("log_level", "info"))
+        if not self.ephemeral and new_level != getattr(self, "_applied_log_level", None):
+            setup_logging(
+                self.config_dir,
+                level=new_level,
+                verbose=self.verbose,
+            )
+            self._applied_log_level = new_level
         if self.settings.get("data_path") != old_data:
             self.ini_path = resolve_data_path(self.settings, self.work_dir)
         if self._watcher is not None:
@@ -883,23 +902,42 @@ class QtpEngine:
     def reload_data(self, *, prefer_source: str | None = None) -> OperationResult:
         """Diskten QuickTextPaste.ini / data.json verisini yeniden yükler."""
         self.ini_path = resolve_data_path(self.settings, self.work_dir)
+        has_disk_file = self.ini_path.is_file() or (self.work_dir / "data.json").is_file()
         try:
-            if self.ini_path.is_file() or (self.work_dir / "data.json").is_file():
+            if has_disk_file:
                 state = load_state(self.work_dir, ini_path=self.ini_path, prefer_source=prefer_source)
-                if state["items"]:
-                    self.items = state["items"]
-                    self.program_meta = state.get("program") or {}
-                    self.extra_sections = state.get("extraSections") or []
-                    for idx, it in enumerate(self.items):
-                        it.setdefault("raw_key", f"text_{idx:03d}")
-                        it.setdefault("terminator", DEFAULT_TERMINATOR)
-                    self.logger.info("INI yeniden yüklendi: %d kayıt (%s).", len(self.items), self.ini_path)
-                    return OperationResult(
-                        ok=True,
-                        exit_code=0,
-                        message=f"INI yeniden yüklendi: {len(self.items)} kayıt ({self.ini_path}).",
-                        data={"count": len(self.items), "source": state.get("source"), "ini_path": str(self.ini_path)},
-                    )
+                if state.get("source") == "empty":
+                    detail = "; ".join(state.get("errors") or []) or "geçerli kayıt kaynağı okunamadı"
+                    err = f"HATA: Kayıtlar yeniden yüklenemedi: {detail}"
+                    self.logger.error(err)
+                    if not self.ephemeral and not getattr(self, "_corrupt_backup_created", False):
+                        try:
+                            create_backup(
+                                self.work_dir,
+                                reason="corrupt_load",
+                                max_keep=int(self.settings.get("backup_count", 15)),
+                            )
+                        except Exception as bak_exc:
+                            self.logger.warning("Bozuk veri yedeği oluşturulamadı: %s", bak_exc)
+                        self._corrupt_backup_created = True
+                    self.startup_warning = err
+                    return OperationResult(ok=False, exit_code=1, message=err, error=err)
+
+                self.items = state["items"]
+                self.program_meta = state.get("program") or {}
+                self.extra_sections = state.get("extraSections") or []
+                for idx, it in enumerate(self.items):
+                    it.setdefault("raw_key", f"text_{idx:03d}")
+                    it.setdefault("terminator", DEFAULT_TERMINATOR)
+                self.startup_warning = None
+                self._corrupt_backup_created = False
+                self.logger.info("INI yeniden yüklendi: %d kayıt (%s).", len(self.items), self.ini_path)
+                return OperationResult(
+                    ok=True,
+                    exit_code=0,
+                    message=f"INI yeniden yüklendi: {len(self.items)} kayıt ({self.ini_path}).",
+                    data={"count": len(self.items), "source": state.get("source"), "ini_path": str(self.ini_path)},
+                )
 
             bundled_ini = get_bundled_default_path("QuickTextPaste.ini")
             if bundled_ini.is_file():
@@ -914,6 +952,8 @@ class QtpEngine:
                 ]
                 self.program_meta = dict(doc.program)
                 self.extra_sections = list(doc.extra_sections)
+                self.startup_warning = None
+                self._corrupt_backup_created = False
                 self.logger.info("Gömülü varsayılan INI yüklendi: %d kayıt.", len(self.items))
                 return OperationResult(
                     ok=True,
@@ -924,9 +964,12 @@ class QtpEngine:
         except Exception as exc:
             err = f"HATA: Kayıtlar yeniden yüklenemedi: {exc}"
             self.logger.error(err)
+            self.startup_warning = err
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
         self.items = []
+        self.startup_warning = None
+        self._corrupt_backup_created = False
         return OperationResult(
             ok=True,
             exit_code=0,
@@ -1204,7 +1247,7 @@ class QtpEngine:
                 continue
             if only_favorites and not bool(it.get("favorite", False)):
                 continue
-            if only_notes and (str(it.get("keys", "")).strip() and not str(it.get("text", "")).startswith("[DAHİLİ NOT]")):
+            if only_notes and not is_note_item(it):
                 continue
             if grp_filter and (str(it.get("group") or "Genel").strip() != grp_filter):
                 continue
