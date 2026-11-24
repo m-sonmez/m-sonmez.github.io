@@ -39,10 +39,15 @@
   <style>
     :root { color-scheme: light; }
     :root.dark { color-scheme: dark; }
+    html, body { max-width: 100%; overflow-x: clip; }
     [x-cloak] { display: none !important; }
     mark { background: #fde047; color: #0f172a; padding: 0 2px; border-radius: 3px; }
     .dark mark { background: #eab308; color: #0f172a; }
     .card-copied { box-shadow: 0 0 0 2px #10b981 !important; border-color: #10b981 !important; }
+    @media (max-width: 768px) {
+      input, select, textarea { font-size: 16px; }
+      button, select, input:not([type="checkbox"]), header a, a.rounded-lg, a.rounded-xl { min-height: 36px; }
+    }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 999px; }
@@ -652,6 +657,17 @@
           window.addEventListener('online', () => { this.isOnline = true; });
           window.addEventListener('offline', () => { this.isOnline = false; });
 
+          if (typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 640) {
+            this.headerCollapsed = true;
+          }
+          if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+            window.addEventListener('resize', () => {
+              if (!this._userToggledHeader && typeof window.innerWidth === 'number') {
+                this.headerCollapsed = window.innerWidth < 640;
+              }
+            });
+          }
+
           window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
@@ -667,7 +683,9 @@
           }
 
           if (navigator.storage && navigator.storage.persist) {
-            try { this.isPersistent = await navigator.storage.persist(); } catch (_) {}
+            try {
+              navigator.storage.persist().then((ok) => { this.isPersistent = Boolean(ok); }).catch(() => {});
+            } catch (_) {}
           }
 
           const loaded = await QtpStorage.loadAll();
@@ -679,7 +697,9 @@
           this.viewMode = s.viewMode === 'table' ? 'table' : 'cards';
           this.stripEmoji = Boolean(s.stripEmoji);
           this.collapsedGroups = Array.isArray(s.collapsedGroups) ? s.collapsedGroups : [];
-          this.headerCollapsed = Boolean(s.headerCollapsed);
+          const hasSavedHeader = Object.prototype.hasOwnProperty.call(s, 'headerCollapsed');
+          const narrowStart = typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 640;
+          this.headerCollapsed = narrowStart ? true : (hasSavedHeader ? Boolean(s.headerCollapsed) : false);
           this.qtpReadyConfirmed = Boolean(s.qtpReadyConfirmed);
           this.bridgeAutoConnect = Boolean(s.bridgeAutoConnect);
           this.autoReloadQtp = s.autoReloadQtp !== false;
@@ -1341,6 +1361,7 @@
         },
 
         async toggleHeaderCollapsed(forceState = null) {
+          this._userToggledHeader = true;
           this.headerCollapsed = forceState === null ? !this.headerCollapsed : Boolean(forceState);
           if (this.headerCollapsed) {
             this.exportMenuOpen = false;
@@ -1517,9 +1538,17 @@
           return `📁 ${this.selectedGroups.length} kategori seçili (${totalItems} kayıt)`;
         },
 
-        toggleCategoryDropdown() {
+        setHdrBottomFromEl(btnEl) {
+          if (btnEl && typeof btnEl.getBoundingClientRect === 'function' && document.documentElement.style) {
+            const rect = btnEl.getBoundingClientRect();
+            document.documentElement.style.setProperty('--hdr-bottom', `${Math.round(rect.bottom + 6)}px`);
+          }
+        },
+
+        toggleCategoryDropdown(ev) {
           this.categoryDropdownOpen = !this.categoryDropdownOpen;
           if (this.categoryDropdownOpen) {
+            this.setHdrBottomFromEl((ev && ev.currentTarget) || this.$refs?.catToggleBtn);
             this.$nextTick(() => this.$refs.catSearchInput?.focus());
           }
         },
@@ -2489,25 +2518,25 @@
     <div class="max-w-7xl mx-auto px-3 sm:px-4" :class="headerCollapsed ? 'py-1.5 space-y-1.5' : 'py-2 space-y-2'">
 
       <div x-show="!headerCollapsed" x-transition.opacity.duration.150ms class="space-y-1.5">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+        <div class="flex flex-wrap items-center justify-between gap-2 min-w-0">
+          <div class="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full">
             <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center font-bold text-sm shadow shrink-0">⚡</div>
-            <h1 class="font-bold text-sm sm:text-base leading-none tracking-tight">QTP PWA</h1>
+            <h1 class="font-bold text-sm sm:text-base leading-none tracking-tight truncate">QTP PWA</h1>
 
             <span
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border max-w-full min-w-0"
               :class="serverConnected
                 ? (unsyncedToServer ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-400/60' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-400/50 dark:border-emerald-800')
                 : (storageEngine === 'IndexedDB' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300/60 dark:border-indigo-800' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-400/50')"
               :title="'Son kayıt: ' + lastSavedTime"
             >
-              <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-              <span x-text="serverConnected ? (unsyncedToServer ? 'Eşitlenmedi' : 'Full-Stack Disk') : (storageEngine + ' Kayıtlı')"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
+              <span class="truncate" x-text="serverConnected ? (unsyncedToServer ? 'Eşitlenmedi' : 'Full-Stack Disk') : (storageEngine + ' Kayıtlı')"></span>
             </span>
 
             <button
               @click="qtpModalOpen = true"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold transition cursor-pointer border"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold transition cursor-pointer border max-w-full min-w-0"
               :class="serverConnected
                 ? (qtpStatus?.running
                   ? 'bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-600/25'
@@ -2519,17 +2548,17 @@
                   : 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/40 hover:bg-violet-500/25')"
               title="QuickTextPaste kurulum, çalıştırma ve yerel sunucu köprü ayarları"
             >
-              <span x-text="serverConnected
+              <span class="truncate" x-text="serverConnected
                 ? (qtpStatus?.running ? '🟢 QTP Çalışıyor' : (qtpStatus?.installed ? '🟡 QTP Kapalı' : '🔴 QTP Kur'))
                 : (qtpReadyConfirmed ? '🟢 QTP Hazır' : '⚡ QTP Kur/Durum')"></span>
             </button>
 
-            <span x-show="linkedFileName" x-cloak class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-400/50 max-w-[170px] truncate">
+            <span x-show="linkedFileName" x-cloak class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-400/50 max-w-full sm:max-w-[170px] truncate">
               🔗 <span class="truncate" x-text="linkedFileName"></span>
               <span x-show="hasUnsavedDiskChanges" class="text-amber-500 font-bold" title="Disk dosyasına kaydedilmemiş değişiklikler">●</span>
             </span>
 
-            <span x-show="!isOnline" x-cloak class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500 text-white">Çevrimdışı</span>
+            <span x-show="!isOnline" x-cloak class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500 text-white max-w-full truncate">Çevrimdışı</span>
 
             <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 pl-1">
               <span class="font-semibold text-slate-700 dark:text-slate-200" x-text="filteredItems.length + ' / ' + items.length"></span>
@@ -2538,7 +2567,7 @@
             </span>
           </div>
 
-          <div class="flex flex-wrap items-center gap-1.5">
+          <div class="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full">
             <a
               :href="standaloneDownloadMeta.href"
               :download="standaloneDownloadMeta.file || undefined"
@@ -2604,10 +2633,10 @@
             </button>
 
             <div class="relative" @click.outside="exportMenuOpen = false">
-              <button @click="exportMenuOpen = !exportMenuOpen; toolsMenuOpen = false" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition inline-flex items-center gap-1">
+              <button @click="exportMenuOpen = !exportMenuOpen; toolsMenuOpen = false; if (exportMenuOpen) setHdrBottomFromEl($event.currentTarget)" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition inline-flex items-center gap-1">
                 📤 Dışa Aktar <span class="text-[10px]">▼</span>
               </button>
-              <div x-show="exportMenuOpen" x-cloak x-transition class="absolute right-0 mt-1.5 w-64 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-40 text-xs">
+              <div x-show="exportMenuOpen" x-cloak x-transition class="fixed inset-x-3 top-[var(--hdr-bottom,5rem)] w-auto max-h-[70dvh] overflow-y-auto sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-1.5 sm:w-64 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-40 text-xs">
                 <button @click="openIniExportModal(false)" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between gap-2">
                   <span>⚙️ QuickTextPaste.ini İndir</span>
                   <span class="text-[10px] text-indigo-500 font-mono" x-text="items.length + ' kayıt'"></span>
@@ -2638,10 +2667,10 @@
             </div>
 
             <div class="relative" @click.outside="toolsMenuOpen = false">
-              <button @click="toolsMenuOpen = !toolsMenuOpen; exportMenuOpen = false" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition inline-flex items-center gap-1" title="Görünüm, Yedekler, Gruplar ve Ayarlar">
+              <button @click="toolsMenuOpen = !toolsMenuOpen; exportMenuOpen = false; if (toolsMenuOpen) setHdrBottomFromEl($event.currentTarget)" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition inline-flex items-center gap-1" title="Görünüm, Yedekler, Gruplar ve Ayarlar">
                 ⚙️ Araçlar <span class="text-[10px]">▼</span>
               </button>
-              <div x-show="toolsMenuOpen" x-cloak x-transition class="absolute right-0 mt-1.5 w-64 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-40 text-xs">
+              <div x-show="toolsMenuOpen" x-cloak x-transition class="fixed inset-x-3 top-[var(--hdr-bottom,5rem)] w-auto max-h-[70dvh] overflow-y-auto sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-1.5 sm:w-64 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-40 text-xs">
                 <div class="px-3.5 py-1.5 flex items-center justify-between gap-2">
                   <span class="text-slate-500 dark:text-slate-400">Görünüm</span>
                   <div class="inline-flex rounded-lg bg-slate-200 dark:bg-slate-800 p-0.5">
@@ -2697,27 +2726,28 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap md:flex-nowrap items-center gap-2">
-        <div class="relative flex-1 min-w-[200px]">
+      <div class="flex flex-wrap md:flex-nowrap items-center gap-2 min-w-0">
+        <div class="relative flex-1 min-w-[min(200px,100%)]">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
           <input
             x-ref="searchInput"
             x-model="search"
             type="text"
             placeholder="Metin, başlık, kategori veya kısayol ara (/)"
-            class="w-full pl-8 pr-7 rounded-xl text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="w-full pl-8 pr-9 rounded-xl text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             :class="headerCollapsed ? 'py-1.5' : 'py-1.5'"
           />
-          <button x-show="search" x-cloak @click="search = ''; $refs.searchInput.focus()" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
+          <button x-show="search" x-cloak @click="search = ''; $refs.searchInput.focus()" class="absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
         </div>
 
-        <div class="relative shrink-0 flex items-center" @click.outside="categoryDropdownOpen = false">
-          <div class="inline-flex items-stretch rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+        <div class="relative shrink-0 max-w-full min-w-0 flex items-center" @click.outside="categoryDropdownOpen = false">
+          <div class="inline-flex items-stretch max-w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden">
             <button
+              x-ref="catToggleBtn"
               type="button"
-              @click="toggleCategoryDropdown()"
+              @click="toggleCategoryDropdown($event)"
               :class="selectedGroups.length ? 'text-indigo-700 dark:text-indigo-300 font-semibold' : 'text-slate-700 dark:text-slate-200 font-medium'"
-              class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[230px] sm:max-w-[280px]"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0"
               title="Çoklu kategori filtrele"
             >
               <span class="truncate" x-text="categorySummaryLabel"></span>
@@ -2737,7 +2767,7 @@
             x-show="categoryDropdownOpen"
             x-cloak
             x-transition
-            class="absolute left-0 md:right-0 md:left-auto top-full mt-1.5 w-[310px] sm:w-[390px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl z-40 overflow-hidden"
+            class="fixed inset-x-3 top-[var(--hdr-bottom,5rem)] w-auto max-h-[70dvh] sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-1.5 sm:w-[390px] md:right-0 md:left-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl z-40 overflow-hidden overflow-y-auto"
           >
             <div class="p-2.5 border-b border-slate-200 dark:border-slate-800 space-y-2 bg-slate-50/80 dark:bg-slate-800/40">
               <div class="relative">
@@ -2819,15 +2849,15 @@
           </div>
         </div>
 
-        <div x-show="!headerCollapsed" class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 shrink-0">
-          <select x-model="hotkeyFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div x-show="!headerCollapsed" class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 min-w-0 max-w-full">
+          <select x-model="hotkeyFilter" class="max-w-full min-w-0 px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="ALL">⌨️ Kısayollar</option>
             <template x-for="hk in allHotkeys" :key="hk">
               <option :value="hk" x-text="hk"></option>
             </template>
           </select>
 
-          <select x-model="scopeFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select x-model="scopeFilter" class="max-w-full min-w-0 px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="all">🎯 Tümü</option>
             <option value="text">📝 Metin</option>
             <option value="label">🏷️ Başlık</option>
@@ -2835,7 +2865,7 @@
             <option value="keys">⌨️ Kısayol</option>
           </select>
 
-          <select x-model="sortFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select x-model="sortFilter" class="max-w-full min-w-0 px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="default">↕️ Varsayılan</option>
             <option value="favorites">⭐ Favoriler</option>
             <option value="popular">🔥 Popüler</option>
@@ -2847,7 +2877,7 @@
           </button>
         </div>
 
-        <div x-show="headerCollapsed" x-cloak class="flex items-center gap-1.5 shrink-0">
+        <div x-show="headerCollapsed" x-cloak class="flex flex-wrap items-center gap-1.5 max-w-full min-w-0">
           <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300" x-text="filteredItems.length + ' / ' + items.length"></span>
           <button @click="toggleHeaderCollapsed(false)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition" title="Üst menüyü göster (Alt+H)">
             ▼ Menüyü Göster
@@ -2935,7 +2965,7 @@
                     ? 'bg-amber-50/75 dark:bg-amber-950/25 border-amber-300 dark:border-amber-700/60 hover:border-amber-500'
                     : 'bg-slate-50/80 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md'
                 ]"
-                class="group relative flex flex-col justify-between p-4 rounded-xl border transition cursor-pointer"
+                class="min-w-0 group relative flex flex-col justify-between p-4 rounded-xl border transition cursor-pointer"
               >
                 <div>
                   <div class="flex items-start justify-between gap-2 mb-2">
@@ -3476,8 +3506,8 @@
             </div>
             <div class="pt-1">
               <div class="text-[11px] text-slate-500 dark:text-slate-400 mb-1">Veya PowerShell ile tek satırda otomatik kur & başlat:</div>
-              <div class="flex items-center gap-2">
-                <code class="flex-1 px-2.5 py-2 rounded-lg bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 font-mono text-[11px] overflow-x-auto" x-text="qtpLinks.psCommand"></code>
+              <div class="flex items-center gap-2 min-w-0">
+                <code class="flex-1 min-w-0 px-2.5 py-2 rounded-lg bg-slate-100 text-slate-900 dark:bg-slate-900 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 font-mono text-[11px] overflow-x-auto" x-text="qtpLinks.psCommand"></code>
                 <button @click="copyCommand(qtpLinks.psCommand)" class="px-2.5 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 font-semibold shrink-0">📋 Kopyala</button>
               </div>
             </div>
@@ -3524,25 +3554,25 @@
       </div>
 
       <div class="p-5 space-y-4 text-xs max-h-[75vh] overflow-y-auto">
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-2">
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-2 min-w-0">
           <div class="font-semibold">Grup Adını Değiştir veya Birleştir</div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <select x-model="renameGroupOld" class="px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-0">
+            <select x-model="renameGroupOld" class="w-full min-w-0 px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
               <template x-for="g in allGroups" :key="g.name">
                 <option :value="g.name" x-text="g.name + ' (' + g.count + ')'"></option>
               </template>
             </select>
-            <input x-model="renameGroupNew" type="text" placeholder="Yeni grup adı..." class="px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700" />
+            <input x-model="renameGroupNew" type="text" placeholder="Yeni grup adı..." class="w-full min-w-0 px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700" />
           </div>
           <button @click="renameGroup()" class="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">✏️ Grubu Yeniden Adlandır / Birleştir</button>
         </div>
 
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 min-w-0">
           <template x-for="g in allGroups" :key="g.name">
-            <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-              <div>
-                <span class="font-semibold" x-text="g.name"></span>
-                <span class="ml-1.5 px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-500 font-semibold" x-text="g.count"></span>
+            <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 min-w-0">
+              <div class="min-w-0 flex-1 flex items-center gap-1.5">
+                <span class="font-semibold truncate" x-text="g.name"></span>
+                <span class="shrink-0 px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-500 font-semibold" x-text="g.count"></span>
               </div>
               <div class="flex items-center gap-1">
                 <button @click="exportSingleGroup(g.name, 'ini')" class="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu INI olarak indir">INI</button>

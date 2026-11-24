@@ -11,21 +11,26 @@
 <body>
   <main id="overlayRoot" class="overlay-card" role="application" aria-label="QTP Hızlı Yapıştırma Katmanı">
     <div class="top-row">
-      <input id="searchInput" class="search-input" type="text" placeholder="Ara… (mesaj, kategori, etiket, kısayol)" autofocus />
+      <input id="searchInput" class="search-input" type="text" placeholder="Ara… (mesaj, kategori, etiket, kısayol)" aria-label="Hazır cevaplarda ara" />
       <button class="action-btn primary" id="btnAddNew" title="Yeni hazır cevap ekle">+ Yeni Ekle</button>
       <button class="action-btn" id="btnSaveAll" title="Değişiklikleri kaydet (Ctrl+S)">💾 Kaydet</button>
-      <button class="action-btn icon-btn" id="btnUndo" title="Geri al (Ctrl+Z)" disabled>↩️ Geri Al</button>
-      <button class="action-btn icon-btn" id="btnRedo" title="Yinele (Ctrl+Y)" disabled>↪️ Yinele</button>
-      <button class="action-btn" id="btnStripEmojiToggle" title="Kopyala/yapıştır sırasında emojileri temizle">😊 Emojili</button>
-      <button class="action-btn" id="btnThemeToggle" title="Açık/Koyu tema değiştir">🌙 Koyu</button>
-      <button class="action-btn" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi">Kısayollar</button>
-      <button class="action-btn" id="btnGroups" title="Grup Yöneticisi">📁 Gruplar</button>
-      <button class="action-btn" id="btnImport" title="INI / JSON İçe Aktar">📥 İçe Aktar</button>
-      <button class="action-btn" id="btnExport" title="Dışa Aktar (INI / JSON / Word / Yazdır)">📤 Dışa Aktar</button>
-      <button class="action-btn" id="btnSnapshots" title="Yerel ve Disk Anlık Kayıtları">🕒 Yedek Geçmişi</button>
-      <button class="action-btn" id="btnReload" title="INI Yeniden Yükle">Yenile</button>
-      <button class="action-btn" id="btnBackup" title="Anlık Yedek Al / Dışa Aktar">Yedekle</button>
-      <button class="action-btn" id="btnHelp" title="Türkçe Yardım (F1)">Yardım (F1)</button>
+      <button class="action-btn icon-btn" id="btnUndo" title="Geri al (Ctrl+Z)" aria-label="Geri al" disabled>↩️ Geri Al</button>
+      <button class="action-btn icon-btn" id="btnRedo" title="Yinele (Ctrl+Y)" aria-label="Yinele" disabled>↪️ Yinele</button>
+      <details class="tools-menu" id="toolsMenu">
+        <summary class="action-btn" id="btnToolsSummary">⋯ Araçlar</summary>
+        <div class="tools-panel">
+          <button class="action-btn" id="btnStripEmojiToggle" title="Kopyala/yapıştır sırasında emojileri temizle">😊 Emojili</button>
+          <button class="action-btn" id="btnThemeToggle" title="Açık/Koyu tema değiştir">🌙 Koyu</button>
+          <button class="action-btn" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi">Kısayollar</button>
+          <button class="action-btn" id="btnGroups" title="Grup Yöneticisi">📁 Gruplar</button>
+          <button class="action-btn" id="btnImport" title="INI / JSON İçe Aktar">📥 İçe Aktar</button>
+          <button class="action-btn" id="btnExport" title="Dışa Aktar (INI / JSON / Word / Yazdır)">📤 Dışa Aktar</button>
+          <button class="action-btn" id="btnSnapshots" title="Yerel ve Disk Anlık Kayıtları">🕒 Yedek Geçmişi</button>
+          <button class="action-btn" id="btnReload" title="INI Yeniden Yükle">Yenile</button>
+          <button class="action-btn" id="btnBackup" title="Anlık Yedek Al / Dışa Aktar">Yedekle</button>
+          <button class="action-btn" id="btnHelp" title="Türkçe Yardım (F1)">Yardım (F1)</button>
+        </div>
+      </details>
     </div>
 
     <div class="toolbar-row">
@@ -34,10 +39,10 @@
         <button class="pill active" id="btnScopeAll" data-scope="all">Tümü</button>
         <button class="pill" id="btnScopeFav" data-scope="favorites">⭐ Favoriler</button>
         <button class="pill" id="btnScopeNotes" data-scope="notes">📝 Notlar</button>
-        <select id="groupFilterSelect" class="field-select" style="width:auto;padding:4px 8px;font-size:12px;" title="Gruba göre filtrele">
+        <select id="groupFilterSelect" class="field-select compact-select" aria-label="Gruba göre filtrele" title="Gruba göre filtrele">
           <option value="">Tüm Gruplar</option>
         </select>
-        <select id="sortSelect" class="field-select" style="width:auto;padding:4px 8px;font-size:12px;" title="Sıralama düzeni">
+        <select id="sortSelect" class="field-select compact-select" aria-label="Sıralama düzeni" title="Sıralama düzeni">
           <option value="order">Varsayılan Sıra</option>
           <option value="usage">En Çok Kullanılan</option>
           <option value="alpha">A–Z (Başlık / Metin)</option>
@@ -47,7 +52,7 @@
         <button class="action-btn active-toggle" id="viewListBtn" title="Liste görünümü">☰ Liste</button>
         <button class="action-btn" id="viewGridBtn" title="Kart / Izgara görünümü">▦ Kart</button>
         <button class="action-btn" id="viewTableBtn" title="Tablo görünümü">▤ Tablo</button>
-        <button class="action-btn" id="btnSelectAllVisible" title="Görünen tüm kayıtları seç / kaldır">☑ Tümünü Seç</button>
+        <button class="action-btn" id="btnSelectAllVisible" title="Filtrelenen tüm kayıtları seç / kaldır">☑ Filtredekileri Seç (0)</button>
       </div>
     </div>
 
@@ -83,13 +88,13 @@
 
   <div class="toast" id="toastBox"></div>
 
-  <div class="modal" id="modalBackdrop">
+  <div class="modal" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-card">
-      <div class="top-row" style="justify-content:space-between;margin-bottom:8px;">
+      <div class="modal-head-row modal-head-row-sm">
         <strong id="modalTitle">Bilgi</strong>
         <button class="action-btn" id="modalClose">Kapat (Esc)</button>
       </div>
-      <div id="helpTabs" class="pills-row" style="display:none;margin-bottom:10px;">
+      <div id="helpTabs" class="pills-row help-tabs-row" style="display:none;">
         <button class="pill active" data-section="genel">Genel &amp; Web</button>
         <button class="pill" data-section="gui">GUI (Masaüstü)</button>
         <button class="pill" data-section="tui">TUI (Terminal)</button>
@@ -97,8 +102,8 @@
         <button class="pill" data-section="kisayollar">Kısayollar</button>
         <button class="pill" data-section="kurulum_sss">Kurulum &amp; SSS</button>
       </div>
-      <div id="hotkeyControls" style="display:none;margin-bottom:10px;gap:6px;flex-wrap:wrap;align-items:center;">
-        <select id="presetSelect" class="action-btn">
+      <div id="hotkeyControls" class="modal-sub-controls" style="display:none;">
+        <select id="presetSelect" class="action-btn" aria-label="Kısayol profili seç">
           <option value="recommended">Önerilen (Win+Alt)</option>
           <option value="win_ctrl">Win+Ctrl</option>
           <option value="ctrl_alt">Ctrl+Alt</option>
@@ -107,7 +112,7 @@
           <option value="legacy_win">Klasik (Win)</option>
         </select>
         <button class="action-btn" id="btnApplyPreset">Profil Uygula</button>
-        <select id="modSelect" class="action-btn">
+        <select id="modSelect" class="action-btn" aria-label="Değiştirici seç">
           <option value="Win+Alt">Win+Alt</option>
           <option value="Win+Ctrl">Win+Ctrl</option>
           <option value="Ctrl+Alt">Ctrl+Alt</option>
@@ -127,7 +132,7 @@
         <button class="action-btn" id="btnApplyMods">Değiştirici Uygula</button>
         <button class="action-btn primary" id="btnDownloadSettings" style="display:none;">Ayarları İndir (qtp_settings.json)</button>
       </div>
-      <div id="backupControls" style="display:none;margin-bottom:10px;gap:8px;flex-wrap:wrap;align-items:center;">
+      <div id="backupControls" class="modal-sub-controls modal-sub-controls-lg" style="display:none;">
         <button class="action-btn primary" id="btnDownloadBackupJson">Tam Yedek İndir (.json v2)</button>
         <button class="action-btn" id="btnDownloadIniUtf16">QuickTextPaste.ini İndir (UTF-16 LE BOM)</button>
       </div>
@@ -135,9 +140,9 @@
     </div>
   </div>
 
-  <div class="modal" id="crudModalBackdrop">
+  <div class="modal" id="crudModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="crudModalTitle">
     <div class="modal-card modal-card-lg">
-      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
+      <div class="modal-head-row">
         <strong id="crudModalTitle">Yeni Hazır Cevap Ekle</strong>
         <button class="action-btn" id="crudClose">İptal (Esc)</button>
       </div>
@@ -165,37 +170,37 @@
         <input id="crudLabel" class="field-input" placeholder="Kısa başlık (isteğe bağlı)" />
       </div>
       <div class="field-col">
-        <div class="top-row" style="justify-content:space-between;">
+        <div class="modal-head-row zero-mb">
           <label class="field-label" for="crudText">Hazır Cevap Metni</label>
-          <button type="button" class="action-btn icon-btn" id="btnCrudStripEmojis" title="Metindeki tüm emojileri temizle">🚫 Emojileri Temizle</button>
+          <button type="button" class="action-btn icon-btn" id="btnCrudStripEmojis" title="Metindeki tüm emojileri temizle" aria-label="Metindeki tüm emojileri temizle">🚫 Emojileri Temizle</button>
         </div>
         <div class="emoji-chips" id="crudEmojiChips"></div>
         <textarea id="crudText" class="field-textarea" rows="5" placeholder="Hazır cevap metnini girin…"></textarea>
         <div class="char-counter">
           <span id="crudCharCount">0 karakter</span>
-          <span id="crudIniPreview" style="font-family:ui-monospace,monospace;"></span>
+          <span id="crudIniPreview" class="mono-preview"></span>
         </div>
       </div>
-      <div class="top-row" style="justify-content:space-between;margin-bottom:8px;">
-        <label class="field-check" style="margin-bottom:0;">
+      <div class="modal-head-row modal-head-row-sm">
+        <label class="field-check zero-mb">
           <input id="crudEndMarker" type="checkbox" checked />
           <span>Yapıştırma sonrası Enter gönder (&lt;E&lt;N&lt;D|)</span>
         </label>
-        <label class="field-check" style="margin-bottom:0;">
+        <label class="field-check zero-mb">
           <input id="crudFavorite" type="checkbox" />
           <span>⭐ Favori olarak işaretle</span>
         </label>
       </div>
-      <div class="top-row" style="justify-content:flex-end;">
+      <div class="modal-foot-row">
         <button class="action-btn" id="crudCancel">İptal</button>
         <button class="action-btn primary" id="crudSave">Kaydet</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="bulkModalBackdrop">
+  <div class="modal" id="bulkModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="bulkModalTitle">
     <div class="modal-card modal-card-lg">
-      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
+      <div class="modal-head-row">
         <strong id="bulkModalTitle">Toplu Düzenleme</strong>
         <button class="action-btn" id="bulkClose">İptal (Esc)</button>
       </div>
@@ -259,9 +264,9 @@
         </div>
       </div>
       <div class="field-col">
-        <div class="top-row" style="justify-content:space-between;">
+        <div class="modal-head-row zero-mb">
           <label class="field-label" for="bulkAddEmoji">Sonuna Emoji Ekle</label>
-          <label class="field-check" style="margin-bottom:0;">
+          <label class="field-check zero-mb">
             <input id="bulkStripEmojis" type="checkbox" />
             <span>🚫 Emojileri toplu temizle</span>
           </label>
@@ -269,33 +274,33 @@
         <input id="bulkAddEmoji" class="field-input" placeholder="Örn. 😊 veya ✅" />
         <div class="emoji-chips" id="bulkEmojiChips"></div>
       </div>
-      <div class="top-row" style="justify-content:flex-end;">
+      <div class="modal-foot-row">
         <button class="action-btn" id="bulkCancel">İptal</button>
         <button class="action-btn primary" id="bulkApplyBtn">Seçili Kayıtlara Uygula</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="groupsModalBackdrop">
+  <div class="modal" id="groupsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="groupsModalTitle">
     <div class="modal-card modal-card-lg">
-      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
-        <strong>📁 Grup Yöneticisi</strong>
+      <div class="modal-head-row">
+        <strong id="groupsModalTitle">📁 Grup Yöneticisi</strong>
         <button class="action-btn" id="groupsClose">Kapat (Esc)</button>
       </div>
       <div id="groupsListBody" class="manager-list"></div>
     </div>
   </div>
 
-  <div class="modal" id="importModalBackdrop">
+  <div class="modal" id="importModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
     <div class="modal-card modal-card-md">
-      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
-        <strong>📥 İçe Aktar (.ini / .json / .txt)</strong>
+      <div class="modal-head-row">
+        <strong id="importModalTitle">📥 İçe Aktar (.ini / .json / .txt)</strong>
         <button class="action-btn" id="importClose">Kapat (Esc)</button>
       </div>
       <div id="importDropZone" class="dropzone-box">
         Dosyayı buraya sürükleyip bırakın veya bilgisayarınızdan seçin (.ini, .json, .txt)
-        <div style="margin-top:8px;">
-          <input id="importFileInput" type="file" accept=".ini,.json,.txt" />
+        <div class="dropzone-input-wrap">
+          <input id="importFileInput" type="file" accept=".ini,.json,.txt" aria-label="İçe aktarılacak dosya seç" />
         </div>
       </div>
       <div class="field-grid">
@@ -306,25 +311,25 @@
             <option value="replace">Üzerine Yaz (Tümünü değiştir)</option>
           </select>
         </div>
-        <div class="field-col" style="justify-content:flex-end;">
+        <div class="field-col dropzone-col-end">
           <label class="field-check">
             <input id="importSkipDuplicates" type="checkbox" checked />
             <span>Aynı metne sahip kopyaları atla</span>
           </label>
         </div>
       </div>
-      <div id="importPreviewBox" class="modal-body-scroll" style="max-height:140px;margin-bottom:10px;">Henüz dosya seçilmedi.</div>
-      <div class="top-row" style="justify-content:flex-end;">
+      <div id="importPreviewBox" class="modal-body-scroll import-preview">Henüz dosya seçilmedi.</div>
+      <div class="modal-foot-row">
         <button class="action-btn" id="importCancel">İptal</button>
         <button class="action-btn primary" id="importConfirmBtn" disabled>İçe Aktar</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="exportModalBackdrop">
+  <div class="modal" id="exportModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
     <div class="modal-card modal-card-md">
-      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
-        <strong>📤 Dışa Aktar ve Yazdır</strong>
+      <div class="modal-head-row">
+        <strong id="exportModalTitle">📤 Dışa Aktar ve Yazdır</strong>
         <button class="action-btn" id="exportClose">Kapat (Esc)</button>
       </div>
       <div class="field-grid">
@@ -338,10 +343,10 @@
         </div>
         <div class="field-col">
           <label class="field-label" id="exportCountHint">Kayıt sayısı</label>
-          <div class="usage-pill" id="exportScopeCount" style="padding:7px 10px;">0 kayıt</div>
+          <div class="usage-pill export-scope-pill" id="exportScopeCount">0 kayıt</div>
         </div>
       </div>
-      <div class="top-row" style="gap:8px;margin-top:6px;">
+      <div class="top-row export-btns-row">
         <button class="action-btn primary" id="btnExportIniUtf16">QuickTextPaste.ini (UTF-16 LE BOM)</button>
         <button class="action-btn" id="btnExportIniUtf8">QuickTextPaste.ini (UTF-8 BOM)</button>
         <button class="action-btn" id="btnExportIniAnsi">QuickTextPaste.ini (ANSI cp1254)</button>
@@ -353,10 +358,10 @@
     </div>
   </div>
 
-  <div class="modal" id="snapshotsModalBackdrop">
+  <div class="modal" id="snapshotsModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="snapshotsModalTitle">
     <div class="modal-card modal-card-lg">
-      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
-        <strong>🕒 Anlık Kayıtlar &amp; Yedek Geçmişi</strong>
+      <div class="modal-head-row">
+        <strong id="snapshotsModalTitle">🕒 Anlık Kayıtlar &amp; Yedek Geçmişi</strong>
         <div class="toolbar-group">
           <button class="action-btn primary" id="btnCreateSnapshot">+ Anlık Kayıt Oluştur</button>
           <button class="action-btn" id="snapshotsClose">Kapat (Esc)</button>
@@ -366,14 +371,14 @@
     </div>
   </div>
 
-  <div class="modal" id="deleteConfirmBackdrop">
+  <div class="modal" id="deleteConfirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="delConfirmTitle">
     <div class="modal-card modal-card-sm">
-      <div class="top-row" style="justify-content:space-between;margin-bottom:10px;">
-        <strong>Kaydı Sil</strong>
+      <div class="modal-head-row">
+        <strong id="delConfirmTitle">Kaydı Sil</strong>
         <button class="action-btn" id="delCancelTop">Kapat</button>
       </div>
-      <p id="delConfirmMsg" style="font-size:13px;line-height:1.5;margin:0 0 14px;"></p>
-      <div class="top-row" style="justify-content:flex-end;">
+      <p id="delConfirmMsg" class="del-confirm-msg"></p>
+      <div class="modal-foot-row">
         <button class="action-btn" id="delCancelBtn">Vazgeç</button>
         <button class="action-btn danger" id="delConfirmBtn">Evet, Sil</button>
       </div>
@@ -432,7 +437,7 @@
     };
 
     const CLI_HELP_STATIC_TEXT = [
-      'QTP v2.3.1 — Komut Satırı Kullanımı',
+      'QTP v2.4.0 — Komut Satırı Kullanımı',
       '',
       'Kullanım:',
       '  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]',
@@ -491,9 +496,12 @@
       extraSections: [],
       hotkeys: { ...HOTKEY_PRESETS.recommended },
       selected: 0,
+      renderLimit: 100,
       selectedKeys: new Set(),
       lastCheckedIdx: -1,
       revision: 0,
+      lastWarning: null,
+      modalReturnFocus: null,
       helpData: null,
       helpSection: 'genel',
       crudEditRawKey: null,
@@ -512,8 +520,10 @@
     const els = {
       overlayRoot: document.getElementById('overlayRoot'),
       search: document.getElementById('searchInput'),
+      toolsMenu: document.getElementById('toolsMenu'),
       pills: document.getElementById('categoryPills'),
       list: document.getElementById('snippetList'),
+      btnSelectAllVisible: document.getElementById('btnSelectAllVisible'),
       count: document.getElementById('itemCount'),
       modeBadge: document.getElementById('modeBadge'),
       toast: document.getElementById('toastBox'),
@@ -717,6 +727,23 @@
       return scored.map((row) => ({ ...row.item, matched_indices: row.indices }));
     }
 
+    const _trCollator = (typeof Intl !== 'undefined' && typeof Intl.Collator === 'function')
+      ? new Intl.Collator('tr')
+      : null;
+
+    function compareTr(a, b) {
+      const sa = trLower(a);
+      const sb = trLower(b);
+      if (_trCollator) return _trCollator.compare(sa, sb);
+      return sa.localeCompare(sb);
+    }
+
+    function isNoteItem(item) {
+      const keys = String((item && (item.keys ?? item.hotkey_prefix)) || '').trim();
+      const text = String((item && item.text) || '');
+      return !keys || text.startsWith('[DAHİLİ NOT]');
+    }
+
     function filterAndSortItemsStatic(items, opts = {}) {
       const category = String(opts.category || 'ALL').toUpperCase();
       const onlyFavorites = Boolean(opts.onlyFavorites);
@@ -730,7 +757,7 @@
         const it = items[i];
         if (!itemMatchesCategory(it, category)) continue;
         if (onlyFavorites && !it.favorite) continue;
-        if (onlyNotes && String(it.keys || '').trim()) continue;
+        if (onlyNotes && !isNoteItem(it)) continue;
         if (group && (String(it.group || 'Genel').trim() || 'Genel') !== group) continue;
         base.push({ item: it, orderIdx: i });
       }
@@ -758,13 +785,13 @@
       if (sortBy === 'usage') {
         rows.sort((a, b) => (Number(b.copyCount || 0) - Number(a.copyCount || 0)) || (a._orderIdx - b._orderIdx));
       } else if (sortBy === 'alpha') {
-        rows.sort((a, b) => trLower(a.label || a.text).localeCompare(trLower(b.label || b.text)) || (a._orderIdx - b._orderIdx));
+        rows.sort((a, b) => compareTr(a.label || a.text, b.label || b.text) || (a._orderIdx - b._orderIdx));
       } else if (sortBy === 'keys') {
         rows.sort((a, b) => {
           const ka = String(a.keys || '').trim();
           const kb = String(b.keys || '').trim();
           if (Boolean(ka) !== Boolean(kb)) return ka ? -1 : 1;
-          return trLower(ka).localeCompare(trLower(kb)) || (a._orderIdx - b._orderIdx);
+          return compareTr(ka, kb) || (a._orderIdx - b._orderIdx);
         });
       } else if (sortBy === 'favorites') {
         rows.sort((a, b) => (Number(Boolean(b.favorite)) - Number(Boolean(a.favorite))) || (a._orderIdx - b._orderIdx));
@@ -1125,7 +1152,7 @@
       let tableHeaderDone = false;
       const closeBlocks = () => {
         if (inList) { out.push('</ul>'); inList = false; }
-        if (inTable) { out.push('</table>'); inTable = false; tableHeaderDone = false; }
+        if (inTable) { out.push('</table></div>'); inTable = false; tableHeaderDone = false; }
       };
       for (const raw of lines) {
         const st = raw.trim();
@@ -1147,13 +1174,13 @@
           if (inList) { out.push('</ul>'); inList = false; }
           const cells = st.slice(1, -1).split('|').map((c) => c.trim());
           if (cells.every((c) => /^:?-{2,}:?$/.test(c))) continue;
-          if (!inTable) { out.push('<table>'); inTable = true; tableHeaderDone = false; }
+          if (!inTable) { out.push('<div class="table-wrap"><table>'); inTable = true; tableHeaderDone = false; }
           const tag = tableHeaderDone ? 'td' : 'th';
           out.push('<tr>' + cells.map((c) => `<${tag}>${renderInlineMd(c)}</${tag}>`).join('') + '</tr>');
           tableHeaderDone = true;
           continue;
         } else if (inTable) {
-          out.push('</table>');
+          out.push('</table></div>');
           inTable = false;
           tableHeaderDone = false;
         }
@@ -1220,6 +1247,35 @@
       state.toastTimer = setTimeout(() => { els.toast.style.display = 'none'; }, 1800);
     }
 
+    function openModalEl(backdropEl, initialFocusEl = null) {
+      if (!backdropEl) return;
+      if (typeof document !== 'undefined' && document.activeElement && document.activeElement !== document.body) {
+        state.modalReturnFocus = document.activeElement;
+      }
+      backdropEl.style.display = 'flex';
+      let target = initialFocusEl;
+      if (!target && typeof backdropEl.querySelector === 'function') {
+        target = backdropEl.querySelector('input, select, textarea, button');
+      }
+      if (target && typeof target.focus === 'function') {
+        target.focus();
+      }
+    }
+
+    function closeModalEl(backdropEl) {
+      if (!backdropEl || backdropEl.style.display === 'none') return;
+      backdropEl.style.display = 'none';
+      const opener = state.modalReturnFocus;
+      state.modalReturnFocus = null;
+      if (opener && typeof opener.focus === 'function' && (opener.isConnected === undefined || opener.isConnected)) {
+        opener.focus();
+      }
+    }
+
+    function isDesktopWide() {
+      return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(min-width: 769px)').matches;
+    }
+
     async function api(path, method = 'GET', body = null) {
       const opts = { method, headers: {} };
       if (body !== null) {
@@ -1232,6 +1288,10 @@
     }
 
     async function detectBackendMode() {
+      const host = (typeof location !== 'undefined' && location.hostname) ? String(location.hostname).toLowerCase() : '';
+      if (host !== '127.0.0.1' && host !== 'localhost' && host !== '[::1]' && host !== '::1') {
+        return null;
+      }
       try {
         const resp = await fetch('./api/revision', { cache: 'no-store' });
         const ctype = (resp.headers.get('content-type') || '').toLowerCase();
@@ -1324,7 +1384,7 @@
     function populateGroupFilterOptions() {
       if (!els.groupFilterSelect) return;
       const source = state.isStatic ? state.allItems : state.items;
-      const groups = Array.from(new Set(source.map((it) => String(it.group || 'Genel').trim() || 'Genel'))).sort();
+      const groups = Array.from(new Set(source.map((it) => String(it.group || 'Genel').trim() || 'Genel'))).sort(compareTr);
       const prev = state.groupFilter;
       els.groupFilterSelect.innerHTML = '<option value="">Tüm Gruplar</option>';
       for (const g of groups) {
@@ -1429,7 +1489,8 @@
       populateGroupFilterOptions();
     }
 
-    function updateStaticItems() {
+    function updateStaticItems(opts = {}) {
+      const resetSelection = Boolean(opts && opts.resetSelection);
       state.items = filterAndSortItemsStatic(state.allItems, {
         category: state.category,
         query: state.query,
@@ -1438,8 +1499,14 @@
         group: state.groupFilter,
         sortBy: state.sortBy,
       });
-      state.selected = 0;
-      renderList();
+      if (resetSelection) {
+        state.selected = 0;
+        state.renderLimit = 100;
+        if (els.list) els.list.scrollTop = 0;
+      } else {
+        state.selected = state.items.length ? Math.min(state.selected, state.items.length - 1) : 0;
+      }
+      renderList({ preserveScroll: !resetSelection });
     }
 
     async function loadCategories() {
@@ -1454,7 +1521,7 @@
       }
       const gres = await api('/api/groups');
       if (gres.ok && gres.data && Array.isArray(gres.data.groups)) {
-        const names = gres.data.groups.map((g) => g.name).sort();
+        const names = gres.data.groups.map((g) => g.name).sort(compareTr);
         const prev = state.groupFilter;
         els.groupFilterSelect.innerHTML = '<option value="">Tüm Gruplar</option>';
         for (const name of names) {
@@ -1472,9 +1539,10 @@
       }
     }
 
-    async function loadItems() {
+    async function loadItems(opts = {}) {
+      const resetSelection = Boolean(opts && opts.resetSelection);
       if (state.isStatic) {
-        updateStaticItems();
+        updateStaticItems({ resetSelection });
         return;
       }
       const params = new URLSearchParams({
@@ -1488,8 +1556,14 @@
       const res = await api(`/api/items?${params.toString()}`);
       if (res.ok) {
         state.items = res.data.items;
-        state.selected = 0;
-        renderList();
+        if (resetSelection) {
+          state.selected = 0;
+          state.renderLimit = 100;
+          if (els.list) els.list.scrollTop = 0;
+        } else {
+          state.selected = state.items.length ? Math.min(state.selected, state.items.length - 1) : 0;
+        }
+        renderList({ preserveScroll: !resetSelection });
       }
     }
 
@@ -1528,12 +1602,12 @@
       if (state.isStatic) {
         const conflicts = detectHotkeyConflictsStatic(state.hotkeys);
         renderHotkeysModalContent(state.hotkeys, conflicts);
-        els.modal.style.display = 'flex';
+        openModalEl(els.modal);
         return;
       }
       const r = await api('/api/hotkeys/check');
       renderHotkeysModalContent(r.data.hotkeys, r.data.conflicts || {});
-      els.modal.style.display = 'flex';
+      openModalEl(els.modal);
     }
 
     async function showIniModal(item, index) {
@@ -1541,12 +1615,12 @@
       els.modalTitle.textContent = `INI Kaydı (${item.raw_key || 'text'})`;
       if (state.isStatic) {
         setModalText(formatIniPreview(item, index));
-        els.modal.style.display = 'flex';
+        openModalEl(els.modal);
         return;
       }
       const res = await api(`/api/show-ini?target=${encodeURIComponent(item.raw_key || item.text || '')}`);
       setModalText(res.ok && res.data ? res.data.preview : (res.error || res.message || 'Gösterilemedi'));
-      els.modal.style.display = 'flex';
+      openModalEl(els.modal);
     }
 
     function showStaticBackupModal() {
@@ -1560,7 +1634,7 @@
         '• Tam Yedek İndir (.json v2): Tüm kayıtları, program meta verilerini ve kısayol ayarlarını JSON yedek dosyası olarak indirir.',
         '• QuickTextPaste.ini İndir (UTF-16 LE BOM): QuickTextPaste ve QTP masaüstü uygulamasıyla %100 uyumlu INI dosyası üretir.',
       ].join('\n'));
-      els.modal.style.display = 'flex';
+      openModalEl(els.modal);
     }
 
     async function fetchTextSafe(relUrl, fallbackMsg) {
@@ -1635,7 +1709,7 @@
       els.helpTabs.style.display = 'flex';
       els.modalTitle.textContent = 'QTP Türkçe Yardım (F1)';
       renderHelpSection(sectionKey);
-      els.modal.style.display = 'flex';
+      openModalEl(els.modal);
     }
 
     function buildEmojiChipRow(container, onPick) {
@@ -1682,7 +1756,7 @@
 
     function openCrudModal(item = null) {
       const sourceItems = state.isStatic ? state.allItems : state.items;
-      const groups = Array.from(new Set(sourceItems.map((it) => it.group || 'Genel').concat(['Genel']))).sort();
+      const groups = Array.from(new Set(sourceItems.map((it) => it.group || 'Genel').concat(['Genel']))).sort(compareTr);
       els.crudGroupList.innerHTML = '';
       groups.forEach((g) => {
         const opt = document.createElement('option');
@@ -1710,8 +1784,7 @@
         if (els.crudFavorite) els.crudFavorite.checked = false;
       }
       updateCrudPreview();
-      els.crudModal.style.display = 'flex';
-      els.crudText.focus();
+      openModalEl(els.crudModal, els.crudText);
     }
 
     async function saveCrudModal() {
@@ -1745,9 +1818,9 @@
           saveItemsStaticLocal();
           showToast('Yeni cevap eklendi ✔');
         }
-        els.crudModal.style.display = 'none';
+        closeModalEl(els.crudModal);
         updateStaticCategories();
-        updateStaticItems();
+        updateStaticItems({ resetSelection: false });
         return;
       }
 
@@ -1755,8 +1828,8 @@
         ? await api('/api/items/update', 'POST', { target: state.crudEditRawKey, ...payload })
         : await api('/api/items/add', 'POST', payload);
       if (res.ok) {
-        els.crudModal.style.display = 'none';
-        await refreshAfterMutation();
+        closeModalEl(els.crudModal);
+        await refreshAfterMutation({ clearSelection: false });
       }
       showToast(res.message || res.error || 'İşlem tamamlandı');
     }
@@ -1766,7 +1839,7 @@
       state.crudDeleteTarget = item;
       const preview = String(item.label || item.text || '').slice(0, 60);
       els.delConfirmMsg.textContent = `'${preview}' kaydını kalıcı olarak silmek istediğinize emin misiniz?`;
-      els.delModal.style.display = 'flex';
+      openModalEl(els.delModal);
     }
 
     function openBulkDeleteModal() {
@@ -1778,30 +1851,29 @@
       state.bulkDeleteMode = true;
       state.crudDeleteTarget = null;
       els.delConfirmMsg.textContent = `Seçili ${keys.length} kaydı kalıcı olarak silmek istediğinize emin misiniz?`;
-      els.delModal.style.display = 'flex';
+      openModalEl(els.delModal);
     }
 
     async function confirmDeleteModal() {
       if (state.bulkDeleteMode) {
         const targets = Array.from(state.selectedKeys);
-        els.delModal.style.display = 'none';
+        closeModalEl(els.delModal);
         state.bulkDeleteMode = false;
         if (!targets.length) return;
         if (state.isStatic) {
           pushStaticUndoSnapshot();
           const set = new Set(targets);
           state.allItems = state.allItems.filter((it) => !set.has(it.raw_key));
-          state.selectedKeys.clear();
           saveItemsStaticLocal();
+          clearSelection();
           updateStaticCategories();
-          updateStaticItems();
+          updateStaticItems({ resetSelection: false });
           showToast(`Seçili kayıtlar silindi ✔ (${targets.length} kayıt)`);
           return;
         }
         const res = await api('/api/items/bulk-delete', 'POST', { targets });
         if (res.ok) {
-          state.selectedKeys.clear();
-          await refreshAfterMutation();
+          await refreshAfterMutation({ clearSelection: true });
         }
         showToast(res.message || res.error || 'Seçili kayıtlar silindi ✔');
         return;
@@ -1817,20 +1889,19 @@
           showToast(`Öğe bulunamadı: ${item.raw_key}`);
           return;
         }
-        state.selectedKeys.delete(item.raw_key);
         saveItemsStaticLocal();
-        els.delModal.style.display = 'none';
+        closeModalEl(els.delModal);
         state.crudDeleteTarget = null;
+        clearSelection();
         updateStaticCategories();
-        updateStaticItems();
+        updateStaticItems({ resetSelection: false });
         showToast('Kayıt silindi ✔');
         return;
       }
       const res = await api('/api/items/delete', 'POST', { target: item.raw_key || item.text });
-      els.delModal.style.display = 'none';
+      closeModalEl(els.delModal);
       state.crudDeleteTarget = null;
-      state.selectedKeys.delete(item.raw_key);
-      await refreshAfterMutation();
+      await refreshAfterMutation({ clearSelection: true });
       showToast(res.message || res.error || 'Kayıt silindi ✔');
     }
 
@@ -1854,7 +1925,7 @@
       buildEmojiChipRow(els.bulkEmojiChips, (emo) => {
         els.bulkAddEmoji.value = (els.bulkAddEmoji.value ? `${els.bulkAddEmoji.value} ` : '') + emo;
       });
-      els.bulkModal.style.display = 'flex';
+      openModalEl(els.bulkModal);
     }
 
     async function applyBulkEdit() {
@@ -1909,9 +1980,9 @@
           else if (favAct === 'remove') item.favorite = false;
         }
         saveItemsStaticLocal();
-        els.bulkModal.style.display = 'none';
+        closeModalEl(els.bulkModal);
         updateStaticCategories();
-        updateStaticItems();
+        updateStaticItems({ resetSelection: false });
         showToast(`Toplu düzenleme tamamlandı ✔ (${targets.length} kayıt)`);
         return;
       }
@@ -1931,11 +2002,14 @@
       };
       const res = await api('/api/items/bulk-edit', 'POST', body);
       if (res.ok) {
-        els.bulkModal.style.display = 'none';
-        await refreshAfterMutation();
+        closeModalEl(els.bulkModal);
+        await refreshAfterMutation({ clearSelection: false });
       }
       showToast(res.message || res.error || 'Toplu düzenleme tamamlandı');
     }
+
+    let renderedRows = [];
+    let activeTableTbody = null;
 
     function renderPills() {
       els.pills.innerHTML = '';
@@ -1943,7 +2017,7 @@
         const b = document.createElement('button');
         b.className = 'pill' + (cat.code === state.category ? ' active' : '');
         b.textContent = `${cat.label} (${cat.count})`;
-        b.onclick = () => { state.category = cat.code; renderPills(); loadItems(); };
+        b.onclick = () => { state.category = cat.code; renderPills(); loadItems({ resetSelection: true }); };
         els.pills.appendChild(b);
       }
     }
@@ -1952,6 +2026,54 @@
       const count = state.selectedKeys.size;
       if (els.bulkCountLabel) els.bulkCountLabel.textContent = `${count} kayıt seçili`;
       if (els.bulkBar) els.bulkBar.classList.toggle('visible', count > 0);
+    }
+
+    function patchSelectionDom() {
+      for (const entry of renderedRows) {
+        const isChecked = state.selectedKeys.has(entry.rawKey);
+        if (entry.checkEl) entry.checkEl.checked = isChecked;
+        if (entry.rowEl && entry.rowEl.classList) entry.rowEl.classList.toggle('checked', isChecked);
+      }
+      updateBulkBar();
+    }
+
+    function patchActiveRowDom(prevIdx, nextIdx, scrollIntoView = false) {
+      if (prevIdx >= 0 && renderedRows[prevIdx] && renderedRows[prevIdx].rowEl && renderedRows[prevIdx].rowEl.classList) {
+        renderedRows[prevIdx].rowEl.classList.remove('selected');
+      }
+      const nextEntry = nextIdx >= 0 ? renderedRows[nextIdx] : null;
+      if (nextEntry && nextEntry.rowEl && nextEntry.rowEl.classList) {
+        nextEntry.rowEl.classList.add('selected');
+        if (scrollIntoView && typeof nextEntry.rowEl.scrollIntoView === 'function') {
+          nextEntry.rowEl.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    }
+
+    function patchFavoriteDom(rawKey, favorite) {
+      for (const entry of renderedRows) {
+        if (entry.rawKey !== rawKey) continue;
+        if (entry.starBtn) {
+          entry.starBtn.textContent = favorite ? '★' : '☆';
+          entry.starBtn.title = favorite ? 'Favoriden çıkar' : 'Favoriye ekle';
+          if (entry.starBtn.classList) entry.starBtn.classList.toggle('active', Boolean(favorite));
+        }
+      }
+    }
+
+    function patchCopyCountDom(rawKey, copyCount) {
+      const cc = Number(copyCount || 0);
+      for (const entry of renderedRows) {
+        if (entry.rawKey !== rawKey) continue;
+        if (entry.metaEl) {
+          const it = entry.item;
+          const baseMeta = it.label ? `${it.group} · ${it.label}` : it.group;
+          entry.metaEl.textContent = cc > 0 ? `${baseMeta} · 📋 ${cc}` : baseMeta;
+        }
+        if (entry.copyTdEl) {
+          entry.copyTdEl.textContent = String(cc);
+        }
+      }
     }
 
     function toggleSelectRow(rawKey, idx, checked, shiftKey = false) {
@@ -1968,30 +2090,35 @@
         else state.selectedKeys.delete(rawKey);
       }
       state.lastCheckedIdx = idx;
-      renderList();
+      patchSelectionDom();
     }
 
     function selectAllVisible() {
-      const visible = state.items.slice(0, 200);
-      const allSelected = visible.length > 0 && visible.every((it) => state.selectedKeys.has(it.raw_key));
+      const targetItems = state.items;
+      const allSelected = targetItems.length > 0 && targetItems.every((it) => state.selectedKeys.has(it.raw_key));
       if (allSelected) {
-        visible.forEach((it) => state.selectedKeys.delete(it.raw_key));
+        targetItems.forEach((it) => state.selectedKeys.delete(it.raw_key));
       } else {
-        visible.forEach((it) => state.selectedKeys.add(it.raw_key));
+        targetItems.forEach((it) => state.selectedKeys.add(it.raw_key));
       }
-      renderList();
+      patchSelectionDom();
     }
 
     function clearSelection() {
       state.selectedKeys.clear();
       state.lastCheckedIdx = -1;
-      renderList();
+      patchSelectionDom();
     }
 
-    async function refreshAfterMutation() {
+    async function refreshAfterMutation(opts = {}) {
+      const shouldClear = Boolean(opts && opts.clearSelection);
+      if (shouldClear) {
+        state.selectedKeys.clear();
+        state.lastCheckedIdx = -1;
+      }
       if (state.isStatic) {
         updateStaticCategories();
-        updateStaticItems();
+        updateStaticItems({ resetSelection: false });
         syncHistoryButtons();
         return;
       }
@@ -2006,7 +2133,7 @@
       } catch (_err) {
       }
       await loadCategories();
-      await loadItems();
+      await loadItems({ resetSelection: false });
     }
 
     function renderHighlightedText(container, fullText, matchedIndices) {
@@ -2042,23 +2169,38 @@
     }
 
     async function handleCopyItem(item) {
+      const txtOut = state.stripEmoji ? stripEmojis(item.text) : String(item.text || '');
       if (state.isStatic) {
-        const txtOut = state.stripEmoji ? stripEmojis(item.text) : String(item.text || '');
         const ok = await copyTextBrowser(txtOut);
         if (ok) {
           const idx = state.allItems.findIndex((it) => it.raw_key === item.raw_key);
           if (idx !== -1) {
-            state.allItems[idx].copyCount = Number(state.allItems[idx].copyCount || 0) + 1;
+            const nextCount = Number(state.allItems[idx].copyCount || 0) + 1;
+            state.allItems[idx].copyCount = nextCount;
+            item.copyCount = nextCount;
             saveItemsStaticLocal();
-            updateStaticItems();
+            if (state.sortBy === 'usage') {
+              updateStaticItems({ resetSelection: false });
+            } else {
+              patchCopyCountDom(item.raw_key, nextCount);
+            }
           }
         }
         showToast(ok ? 'Panoya kopyalandı ✔' : 'Pano erişimi engellendi; metni seçip kopyalayın.');
         return;
       }
-      const r = await api('/api/copy', 'POST', { target: item.raw_key, strip_emoji: state.stripEmoji });
-      showToast(r.message || r.error);
-      await loadItems();
+      const browserOk = await copyTextBrowser(txtOut);
+      const r = await api('/api/copy', 'POST', { target: item.raw_key, strip_emoji: state.stripEmoji, browser_copied: Boolean(browserOk) });
+      const nextCount = (r && r.data && typeof r.data.copyCount === 'number')
+        ? r.data.copyCount
+        : (Number(item.copyCount || 0) + (r && r.ok ? 1 : 0));
+      item.copyCount = nextCount;
+      if (state.sortBy === 'usage') {
+        await loadItems({ resetSelection: false });
+      } else {
+        patchCopyCountDom(item.raw_key, nextCount);
+      }
+      showToast((r && r.ok ? r.message : null) || (browserOk ? 'Panoya kopyalandı ✔' : (r && r.error) || 'Kopyalandı'));
     }
 
     async function handlePasteItem(item) {
@@ -2066,9 +2208,18 @@
         await handleCopyItem(item);
         return;
       }
-      const r = await api('/api/paste', 'POST', { target: item.raw_key, strip_emoji: state.stripEmoji });
-      showToast(r.message || r.error);
-      await loadItems();
+      showToast('3 sn içinde hedef pencereye geçin…');
+      const r = await api('/api/paste', 'POST', { target: item.raw_key, strip_emoji: state.stripEmoji, delay_s: 3 });
+      showToast(r.message || r.error || 'Yapıştırıldı');
+      if (r && r.ok) {
+        const nextCount = Number(item.copyCount || 0) + 1;
+        item.copyCount = nextCount;
+        if (state.sortBy === 'usage') {
+          await loadItems({ resetSelection: false });
+        } else {
+          patchCopyCountDom(item.raw_key, nextCount);
+        }
+      }
     }
 
     async function handleToggleFavorite(item) {
@@ -2076,15 +2227,28 @@
         pushStaticUndoSnapshot();
         const idx = state.allItems.findIndex((it) => it.raw_key === item.raw_key);
         if (idx !== -1) {
-          state.allItems[idx].favorite = !state.allItems[idx].favorite;
+          const nextFav = !state.allItems[idx].favorite;
+          state.allItems[idx].favorite = nextFav;
+          item.favorite = nextFav;
           saveItemsStaticLocal();
-          updateStaticItems();
-          showToast(state.allItems[idx].favorite ? 'Favorilere eklendi ⭐' : 'Favorilerden çıkarıldı');
+          if (state.scopeFilter === 'favorites' || state.sortBy === 'favorites') {
+            updateStaticItems({ resetSelection: false });
+          } else {
+            patchFavoriteDom(item.raw_key, nextFav);
+            syncHistoryButtons();
+          }
+          showToast(nextFav ? 'Favorilere eklendi ⭐' : 'Favorilerden çıkarıldı');
         }
         return;
       }
       const r = await api('/api/items/favorite', 'POST', { target: item.raw_key });
-      await refreshAfterMutation();
+      const nextFav = !item.favorite;
+      item.favorite = nextFav;
+      if (state.scopeFilter === 'favorites' || state.sortBy === 'favorites') {
+        await refreshAfterMutation({ clearSelection: false });
+      } else {
+        patchFavoriteDom(item.raw_key, nextFav);
+      }
       showToast(r.message || r.error || 'Favori durumu güncellendi ✔');
     }
 
@@ -2100,14 +2264,15 @@
           };
           state.allItems.splice(idx + 1, 0, clone);
           saveItemsStaticLocal();
+          clearSelection();
           updateStaticCategories();
-          updateStaticItems();
+          updateStaticItems({ resetSelection: false });
           showToast('Kayıt çoğaltıldı ✔');
         }
         return;
       }
       const r = await api('/api/items/duplicate', 'POST', { target: item.raw_key });
-      await refreshAfterMutation();
+      await refreshAfterMutation({ clearSelection: true });
       showToast(r.message || r.error || 'Kayıt çoğaltıldı ✔');
     }
 
@@ -2124,12 +2289,13 @@
         state.allItems[idx] = state.allItems[newIdx];
         state.allItems[newIdx] = tmp;
         saveItemsStaticLocal();
-        updateStaticItems();
+        clearSelection();
+        updateStaticItems({ resetSelection: false });
         showToast('Kayıt sırası güncellendi ✔');
         return;
       }
       const r = await api('/api/items/move', 'POST', { target: item.raw_key, direction });
-      await refreshAfterMutation();
+      await refreshAfterMutation({ clearSelection: true });
       showToast(r.message || r.error || 'Sıra güncellendi');
     }
 
@@ -2143,7 +2309,7 @@
         return;
       }
       const r = await api('/api/save', 'POST', {});
-      await refreshAfterMutation();
+      await refreshAfterMutation({ clearSelection: false });
       showToast(r.message || r.error || 'Tüm kayıtlar ve ayarlar kaydedildi ✔');
     }
 
@@ -2158,14 +2324,15 @@
         state.canUndo = state.undoStack.length > 0;
         state.canRedo = state.redoStack.length > 0;
         saveItemsStaticLocal();
+        clearSelection();
         updateStaticCategories();
-        updateStaticItems();
+        updateStaticItems({ resetSelection: false });
         syncHistoryButtons();
         showToast('Son işlem geri alındı ✔');
         return;
       }
       const r = await api('/api/undo', 'POST', {});
-      await refreshAfterMutation();
+      await refreshAfterMutation({ clearSelection: true });
       showToast(r.message || r.error || 'Geri alındı');
     }
 
@@ -2180,14 +2347,15 @@
         state.canUndo = state.undoStack.length > 0;
         state.canRedo = state.redoStack.length > 0;
         saveItemsStaticLocal();
+        clearSelection();
         updateStaticCategories();
-        updateStaticItems();
+        updateStaticItems({ resetSelection: false });
         syncHistoryButtons();
         showToast('İşlem yinelendi ✔');
         return;
       }
       const r = await api('/api/redo', 'POST', {});
-      await refreshAfterMutation();
+      await refreshAfterMutation({ clearSelection: true });
       showToast(r.message || r.error || 'Yinelendi');
     }
 
@@ -2216,64 +2384,296 @@
     }
 
     function appendRowActions(container, it, idx) {
-      const upBtn = document.createElement('button');
-      upBtn.className = 'action-btn icon-btn';
-      upBtn.textContent = '⬆️';
-      upBtn.title = 'Yukarı taşı';
-      upBtn.onclick = (ev) => { ev.stopPropagation(); handleMoveItem(it, 'up'); };
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'action-btn';
+      copyBtn.textContent = 'Kopyala';
+      copyBtn.onclick = async (ev) => { ev.stopPropagation(); await handleCopyItem(it); };
+      container.appendChild(copyBtn);
 
-      const downBtn = document.createElement('button');
-      downBtn.className = 'action-btn icon-btn';
-      downBtn.textContent = '⬇️';
-      downBtn.title = 'Aşağı taşı';
-      downBtn.onclick = (ev) => { ev.stopPropagation(); handleMoveItem(it, 'down'); };
-
-      const dupBtn = document.createElement('button');
-      dupBtn.className = 'action-btn icon-btn';
-      dupBtn.textContent = '📑';
-      dupBtn.title = 'Çoğalt';
-      dupBtn.onclick = (ev) => { ev.stopPropagation(); handleDuplicateItem(it); };
+      if (!state.isStatic) {
+        const pasteBtn = document.createElement('button');
+        pasteBtn.className = 'action-btn primary';
+        pasteBtn.textContent = 'Yapıştır';
+        pasteBtn.title = '3 saniye sonra aktif pencereye yapıştır';
+        pasteBtn.onclick = async (ev) => { ev.stopPropagation(); await handlePasteItem(it); };
+        container.appendChild(pasteBtn);
+      }
 
       const editBtn = document.createElement('button');
       editBtn.className = 'action-btn';
       editBtn.textContent = 'Düzenle';
       editBtn.onclick = (ev) => { ev.stopPropagation(); openCrudModal(it); };
+      container.appendChild(editBtn);
+
+      const more = document.createElement('details');
+      more.className = 'row-more';
+      more.onclick = (ev) => { ev.stopPropagation(); };
+      const sum = document.createElement('summary');
+      sum.className = 'action-btn icon-btn';
+      sum.textContent = '⋯';
+      sum.setAttribute('aria-label', 'Diğer işlemler');
+      const menu = document.createElement('div');
+      menu.className = 'row-more-menu';
+
+      const upBtn = document.createElement('button');
+      upBtn.className = 'action-btn icon-btn';
+      upBtn.textContent = '⬆️';
+      upBtn.title = 'Yukarı taşı';
+      upBtn.setAttribute('aria-label', 'Yukarı taşı');
+      upBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); handleMoveItem(it, 'up'); };
+
+      const downBtn = document.createElement('button');
+      downBtn.className = 'action-btn icon-btn';
+      downBtn.textContent = '⬇️';
+      downBtn.title = 'Aşağı taşı';
+      downBtn.setAttribute('aria-label', 'Aşağı taşı');
+      downBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); handleMoveItem(it, 'down'); };
+
+      const dupBtn = document.createElement('button');
+      dupBtn.className = 'action-btn icon-btn';
+      dupBtn.textContent = '📑';
+      dupBtn.title = 'Çoğalt';
+      dupBtn.setAttribute('aria-label', 'Çoğalt');
+      dupBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); handleDuplicateItem(it); };
 
       const delBtn = document.createElement('button');
       delBtn.className = 'action-btn danger';
       delBtn.textContent = 'Sil';
-      delBtn.onclick = (ev) => { ev.stopPropagation(); openDeleteModal(it); };
+      delBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); openDeleteModal(it); };
 
       const iniBtn = document.createElement('button');
       iniBtn.className = 'action-btn';
       iniBtn.textContent = "INI'de Göster";
-      iniBtn.onclick = (ev) => { ev.stopPropagation(); showIniModal(it, idx); };
+      iniBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); showIniModal(it, idx); };
 
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'action-btn';
-      copyBtn.textContent = 'Kopyala';
-      copyBtn.onclick = async (ev) => { ev.stopPropagation(); await handleCopyItem(it); };
+      menu.appendChild(upBtn);
+      menu.appendChild(downBtn);
+      menu.appendChild(dupBtn);
+      menu.appendChild(delBtn);
+      menu.appendChild(iniBtn);
+      more.appendChild(sum);
+      more.appendChild(menu);
+      container.appendChild(more);
 
       const badge = document.createElement('span');
       badge.className = it.keys ? 'badge' : 'note-pill';
       badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
-
-      container.appendChild(upBtn);
-      container.appendChild(downBtn);
-      container.appendChild(dupBtn);
-      container.appendChild(editBtn);
-      container.appendChild(delBtn);
-      container.appendChild(iniBtn);
-      container.appendChild(copyBtn);
       container.appendChild(badge);
     }
 
-    function renderList() {
+    function createTableRowEl(it, idx) {
+      const tr = document.createElement('tr');
+      const isChecked = state.selectedKeys.has(it.raw_key);
+      tr.className = (idx === state.selected ? 'selected ' : '') + (isChecked ? 'checked' : '');
+      tr.setAttribute('data-idx', String(idx));
+      tr.setAttribute('data-raw-key', String(it.raw_key || ''));
+
+      const tdCheck = document.createElement('td');
+      const chkWrap = document.createElement('label');
+      chkWrap.className = 'row-check-wrap';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.className = 'row-check';
+      chk.checked = isChecked;
+      chk.setAttribute('aria-label', 'Kaydı seç');
+      chk.onclick = (ev) => {
+        ev.stopPropagation();
+        toggleSelectRow(it.raw_key, idx, chk.checked, Boolean(ev.shiftKey));
+      };
+      chkWrap.onclick = (ev) => { ev.stopPropagation(); };
+      chkWrap.appendChild(chk);
+      tdCheck.appendChild(chkWrap);
+
+      const tdStar = document.createElement('td');
+      const starBtn = document.createElement('button');
+      starBtn.className = 'star-btn' + (it.favorite ? ' active' : '');
+      starBtn.textContent = it.favorite ? '★' : '☆';
+      starBtn.title = it.favorite ? 'Favoriden çıkar' : 'Favoriye ekle';
+      starBtn.setAttribute('aria-label', 'Favori');
+      starBtn.onclick = (ev) => { ev.stopPropagation(); handleToggleFavorite(it); };
+      tdStar.appendChild(starBtn);
+
+      const tdKey = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = it.keys ? 'badge' : 'note-pill';
+      badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
+      tdKey.appendChild(badge);
+
+      const tdGrp = document.createElement('td');
+      tdGrp.textContent = it.group || 'Genel';
+
+      const tdLbl = document.createElement('td');
+      tdLbl.textContent = it.label || '-';
+
+      const tdTxt = document.createElement('td');
+      renderHighlightedText(tdTxt, String(it.text || '').replace(/\r?\n/g, ' '), it.matched_indices);
+
+      const tdUse = document.createElement('td');
+      tdUse.textContent = String(Number(it.copyCount || 0));
+
+      const tdAct = document.createElement('td');
+      const actWrap = document.createElement('div');
+      actWrap.className = 'row-actions';
+      appendRowActions(actWrap, it, idx);
+      tdAct.appendChild(actWrap);
+
+      tr.appendChild(tdCheck);
+      tr.appendChild(tdStar);
+      tr.appendChild(tdKey);
+      tr.appendChild(tdGrp);
+      tr.appendChild(tdLbl);
+      tr.appendChild(tdTxt);
+      tr.appendChild(tdUse);
+      tr.appendChild(tdAct);
+      tr.oncontextmenu = (ev) => { ev.preventDefault(); showIniModal(it, idx); };
+      tr.onclick = async () => {
+        const prevSel = state.selected;
+        state.selected = idx;
+        patchActiveRowDom(prevSel, idx, false);
+        await handleCopyItem(it);
+      };
+      renderedRows.push({ rawKey: it.raw_key, rowEl: tr, checkEl: chk, starBtn, metaEl: null, copyTdEl: tdUse, item: it });
+      return tr;
+    }
+
+    function createCardRowEl(it, idx) {
+      const row = document.createElement('div');
+      const isChecked = state.selectedKeys.has(it.raw_key);
+      const isNote = isNoteItem(it);
+      row.className = 'snippet-row'
+        + (state.viewMode === 'grid' ? ' grid-card' : '')
+        + (idx === state.selected ? ' selected' : '')
+        + (isChecked ? ' checked' : '')
+        + (isNote ? ' is-note' : '');
+      row.setAttribute('data-idx', String(idx));
+      row.setAttribute('data-raw-key', String(it.raw_key || ''));
+
+      const leading = document.createElement('div');
+      leading.className = 'row-leading';
+      const chkWrap = document.createElement('label');
+      chkWrap.className = 'row-check-wrap';
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.className = 'row-check';
+      chk.checked = isChecked;
+      chk.setAttribute('aria-label', 'Kaydı seç');
+      chk.onclick = (ev) => {
+        ev.stopPropagation();
+        toggleSelectRow(it.raw_key, idx, chk.checked, Boolean(ev.shiftKey));
+      };
+      chkWrap.onclick = (ev) => { ev.stopPropagation(); };
+      chkWrap.appendChild(chk);
+      const starBtn = document.createElement('button');
+      starBtn.className = 'star-btn' + (it.favorite ? ' active' : '');
+      starBtn.title = it.favorite ? 'Favoriden çıkar' : 'Favoriye ekle';
+      starBtn.setAttribute('aria-label', 'Favori');
+      starBtn.textContent = it.favorite ? '★' : '☆';
+      starBtn.onclick = (ev) => { ev.stopPropagation(); handleToggleFavorite(it); };
+      leading.appendChild(chkWrap);
+      leading.appendChild(starBtn);
+
+      const left = document.createElement('div');
+      left.className = 'snippet-main';
+      const txt = document.createElement('div');
+      txt.className = 'snippet-text';
+      renderHighlightedText(txt, String(it.text || '').replace(/\r?\n/g, ' '), it.matched_indices);
+      const meta = document.createElement('div');
+      meta.className = 'snippet-meta';
+      const cc = Number(it.copyCount || 0);
+      const baseMeta = it.label ? `${it.group} · ${it.label}` : it.group;
+      meta.textContent = cc > 0 ? `${baseMeta} · 📋 ${cc}` : baseMeta;
+      left.appendChild(txt);
+      left.appendChild(meta);
+
+      const right = document.createElement('div');
+      right.className = 'row-actions';
+      appendRowActions(right, it, idx);
+
+      if (state.viewMode === 'grid') {
+        const topHead = document.createElement('div');
+        topHead.className = 'top-row';
+        topHead.style.justifyContent = 'space-between';
+        topHead.appendChild(leading);
+        const badge = document.createElement('span');
+        badge.className = it.keys ? 'badge' : 'note-pill';
+        badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
+        topHead.appendChild(badge);
+        row.appendChild(topHead);
+        row.appendChild(left);
+        row.appendChild(right);
+      } else {
+        row.appendChild(leading);
+        row.appendChild(left);
+        row.appendChild(right);
+      }
+      row.oncontextmenu = (ev) => {
+        ev.preventDefault();
+        showIniModal(it, idx);
+      };
+      row.onclick = async () => {
+        const prevSel = state.selected;
+        state.selected = idx;
+        patchActiveRowDom(prevSel, idx, false);
+        await handleCopyItem(it);
+      };
+      renderedRows.push({ rawKey: it.raw_key, rowEl: row, checkEl: chk, starBtn, metaEl: meta, copyTdEl: null, item: it });
+      return row;
+    }
+
+    function updateShowMoreButton() {
+      const existing = document.getElementById('btnShowMore');
+      if (existing && els.list && typeof els.list.removeChild === 'function') {
+        els.list.removeChild(existing);
+      }
+      const renderedCount = renderedRows.length;
+      const remaining = state.items.length - renderedCount;
+      if (remaining <= 0) return;
+      const btn = document.createElement('button');
+      btn.id = 'btnShowMore';
+      btn.type = 'button';
+      btn.className = 'action-btn show-more-btn';
+      btn.textContent = `Daha fazla göster (+100) — ${remaining} kalan`;
+      btn.onclick = (ev) => {
+        ev.stopPropagation();
+        appendMoreRows(100);
+      };
+      els.list.appendChild(btn);
+    }
+
+    function appendMoreRows(chunkSize = 100) {
+      const prevCount = renderedRows.length;
+      if (prevCount >= state.items.length) return;
+      state.renderLimit = prevCount + chunkSize;
+      const slice = state.items.slice(prevCount, state.renderLimit);
+      const showMoreBtn = document.getElementById('btnShowMore');
+      if (showMoreBtn && typeof els.list.removeChild === 'function') {
+        els.list.removeChild(showMoreBtn);
+      }
+      if (state.viewMode === 'table' && activeTableTbody) {
+        slice.forEach((it, offset) => {
+          activeTableTbody.appendChild(createTableRowEl(it, prevCount + offset));
+        });
+      } else {
+        slice.forEach((it, offset) => {
+          els.list.appendChild(createCardRowEl(it, prevCount + offset));
+        });
+      }
+      updateShowMoreButton();
+    }
+
+    function renderList(opts = {}) {
+      const prevScroll = els.list ? (els.list.scrollTop || 0) : 0;
       els.list.innerHTML = '';
+      renderedRows = [];
+      activeTableTbody = null;
       syncToolbarStateDom();
-      const visible = state.items.slice(0, 200);
+      const limit = state.renderLimit === Infinity ? state.items.length : state.renderLimit;
+      const visible = state.items.slice(0, limit);
       const totalAll = state.isStatic ? state.allItems.length : null;
       els.count.textContent = totalAll !== null ? `${state.items.length} / ${totalAll} kayıt` : `${state.items.length} kayıt`;
+      if (els.btnSelectAllVisible) {
+        els.btnSelectAllVisible.textContent = `☑ Filtredekileri Seç (${state.items.length})`;
+      }
       updateBulkBar();
       if (!visible.length) {
         const empty = document.createElement('div');
@@ -2291,152 +2691,31 @@
         table.appendChild(thead);
         const tbody = document.createElement('tbody');
         visible.forEach((it, idx) => {
-          const tr = document.createElement('tr');
-          const isChecked = state.selectedKeys.has(it.raw_key);
-          tr.className = (idx === state.selected ? 'selected ' : '') + (isChecked ? 'checked' : '');
-
-          const tdCheck = document.createElement('td');
-          const chk = document.createElement('input');
-          chk.type = 'checkbox';
-          chk.className = 'row-check';
-          chk.checked = isChecked;
-          chk.onclick = (ev) => {
-            ev.stopPropagation();
-            toggleSelectRow(it.raw_key, idx, chk.checked, Boolean(ev.shiftKey));
-          };
-          tdCheck.appendChild(chk);
-
-          const tdStar = document.createElement('td');
-          const starBtn = document.createElement('button');
-          starBtn.className = 'star-btn' + (it.favorite ? ' active' : '');
-          starBtn.textContent = it.favorite ? '★' : '☆';
-          starBtn.onclick = (ev) => { ev.stopPropagation(); handleToggleFavorite(it); };
-          tdStar.appendChild(starBtn);
-
-          const tdKey = document.createElement('td');
-          const badge = document.createElement('span');
-          badge.className = it.keys ? 'badge' : 'note-pill';
-          badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
-          tdKey.appendChild(badge);
-
-          const tdGrp = document.createElement('td');
-          tdGrp.textContent = it.group || 'Genel';
-
-          const tdLbl = document.createElement('td');
-          tdLbl.textContent = it.label || '-';
-
-          const tdTxt = document.createElement('td');
-          renderHighlightedText(tdTxt, String(it.text || '').replace(/\r?\n/g, ' '), it.matched_indices);
-
-          const tdUse = document.createElement('td');
-          tdUse.textContent = String(Number(it.copyCount || 0));
-
-          const tdAct = document.createElement('td');
-          const actWrap = document.createElement('div');
-          actWrap.className = 'row-actions';
-          appendRowActions(actWrap, it, idx);
-          tdAct.appendChild(actWrap);
-
-          tr.appendChild(tdCheck);
-          tr.appendChild(tdStar);
-          tr.appendChild(tdKey);
-          tr.appendChild(tdGrp);
-          tr.appendChild(tdLbl);
-          tr.appendChild(tdTxt);
-          tr.appendChild(tdUse);
-          tr.appendChild(tdAct);
-          tr.oncontextmenu = (ev) => { ev.preventDefault(); showIniModal(it, idx); };
-          tr.onclick = async () => {
-            state.selected = idx;
-            renderList();
-            await handlePasteItem(it);
-          };
-          tbody.appendChild(tr);
+          tbody.appendChild(createTableRowEl(it, idx));
         });
+        activeTableTbody = tbody;
         table.appendChild(tbody);
         const tableWrap = document.createElement('div');
         tableWrap.className = 'table-wrap';
         tableWrap.appendChild(table);
         els.list.appendChild(tableWrap);
+        updateShowMoreButton();
+        if (opts.preserveScroll && els.list) els.list.scrollTop = prevScroll;
         return;
       }
 
       visible.forEach((it, idx) => {
-        const row = document.createElement('div');
-        const isChecked = state.selectedKeys.has(it.raw_key);
-        const isNote = !String(it.keys || '').trim();
-        row.className = 'snippet-row'
-          + (state.viewMode === 'grid' ? ' grid-card' : '')
-          + (idx === state.selected ? ' selected' : '')
-          + (isChecked ? ' checked' : '')
-          + (isNote ? ' is-note' : '');
-
-        const leading = document.createElement('div');
-        leading.className = 'row-leading';
-        const chk = document.createElement('input');
-        chk.type = 'checkbox';
-        chk.className = 'row-check';
-        chk.checked = isChecked;
-        chk.onclick = (ev) => {
-          ev.stopPropagation();
-          toggleSelectRow(it.raw_key, idx, chk.checked, Boolean(ev.shiftKey));
-        };
-        const starBtn = document.createElement('button');
-        starBtn.className = 'star-btn' + (it.favorite ? ' active' : '');
-        starBtn.title = it.favorite ? 'Favoriden çıkar' : 'Favoriye ekle';
-        starBtn.textContent = it.favorite ? '★' : '☆';
-        starBtn.onclick = (ev) => { ev.stopPropagation(); handleToggleFavorite(it); };
-        leading.appendChild(chk);
-        leading.appendChild(starBtn);
-
-        const left = document.createElement('div');
-        left.className = 'snippet-main';
-        const txt = document.createElement('div');
-        txt.className = 'snippet-text';
-        renderHighlightedText(txt, String(it.text || '').replace(/\r?\n/g, ' '), it.matched_indices);
-        const meta = document.createElement('div');
-        meta.className = 'snippet-meta';
-        const cc = Number(it.copyCount || 0);
-        const baseMeta = it.label ? `${it.group} · ${it.label}` : it.group;
-        meta.textContent = cc > 0 ? `${baseMeta} · 📋 ${cc}` : baseMeta;
-        left.appendChild(txt);
-        left.appendChild(meta);
-
-        const right = document.createElement('div');
-        right.className = 'row-actions';
-        appendRowActions(right, it, idx);
-
-        if (state.viewMode === 'grid') {
-          const topHead = document.createElement('div');
-          topHead.className = 'top-row';
-          topHead.style.justifyContent = 'space-between';
-          topHead.appendChild(leading);
-          const badge = document.createElement('span');
-          badge.className = it.keys ? 'badge' : 'note-pill';
-          badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
-          topHead.appendChild(badge);
-          row.appendChild(topHead);
-          row.appendChild(left);
-          row.appendChild(right);
-        } else {
-          row.appendChild(leading);
-          row.appendChild(left);
-          row.appendChild(right);
-        }
-        row.oncontextmenu = (ev) => {
-          ev.preventDefault();
-          showIniModal(it, idx);
-        };
-        row.onclick = async () => {
-          state.selected = idx;
-          renderList();
-          await handlePasteItem(it);
-        };
-        els.list.appendChild(row);
+        els.list.appendChild(createCardRowEl(it, idx));
       });
-      const selEl = els.list.children[state.selected];
-      if (selEl && typeof selEl.scrollIntoView === 'function') {
-        selEl.scrollIntoView({ block: 'nearest' });
+      updateShowMoreButton();
+      if (opts.preserveScroll && els.list) {
+        els.list.scrollTop = prevScroll;
+      }
+      if (opts.scrollIntoView) {
+        const selEntry = renderedRows[state.selected];
+        if (selEntry && selEntry.rowEl && typeof selEntry.rowEl.scrollIntoView === 'function') {
+          selEntry.rowEl.scrollIntoView({ block: 'nearest' });
+        }
       }
     }
 
@@ -2470,9 +2749,9 @@
           const controls = document.createElement('div');
           controls.className = 'toolbar-group';
           const renameInput = document.createElement('input');
-          renameInput.className = 'field-input';
-          renameInput.style.width = '160px';
+          renameInput.className = 'field-input rename-input';
           renameInput.value = grp.name;
+          renameInput.setAttribute('aria-label', `${grp.name} için yeni ad`);
           const renameBtn = document.createElement('button');
           renameBtn.className = 'action-btn';
           renameBtn.textContent = 'Yeniden Adlandır';
@@ -2485,11 +2764,11 @@
                 if ((String(it.group || 'Genel').trim() || 'Genel') === grp.name) it.group = newName;
               }
               saveItemsStaticLocal();
-              await refreshAfterMutation();
+              await refreshAfterMutation({ clearSelection: false });
               showToast(`Grup yeniden adlandırıldı ✔ (${grp.name} → ${newName})`);
             } else {
               const r = await api('/api/groups/rename', 'POST', { old_group: grp.name, new_group: newName });
-              await refreshAfterMutation();
+              await refreshAfterMutation({ clearSelection: false });
               showToast(r.message || r.error || 'Grup güncellendi');
             }
             await openGroupsModal();
@@ -2512,11 +2791,11 @@
               pushStaticUndoSnapshot();
               state.allItems = state.allItems.filter((it) => (String(it.group || 'Genel').trim() || 'Genel') !== grp.name);
               saveItemsStaticLocal();
-              await refreshAfterMutation();
+              await refreshAfterMutation({ clearSelection: true });
               showToast(`Grup silindi ✔ (${grp.name})`);
             } else {
               const r = await api('/api/groups/delete', 'POST', { group: grp.name });
-              await refreshAfterMutation();
+              await refreshAfterMutation({ clearSelection: true });
               showToast(r.message || r.error || 'Grup silindi');
             }
             await openGroupsModal();
@@ -2530,7 +2809,7 @@
           els.groupsListBody.appendChild(row);
         }
       }
-      els.groupsModal.style.display = 'flex';
+      openModalEl(els.groupsModal);
     }
 
     function parseImportPayload(filename, uint8Bytes) {
@@ -2598,7 +2877,7 @@
       els.importPreviewBox.textContent = 'Henüz dosya seçilmedi.';
       els.importConfirmBtn.disabled = true;
       if (els.importFileInput) els.importFileInput.value = '';
-      els.importModal.style.display = 'flex';
+      openModalEl(els.importModal);
     }
 
     async function confirmImportModal() {
@@ -2624,8 +2903,8 @@
           state.extraSections = pending.extraSections || [];
         }
         saveItemsStaticLocal();
-        els.importModal.style.display = 'none';
-        await refreshAfterMutation();
+        closeModalEl(els.importModal);
+        await refreshAfterMutation({ clearSelection: true });
         showToast(`İçe aktarıldı ✔ (${added} yeni, toplam ${state.allItems.length} kayıt)`);
         return;
       }
@@ -2636,8 +2915,8 @@
         skip_duplicates: skipDup,
       });
       if (res.ok) {
-        els.importModal.style.display = 'none';
-        await refreshAfterMutation();
+        closeModalEl(els.importModal);
+        await refreshAfterMutation({ clearSelection: true });
       }
       showToast(res.message || res.error || 'İçe aktarım tamamlandı');
     }
@@ -2672,7 +2951,7 @@
         els.exportScopeSelect.value = defaultScope === 'selected' ? 'all' : defaultScope;
       }
       updateExportScopeCountLabel();
-      els.exportModal.style.display = 'flex';
+      openModalEl(els.exportModal);
     }
 
     function loadStaticSnapshots() {
@@ -2721,8 +3000,8 @@
               pushStaticUndoSnapshot();
               state.allItems = (snap.items || []).map((it, i) => normalizeRawItem(it, i));
               saveItemsStaticLocal();
-              await refreshAfterMutation();
-              els.snapshotsModal.style.display = 'none';
+              await refreshAfterMutation({ clearSelection: true });
+              closeModalEl(els.snapshotsModal);
               showToast(`Anlık kayıt geri yüklendi ✔ (${state.allItems.length} kayıt)`);
             };
             const dlBtn = document.createElement('button');
@@ -2762,8 +3041,8 @@
             resBtn.textContent = 'Geri Yükle';
             resBtn.onclick = async () => {
               const r = await api('/api/restore', 'POST', { target: name, mode: 'replace' });
-              await refreshAfterMutation();
-              els.snapshotsModal.style.display = 'none';
+              await refreshAfterMutation({ clearSelection: true });
+              closeModalEl(els.snapshotsModal);
               showToast(r.message || r.error || 'Yedek geri yüklendi ✔');
             };
             row.appendChild(resBtn);
@@ -2771,12 +3050,12 @@
           }
         }
       }
-      els.snapshotsModal.style.display = 'flex';
+      openModalEl(els.snapshotsModal);
     }
 
     els.search.addEventListener('input', () => {
       state.query = els.search.value;
-      loadItems();
+      loadItems({ resetSelection: true });
     });
 
     if (els.crudText) els.crudText.addEventListener('input', updateCrudPreview);
@@ -2784,28 +3063,44 @@
     if (els.crudEndMarker) els.crudEndMarker.addEventListener('change', updateCrudPreview);
 
     els.modal.addEventListener('click', (ev) => {
-      if (ev.target === els.modal) els.modal.style.display = 'none';
+      if (ev.target === els.modal) closeModalEl(els.modal);
     });
     els.crudModal.addEventListener('click', (ev) => {
-      if (ev.target === els.crudModal) els.crudModal.style.display = 'none';
+      if (ev.target === els.crudModal) closeModalEl(els.crudModal);
     });
     els.delModal.addEventListener('click', (ev) => {
-      if (ev.target === els.delModal) els.delModal.style.display = 'none';
+      if (ev.target === els.delModal) closeModalEl(els.delModal);
     });
     els.bulkModal.addEventListener('click', (ev) => {
-      if (ev.target === els.bulkModal) els.bulkModal.style.display = 'none';
+      if (ev.target === els.bulkModal) closeModalEl(els.bulkModal);
     });
     els.groupsModal.addEventListener('click', (ev) => {
-      if (ev.target === els.groupsModal) els.groupsModal.style.display = 'none';
+      if (ev.target === els.groupsModal) closeModalEl(els.groupsModal);
     });
     els.importModal.addEventListener('click', (ev) => {
-      if (ev.target === els.importModal) els.importModal.style.display = 'none';
+      if (ev.target === els.importModal) closeModalEl(els.importModal);
     });
     els.exportModal.addEventListener('click', (ev) => {
-      if (ev.target === els.exportModal) els.exportModal.style.display = 'none';
+      if (ev.target === els.exportModal) closeModalEl(els.exportModal);
     });
     els.snapshotsModal.addEventListener('click', (ev) => {
-      if (ev.target === els.snapshotsModal) els.snapshotsModal.style.display = 'none';
+      if (ev.target === els.snapshotsModal) closeModalEl(els.snapshotsModal);
+    });
+
+    document.addEventListener('click', (ev) => {
+      const target = ev && ev.target ? ev.target : null;
+      if (els.toolsMenu && !isDesktopWide() && els.toolsMenu.hasAttribute('open')) {
+        if (!target || typeof els.toolsMenu.contains !== 'function' || !els.toolsMenu.contains(target)) {
+          els.toolsMenu.removeAttribute('open');
+        }
+      }
+      if (typeof document.querySelectorAll === 'function') {
+        for (const d of document.querySelectorAll('details.row-more[open]')) {
+          if (!target || typeof d.contains !== 'function' || !d.contains(target)) {
+            d.removeAttribute('open');
+          }
+        }
+      }
     });
 
     document.addEventListener('keydown', async (e) => {
@@ -2843,18 +3138,22 @@
         return;
       }
       if (e.key === 'Escape') {
-        if (els.crudModal.style.display === 'flex') els.crudModal.style.display = 'none';
-        else if (els.delModal.style.display === 'flex') els.delModal.style.display = 'none';
-        else if (els.bulkModal.style.display === 'flex') els.bulkModal.style.display = 'none';
-        else if (els.groupsModal.style.display === 'flex') els.groupsModal.style.display = 'none';
-        else if (els.importModal.style.display === 'flex') els.importModal.style.display = 'none';
-        else if (els.exportModal.style.display === 'flex') els.exportModal.style.display = 'none';
-        else if (els.snapshotsModal.style.display === 'flex') els.snapshotsModal.style.display = 'none';
-        else if (modalOpen) els.modal.style.display = 'none';
-        else {
+        if (els.crudModal.style.display === 'flex') closeModalEl(els.crudModal);
+        else if (els.delModal.style.display === 'flex') closeModalEl(els.delModal);
+        else if (els.bulkModal.style.display === 'flex') closeModalEl(els.bulkModal);
+        else if (els.groupsModal.style.display === 'flex') closeModalEl(els.groupsModal);
+        else if (els.importModal.style.display === 'flex') closeModalEl(els.importModal);
+        else if (els.exportModal.style.display === 'flex') closeModalEl(els.exportModal);
+        else if (els.snapshotsModal.style.display === 'flex') closeModalEl(els.snapshotsModal);
+        else if (modalOpen) closeModalEl(els.modal);
+        else if (typeof document.querySelectorAll === 'function' && Array.from(document.querySelectorAll('details.row-more[open]')).length) {
+          for (const d of document.querySelectorAll('details.row-more[open]')) d.removeAttribute('open');
+        } else if (els.toolsMenu && !isDesktopWide() && els.toolsMenu.hasAttribute('open')) {
+          els.toolsMenu.removeAttribute('open');
+        } else {
           els.search.value = '';
           state.query = '';
-          loadItems();
+          loadItems({ resetSelection: true });
         }
         return;
       }
@@ -2885,34 +3184,40 @@
         }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        const maxVis = Math.min(state.items.length, 200) - 1;
-        state.selected = Math.min(Math.max(0, maxVis), state.selected + 1);
-        renderList();
+        const prevSel = state.selected;
+        const maxAll = Math.max(0, state.items.length - 1);
+        state.selected = Math.min(maxAll, state.selected + 1);
+        if (state.selected >= renderedRows.length && state.selected < state.items.length) {
+          appendMoreRows(Math.max(100, state.selected - renderedRows.length + 1));
+        }
+        patchActiveRowDom(prevSel, state.selected, true);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
+        const prevSel = state.selected;
         state.selected = Math.max(0, state.selected - 1);
-        renderList();
+        patchActiveRowDom(prevSel, state.selected, true);
       } else if (e.key === 'PageDown') {
         e.preventDefault();
-        const maxVis = Math.min(state.items.length, 200) - 1;
-        state.selected = Math.min(Math.max(0, maxVis), state.selected + 6);
-        renderList();
+        const prevSel = state.selected;
+        const maxAll = Math.max(0, state.items.length - 1);
+        state.selected = Math.min(maxAll, state.selected + 6);
+        if (state.selected >= renderedRows.length && state.selected < state.items.length) {
+          appendMoreRows(Math.max(100, state.selected - renderedRows.length + 1));
+        }
+        patchActiveRowDom(prevSel, state.selected, true);
       } else if (e.key === 'PageUp') {
         e.preventDefault();
+        const prevSel = state.selected;
         state.selected = Math.max(0, state.selected - 6);
-        renderList();
+        patchActiveRowDom(prevSel, state.selected, true);
       } else if (e.key === 'Enter' && state.items[state.selected]) {
         e.preventDefault();
         const it = state.items[state.selected];
-        if (e.ctrlKey || e.metaKey) {
-          await handleCopyItem(it);
-        } else {
-          await handlePasteItem(it);
-        }
+        await handleCopyItem(it);
       }
     });
 
-    document.getElementById('modalClose').onclick = () => { els.modal.style.display = 'none'; };
+    document.getElementById('modalClose').onclick = () => { closeModalEl(els.modal); };
     document.getElementById('btnHelp').onclick = () => showHelpModal('genel');
     document.getElementById('btnAddNew').onclick = () => openCrudModal(null);
     document.getElementById('btnSaveAll').onclick = handleSaveAll;
@@ -2939,15 +3244,15 @@
     document.getElementById('btnBulkExport').onclick = () => openExportModal('selected');
     document.getElementById('btnBulkDelete').onclick = openBulkDeleteModal;
     document.getElementById('btnBulkClear').onclick = clearSelection;
-    document.getElementById('bulkClose').onclick = () => { els.bulkModal.style.display = 'none'; };
-    document.getElementById('bulkCancel').onclick = () => { els.bulkModal.style.display = 'none'; };
+    document.getElementById('bulkClose').onclick = () => { closeModalEl(els.bulkModal); };
+    document.getElementById('bulkCancel').onclick = () => { closeModalEl(els.bulkModal); };
     document.getElementById('bulkApplyBtn').onclick = applyBulkEdit;
-    document.getElementById('groupsClose').onclick = () => { els.groupsModal.style.display = 'none'; };
-    document.getElementById('importClose').onclick = () => { els.importModal.style.display = 'none'; };
-    document.getElementById('importCancel').onclick = () => { els.importModal.style.display = 'none'; };
+    document.getElementById('groupsClose').onclick = () => { closeModalEl(els.groupsModal); };
+    document.getElementById('importClose').onclick = () => { closeModalEl(els.importModal); };
+    document.getElementById('importCancel').onclick = () => { closeModalEl(els.importModal); };
     document.getElementById('importConfirmBtn').onclick = confirmImportModal;
-    document.getElementById('exportClose').onclick = () => { els.exportModal.style.display = 'none'; };
-    document.getElementById('snapshotsClose').onclick = () => { els.snapshotsModal.style.display = 'none'; };
+    document.getElementById('exportClose').onclick = () => { closeModalEl(els.exportModal); };
+    document.getElementById('snapshotsClose').onclick = () => { closeModalEl(els.snapshotsModal); };
 
     document.getElementById('btnCrudStripEmojis').onclick = () => {
       els.crudText.value = stripEmojis(els.crudText.value);
@@ -2959,15 +3264,15 @@
     els.viewGridBtn.onclick = () => switchViewMode('grid');
     els.viewTableBtn.onclick = () => switchViewMode('table');
 
-    els.btnScopeAll.onclick = () => { state.scopeFilter = 'all'; syncToolbarStateDom(); loadItems(); };
-    els.btnScopeFav.onclick = () => { state.scopeFilter = 'favorites'; syncToolbarStateDom(); loadItems(); };
-    els.btnScopeNotes.onclick = () => { state.scopeFilter = 'notes'; syncToolbarStateDom(); loadItems(); };
-    els.groupFilterSelect.onchange = () => { state.groupFilter = els.groupFilterSelect.value; loadItems(); };
+    els.btnScopeAll.onclick = () => { state.scopeFilter = 'all'; syncToolbarStateDom(); loadItems({ resetSelection: true }); };
+    els.btnScopeFav.onclick = () => { state.scopeFilter = 'favorites'; syncToolbarStateDom(); loadItems({ resetSelection: true }); };
+    els.btnScopeNotes.onclick = () => { state.scopeFilter = 'notes'; syncToolbarStateDom(); loadItems({ resetSelection: true }); };
+    els.groupFilterSelect.onchange = () => { state.groupFilter = els.groupFilterSelect.value; loadItems({ resetSelection: true }); };
     els.sortSelect.onchange = async () => {
       state.sortBy = els.sortSelect.value;
       if (state.isStatic) savePrefsLocal();
       else await api('/api/settings', 'POST', { key: 'sort_by', value: state.sortBy });
-      await loadItems();
+      await loadItems({ resetSelection: true });
     };
 
     els.exportScopeSelect.onchange = updateExportScopeCountLabel;
@@ -3021,7 +3326,7 @@
       showToast(`Word belgesi indirildi (${items.length} kayıt) ✔`);
     };
     document.getElementById('btnPrintItems').onclick = () => {
-      els.exportModal.style.display = 'none';
+      closeModalEl(els.exportModal);
       if (typeof window !== 'undefined' && typeof window.print === 'function') {
         window.print();
       }
@@ -3063,11 +3368,11 @@
       });
     }
 
-    document.getElementById('crudClose').onclick = () => { els.crudModal.style.display = 'none'; };
-    document.getElementById('crudCancel').onclick = () => { els.crudModal.style.display = 'none'; };
+    document.getElementById('crudClose').onclick = () => { closeModalEl(els.crudModal); };
+    document.getElementById('crudCancel').onclick = () => { closeModalEl(els.crudModal); };
     document.getElementById('crudSave').onclick = saveCrudModal;
-    document.getElementById('delCancelTop').onclick = () => { els.delModal.style.display = 'none'; };
-    document.getElementById('delCancelBtn').onclick = () => { els.delModal.style.display = 'none'; };
+    document.getElementById('delCancelTop').onclick = () => { closeModalEl(els.delModal); };
+    document.getElementById('delCancelBtn').onclick = () => { closeModalEl(els.delModal); };
     document.getElementById('delConfirmBtn').onclick = confirmDeleteModal;
 
     els.btnThemeToggle.onclick = async () => {
@@ -3140,15 +3445,17 @@
     document.getElementById('btnReload').onclick = async () => {
       if (state.isStatic) {
         await loadStaticData(true);
+        clearSelection();
         await loadCategories();
-        await loadItems();
+        await loadItems({ resetSelection: false });
         showToast(`Veriler yenilendi (${state.allItems.length} kayıt) ✔`);
         return;
       }
       const r = await api('/api/reload', 'POST', {});
       showToast(r.message || r.error);
+      clearSelection();
       await loadCategories();
-      await loadItems();
+      await loadItems({ resetSelection: false });
     };
     document.getElementById('btnBackup').onclick = async () => {
       if (state.isStatic) {
@@ -3186,6 +3493,20 @@
     };
 
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('beforeprint', () => {
+        if (state.renderLimit !== Infinity) {
+          state._savedRenderLimit = state.renderLimit;
+          state.renderLimit = Infinity;
+          renderList({ preserveScroll: true });
+        }
+      });
+      window.addEventListener('afterprint', () => {
+        if (state._savedRenderLimit !== undefined) {
+          state.renderLimit = state._savedRenderLimit;
+          delete state._savedRenderLimit;
+          renderList({ preserveScroll: true });
+        }
+      });
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         state.deferredPrompt = e;
@@ -3214,6 +3535,10 @@
             state.canUndo = Boolean(r.data.can_undo);
             state.canRedo = Boolean(r.data.can_redo);
             syncHistoryButtons();
+            if (r.data.warning && r.data.warning !== state.lastWarning) {
+              state.lastWarning = r.data.warning;
+              showToast(String(r.data.warning));
+            }
             if (r.data.revision !== state.revision) {
               const prevRev = state.revision;
               state.revision = r.data.revision;
@@ -3223,8 +3548,9 @@
               if (r.data.sort_by) state.sortBy = r.data.sort_by;
               syncToolbarStateDom();
               if (prevRev !== 0) {
+                clearSelection();
                 await loadCategories();
-                await loadItems();
+                await loadItems({ resetSelection: false });
                 showToast('Değişiklikler otomatik yenilendi ✔');
               }
             }
@@ -3236,6 +3562,15 @@
 
     async function initWebUi() {
       setupOsDownloadButton();
+      const syncToolsMenu = () => {
+        if (!els.toolsMenu) return;
+        if (isDesktopWide()) els.toolsMenu.setAttribute('open', '');
+        else els.toolsMenu.removeAttribute('open');
+      };
+      syncToolsMenu();
+      if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+        window.addEventListener('resize', syncToolsMenu);
+      }
       const revPayload = await detectBackendMode();
       if (revPayload) {
         state.isStatic = false;
@@ -3258,6 +3593,10 @@
           els.search.value = state.query;
         }
         els.modeBadge.textContent = 'Canlı Mod (--web)';
+        if (revPayload.data.warning) {
+          state.lastWarning = revPayload.data.warning;
+          showToast(String(revPayload.data.warning));
+        }
         startLivePolling();
       } else {
         state.isStatic = true;
@@ -3283,7 +3622,7 @@
         }
       }
       await loadCategories();
-      await loadItems();
+      await loadItems({ resetSelection: true });
     }
 
     initWebUi();

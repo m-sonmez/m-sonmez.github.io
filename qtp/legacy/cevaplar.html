@@ -27,9 +27,15 @@
   <style>
     :root { color-scheme: light; }
     :root.dark { color-scheme: dark; }
+    html, body { max-width: 100%; overflow-x: clip; }
     mark { background: #fde047; color: #0f172a; padding: 0 2px; border-radius: 3px; }
     .dark mark { background: #eab308; color: #0f172a; }
     .card-copied { box-shadow: 0 0 0 2px #10b981 !important; }
+    @media (max-width: 768px) {
+      input, select, textarea { font-size: 16px; }
+      button, select, input:not([type="checkbox"]), header a, a.rounded-lg, a.rounded-xl { min-height: 36px; }
+    }
+    .hidden { display: none !important; }
     @media print {
       .no-print { display: none !important; }
       body { background: #fff !important; color: #000 !important; }
@@ -41,15 +47,15 @@
   <header class="no-print sticky top-0 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 shadow-sm">
     <div id="headerInner" class="max-w-7xl mx-auto px-3 sm:px-4 py-2 space-y-2">
 
-      <div id="headerTopBar" class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex flex-wrap items-center gap-2 min-w-0">
+      <div id="headerTopBar" class="flex flex-wrap items-center justify-between gap-2 min-w-0">
+        <div class="flex flex-wrap items-center gap-2 min-w-0 max-w-full">
           <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow shrink-0">⚡</div>
-          <h1 class="font-bold text-sm sm:text-base leading-none">Hazır Cevaplar Hızlı Pano</h1>
-          <span id="sourceBadge" class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">Yükleniyor</span>
-          <span id="statsText" class="text-xs text-slate-500 dark:text-slate-400">Yükleniyor...</span>
+          <h1 class="font-bold text-sm sm:text-base leading-none truncate">Hazır Cevaplar Hızlı Pano</h1>
+          <span id="sourceBadge" class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 max-w-full truncate">Yükleniyor</span>
+          <span id="statsText" class="hidden sm:inline text-xs text-slate-500 dark:text-slate-400 max-w-full truncate">Yükleniyor...</span>
         </div>
 
-        <div class="flex flex-wrap items-center gap-1.5">
+        <div class="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full">
           <a href="../index.html" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
             ⚙️ Tam Yönetim Paneli
           </a>
@@ -62,7 +68,7 @@
             <button id="toolsMenuBtn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition inline-flex items-center gap-1">
               ⚙️ Araçlar <span class="text-[10px]">▼</span>
             </button>
-            <div id="toolsDropdownMenu" class="hidden absolute right-0 mt-1.5 w-60 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-40 text-xs">
+            <div id="toolsDropdownMenu" class="hidden fixed inset-x-3 top-[var(--hdr-bottom,5rem)] w-auto max-h-[70dvh] overflow-y-auto sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-1.5 sm:w-60 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-40 text-xs">
               <button id="toggleEmojiBtn" type="button" class="w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                 😊 Emojili Kopyala
               </button>
@@ -87,24 +93,24 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap md:flex-nowrap items-center gap-2">
-        <div class="relative flex-1 min-w-[200px]">
+      <div class="flex flex-wrap md:flex-nowrap items-center gap-2 min-w-0">
+        <div class="relative flex-1 min-w-[min(200px,100%)]">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
           <input id="searchInput" type="text" placeholder="Metin, başlık, kategori veya kısayol ara (/)"
-            class="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button id="clearSearchBtn" type="button" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
+            class="w-full pl-8 pr-9 py-1.5 rounded-xl text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button id="clearSearchBtn" type="button" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
         </div>
 
-        <div id="catDropdownWrap" class="relative shrink-0 flex items-center">
-          <div class="inline-flex items-stretch rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-            <button id="catDropdownBtn" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[230px] sm:max-w-[280px]" title="Çoklu kategori filtrele">
+        <div id="catDropdownWrap" class="relative shrink-0 max-w-full min-w-0 flex items-center">
+          <div class="inline-flex items-stretch max-w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <button id="catDropdownBtn" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0" title="Çoklu kategori filtrele">
               <span id="catBtnLabel" class="truncate">📁 Kategoriler: Tümü (0)</span>
               <span id="catBtnCaret" class="text-[10px] opacity-70 shrink-0">▼</span>
             </button>
             <button id="catClearBtn" type="button" class="hidden px-2 py-1.5 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-slate-200 dark:hover:bg-slate-700 border-l border-slate-300 dark:border-slate-700 transition" title="Kategori filtresini sıfırla">✕</button>
           </div>
 
-          <div id="catDropdownMenu" class="hidden absolute left-0 md:right-0 md:left-auto top-full mt-1.5 w-[310px] sm:w-[390px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl z-40 overflow-hidden">
+          <div id="catDropdownMenu" class="hidden fixed inset-x-3 top-[var(--hdr-bottom,5rem)] w-auto max-h-[70dvh] sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-1.5 sm:w-[390px] md:right-0 md:left-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl z-40 overflow-hidden overflow-y-auto">
             <div class="p-2.5 border-b border-slate-200 dark:border-slate-800 space-y-2 bg-slate-50/80 dark:bg-slate-800/40">
               <div class="relative">
                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔎</span>
@@ -125,8 +131,8 @@
           </div>
         </div>
 
-        <div id="expandedFilters" class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 shrink-0">
-          <select id="hotkeyFilter" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div id="expandedFilters" class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 max-w-full min-w-0">
+          <select id="hotkeyFilter" class="max-w-full min-w-0 px-2.5 py-1.5 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="ALL">⌨️ Tüm Kısayollar</option>
           </select>
 
@@ -182,6 +188,7 @@
     let categorySearch = '';
     let categorySelectedFirst = false;
     let headerCollapsed = false;
+    let userToggledHeader = false;
     let stripEmoji = false;
     let onlyFavorites = false;
     const collapsedGroups = new Set();
@@ -503,6 +510,7 @@
     }
 
     async function toggleHeaderCollapsed(forceState = null) {
+      userToggledHeader = true;
       headerCollapsed = forceState === null ? !headerCollapsed : Boolean(forceState);
       if (headerCollapsed) el.toolsDropdownMenu.classList.add('hidden');
       applyHeaderCollapsedUI();
@@ -644,11 +652,19 @@
       });
     }
 
+    function setHdrBottomFromEl(btnEl) {
+      if (btnEl && typeof btnEl.getBoundingClientRect === 'function' && document.documentElement.style) {
+        const r = btnEl.getBoundingClientRect();
+        document.documentElement.style.setProperty('--hdr-bottom', `${Math.round(r.bottom + 6)}px`);
+      }
+    }
+
     function setCategoryDropdownOpen(open) {
       categoryDropdownOpen = Boolean(open);
       el.catMenu.classList.toggle('hidden', !categoryDropdownOpen);
       el.catBtnCaret.textContent = categoryDropdownOpen ? '▲' : '▼';
       if (categoryDropdownOpen) {
+        setHdrBottomFromEl(el.catBtn);
         updateCategoryDropdownUI();
         requestAnimationFrame(() => el.catSearchInput.focus());
       }
@@ -799,7 +815,7 @@
             const count = Math.max(Number(item.copyCount || 0), copyCounts[h] || 0);
 
             const card = document.createElement('article');
-            card.className = `group relative flex flex-col justify-between p-4 rounded-xl border transition cursor-pointer ${
+            card.className = `min-w-0 group relative flex flex-col justify-between p-4 rounded-xl border transition cursor-pointer ${
               isNote
                 ? 'bg-amber-50/70 dark:bg-amber-950/25 border-amber-300 dark:border-amber-700/60 hover:border-amber-500'
                 : 'bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md'
@@ -916,6 +932,7 @@
     el.toolsMenuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       el.toolsDropdownMenu.classList.toggle('hidden');
+      if (!el.toolsDropdownMenu.classList.contains('hidden')) setHdrBottomFromEl(el.toolsMenuBtn);
       if (categoryDropdownOpen) setCategoryDropdownOpen(false);
     });
 
@@ -1031,8 +1048,20 @@
 
     async function bootstrapData() {
       const settings = await SharedStore.loadSettings();
-      headerCollapsed = Boolean(settings.headerCollapsed);
+      const hasSavedHeader = Object.prototype.hasOwnProperty.call(settings, 'headerCollapsed');
+      const isNarrowViewport = typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth < 640;
+      headerCollapsed = userToggledHeader ? headerCollapsed : (isNarrowViewport || (hasSavedHeader && Boolean(settings.headerCollapsed)));
       applyHeaderCollapsedUI();
+      if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+        window.addEventListener('resize', () => {
+          if (userToggledHeader || typeof window.innerWidth !== 'number') return;
+          const want = window.innerWidth < 640;
+          if (headerCollapsed !== want) {
+            headerCollapsed = want;
+            applyHeaderCollapsedUI();
+          }
+        });
+      }
 
       const stored = await SharedStore.loadStoredState();
       const hasUserData = Array.isArray(stored.items) && (
