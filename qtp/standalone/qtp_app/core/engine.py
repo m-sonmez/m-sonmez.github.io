@@ -1790,7 +1790,7 @@ class QtpEngine:
                 ok=True,
                 exit_code=0,
                 message="Ayarlar kaydedildi ✔",
-                data={"key": key, "value": val_out},
+                data={"key": key, "value": val_out, "revision": self.revision},
             )
         except SettingValidationError as exc:
             err = str(exc)

@@ -481,6 +481,39 @@ def restore_previous_app(handle: Any, *, platform_name: str | None = None) -> bo
     return False
 
 
+def bring_window_to_top(win_id: int, *, platform_name: str | None = None) -> bool:
+    """Pencereyi işletim sistemi düzeyinde en üst katmana (topmost) ve öne getirir."""
+    plat = platform_name or sys.platform
+    if plat != "win32" or not win_id:
+        return False
+    try:
+        windll = getattr(ctypes, "windll", None)
+        if windll is None:
+            return False
+        u32 = windll.user32
+        u32.SetWindowPos.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_uint,
+        ]
+        u32.SetWindowPos.restype = ctypes.c_int
+        u32.SetForegroundWindow.argtypes = [ctypes.c_void_p]
+        u32.SetForegroundWindow.restype = ctypes.c_int
+        hwnd = ctypes.c_void_p(int(win_id))
+        hwnd_topmost = ctypes.c_void_p(-1)
+        swp_flags = 0x0001 | 0x0002 | 0x0040
+        ok_pos = bool(u32.SetWindowPos(hwnd, hwnd_topmost, 0, 0, 0, 0, swp_flags))
+        u32.SetForegroundWindow(hwnd)
+        return ok_pos
+    except Exception as exc:
+        logger.debug("Pencere en üste getirilemedi: %s", exc)
+        return False
+
+
 def _get_pynput_controller() -> tuple[Any, Any]:
     from pynput.keyboard import Controller, Key
 

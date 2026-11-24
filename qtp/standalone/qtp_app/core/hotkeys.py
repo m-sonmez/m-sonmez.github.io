@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+from pathlib import Path
 import re
 import sys
 import threading
@@ -150,7 +151,9 @@ _SPECIAL_KEY_SPECS: dict[str, tuple[str, int, str, str]] = {
     "page_up": ("PageUp", 0x21, "<page_up>", "page up"),
     "pagedown": ("PageDown", 0x22, "<page_down>", "page down"),
     "pgdn": ("PageDown", 0x22, "<page_down>", "page down"),
+    "pgdown": ("PageDown", 0x22, "<page_down>", "page down"),
     "page_down": ("PageDown", 0x22, "<page_down>", "page down"),
+    "backtab": ("Tab", 0x09, "<tab>", "tab"),
     "up": ("Up", 0x26, "<up>", "up"),
     "down": ("Down", 0x28, "<down>", "down"),
     "left": ("Left", 0x25, "<left>", "left"),
@@ -256,6 +259,33 @@ _MACOS_RESERVED_SHORTCUTS: dict[str, str] = {
     "Win+Shift+Q": "macOS oturum kapatma (Cmd+Shift+Q) sistem kısayolu ile çakışır.",
     "Win+Space": "macOS Spotlight arama (Cmd+Space) sistem kısayolu ile çakışır.",
 }
+
+_LINUX_DESKTOP_RESERVED_SHORTCUTS: dict[str, str] = {
+    "Win+Q": "KDE Plasma Etkinlikler (Activities) sistem kısayolu ile çakışır.",
+    "Win+W": "KDE Plasma Genel Bakış (Overview) sistem kısayolu ile çakışır.",
+    "Win+E": "Masaüstü Dosya Yöneticisi (Dolphin/Files) kısayolu ile çakışır.",
+    "Win+D": "Masaüstünü Göster sistem kısayolu ile çakışır.",
+    "Win+L": "Ekranı Kilitle sistem kısayolu ile çakışır.",
+    "Win+V": "Masaüstü Pano / Bildirimler (Klipper/GNOME) kısayolu ile çakışır.",
+    "Win+A": "GNOME Uygulama Izgarası / Masaüstü kısayolu ile çakışır.",
+    "Win+S": "GNOME Genel Bakış / Arama kısayolu ile çakışır.",
+    "Win+T": "KDE Plasma 6 Döşeme Düzenleyici (Tile Editor) kısayolu ile çakışır.",
+    "Win+G": "KDE Plasma Masaüstü Izgarası kısayolu ile çakışır.",
+    "Win+Space": "Klavye düzeni / uygulama başlatıcı sistem kısayolu ile çakışır.",
+    "Win+Tab": "Pencere / Etkinlik geçiş sistem kısayolu ile çakışır.",
+    "Alt+Space": "Pencere sistem menüsü kısayolu ile çakışır.",
+    "Alt+F2": "Masaüstü hızlı komut çalıştırıcı sistem kısayolu ile çakışır.",
+    "Alt+F4": "Aktif pencereyi kapatma sistem kısayolu ile çakışır.",
+    "Alt+Tab": "Pencere değiştirme sistem kısayolu ile çakışır.",
+    "Ctrl+Alt+Delete": "Oturum / sistem güvenlik ekranı kısayolu ile çakışır.",
+    "Ctrl+Alt+L": "Ekranı Kilitle sistem kısayolu ile çakışır.",
+    "Ctrl+Alt+T": "Uçbirim (Terminal) başlatma masaüstü kısayolu ile çakışır.",
+    "Ctrl+Esc": "Uygulama menüsü / sistem etkinlikleri kısayolu ile çakışır.",
+}
+for _linux_digit in range(1, 10):
+    _LINUX_DESKTOP_RESERVED_SHORTCUTS[f"Win+{_linux_digit}"] = (
+        f"Görev çubuğu / masaüstü {_linux_digit}. uygulama başlatma kısayolu ile çakışır."
+    )
 
 
 class POINT(ctypes.Structure):
@@ -413,18 +443,89 @@ def to_keyboard_lib_combo(combo: str) -> str:
     return "+".join(tokens)
 
 
+def read_kde_global_shortcuts(config_path: Path | None = None) -> dict[str, list[str]]:
+    """KDE Plasma ~/.config/kglobalshortcutsrc dosyasından etkin global kısayolları okur."""
+    path = Path(config_path) if config_path is not None else (Path.home() / ".config" / "kglobalshortcutsrc")
+    try:
+        if not path.is_file():
+            return {}
+        raw_text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {}
+
+    bindings: dict[str, list[str]] = {}
+    current_section = ""
+    skip_section = False
+
+    for raw_line in raw_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            if "[$" in line:
+                skip_section = True
+                current_section = ""
+                continue
+            skip_section = False
+            if line.startswith("[services][") and line.endswith("]"):
+                current_section = line[len("[services][") : -1].strip()
+            else:
+                current_section = line[1:-1].strip()
+            continue
+        if skip_section or line.startswith(("#", ";")) or "=" not in line:
+            continue
+
+        action_id, rhs = line.split("=", 1)
+        action_id = action_id.strip()
+        if not action_id or action_id == "_k_friendly_name" or action_id.startswith("$"):
+            continue
+
+        parts = rhs.split(",", 2)
+        active_field = parts[0].strip()
+        if not active_field or active_field.lower() == "none":
+            continue
+        friendly = parts[2].strip() if len(parts) >= 3 and parts[2].strip() else action_id
+        msg = (
+            f"KDE Plasma sistem kısayolu ile çakışır: {friendly} ({current_section})."
+            if current_section
+            else f"KDE Plasma sistem kısayolu ile çakışır: {friendly}."
+        )
+
+        for token in re.split(r"\\t|\t", active_field):
+            cand = token.strip()
+            if not cand or cand.lower() == "none":
+                continue
+            try:
+                norm = normalize_hotkey(cand)
+            except ValueError:
+                continue
+            bucket = bindings.setdefault(norm, [])
+            if msg not in bucket:
+                bucket.append(msg)
+
+    return bindings
+
+
 def detect_hotkey_conflicts(
     hotkeys_map: dict[str, str],
     platform_name: str | None = None,
+    *,
+    kde_config_path: Path | None = None,
+    include_host_config: bool | None = None,
 ) -> dict[str, list[str]]:
     """
-    Kısayol haritasındaki çift atamaları, OS sistem kısayollarını, Türkçe-Q AltGr tuzaklarını
-    ve Linux TTY geçişlerini denetleyip slot→uyarı listesi döndürür.
+    Kısayol haritasındaki çift atamaları, OS sistem kısayollarını, Türkçe-Q AltGr tuzaklarını,
+    KDE Plasma global kısayollarını ve Linux/BSD masaüstü geçişlerini denetleyip slot→uyarı döndürür.
     """
     plat = platform_name or sys.platform
     conflicts: dict[str, list[str]] = {}
     normalized_by_slot: dict[str, str] = {}
     slots_by_combo: dict[str, list[str]] = {}
+
+    def _add_conflict(slot_key: str, text_msg: str) -> None:
+        bucket = conflicts.setdefault(slot_key, [])
+        if text_msg not in bucket:
+            bucket.append(text_msg)
 
     for slot, raw in hotkeys_map.items():
         text = str(raw or "").strip()
@@ -433,7 +534,7 @@ def detect_hotkey_conflicts(
         try:
             norm = normalize_hotkey(text)
         except ValueError as exc:
-            conflicts.setdefault(slot, []).append(str(exc))
+            _add_conflict(slot, str(exc))
             continue
         normalized_by_slot[slot] = norm
         slots_by_combo.setdefault(norm, []).append(slot)
@@ -442,28 +543,40 @@ def detect_hotkey_conflicts(
         if len(owner_slots) > 1:
             for s in owner_slots:
                 others = [o for o in owner_slots if o != s]
-                conflicts.setdefault(s, []).append(
-                    f"Çift atama: '{combo_norm}' başka bir kategoride de kullanılıyor ({', '.join(others)})."
+                _add_conflict(
+                    s,
+                    f"Çift atama: '{combo_norm}' başka bir kategoride de kullanılıyor ({', '.join(others)}).",
                 )
+
+    kde_bindings: dict[str, list[str]] = {}
+    if is_posix_desktop(plat):
+        should_read_kde = (kde_config_path is not None) or (
+            include_host_config if include_host_config is not None else (platform_name is None)
+        )
+        if should_read_kde:
+            kde_bindings = read_kde_global_shortcuts(kde_config_path)
 
     for slot, norm in normalized_by_slot.items():
         mods, key = parse_hotkey(norm)
         if plat == "win32":
             if norm in _WIN_RESERVED_SHORTCUTS:
-                conflicts.setdefault(slot, []).append(_WIN_RESERVED_SHORTCUTS[norm])
-            if mods == ("Ctrl", "Alt"):
-                if norm in _TRQ_ALTGR_WARNINGS:
-                    conflicts.setdefault(slot, []).append(_TRQ_ALTGR_WARNINGS[norm])
-            if mods == ("Ctrl", "Shift") and key == "Space":
-                pass
+                _add_conflict(slot, _WIN_RESERVED_SHORTCUTS[norm])
+            if mods == ("Ctrl", "Alt") and norm in _TRQ_ALTGR_WARNINGS:
+                _add_conflict(slot, _TRQ_ALTGR_WARNINGS[norm])
         elif plat == "darwin":
             if norm in _MACOS_RESERVED_SHORTCUTS:
-                conflicts.setdefault(slot, []).append(_MACOS_RESERVED_SHORTCUTS[norm])
+                _add_conflict(slot, _MACOS_RESERVED_SHORTCUTS[norm])
         elif is_posix_desktop(plat):
             if mods == ("Ctrl", "Alt") and re.fullmatch(r"F([1-9]|1[0-2])", key):
-                conflicts.setdefault(slot, []).append(
-                    f"Linux/BSD TTY sanal konsol geçiş kısayolu ({norm}) ile çakışır."
+                _add_conflict(
+                    slot,
+                    f"Linux/BSD TTY sanal konsol geçiş kısayolu ({norm}) ile çakışır.",
                 )
+            if norm in _LINUX_DESKTOP_RESERVED_SHORTCUTS:
+                _add_conflict(slot, _LINUX_DESKTOP_RESERVED_SHORTCUTS[norm])
+            if norm in kde_bindings:
+                for kde_msg in kde_bindings[norm]:
+                    _add_conflict(slot, kde_msg)
 
     return conflicts
 

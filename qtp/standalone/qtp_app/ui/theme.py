@@ -496,10 +496,10 @@ def build_overlay_stylesheet(palette: ThemePalette, *, translucent: bool = False
         color: {palette.pill_text};
         border: 1px solid {palette.border};
         border-radius: {PILL_RADIUS}px;
-        padding: 5px 12px;
+        padding: 4px 10px;
         font-size: {FONT_SIZE_PILL}px;
         font-weight: 600;
-        letter-spacing: 0.4px;
+        letter-spacing: 0.3px;
     }}
     QPushButton.CategoryPill:hover {{
         background-color: {palette.pill_hover};

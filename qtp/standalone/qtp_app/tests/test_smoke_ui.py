@@ -489,3 +489,136 @@ def test_overlay_copy_before_hide_wayland_opacity_svg_icons_and_8edge_resize(qtb
     assert ov.isMaximized() is True
     ov.toggle_maximize()
     assert ov.isMaximized() is False
+
+
+def test_overlay_focus_loss_initial_category_ipc_and_conflict_confirm(qtbot, tmp_path: Path):
+    import json
+    import shutil
+    import socket
+    from PyQt6.QtCore import QEvent, QTimer
+    from PyQt6.QtWidgets import QApplication, QMessageBox
+    from qtp_app.core.settings import set_setting_value
+    from qtp_app.main import SingleInstanceGuard, launch_gui
+
+    app = QApplication.instance()
+    cfg = copy.deepcopy(DEFAULT_SETTINGS)
+    assert cfg["hide_on_blur"] is True
+    assert set_setting_value(cfg, "hide_on_blur", "false")["hide_on_blur"] is False
+
+    doc = parse_qtp_ini(read_text_auto(FIXTURES_DIR / "QuickTextPaste.ini"))
+    items = [{**it.to_dict(include_meta=False), "terminator": it.terminator} for it in doc.items[:30]]
+    ov = OverlayWindow(items, theme="light", hide_on_blur=True)
+    qtbot.addWidget(ov)
+    ov.show_overlay(category="ALL", animate=False)
+    QApplication.processEvents()
+    assert ov.isVisible() is True
+
+    with mock.patch.object(ov, "isActiveWindow", return_value=False):
+        ov.handle_focus_lost(delay_ms=0)
+    assert ov.isVisible() is True
+
+    ov._opened_monotonic -= 1.0
+    ov.set_modal_child_open(True)
+    with mock.patch.object(ov, "isActiveWindow", return_value=False):
+        ov.handle_focus_lost(delay_ms=0)
+    assert ov.isVisible() is True
+    ov.set_modal_child_open(False)
+
+    ov.apply_settings(hide_on_blur=False)
+    with mock.patch.object(ov, "isActiveWindow", return_value=False):
+        ov.handle_focus_lost(delay_ms=0)
+    assert ov.isVisible() is True
+
+    ov.apply_settings(hide_on_blur=True)
+    with mock.patch.object(ov, "isActiveWindow", return_value=False), \
+         mock.patch("qtp_app.ui.overlay.QApplication.activeWindow", return_value=None):
+        ov.handle_focus_lost(delay_ms=0)
+    QApplication.processEvents()
+    assert ov.isVisible() is False
+
+    ov.show_overlay(category="ALL", animate=False)
+    ov._opened_monotonic -= 1.0
+    with mock.patch.object(ov, "isActiveWindow", return_value=False), \
+         mock.patch("qtp_app.ui.overlay.QApplication.activeWindow", return_value=None):
+        ov.event(QEvent(QEvent.Type.WindowDeactivate))
+    assert ov._blur_timer.isActive() is True
+    ov._blur_timer.stop()
+
+    with mock.patch.object(ov, "isActiveWindow", return_value=False), \
+         mock.patch.object(ov, "hide") as hide_mock, \
+         mock.patch.object(ov, "activateWindow") as act_mock, \
+         mock.patch("qtp_app.ui.overlay.bring_window_to_top", return_value=True) as top_mock:
+        ov.show_overlay(category="ALL", hotkey_key="all", force_category=True, animate=False)
+    assert hide_mock.called
+    assert act_mock.called
+    assert top_mock.called
+    assert bool(ov.windowFlags() & Qt.WindowType.WindowStaysOnTopHint)
+
+    ipc_dir = tmp_path / "ipc"
+    received_tokens: list[str] = []
+    g_srv = SingleInstanceGuard(ipc_dir)
+    g_srv.acquire(lambda tok="": received_tokens.append(tok))
+    g_cli = SingleInstanceGuard(ipc_dir)
+    with mock.patch.dict(os.environ, {"XDG_ACTIVATION_TOKEN": "wl-token-241"}):
+        assert g_cli.try_notify_existing() is True
+    lock_info = json.loads(g_srv.lock_path.read_text(encoding="utf-8"))
+    with socket.create_connection(("127.0.0.1", int(lock_info["port"])), timeout=1.0) as s:
+        s.sendall(b"SHOW\n")
+        assert s.recv(16).startswith(b"OK")
+    qtbot.waitUntil(lambda: len(received_tokens) >= 2, timeout=2000)
+    assert received_tokens[0] == "wl-token-241"
+    assert received_tokens[1] == ""
+    g_srv.release()
+
+    sw = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE)
+    qtbot.addWidget(sw)
+    assert sw.hide_on_blur_chk.isChecked() is True
+    sw.hide_on_blur_chk.setChecked(False)
+    sw.hk_rows["Q"].edit.setText("Win+Q")
+    with mock.patch(
+             "qtp_app.ui.settings_window.detect_hotkey_conflicts",
+             return_value={"Q": ["KDE Plasma Etkinlikler (Activities) sistem kısayolu ile çakışır."]},
+         ):
+        sw._update_conflict_status()
+        assert "KDE" in sw.conflict_label.text() or "Win+Q" in sw.conflict_label.text()
+        with mock.patch.object(QMessageBox, "warning", return_value=QMessageBox.StandardButton.No) as warn_no:
+            sw._save_and_accept()
+        assert warn_no.called and sw.result_settings is None
+        with mock.patch.object(QMessageBox, "warning", return_value=QMessageBox.StandardButton.Yes) as warn_yes:
+            sw._save_and_accept()
+        assert warn_yes.called and sw.result_settings is not None
+        assert sw.result_settings["hide_on_blur"] is False
+
+    stale_wd = tmp_path / "stale_wd"
+    stale_wd.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(FIXTURES_DIR / "QuickTextPaste.ini", stale_wd / "QuickTextPaste.ini")
+    stale_cfg = copy.deepcopy(DEFAULT_SETTINGS)
+    stale_cfg["last_category"] = "Z"
+    stale_cfg["last_category_by_hotkey"] = {"all": "Z", "A": "A", "Z": "Z", "X": "X", "Q": "Q"}
+    stale_cfg["start_minimized"] = False
+    save_settings(stale_cfg, stale_wd / "qtp_settings.json")
+
+    eng_stale = QtpEngine(work_dir=stale_wd)
+    orig_show = OverlayWindow.show_overlay
+    shown_cats: list[str] = []
+
+    def _spy_show(self_ov, *, category=None, hotkey_key=None, query=None, force_category=False, animate=True):
+        orig_show(
+            self_ov,
+            category=category,
+            hotkey_key=hotkey_key,
+            query=query,
+            force_category=force_category,
+            animate=animate,
+        )
+        shown_cats.append(self_ov.active_category)
+
+    fake_hk = mock.Mock()
+    fake_hk.register.return_value = {}
+    fake_hk.conflicts = {}
+    QTimer.singleShot(50, app.quit)
+    with mock.patch.object(OverlayWindow, "show_overlay", _spy_show), \
+         mock.patch("qtp_app.main.HotkeyManager", return_value=fake_hk):
+        rc = launch_gui(eng_stale, quiet=True)
+    assert rc == 0
+    assert shown_cats and shown_cats[0] == "ALL"

@@ -569,3 +569,19 @@ def test_paster_terminal_detection_ydotool_and_qt_selection_coverage(monkeypatch
             sleep_fn=lambda _s: None,
         )
     assert res_auto.ok is True and res_auto.copied is True and res_auto.method == "ctrl_v"
+
+
+def test_bring_window_to_top_cross_platform():
+    assert paster.bring_window_to_top(0, platform_name="win32") is False
+    assert paster.bring_window_to_top(12345, platform_name="linux") is False
+
+    fake_u32 = mock.Mock()
+    fake_u32.SetWindowPos.return_value = 1
+    fake_u32.SetForegroundWindow.return_value = 1
+    with mock.patch.object(paster.ctypes, "windll", SimpleNamespace(user32=fake_u32), create=True):
+        assert paster.bring_window_to_top(67890, platform_name="win32") is True
+    assert fake_u32.SetWindowPos.called
+    assert fake_u32.SetForegroundWindow.called
+
+    with mock.patch.object(paster.ctypes, "windll", None, create=True):
+        assert paster.bring_window_to_top(67890, platform_name="win32") is False

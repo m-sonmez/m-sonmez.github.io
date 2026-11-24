@@ -354,7 +354,7 @@ class TestHtmlJsParity(unittest.TestCase):
         self.assertLess(len(idx_scripts[2].encode("utf-8")), 105_000)
 
         sw_js = (ROOT_DIR / "sw.js").read_text(encoding="utf-8")
-        self.assertIn("qtp-pwa-cache-v3.5.0", sw_js)
+        self.assertIn("qtp-pwa-cache-v3.5.1", sw_js)
         self.assertIn("/api/", sw_js)
         self.assertIn("data.json", sw_js)
         self.assertIn("./theme.css", sw_js)

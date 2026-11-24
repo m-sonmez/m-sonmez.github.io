@@ -423,6 +423,11 @@ class SettingsWindow(QDialog):
         self.lang_cb.setToolTip(tip)
         gen_form.addRow(lbl + ":", self.lang_cb)
 
+        lbl, tip = self._desc("hide_on_blur")
+        self.hide_on_blur_chk = QCheckBox(lbl)
+        self.hide_on_blur_chk.setToolTip(tip)
+        gen_form.addRow("", self.hide_on_blur_chk)
+
         lbl, tip = self._desc("start_minimized")
         self.start_min_chk = QCheckBox(lbl)
         self.start_min_chk.setToolTip(tip)
@@ -675,10 +680,14 @@ class SettingsWindow(QDialog):
             self.conflict_label.setText("Çakışma algılanmadı ✔")
             return
         lines = []
+        has_severe = False
         for slot, msgs in conflicts.items():
             combo = hk_map.get(slot, "")
+            if any("AltGr" not in m for m in msgs):
+                has_severe = True
             lines.append(f"[{slot}: {combo}] {'; '.join(msgs)}")
-        self.conflict_label.setStyleSheet(f"color: {self._palette.warning_text}; font-weight: 600;")
+        color = self._palette.danger_text if has_severe else self._palette.warning_text
+        self.conflict_label.setStyleSheet(f"color: {color}; font-weight: 600;")
         self.conflict_label.setText("\n".join(lines))
 
     def _populate(self, data: dict[str, Any]) -> None:
@@ -691,6 +700,7 @@ class SettingsWindow(QDialog):
         self.width_spin.setValue(int(ws[0]))
         self.height_spin.setValue(int(ws[1]))
         self.lang_cb.setCurrentText(str(data.get("language", "tr")))
+        self.hide_on_blur_chk.setChecked(bool(data.get("hide_on_blur", True)))
         self.start_min_chk.setChecked(bool(data.get("start_minimized", False)))
         self.tray_chk.setChecked(bool(data.get("tray_icon", True)))
         self.paste_method_cb.setCurrentText(str(data.get("paste_method", "auto")))
@@ -754,6 +764,7 @@ class SettingsWindow(QDialog):
         out["last_category"] = self.last_cat_cb.currentText()
         out["window_size"] = [self.width_spin.value(), self.height_spin.value()]
         out["language"] = self.lang_cb.currentText()
+        out["hide_on_blur"] = self.hide_on_blur_chk.isChecked()
         out["start_minimized"] = self.start_min_chk.isChecked()
         out["tray_icon"] = self.tray_chk.isChecked()
         out["paste_method"] = self.paste_method_cb.currentText()
@@ -799,6 +810,24 @@ class SettingsWindow(QDialog):
                 )
                 return
             seen_combos[norm] = slot
+
+        os_conflicts = detect_hotkey_conflicts(hk_map)
+        if os_conflicts:
+            summary_lines = [
+                f"• [{slot}: {hk_map.get(slot, '')}] {'; '.join(msgs)}"
+                for slot, msgs in os_conflicts.items()
+            ]
+            ans = QMessageBox.warning(
+                self,
+                "Kısayol Çakışması Uyarısı",
+                "Uyarı: Seçilen kısayollar işletim sistemi veya masaüstü ortamı ile çakışıyor:\n\n"
+                + "\n".join(summary_lines)
+                + "\n\nYine de kaydetmek istiyor musunuz?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if ans != QMessageBox.StandardButton.Yes:
+                return
 
         self.result_settings = self.collect_settings()
         self.accept()

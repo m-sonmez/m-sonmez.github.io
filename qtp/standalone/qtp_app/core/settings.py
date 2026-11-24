@@ -37,6 +37,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "window_size": [720, 520],
     "paste_method": "auto",
     "enter_after_paste": True,
+    "hide_on_blur": True,
     "start_minimized": False,
     "tray_icon": True,
     "data_path": "./QuickTextPaste.ini",
@@ -84,6 +85,10 @@ SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
     "enter_after_paste": {
         "label": "Yapıştırma Sonrası Enter (<E<N<D|)",
         "tooltip": "Kayıt '<E<N<D|' bitiş işaretine sahipse yapıştırma işleminden sonra otomatik Enter tuşu gönderir.",
+    },
+    "hide_on_blur": {
+        "label": "Odağı kaybedince katmanı otomatik gizle",
+        "tooltip": "Katman penceresi dışına tıklandığında veya başka bir pencereye geçildiğinde katmanı otomatik kapatır.",
     },
     "start_minimized": {
         "label": "Küçültülmüş Başlat",
@@ -234,6 +239,7 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
     merged["paste_method"] = pm if pm in VALID_PASTE_METHODS else DEFAULT_SETTINGS["paste_method"]
 
     merged["enter_after_paste"] = bool(raw.get("enter_after_paste", DEFAULT_SETTINGS["enter_after_paste"]))
+    merged["hide_on_blur"] = bool(raw.get("hide_on_blur", DEFAULT_SETTINGS["hide_on_blur"]))
     merged["start_minimized"] = bool(raw.get("start_minimized", DEFAULT_SETTINGS["start_minimized"]))
     merged["tray_icon"] = bool(raw.get("tray_icon", DEFAULT_SETTINGS["tray_icon"]))
     merged["auto_reload"] = bool(raw.get("auto_reload", DEFAULT_SETTINGS["auto_reload"]))
@@ -340,7 +346,7 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
         if val not in ("ALL", "A", "Z", "X", "Q"):
             raise SettingValidationError(f"Geçersiz ayar değeri ('last_category'): '{value}' (ALL/A/Z/X/Q).")
         updated["last_category"] = val
-    elif norm in ("enter_after_paste", "start_minimized", "tray_icon", "auto_reload", "strip_emoji"):
+    elif norm in ("enter_after_paste", "hide_on_blur", "start_minimized", "tray_icon", "auto_reload", "strip_emoji"):
         updated[norm] = _parse_bool(value)
     elif norm == "auto_reload_interval_ms":
         try:

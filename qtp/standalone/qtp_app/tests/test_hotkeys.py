@@ -27,6 +27,7 @@ from qtp_app.core.hotkeys import (
     normalize_hotkey,
     parse_hotkey,
     parse_modifiers,
+    read_kde_global_shortcuts,
     resolve_preset_name,
     to_keyboard_lib_combo,
     to_pynput_combo,
@@ -381,3 +382,53 @@ def test_hotkeys_error_paths_and_macos_accessibility_mocked():
     assert "1409" in mgr_w32_fail.conflicts["all"]
     assert "hata kodu=5" in mgr_w32_fail.conflicts["A"]
     mgr_w32_fail.unregister()
+
+
+def test_kde_kglobalshortcutsrc_parsing_and_linux_conflicts(tmp_path: Path):
+    kde_rc = tmp_path / "kglobalshortcutsrc"
+    kde_rc.write_text(
+        "[plasmashell]\n"
+        "_k_friendly_name=Plasma\n"
+        "manage activities=Meta+Q,Meta+Q,Show Activity Switcher\n"
+        "activate task manager entry 1=Meta+1,none,Görev 1\n"
+        "[kwin]\n"
+        "Overview=Meta+W\\tCtrl+Alt+O,Meta+W,Toggle Overview\n"
+        "Window Minimize=Meta+PgDown,Meta+PgDown,Minimize Window\n"
+        "Inactive Action=none,Meta+J,Ignored\n"
+        "[kwin][$InverseAction]\n"
+        "ShouldBeSkipped=Meta+Alt+A,Meta+Alt+A,Skipped\n"
+        "[services][dev.warp.Warp.desktop]\n"
+        "_launch=Meta+T,none,Warp\n",
+        encoding="utf-8",
+    )
+    parsed = read_kde_global_shortcuts(kde_rc)
+    assert "Win+Q" in parsed and any("Show Activity Switcher" in m for m in parsed["Win+Q"])
+    assert "Win+W" in parsed and "Ctrl+Alt+O" in parsed
+    assert "Win+PageDown" in parsed
+    assert "Win+T" in parsed and any("dev.warp.Warp.desktop" in m for m in parsed["Win+T"])
+    assert "Win+J" not in parsed
+    assert "Win+Alt+A" not in parsed
+
+    sane = {
+        "all": "Win+Alt+Space",
+        "A": "Win+Alt+A",
+        "Z": "Win+Alt+Z",
+        "X": "Win+Alt+X",
+        "Q": "Win+Alt+Q",
+    }
+    assert detect_hotkey_conflicts(sane, platform_name="linux", kde_config_path=kde_rc, include_host_config=True) == {}
+
+    bad_kde = dict(sane, Q="Win+Q", X="Win+T", Z="Ctrl+Alt+O")
+    c_map = detect_hotkey_conflicts(bad_kde, platform_name="linux", kde_config_path=kde_rc, include_host_config=True)
+    assert "Q" in c_map and any("KDE" in msg for msg in c_map["Q"])
+    assert "X" in c_map and any("Warp" in msg or "KDE" in msg for msg in c_map["X"])
+    assert "Z" in c_map and any("Overview" in msg for msg in c_map["Z"])
+
+    c_static = detect_hotkey_conflicts(
+        dict(sane, Q="Win+Q", A="Win+W", Z="Alt+F4"),
+        platform_name="linux",
+        include_host_config=False,
+    )
+    assert "Q" in c_static and any("Activities" in msg or "Etkinlikler" in msg for msg in c_static["Q"])
+    assert "A" in c_static and any("Overview" in msg for msg in c_static["A"])
+    assert "Z" in c_static

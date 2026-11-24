@@ -4,6 +4,22 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.4.1] - 2026-11-24
+
+### Linux/KDE Wayland Katman Davranışı, KDE Kısayol Çakışma Algılama & Yüksek Yoğunluklu Spotlight Web/GUI Arayüzü
+- **Odak Kaybında Otomatik Gizlenme (`core/settings.py`, `ui/overlay.py`, `ui/settings_window.py`, `main.py`):**
+  - `hide_on_blur: true` varsayılan ayarı ve **Ayarlar → Genel** altında *"Odağı kaybedince katmanı otomatik gizle"* kutusu eklendi; katman dışındaki bir pencereye tıklandığında `90 ms` gecikmeli etkin pencere denetimiyle otomatik gizlenir (iç iletişim kutuları, bağlam menüleri, sürükle/boyutlandır ve `0.25 s` açılış koruma süresi hariç).
+- **Yinelemeli Tetiklemede Daima Üstte Kalma & Wayland `XDG_ACTIVATION_TOKEN` (`main.py`, `ui/overlay.py`, `core/paster.py`):**
+  - `SingleInstanceGuard` ikinci örnekten gelen `XDG_ACTIVATION_TOKEN` belirtecini JSON `{"cmd": "SHOW", "activation_token": ...}` IPC yüküyle canlı sürece iletir; `show_overlay()` `WindowStaysOnTopHint` bayrağını koruyarak görünür ama etkin olmayan pencereyi gizle+yeniden göster akışıyla ve `requestActivate()` + Win32 `bring_window_to_top()` ile en öne taşır.
+- **Açılış & Genel Tetiklemede Deterministik `"ALL"` Kategorisi (`main.py`):**
+  - Eski `last_category: "Z"` / `last_category_by_hotkey.all` kalıntılarını göz ardı ederek ilk başlatmada (`--category` verilmedikçe) ve `all` kısayolu / tepsi / IPC tetiklemelerinde katmanın daima **`ALL` (Tümü)** kategorisiyle açılması sağlandı (`A`/`Z`/`X`/`Q` kısayolları ilgili kategoriyi `force_category=True` ile deterministik açar).
+- **Gerçek KDE Plasma & Linux Masaüstü Kısayol Çakışma Denetimi (`core/hotkeys.py`, `ui/settings_window.py`, `web/qtp.html`):**
+  - `read_kde_global_shortcuts()` (`~/.config/kglobalshortcutsrc`, `Meta+Q = Etkinlikler` dahil) ve `_LINUX_DESKTOP_RESERVED_SHORTCUTS` (`Win+Q/W/E/D/L/V/A/S/T/G`, `Alt+F2/F4/Tab/Space`, `Ctrl+Alt+L/T/Delete`, `Ctrl+Esc`) eklendi; Ayarlar penceresinde ciddi OS/DE çakışmalarında kırmızı vurgu + kaydetme öncesi `QMessageBox.warning` onayı getirildi.
+- **Yüksek Yoğunluklu Simge Öncelikli Web UI (`web/qtp.html`, `web/theme.css`, `qtp.html`, `theme.css`, `sw.js` `v3.5.1`):**
+  - Masaüstünde yapay `max-height: 440px` sınırı kaldırılıp viewport dolduran tek satır Spotlight listesi (`15–20+` görünür kayıt), mobilde yatay yoğun satır düzeni (`8–12+` kayıt, `.snippet-text >= 240px`), SVG simge düğmeleri, kompakt kategori hapları ve düzenleme modalı içinde tam **Hızlı İşlemler Çubuğu** (`Kopyala`, `Yapıştır`, `Favori`, `Çoğalt`, `Yukarı/Aşağı`, `INI Göster`, `Sil`) eklendi; GUI `SnippetItemDelegate` satır yüksekliği `58 px` yapıldı.
+
+---
+
 ## [2.4.0] - 2026-11-24
 
 ### Güvenlik, Mobil/Masaüstü Düzen Sertleştirme, Veri Koruma & Wayland İyileştirmeleri

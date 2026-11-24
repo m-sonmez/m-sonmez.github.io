@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 import html
+import time
 from typing import Any, Callable
 
 from PyQt6.QtCore import (
@@ -68,7 +69,7 @@ from PyQt6.QtWidgets import (
 
 from qtp_app.core.engine import format_ini_preview, is_note_item, item_matches_category, strip_emojis
 from qtp_app.core.logging_setup import get_logger
-from qtp_app.core.paster import capture_previous_app, copy_to_clipboard, is_posix_desktop
+from qtp_app.core.paster import bring_window_to_top, capture_previous_app, copy_to_clipboard, is_posix_desktop
 from qtp_app.ui.flow_layout import FlowLayout
 from qtp_app.ui.icons import make_svg_icon
 from qtp_app.ui.search import FuzzyMatcher, tr_lower
@@ -228,9 +229,9 @@ class SnippetTableModel(QAbstractTableModel):
 
 
 class SnippetItemDelegate(QStyledItemDelegate):
-    """2 satırlı metin, seçim kutusu, favori yıldızı, eşleşme vurgulama ve rozet çizer."""
+    """Kompakt satır içi metin, seçim kutusu, favori yıldızı, eşleşme vurgulama ve rozet çizer."""
 
-    ROW_HEIGHT = 76
+    ROW_HEIGHT = 58
     GRID_WIDTH = 216
     GRID_HEIGHT = 108
     COPY_BTN_WIDTH = 66
@@ -267,7 +268,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
         self._doc_cache.clear()
 
     def check_box_rect(self, row_rect: QRect) -> QRect:
-        card_rect = row_rect.adjusted(2, 3, -2, -3)
+        card_rect = row_rect.adjusted(2, 2, -2, -2)
         if self.grid_mode:
             return QRect(card_rect.left() + 8, card_rect.top() + 8, 16, 16)
         return QRect(card_rect.left() + 8, card_rect.top() + (card_rect.height() - 16) // 2, 16, 16)
@@ -325,7 +326,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
         doc.setTextWidth(float(text_width))
         html_body = self._build_highlighted_html(clipped, matched_indices)
         doc.setHtml(
-            f'<div style="color:{self.palette.text_primary};line-height:1.3;">{html_body}</div>'
+            f'<div style="color:{self.palette.text_primary};line-height:1.22;">{html_body}</div>'
         )
         self._doc_cache[key] = doc
         if len(self._doc_cache) > self._DOC_CACHE_MAX:
@@ -358,7 +359,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
-        card_rect = option.rect.adjusted(2, 3, -2, -3)
+        card_rect = option.rect.adjusted(2, 2, -2, -2)
         raw_key = str(item.get("raw_key", ""))
         is_checked = raw_key in self.checked_keys
         is_selected = bool(option.state & QStyle.StateFlag.State_Selected)
@@ -472,14 +473,17 @@ class SnippetItemDelegate(QStyledItemDelegate):
             text_height = 42
         else:
             text_left = st_rect.right() + 8
-            text_top = card_rect.top() + PADDING_ROW_V - 2
+            text_top = card_rect.top() + 6
             text_width = max(120, card_rect.right() - text_left - right_reserved)
-            text_height = 40
+            text_height = 24
 
         main_rect = QRect(text_left, text_top, text_width, text_height)
         raw_text = str(item.get("text", "")).replace("\r\n", " ").replace("\n", " ")
-        max_chars = max(32, int((text_width * 1.95) / max(6, self._text_fm.averageCharWidth())))
-        clipped = raw_text[: max_chars - 1] + "…" if len(raw_text) > max_chars else raw_text
+        if self.grid_mode:
+            max_chars = max(32, int((text_width * 1.95) / max(6, self._text_fm.averageCharWidth())))
+            clipped = raw_text[: max_chars - 1] + "…" if len(raw_text) > max_chars else raw_text
+        else:
+            clipped = self._text_fm.elidedText(raw_text, Qt.TextElideMode.ElideRight, text_width)
 
         doc = self._get_cached_doc(clipped, matched_indices, text_width)
         painter.save()
@@ -490,9 +494,9 @@ class SnippetItemDelegate(QStyledItemDelegate):
 
         meta_rect = QRect(
             text_left,
-            card_rect.bottom() - 22,
+            card_rect.bottom() - 20,
             max(80, text_width),
-            18,
+            16,
         )
         grp = str(item.get("group", "Genel")).strip()
         lbl = str(item.get("label", "")).strip()
@@ -1016,6 +1020,7 @@ class OverlayWindow(QWidget):
         view_mode: str = "list",
         strip_emoji: bool = False,
         sort_by: str = "order",
+        hide_on_blur: bool = True,
         can_undo: bool = False,
         can_redo: bool = False,
         window_size: tuple[int, int] = (WINDOW_WIDTH, WINDOW_HEIGHT),
@@ -1049,6 +1054,9 @@ class OverlayWindow(QWidget):
         self._view_mode = view_mode if view_mode in ("list", "grid", "table") else "list"
         self._strip_emoji = bool(strip_emoji)
         self._sort_by = sort_by if sort_by in ("order", "usage", "alpha", "keys", "favorites") else "order"
+        self._hide_on_blur = bool(hide_on_blur)
+        self._opened_monotonic: float = 0.0
+        self._modal_depth: int = 0
         self._only_favorites = False
         self._only_notes = False
         self._can_undo = bool(can_undo)
@@ -1112,6 +1120,9 @@ class OverlayWindow(QWidget):
         self._toast_timer.setSingleShot(True)
         self._toast_timer.timeout.connect(self._fade_out_toast)
         self._toast_anim: QPropertyAnimation | None = None
+        self._blur_timer = QTimer(self)
+        self._blur_timer.setSingleShot(True)
+        self._blur_timer.timeout.connect(self._hide_if_still_inactive)
 
         self._build_ui()
         self._apply_theme()
@@ -1381,6 +1392,8 @@ class OverlayWindow(QWidget):
         ):
             self.more_menu.addAction(act)
         self.more_btn.setMenu(self.more_menu)
+        self.more_menu.aboutToShow.connect(lambda: self.set_modal_child_open(True))
+        self.more_menu.aboutToHide.connect(lambda: self.set_modal_child_open(False))
 
         for b in (
             self.view_list_btn,
@@ -1618,8 +1631,8 @@ class OverlayWindow(QWidget):
             self._card_layout.setContentsMargins(10, 4, 10, 4)
             self._card_layout.setSpacing(2)
         else:
-            self._card_layout.setContentsMargins(PADDING_OUTER, 8, PADDING_OUTER, 8)
-            self._card_layout.setSpacing(7)
+            self._card_layout.setContentsMargins(PADDING_OUTER, 6, PADDING_OUTER, 6)
+            self._card_layout.setSpacing(5)
 
     def _elide_footer_hints(self) -> None:
         card_w = self.card.width() if hasattr(self, "card") and self.card.width() > 0 else self.width() - 12
@@ -1709,6 +1722,7 @@ class OverlayWindow(QWidget):
         view_mode: str | None = None,
         strip_emoji: bool | None = None,
         sort_by: str | None = None,
+        hide_on_blur: bool | None = None,
     ) -> None:
         if theme is not None:
             self._theme_setting = theme
@@ -1718,6 +1732,8 @@ class OverlayWindow(QWidget):
             self._view_mode = view_mode
         if strip_emoji is not None:
             self._strip_emoji = bool(strip_emoji)
+        if hide_on_blur is not None:
+            self._hide_on_blur = bool(hide_on_blur)
         if sort_by is not None and sort_by in ("order", "usage", "alpha", "keys", "favorites"):
             self._sort_by = sort_by
             sidx = self.sort_cb.findData(sort_by)
@@ -2020,13 +2036,22 @@ class OverlayWindow(QWidget):
         menu.addSeparator()
         menu.addAction(act_ini)
         menu.addAction(act_help)
-        menu.exec(global_pos)
+        self.set_modal_child_open(True)
+        try:
+            menu.exec(global_pos)
+        finally:
+            self.set_modal_child_open(False)
 
     def _open_add_dialog(self) -> None:
         self.add_item_requested.emit()
         groups = [str(it.get("group", "Genel")) for it in self._items]
-        dlg = SnippetEditorDialog(self._palette, groups, item=None, parent=self)
-        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None:
+        self.set_modal_child_open(True)
+        try:
+            dlg = SnippetEditorDialog(self._palette, groups, item=None, parent=self)
+            accepted = dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None
+        finally:
+            self.set_modal_child_open(False)
+        if accepted and dlg.result_payload is not None:
             if self._on_add_cb is not None:
                 res = self._on_add_cb(dlg.result_payload)
                 if res is not None and hasattr(res, "message"):
@@ -2035,8 +2060,13 @@ class OverlayWindow(QWidget):
     def _open_edit_dialog(self, item: dict[str, Any]) -> None:
         self.edit_item_requested.emit(item)
         groups = [str(it.get("group", "Genel")) for it in self._items]
-        dlg = SnippetEditorDialog(self._palette, groups, item=item, parent=self)
-        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None:
+        self.set_modal_child_open(True)
+        try:
+            dlg = SnippetEditorDialog(self._palette, groups, item=item, parent=self)
+            accepted = dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None
+        finally:
+            self.set_modal_child_open(False)
+        if accepted and dlg.result_payload is not None:
             if self._on_edit_cb is not None:
                 res = self._on_edit_cb(item, dlg.result_payload)
                 if res is not None and hasattr(res, "message"):
@@ -2044,11 +2074,15 @@ class OverlayWindow(QWidget):
 
     def _confirm_delete_item(self, item: dict[str, Any]) -> None:
         self.delete_item_requested.emit(item)
-        ans = QMessageBox.question(
-            self,
-            "Kaydı Sil",
-            f"'{item.get('label') or str(item.get('text', ''))[:40]}' kaydı silinsin mi?",
-        )
+        self.set_modal_child_open(True)
+        try:
+            ans = QMessageBox.question(
+                self,
+                "Kaydı Sil",
+                f"'{item.get('label') or str(item.get('text', ''))[:40]}' kaydı silinsin mi?",
+            )
+        finally:
+            self.set_modal_child_open(False)
         if ans == QMessageBox.StandardButton.Yes and self._on_delete_cb is not None:
             res = self._on_delete_cb(item)
             if res is not None and hasattr(res, "message"):
@@ -2059,8 +2093,13 @@ class OverlayWindow(QWidget):
             self.show_toast("Toplu düzenleme için önce kayıt seçin.")
             return
         groups = [str(it.get("group", "Genel")) for it in self._items]
-        dlg = BulkEditDialog(self._palette, len(self._selected_keys), groups, parent=self)
-        if dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None:
+        self.set_modal_child_open(True)
+        try:
+            dlg = BulkEditDialog(self._palette, len(self._selected_keys), groups, parent=self)
+            accepted = dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None
+        finally:
+            self.set_modal_child_open(False)
+        if accepted and dlg.result_payload is not None:
             if self._on_bulk_edit_cb is not None:
                 res = self._on_bulk_edit_cb(sorted(self._selected_keys), dlg.result_payload)
                 if res is not None and hasattr(res, "message"):
@@ -2070,11 +2109,15 @@ class OverlayWindow(QWidget):
         if not self._selected_keys:
             self.show_toast("Toplu silme için önce kayıt seçin.")
             return
-        ans = QMessageBox.question(
-            self,
-            "Seçili Kayıtları Sil",
-            f"Seçili {len(self._selected_keys)} kayıt kalıcı olarak silinsin mi?",
-        )
+        self.set_modal_child_open(True)
+        try:
+            ans = QMessageBox.question(
+                self,
+                "Seçili Kayıtları Sil",
+                f"Seçili {len(self._selected_keys)} kayıt kalıcı olarak silinsin mi?",
+            )
+        finally:
+            self.set_modal_child_open(False)
         if ans == QMessageBox.StandardButton.Yes and self._on_bulk_delete_cb is not None:
             res = self._on_bulk_delete_cb(sorted(self._selected_keys))
             if res is not None and hasattr(res, "message"):
@@ -2088,15 +2131,19 @@ class OverlayWindow(QWidget):
                 counts[g] = counts.get(g, 0) + 1
             return sorted(counts.items(), key=lambda x: tr_lower(x[0]))
 
-        dlg = GroupManagerDialog(
-            self._palette,
-            _groups_provider,
-            on_rename=lambda o, n: self._on_rename_group_cb(o, n) if self._on_rename_group_cb else None,
-            on_delete=lambda g: self._on_delete_group_cb(g) if self._on_delete_group_cb else None,
-            on_export=lambda g: self._on_export_group_cb(g) if self._on_export_group_cb else None,
-            parent=self,
-        )
-        dlg.exec()
+        self.set_modal_child_open(True)
+        try:
+            dlg = GroupManagerDialog(
+                self._palette,
+                _groups_provider,
+                on_rename=lambda o, n: self._on_rename_group_cb(o, n) if self._on_rename_group_cb else None,
+                on_delete=lambda g: self._on_delete_group_cb(g) if self._on_delete_group_cb else None,
+                on_export=lambda g: self._on_export_group_cb(g) if self._on_export_group_cb else None,
+                parent=self,
+            )
+            dlg.exec()
+        finally:
+            self.set_modal_child_open(False)
 
     def _trigger_save_all(self) -> None:
         if self._on_save_all_cb is not None:
@@ -2117,8 +2164,12 @@ class OverlayWindow(QWidget):
                 self.show_toast(res.message)
 
     def _show_ini_preview(self, item: dict[str, Any], row: int) -> None:
-        dlg = IniSnippetViewerDialog(item, row, self._ini_path, self._palette, self)
-        dlg.exec()
+        self.set_modal_child_open(True)
+        try:
+            dlg = IniSnippetViewerDialog(item, row, self._ini_path, self._palette, self)
+            dlg.exec()
+        finally:
+            self.set_modal_child_open(False)
 
     def _supports_window_opacity(self) -> bool:
         pname = (QGuiApplication.platformName() or "").strip().lower()
@@ -2222,9 +2273,64 @@ class OverlayWindow(QWidget):
         self._sync_toolbar_widgets()
         self._elide_footer_hints()
 
+    def set_modal_child_open(self, opened: bool) -> None:
+        """Katmana bağlı alt pencere veya menü açıkken odak kaybından gizlemeyi bastırır."""
+        if opened:
+            self._modal_depth += 1
+            self._blur_timer.stop()
+        else:
+            self._modal_depth = max(0, self._modal_depth - 1)
+
+    def _is_own_child_window(self, widget: Any) -> bool:
+        if widget is None or widget is self:
+            return False
+        if self.isAncestorOf(widget):
+            return True
+        cur = widget.parent() if hasattr(widget, "parent") else None
+        while cur is not None:
+            if cur is self:
+                return True
+            cur = cur.parent() if hasattr(cur, "parent") else None
+        return False
+
+    def _hide_if_still_inactive(self) -> None:
+        if not self._hide_on_blur or not self.isVisible():
+            return
+        if self._modal_depth > 0 or self._resize_edges or self._moving_window:
+            return
+        if self.isActiveWindow():
+            return
+        if QApplication.activeModalWidget() is not None or QApplication.activePopupWidget() is not None:
+            return
+        if self._is_own_child_window(QApplication.activeWindow()):
+            return
+        self.hide_overlay(animate=False)
+
+    def handle_focus_lost(self, *, delay_ms: int = 90) -> None:
+        """Pencere odağını yitirdiğinde alt modal yoksa katmanı otomatik gizler."""
+        if not self._hide_on_blur or not self.isVisible():
+            return
+        if self._modal_depth > 0 or self._resize_edges or self._moving_window:
+            return
+        if (time.monotonic() - self._opened_monotonic) < 0.25:
+            return
+        if delay_ms <= 0:
+            self._blur_timer.stop()
+            self._hide_if_still_inactive()
+            return
+        self._blur_timer.start(delay_ms)
+
+    def changeEvent(self, event: Any) -> None:
+        if event.type() == QEvent.Type.ActivationChange and not self.isActiveWindow():
+            self.handle_focus_lost(delay_ms=90)
+        super().changeEvent(event)
+
     def event(self, ev: Any) -> bool:
-        if ev.type() == QEvent.Type.HoverMove and not (self._resize_edges or self._moving_window):
+        etype = ev.type()
+        if etype == QEvent.Type.HoverMove and not (self._resize_edges or self._moving_window):
             self._update_hover_cursor(ev.position().toPoint())
+        elif etype == QEvent.Type.WindowDeactivate:
+            self.handle_focus_lost(delay_ms=90)
         return super().event(ev)
 
     def mousePressEvent(self, event: Any) -> None:
@@ -2355,6 +2461,16 @@ class OverlayWindow(QWidget):
 
         if self._anim_group is not None:
             self._anim_group.stop()
+        self._blur_timer.stop()
+
+        if not (self.windowFlags() & Qt.WindowType.WindowStaysOnTopHint):
+            self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+
+        if self.isVisible() and not self.isActiveWindow():
+            self.hide()
+            app_inst = QApplication.instance()
+            if app_inst is not None:
+                app_inst.processEvents()
 
         supports_opacity = self._supports_window_opacity()
         supports_raise = self._supports_raise()
@@ -2372,6 +2488,7 @@ class OverlayWindow(QWidget):
             if handle is not None:
                 handle.requestActivate()
             self.activateWindow()
+            bring_window_to_top(int(self.winId()))
             self.focus_search()
 
             group = QParallelAnimationGroup(self)
@@ -2403,13 +2520,16 @@ class OverlayWindow(QWidget):
                 handle.requestActivate()
             self.activateWindow()
             QApplication.setActiveWindow(self)
+            bring_window_to_top(int(self.winId()))
             self.focus_search()
+        self._opened_monotonic = time.monotonic()
         self._elide_footer_hints()
 
         logger.info("Katman açıldı (kategori=%s, kayıt=%d).", self._active_category, self.list_model.rowCount())
 
     def hide_overlay(self, *, animate: bool = True) -> None:
         """Katmanı 180 ms animasyonla kapatır."""
+        self._blur_timer.stop()
         if self._anim_group is not None:
             self._anim_group.stop()
         if not self.isVisible():

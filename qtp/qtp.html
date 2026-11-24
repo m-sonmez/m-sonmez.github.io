@@ -12,23 +12,23 @@
   <main id="overlayRoot" class="overlay-card" role="application" aria-label="QTP Hızlı Yapıştırma Katmanı">
     <div class="top-row">
       <input id="searchInput" class="search-input" type="text" placeholder="Ara… (mesaj, kategori, etiket, kısayol)" aria-label="Hazır cevaplarda ara" />
-      <button class="action-btn primary" id="btnAddNew" title="Yeni hazır cevap ekle">+ Yeni Ekle</button>
-      <button class="action-btn" id="btnSaveAll" title="Değişiklikleri kaydet (Ctrl+S)">💾 Kaydet</button>
-      <button class="action-btn icon-btn" id="btnUndo" title="Geri al (Ctrl+Z)" aria-label="Geri al" disabled>↩️ Geri Al</button>
-      <button class="action-btn icon-btn" id="btnRedo" title="Yinele (Ctrl+Y)" aria-label="Yinele" disabled>↪️ Yinele</button>
+      <button class="action-btn primary icon-only-btn" id="btnAddNew" title="Yeni hazır cevap ekle" aria-label="Yeni hazır cevap ekle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="action-btn icon-only-btn" id="btnSaveAll" title="Değişiklikleri kaydet (Ctrl+S)" aria-label="Değişiklikleri kaydet"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+      <button class="action-btn icon-only-btn" id="btnUndo" title="Geri al (Ctrl+Z)" aria-label="Geri al" disabled><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+      <button class="action-btn icon-only-btn" id="btnRedo" title="Yinele (Ctrl+Y)" aria-label="Yinele" disabled><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg></button>
+      <button class="action-btn icon-only-btn" id="btnThemeToggle" title="Açık / koyu tema değiştir" aria-label="Açık veya koyu temayı değiştir"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
       <details class="tools-menu" id="toolsMenu">
-        <summary class="action-btn" id="btnToolsSummary">⋯ Araçlar</summary>
+        <summary class="action-btn icon-only-btn" id="btnToolsSummary" title="Diğer araçlar" aria-label="Araçlar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></summary>
         <div class="tools-panel">
-          <button class="action-btn" id="btnStripEmojiToggle" title="Kopyala/yapıştır sırasında emojileri temizle">😊 Emojili</button>
-          <button class="action-btn" id="btnThemeToggle" title="Açık/Koyu tema değiştir">🌙 Koyu</button>
-          <button class="action-btn" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi">Kısayollar</button>
-          <button class="action-btn" id="btnGroups" title="Grup Yöneticisi">📁 Gruplar</button>
-          <button class="action-btn" id="btnImport" title="INI / JSON İçe Aktar">📥 İçe Aktar</button>
-          <button class="action-btn" id="btnExport" title="Dışa Aktar (INI / JSON / Word / Yazdır)">📤 Dışa Aktar</button>
-          <button class="action-btn" id="btnSnapshots" title="Yerel ve Disk Anlık Kayıtları">🕒 Yedek Geçmişi</button>
-          <button class="action-btn" id="btnReload" title="INI Yeniden Yükle">Yenile</button>
-          <button class="action-btn" id="btnBackup" title="Anlık Yedek Al / Dışa Aktar">Yedekle</button>
-          <button class="action-btn" id="btnHelp" title="Türkçe Yardım (F1)">Yardım (F1)</button>
+          <button class="action-btn icon-only-btn" id="btnStripEmojiToggle" title="Kopyala/yapıştır sırasında emojileri temizle" aria-label="Emojileri temizle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><span class="tool-lbl">Emojili</span></button>
+          <button class="action-btn icon-only-btn" id="btnHotkeys" title="Global Kısayollar ve Çakışma Denetimi" aria-label="Global Kısayollar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h8M6 13h.01M18 13h.01"/></svg><span class="tool-lbl">Kısayollar</span></button>
+          <button class="action-btn icon-only-btn" id="btnGroups" title="Grup Yöneticisi" aria-label="Grup Yöneticisi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span class="tool-lbl">Gruplar</span></button>
+          <button class="action-btn icon-only-btn" id="btnImport" title="INI / JSON İçe Aktar" aria-label="İçe Aktar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="tool-lbl">İçe Aktar</span></button>
+          <button class="action-btn icon-only-btn" id="btnExport" title="Dışa Aktar (INI / JSON / Word / Yazdır)" aria-label="Dışa Aktar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="tool-lbl">Dışa Aktar</span></button>
+          <button class="action-btn icon-only-btn" id="btnSnapshots" title="Yerel ve Disk Anlık Kayıtları" aria-label="Yedek Geçmişi"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg><span class="tool-lbl">Geçmiş</span></button>
+          <button class="action-btn icon-only-btn" id="btnReload" title="INI Yeniden Yükle" aria-label="INI Yeniden Yükle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span class="tool-lbl">Yenile</span></button>
+          <button class="action-btn icon-only-btn" id="btnBackup" title="Anlık Yedek Al / Dışa Aktar" aria-label="Yedekle"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg><span class="tool-lbl">Yedekle</span></button>
+          <button class="action-btn icon-only-btn" id="btnHelp" title="Türkçe Yardım (F1)" aria-label="Türkçe Yardım (F1)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="tool-lbl">Yardım</span></button>
         </div>
       </details>
     </div>
@@ -36,9 +36,9 @@
     <div class="toolbar-row">
       <div class="pills-row" id="categoryPills"></div>
       <div class="toolbar-group">
-        <button class="pill active" id="btnScopeAll" data-scope="all">Tümü</button>
-        <button class="pill" id="btnScopeFav" data-scope="favorites">⭐ Favoriler</button>
-        <button class="pill" id="btnScopeNotes" data-scope="notes">📝 Notlar</button>
+        <button class="pill active" id="btnScopeAll" data-scope="all" title="Tüm kayıtlar" aria-label="Tüm kayıtlar">Tümü</button>
+        <button class="pill icon-only-pill" id="btnScopeFav" data-scope="favorites" title="Yalnızca favoriler" aria-label="Yalnızca favoriler"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+        <button class="pill icon-only-pill" id="btnScopeNotes" data-scope="notes" title="Yalnızca kısayolsuz notlar" aria-label="Yalnızca notlar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></button>
         <select id="groupFilterSelect" class="field-select compact-select" aria-label="Gruba göre filtrele" title="Gruba göre filtrele">
           <option value="">Tüm Gruplar</option>
         </select>
@@ -49,10 +49,10 @@
           <option value="keys">Kısayola Göre</option>
           <option value="favorites">Önce Favoriler</option>
         </select>
-        <button class="action-btn active-toggle" id="viewListBtn" title="Liste görünümü">☰ Liste</button>
-        <button class="action-btn" id="viewGridBtn" title="Kart / Izgara görünümü">▦ Kart</button>
-        <button class="action-btn" id="viewTableBtn" title="Tablo görünümü">▤ Tablo</button>
-        <button class="action-btn" id="btnSelectAllVisible" title="Filtrelenen tüm kayıtları seç / kaldır">☑ Filtredekileri Seç (0)</button>
+        <button class="action-btn icon-only-btn active-toggle" id="viewListBtn" title="Liste görünümü" aria-label="Liste görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+        <button class="action-btn icon-only-btn" id="viewGridBtn" title="Kart / Izgara görünümü" aria-label="Kart görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></button>
+        <button class="action-btn icon-only-btn" id="viewTableBtn" title="Tablo görünümü" aria-label="Tablo görünümü"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="10" x2="9" y2="20"/></svg></button>
+        <button class="action-btn icon-btn" id="btnSelectAllVisible" title="Filtrelenen tüm kayıtları seç / kaldır" aria-label="Filtrelenen tüm kayıtları seç"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8 12 11 15 16 9"/></svg><span class="sel-count">0</span></button>
       </div>
     </div>
 
@@ -69,19 +69,24 @@
     <section class="snippet-list view-list" id="snippetList" tabindex="0"></section>
 
     <footer class="footer-bar">
-      <span>↑↓ Gezin · ⏎ Yapıştır · Ctrl+⏎ Kopyala · Esc Kapat</span>
-      <span>Ctrl+Z/Y · Ctrl+S · <strong id="itemCount">0 kayıt</strong></span>
+      <span class="footer-hints-span">↑↓ Gezin · ⏎ Yapıştır · Ctrl+⏎ Kopyala · Esc Kapat</span>
+      <span><span class="footer-kbd">Ctrl+Z/Y · Ctrl+S · </span><strong id="itemCount">0 kayıt</strong></span>
     </footer>
 
     <nav class="links-bar" aria-label="Sürümler ve Bağlantılar">
       <span id="modeBadge" class="mode-badge">Mod algılanıyor…</span>
       <div class="links-group">
-        <a id="osDownloadLink" class="link-chip primary" href="./qtp.exe" download="qtp.exe">⬇ Windows İndir (qtp.exe)</a>
-        <button id="btnInstallPwa" class="link-chip" type="button" style="display:none;">📲 Uygulamayı Kur (PWA)</button>
-        <a class="link-chip" href="./qtp.exe" download="qtp.exe">Windows (qtp.exe)</a>
-        <a class="link-chip" href="./qtp.bin" download="qtp.bin">Linux (qtp.bin)</a>
-        <a class="link-chip" href="./index.html">Eski Sistem (index.html)</a>
-        <a class="link-chip" href="./legacy/cevaplar.html">Hızlı Pano</a>
+        <a id="osDownloadLink" class="link-chip primary" href="./qtp.exe" download="qtp.exe">⬇ qtp.exe</a>
+        <button id="btnInstallPwa" class="link-chip" type="button" style="display:none;">📲 Kur</button>
+        <details class="links-more" id="linksMoreMenu">
+          <summary class="link-chip" aria-label="Diğer indirme ve sayfa bağlantıları">Bağlantılar</summary>
+          <div class="links-secondary">
+            <a class="link-chip" href="./qtp.exe" download="qtp.exe">Windows (qtp.exe)</a>
+            <a class="link-chip" href="./qtp.bin" download="qtp.bin">Linux (qtp.bin)</a>
+            <a class="link-chip" href="./index.html">Eski Sistem (index.html)</a>
+            <a class="link-chip" href="./legacy/cevaplar.html">Hızlı Pano</a>
+          </div>
+        </details>
       </div>
     </nav>
   </main>
@@ -145,6 +150,16 @@
       <div class="modal-head-row">
         <strong id="crudModalTitle">Yeni Hazır Cevap Ekle</strong>
         <button class="action-btn" id="crudClose">İptal (Esc)</button>
+      </div>
+      <div id="crudQuickActionsBar" class="crud-quick-actions" style="display:none;">
+        <button type="button" class="action-btn" id="crudActCopy" title="Panoya kopyala">📋 Kopyala</button>
+        <button type="button" class="action-btn primary" id="crudActPaste" title="3 saniye sonra aktif pencereye yapıştır">⏎ Yapıştır (3 sn)</button>
+        <button type="button" class="action-btn" id="crudActFav" title="Favori durumunu değiştir">⭐ Favori</button>
+        <button type="button" class="action-btn" id="crudActDup" title="Kaydı çoğalt">📑 Çoğalt</button>
+        <button type="button" class="action-btn" id="crudActUp" title="Yukarı taşı">⬆️ Yukarı</button>
+        <button type="button" class="action-btn" id="crudActDown" title="Aşağı taşı">⬇️ Aşağı</button>
+        <button type="button" class="action-btn" id="crudActIni" title="INI kaydını göster">INI Göster</button>
+        <button type="button" class="action-btn danger" id="crudActDelete" title="Kaydı sil">🗑️ Sil</button>
       </div>
       <div class="field-grid">
         <div class="field-col">
@@ -420,6 +435,27 @@
       'Alt+Space': 'Pencere sistem menüsü kısayolu ile çakışır.',
       'Ctrl+Alt+Delete': 'Windows güvenlik ekranı sistem kısayolu ile çakışır.',
     };
+    const LINUX_RESERVED = {
+      'Win+Q': 'KDE Plasma Etkinlikler (Activities) veya masaüstü ortamı sistem kısayolu ile çakışır.',
+      'Win+W': 'KDE Plasma Pencereleri Göster (Present Windows / Overview) sistem kısayolu ile çakışır.',
+      'Win+E': 'Masaüstü dosya yöneticisi kısayolu ile çakışır.',
+      'Win+D': 'Masaüstünü göster sistem kısayolu ile çakışır.',
+      'Win+L': 'Oturumu kilitleme sistem kısayolu ile çakışır.',
+      'Win+V': 'Pano yöneticisi / bildirim kısayolu ile çakışır.',
+      'Win+A': 'Uygulama menüsü / masaüstü kısayolu ile çakışır.',
+      'Win+S': 'Arama / genel bakış kısayolu ile çakışır.',
+      'Win+T': 'Terminal başlatma kısayolu ile çakışır.',
+      'Win+G': 'KDE Plasma Izgara Görünümü (Grid View) sistem kısayolu ile çakışır.',
+      'Win+Tab': 'Pencere / etkinlik değiştirici kısayolu ile çakışır.',
+      'Alt+Space': 'KRunner veya pencere sistem menüsü kısayolu ile çakışır.',
+      'Alt+F2': 'KDE KRunner / GNOME komut çalıştırıcısı ile çakışır.',
+      'Alt+F4': 'Etkin pencereyi kapatma kısayolu ile çakışır.',
+      'Alt+Tab': 'Pencereler arası geçiş kısayolu ile çakışır.',
+      'Ctrl+Alt+Delete': 'Oturum kapatma / sistem menüsü ile çakışır.',
+      'Ctrl+Alt+L': 'Ekran kilitleme kısayolu ile çakışır.',
+      'Ctrl+Alt+T': 'Terminal açma kısayolu ile çakışır.',
+      'Ctrl+Esc': 'KDE Sistem Etkinliği / uygulama menüsü ile çakışır.',
+    };
     const TRQ_ALTGR = {
       'Ctrl+Alt+Q': 'Türkçe-Q klavyede AltGr+Q (@ işareti) yazımını engelleyebilir.',
       'Ctrl+Alt+A': 'Türkçe-Q klavyede AltGr+A (æ karakteri) yazımını engelleyebilir.',
@@ -437,7 +473,7 @@
     };
 
     const CLI_HELP_STATIC_TEXT = [
-      'QTP v2.4.0 — Komut Satırı Kullanımı',
+      'QTP v2.4.1 — Komut Satırı Kullanımı',
       '',
       'Kullanım:',
       '  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]',
@@ -479,6 +515,17 @@
     const LS_SNAPS_KEY = 'qtp_snapshots_v1';
     const QUICK_EMOJIS = ['😊', '👍', '🎉', '🚀', '✅', '⚠️', '🙏', '💳', '📦', '🛵', '📞', '❤️', '🔥', '⭐', '💡', '📌'];
 
+    const ICONS = {
+      sun: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
+      moon: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+      copy: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+      paste: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 10l-5 5 5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>',
+      edit: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+      emojiOn: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+      emojiOff: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="4" y1="4" x2="20" y2="20"/></svg>',
+      checkAll: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8 12 11 15 16 9"/></svg>',
+    };
+
     const state = {
       isStatic: false,
       theme: 'light',
@@ -505,6 +552,7 @@
       helpData: null,
       helpSection: 'genel',
       crudEditRawKey: null,
+      crudCurrentItem: null,
       crudDeleteTarget: null,
       bulkDeleteMode: false,
       pendingImportData: null,
@@ -552,6 +600,15 @@
       btnInstallPwa: document.getElementById('btnInstallPwa'),
       crudModal: document.getElementById('crudModalBackdrop'),
       crudTitle: document.getElementById('crudModalTitle'),
+      crudQuickActionsBar: document.getElementById('crudQuickActionsBar'),
+      crudActCopy: document.getElementById('crudActCopy'),
+      crudActPaste: document.getElementById('crudActPaste'),
+      crudActFav: document.getElementById('crudActFav'),
+      crudActDup: document.getElementById('crudActDup'),
+      crudActUp: document.getElementById('crudActUp'),
+      crudActDown: document.getElementById('crudActDown'),
+      crudActIni: document.getElementById('crudActIni'),
+      crudActDelete: document.getElementById('crudActDelete'),
       crudKeys: document.getElementById('crudKeys'),
       crudGroup: document.getElementById('crudGroup'),
       crudGroupList: document.getElementById('crudGroupList'),
@@ -1101,15 +1158,20 @@
     function detectHotkeyConflictsStatic(hkMap) {
       const conflicts = {};
       const byCombo = {};
+      const navStr = typeof navigator !== 'undefined' ? `${navigator.platform || ''} ${navigator.userAgent || ''}` : '';
+      const isLinuxHost = /linux|x11/i.test(navStr);
       for (const [slot, raw] of Object.entries(hkMap)) {
         const clean = String(raw || '').trim();
         if (!clean) continue;
         const norm = normalizeComboText(clean);
         if (!byCombo[norm]) byCombo[norm] = [];
         byCombo[norm].push(slot);
-        if (WIN_RESERVED[norm]) {
+        const sysMsg = isLinuxHost
+          ? (LINUX_RESERVED[norm] || WIN_RESERVED[norm])
+          : (WIN_RESERVED[norm] || LINUX_RESERVED[norm]);
+        if (sysMsg) {
           if (!conflicts[slot]) conflicts[slot] = [];
-          conflicts[slot].push(WIN_RESERVED[norm]);
+          conflicts[slot].push(sysMsg);
         }
         if (TRQ_ALTGR[norm]) {
           if (!conflicts[slot]) conflicts[slot] = [];
@@ -1211,7 +1273,12 @@
         document.documentElement.setAttribute('data-theme', clean);
       }
       if (els.btnThemeToggle) {
-        els.btnThemeToggle.textContent = clean === 'dark' ? '☀️ Açık' : '🌙 Koyu';
+        const title = clean === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç';
+        els.btnThemeToggle.innerHTML = clean === 'dark' ? ICONS.sun : ICONS.moon;
+        els.btnThemeToggle.title = title;
+        if (typeof els.btnThemeToggle.setAttribute === 'function') {
+          els.btnThemeToggle.setAttribute('aria-label', title);
+        }
       }
     }
 
@@ -1371,7 +1438,12 @@
       if (els.viewTableBtn) els.viewTableBtn.classList.toggle('active-toggle', state.viewMode === 'table');
       if (els.list) els.list.className = `snippet-list view-${state.viewMode}`;
       if (els.btnStripEmojiToggle) {
-        els.btnStripEmojiToggle.textContent = state.stripEmoji ? '🚫 Emojisiz' : '😊 Emojili';
+        const emIcon = state.stripEmoji ? ICONS.emojiOff : ICONS.emojiOn;
+        const emText = state.stripEmoji ? 'Emojisiz' : 'Emojili';
+        els.btnStripEmojiToggle.innerHTML = `${emIcon}<span class="tool-lbl">${emText}</span>`;
+        els.btnStripEmojiToggle.title = state.stripEmoji
+          ? 'Emojisiz kopyalama etkin (kapatmak için tıklayın)'
+          : 'Kopyala/yapıştır sırasında emojileri temizle';
         els.btnStripEmojiToggle.classList.toggle('active-toggle', state.stripEmoji);
       }
       if (els.btnScopeAll) els.btnScopeAll.classList.toggle('active', state.scopeFilter === 'all');
@@ -1764,15 +1836,39 @@
         els.crudGroupList.appendChild(opt);
       });
       buildEmojiChipRow(els.crudEmojiChips, (emo) => insertTextAtCursor(els.crudText, emo));
+      state.crudCurrentItem = item || null;
       if (item) {
         state.crudEditRawKey = item.raw_key;
-        els.crudTitle.textContent = `Cevabı Düzenle (${item.raw_key || ''})`;
+        els.crudTitle.textContent = `Görüntüle ve Düzenle (${item.raw_key || ''})`;
         els.crudKeys.value = item.keys || '';
         els.crudGroup.value = item.group || 'Genel';
         els.crudLabel.value = item.label || '';
         els.crudText.value = item.text || '';
         els.crudEndMarker.checked = item.terminator === DEFAULT_TERMINATOR;
         if (els.crudFavorite) els.crudFavorite.checked = Boolean(item.favorite);
+        if (els.crudQuickActionsBar) els.crudQuickActionsBar.style.display = 'flex';
+        if (els.crudActPaste) els.crudActPaste.style.display = state.isStatic ? 'none' : 'inline-flex';
+        if (els.crudActFav) els.crudActFav.textContent = item.favorite ? '★ Favoride' : '☆ Favori';
+        if (els.crudActCopy) els.crudActCopy.onclick = async () => { await handleCopyItem(item); };
+        if (els.crudActPaste) els.crudActPaste.onclick = async () => { closeModalEl(els.crudModal); await handlePasteItem(item); };
+        if (els.crudActFav) {
+          els.crudActFav.onclick = async () => {
+            await handleToggleFavorite(item);
+            if (els.crudFavorite) els.crudFavorite.checked = Boolean(item.favorite);
+            if (els.crudActFav) els.crudActFav.textContent = item.favorite ? '★ Favoride' : '☆ Favori';
+          };
+        }
+        if (els.crudActDup) els.crudActDup.onclick = async () => { closeModalEl(els.crudModal); await handleDuplicateItem(item); };
+        if (els.crudActUp) els.crudActUp.onclick = async () => { await handleMoveItem(item, 'up'); };
+        if (els.crudActDown) els.crudActDown.onclick = async () => { await handleMoveItem(item, 'down'); };
+        if (els.crudActIni) {
+          els.crudActIni.onclick = () => {
+            const foundIdx = state.items.findIndex((x) => x.raw_key === item.raw_key);
+            closeModalEl(els.crudModal);
+            showIniModal(item, foundIdx >= 0 ? foundIdx : state.selected);
+          };
+        }
+        if (els.crudActDelete) els.crudActDelete.onclick = () => { closeModalEl(els.crudModal); openDeleteModal(item); };
       } else {
         state.crudEditRawKey = null;
         els.crudTitle.textContent = 'Yeni Hazır Cevap Ekle';
@@ -1782,6 +1878,7 @@
         els.crudText.value = '';
         els.crudEndMarker.checked = true;
         if (els.crudFavorite) els.crudFavorite.checked = false;
+        if (els.crudQuickActionsBar) els.crudQuickActionsBar.style.display = 'none';
       }
       updateCrudPreview();
       openModalEl(els.crudModal, els.crudText);
@@ -2016,7 +2113,9 @@
       for (const cat of state.categories) {
         const b = document.createElement('button');
         b.className = 'pill' + (cat.code === state.category ? ' active' : '');
-        b.textContent = `${cat.label} (${cat.count})`;
+        b.textContent = cat.code === 'ALL' ? `Tümü ${cat.count}` : `${cat.code} ${cat.count}`;
+        b.title = `${cat.label} (${cat.count})`;
+        if (typeof b.setAttribute === 'function') b.setAttribute('aria-label', `${cat.label} (${cat.count})`);
         b.onclick = () => { state.category = cat.code; renderPills(); loadItems({ resetSelection: true }); };
         els.pills.appendChild(b);
       }
@@ -2057,6 +2156,10 @@
           entry.starBtn.textContent = favorite ? '★' : '☆';
           entry.starBtn.title = favorite ? 'Favoriden çıkar' : 'Favoriye ekle';
           if (entry.starBtn.classList) entry.starBtn.classList.toggle('active', Boolean(favorite));
+        }
+        if (entry.metaEl && entry.item && typeof entry.metaEl.setAttribute === 'function') {
+          const bLabel = entry.item.keys ? hotkeyBadge(entry.item.keys) : 'Not';
+          entry.metaEl.setAttribute('data-mobile-tag', `${bLabel}${favorite ? ' ★' : ''} · `);
         }
       }
     }
@@ -2359,6 +2462,14 @@
       showToast(r.message || r.error || 'Yinelendi');
     }
 
+    async function saveLiveSetting(key, value) {
+      const r = await api('/api/settings', 'POST', { key, value });
+      if (r && r.ok && r.data && typeof r.data.revision === 'number') {
+        state.revision = r.data.revision;
+      }
+      return r;
+    }
+
     async function switchViewMode(mode) {
       if (!['list', 'grid', 'table'].includes(mode)) return;
       state.viewMode = mode;
@@ -2367,7 +2478,7 @@
       if (state.isStatic) {
         savePrefsLocal();
       } else {
-        await api('/api/settings', 'POST', { key: 'view_mode', value: mode });
+        await saveLiveSetting('view_mode', mode);
       }
     }
 
@@ -2378,87 +2489,38 @@
         savePrefsLocal();
         showToast(state.stripEmoji ? 'Emojisiz kopyalama etkin 🚫' : 'Emojili kopyalama etkin 😊');
       } else {
-        const r = await api('/api/settings', 'POST', { key: 'strip_emoji', value: state.stripEmoji });
+        const r = await saveLiveSetting('strip_emoji', state.stripEmoji);
         showToast(r.message || r.error || 'Ayar güncellendi');
       }
     }
 
-    function appendRowActions(container, it, idx) {
+    function appendRowActions(container, it, _idx) {
       const copyBtn = document.createElement('button');
-      copyBtn.className = 'action-btn';
-      copyBtn.textContent = 'Kopyala';
+      copyBtn.className = 'action-btn icon-only-btn row-act-copy';
+      copyBtn.innerHTML = ICONS.copy;
+      copyBtn.title = 'Panoya kopyala';
+      copyBtn.setAttribute('aria-label', 'Kopyala');
       copyBtn.onclick = async (ev) => { ev.stopPropagation(); await handleCopyItem(it); };
       container.appendChild(copyBtn);
 
       if (!state.isStatic) {
         const pasteBtn = document.createElement('button');
-        pasteBtn.className = 'action-btn primary';
-        pasteBtn.textContent = 'Yapıştır';
+        pasteBtn.className = 'action-btn primary icon-only-btn row-act-paste';
+        pasteBtn.setAttribute('data-action', 'paste');
+        pasteBtn.innerHTML = ICONS.paste;
         pasteBtn.title = '3 saniye sonra aktif pencereye yapıştır';
+        pasteBtn.setAttribute('aria-label', 'Yapıştır');
         pasteBtn.onclick = async (ev) => { ev.stopPropagation(); await handlePasteItem(it); };
         container.appendChild(pasteBtn);
       }
 
       const editBtn = document.createElement('button');
-      editBtn.className = 'action-btn';
-      editBtn.textContent = 'Düzenle';
+      editBtn.className = 'action-btn icon-only-btn row-act-edit';
+      editBtn.innerHTML = ICONS.edit;
+      editBtn.title = 'Görüntüle / Düzenle / İşlemler';
+      editBtn.setAttribute('aria-label', 'Görüntüle ve düzenle');
       editBtn.onclick = (ev) => { ev.stopPropagation(); openCrudModal(it); };
       container.appendChild(editBtn);
-
-      const more = document.createElement('details');
-      more.className = 'row-more';
-      more.onclick = (ev) => { ev.stopPropagation(); };
-      const sum = document.createElement('summary');
-      sum.className = 'action-btn icon-btn';
-      sum.textContent = '⋯';
-      sum.setAttribute('aria-label', 'Diğer işlemler');
-      const menu = document.createElement('div');
-      menu.className = 'row-more-menu';
-
-      const upBtn = document.createElement('button');
-      upBtn.className = 'action-btn icon-btn';
-      upBtn.textContent = '⬆️';
-      upBtn.title = 'Yukarı taşı';
-      upBtn.setAttribute('aria-label', 'Yukarı taşı');
-      upBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); handleMoveItem(it, 'up'); };
-
-      const downBtn = document.createElement('button');
-      downBtn.className = 'action-btn icon-btn';
-      downBtn.textContent = '⬇️';
-      downBtn.title = 'Aşağı taşı';
-      downBtn.setAttribute('aria-label', 'Aşağı taşı');
-      downBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); handleMoveItem(it, 'down'); };
-
-      const dupBtn = document.createElement('button');
-      dupBtn.className = 'action-btn icon-btn';
-      dupBtn.textContent = '📑';
-      dupBtn.title = 'Çoğalt';
-      dupBtn.setAttribute('aria-label', 'Çoğalt');
-      dupBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); handleDuplicateItem(it); };
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'action-btn danger';
-      delBtn.textContent = 'Sil';
-      delBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); openDeleteModal(it); };
-
-      const iniBtn = document.createElement('button');
-      iniBtn.className = 'action-btn';
-      iniBtn.textContent = "INI'de Göster";
-      iniBtn.onclick = (ev) => { ev.stopPropagation(); more.removeAttribute('open'); showIniModal(it, idx); };
-
-      menu.appendChild(upBtn);
-      menu.appendChild(downBtn);
-      menu.appendChild(dupBtn);
-      menu.appendChild(delBtn);
-      menu.appendChild(iniBtn);
-      more.appendChild(sum);
-      more.appendChild(menu);
-      container.appendChild(more);
-
-      const badge = document.createElement('span');
-      badge.className = it.keys ? 'badge' : 'note-pill';
-      badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
-      container.appendChild(badge);
     }
 
     function createTableRowEl(it, idx) {
@@ -2579,6 +2641,9 @@
       renderHighlightedText(txt, String(it.text || '').replace(/\r?\n/g, ' '), it.matched_indices);
       const meta = document.createElement('div');
       meta.className = 'snippet-meta';
+      if (typeof meta.setAttribute === 'function') {
+        meta.setAttribute('data-mobile-tag', `${it.keys ? hotkeyBadge(it.keys) : 'Not'}${it.favorite ? ' ★' : ''} · `);
+      }
       const cc = Number(it.copyCount || 0);
       const baseMeta = it.label ? `${it.group} · ${it.label}` : it.group;
       meta.textContent = cc > 0 ? `${baseMeta} · 📋 ${cc}` : baseMeta;
@@ -2602,6 +2667,10 @@
         row.appendChild(left);
         row.appendChild(right);
       } else {
+        const badge = document.createElement('span');
+        badge.className = it.keys ? 'badge' : 'note-pill';
+        badge.textContent = it.keys ? hotkeyBadge(it.keys) : 'Not';
+        leading.appendChild(badge);
         row.appendChild(leading);
         row.appendChild(left);
         row.appendChild(right);
@@ -2672,7 +2741,11 @@
       const totalAll = state.isStatic ? state.allItems.length : null;
       els.count.textContent = totalAll !== null ? `${state.items.length} / ${totalAll} kayıt` : `${state.items.length} kayıt`;
       if (els.btnSelectAllVisible) {
-        els.btnSelectAllVisible.textContent = `☑ Filtredekileri Seç (${state.items.length})`;
+        els.btnSelectAllVisible.innerHTML = `${ICONS.checkAll}<span class="sel-count">${state.items.length}</span>`;
+        els.btnSelectAllVisible.title = `Filtrelenen ${state.items.length} kaydı seç / kaldır`;
+        if (typeof els.btnSelectAllVisible.setAttribute === 'function') {
+          els.btnSelectAllVisible.setAttribute('aria-label', `Filtrelenen ${state.items.length} kaydı seç`);
+        }
       }
       updateBulkBar();
       if (!visible.length) {
@@ -3271,7 +3344,7 @@
     els.sortSelect.onchange = async () => {
       state.sortBy = els.sortSelect.value;
       if (state.isStatic) savePrefsLocal();
-      else await api('/api/settings', 'POST', { key: 'sort_by', value: state.sortBy });
+      else await saveLiveSetting('sort_by', state.sortBy);
       await loadItems({ resetSelection: true });
     };
 
@@ -3383,7 +3456,7 @@
         showToast(nextTheme === 'dark' ? 'Koyu tema etkinleştirildi.' : 'Açık tema etkinleştirildi.');
         return;
       }
-      const r = await api('/api/settings', 'POST', { key: 'theme', value: nextTheme });
+      const r = await saveLiveSetting('theme', nextTheme);
       showToast(r.message || r.error || 'Tema güncellendi');
     };
 
@@ -3548,7 +3621,6 @@
               if (r.data.sort_by) state.sortBy = r.data.sort_by;
               syncToolbarStateDom();
               if (prevRev !== 0) {
-                clearSelection();
                 await loadCategories();
                 await loadItems({ resetSelection: false });
                 showToast('Değişiklikler otomatik yenilendi ✔');
@@ -3568,6 +3640,17 @@
         else els.toolsMenu.removeAttribute('open');
       };
       syncToolsMenu();
+      if (els.toolsMenu && typeof els.toolsMenu.querySelectorAll === 'function') {
+        for (const tBtn of els.toolsMenu.querySelectorAll('button')) {
+          if (typeof tBtn.addEventListener === 'function') {
+            tBtn.addEventListener('click', () => {
+              if (!isDesktopWide() && typeof els.toolsMenu.removeAttribute === 'function') {
+                els.toolsMenu.removeAttribute('open');
+              }
+            });
+          }
+        }
+      }
       if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
         window.addEventListener('resize', syncToolsMenu);
       }

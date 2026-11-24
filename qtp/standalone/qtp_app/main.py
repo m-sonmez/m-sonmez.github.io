@@ -40,7 +40,9 @@ class SingleInstanceGuard:
             if port <= 0:
                 return False
             with socket.create_connection(("127.0.0.1", port), timeout=0.35) as conn:
-                conn.sendall(b"SHOW\n")
+                token = os.environ.get("XDG_ACTIVATION_TOKEN", "").strip()
+                msg = json.dumps({"cmd": "SHOW", "activation_token": token}).encode("utf-8") + b"\n"
+                conn.sendall(msg)
                 reply = conn.recv(16)
                 return reply.startswith(b"OK")
         except Exception:
@@ -69,9 +71,25 @@ class SingleInstanceGuard:
                     break
                 with conn:
                     try:
-                        data = conn.recv(64)
-                        if data.startswith(b"SHOW") and self._on_show is not None:
-                            self._on_show()
+                        data = conn.recv(4096)
+                        raw = data.decode("utf-8", errors="ignore").strip()
+                        token = ""
+                        show_cmd = False
+                        if raw.startswith("{"):
+                            try:
+                                parsed = json.loads(raw)
+                                if isinstance(parsed, dict) and str(parsed.get("cmd", "")).upper() == "SHOW":
+                                    show_cmd = True
+                                    token = str(parsed.get("activation_token") or "").strip()
+                            except ValueError:
+                                show_cmd = False
+                        elif raw.startswith("SHOW"):
+                            show_cmd = True
+                        if show_cmd and self._on_show is not None:
+                            try:
+                                self._on_show(token)
+                            except TypeError:
+                                self._on_show()
                         conn.sendall(b"OK\n")
                     except Exception:
                         pass
@@ -132,6 +150,7 @@ def apply_reload_event_gui(
             view_mode=engine.settings.get("view_mode", "list"),
             strip_emoji=bool(engine.settings.get("strip_emoji", False)),
             sort_by=engine.settings.get("sort_by", "order"),
+            hide_on_blur=bool(engine.settings.get("hide_on_blur", True)),
         )
         if event.theme_changed and hasattr(tray, "apply_palette") and hasattr(overlay, "_palette"):
             tray.apply_palette(overlay._palette)
@@ -362,7 +381,7 @@ def launch_gui(
 
     class UiBridge(QObject):
         hotkey_fired = pyqtSignal(str)
-        show_ipc = pyqtSignal()
+        show_ipc = pyqtSignal(str)
         file_reloaded = pyqtSignal(object)
 
     bridge = UiBridge()
@@ -377,7 +396,7 @@ def launch_gui(
             icon_kind = QSystemTrayIcon.MessageIcon.Warning if warning else QSystemTrayIcon.MessageIcon.Information
             tray_ref[0].showMessage("QTP", msg, icon_kind, duration_ms)
             return
-        overlay.show_overlay(animate=False)
+        overlay.show_overlay(category="ALL", hotkey_key="all", force_category=True, animate=False)
         overlay.show_toast(msg, duration_ms=duration_ms)
 
     def _sync_overlay_after_mutation(res: Any) -> Any:
@@ -479,12 +498,16 @@ def launch_gui(
             for it in engine.items
             if (str(it.get("group") or "Genel").strip() or "Genel") == grp_name
         ]
-        path, _ = QFileDialog.getSaveFileName(
-            overlay if overlay.isVisible() else None,
-            f"Grubu Dışa Aktar ({grp_name})",
-            str(engine.work_dir / f"qtp-grup-{grp_name}.ini"),
-            "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
-        )
+        overlay.set_modal_child_open(True)
+        try:
+            path, _ = QFileDialog.getSaveFileName(
+                overlay if overlay.isVisible() else None,
+                f"Grubu Dışa Aktar ({grp_name})",
+                str(engine.work_dir / f"qtp-grup-{grp_name}.ini"),
+                "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
+            )
+        finally:
+            overlay.set_modal_child_open(False)
         if not path:
             return None
         res = engine.op_export_ini(path, raw_keys=keys)
@@ -500,7 +523,7 @@ def launch_gui(
     def handle_setting_change(key: str, value: Any) -> Any:
         return engine.op_set_setting(key, value)
 
-    effective_cat = (initial_category or str(engine.settings.get("last_category", "ALL"))).strip().upper() or "ALL"
+    effective_cat = (initial_category or "ALL").strip().upper() or "ALL"
     ws = engine.settings.get("window_size") or [720, 520]
     overlay = OverlayWindow(
         engine.items,
@@ -508,6 +531,7 @@ def launch_gui(
         view_mode=str(engine.settings.get("view_mode", "list")),
         strip_emoji=bool(engine.settings.get("strip_emoji", False)),
         sort_by=str(engine.settings.get("sort_by", "order")),
+        hide_on_blur=bool(engine.settings.get("hide_on_blur", True)),
         can_undo=bool(engine._undo_stack),
         can_redo=bool(engine._redo_stack),
         window_size=(int(ws[0]), int(ws[1])),
@@ -552,8 +576,12 @@ def launch_gui(
     app.setPalette(build_qpalette(current_palette()))
 
     def open_help() -> None:
-        dlg = HelpDialog(current_palette(), parent=overlay if overlay.isVisible() else None)
-        dlg.exec()
+        overlay.set_modal_child_open(True)
+        try:
+            dlg = HelpDialog(current_palette(), parent=overlay if overlay.isVisible() else None)
+            dlg.exec()
+        finally:
+            overlay.set_modal_child_open(False)
 
     hotkey_mgr = HotkeyManager()
 
@@ -571,16 +599,27 @@ def launch_gui(
 
     def on_hotkey_gui(cat: str) -> None:
         if cat == "all":
-            overlay.show_overlay(category=None, hotkey_key="all")
+            overlay.show_overlay(category="ALL", hotkey_key="all", force_category=True)
         else:
-            overlay.show_overlay(category=cat, hotkey_key=cat)
+            overlay.show_overlay(category=cat, hotkey_key=cat, force_category=True)
+
+    def on_show_ipc(token: str = "") -> None:
+        clean_tok = str(token or "").strip()
+        if clean_tok:
+            os.environ["XDG_ACTIVATION_TOKEN"] = clean_tok
+        overlay.show_overlay(category="ALL", hotkey_key="all", force_category=True)
 
     bridge.hotkey_fired.connect(on_hotkey_gui)
-    bridge.show_ipc.connect(lambda: overlay.show_overlay(category="ALL", hotkey_key="all"))
+    bridge.show_ipc.connect(on_show_ipc)
 
     def open_settings() -> None:
-        dlg = SettingsWindow(engine.settings, current_palette(), parent=overlay if overlay.isVisible() else None)
-        if dlg.exec() == dlg.DialogCode.Accepted and dlg.result_settings is not None:
+        overlay.set_modal_child_open(True)
+        try:
+            dlg = SettingsWindow(engine.settings, current_palette(), parent=overlay if overlay.isVisible() else None)
+            accepted = dlg.exec() == dlg.DialogCode.Accepted and dlg.result_settings is not None
+        finally:
+            overlay.set_modal_child_open(False)
+        if accepted and dlg.result_settings is not None:
             old_data_path = engine.settings.get("data_path")
             merged = dict(dlg.result_settings)
             merged["last_category_by_hotkey"] = overlay.last_category_by_hotkey
@@ -591,6 +630,7 @@ def launch_gui(
                 view_mode=engine.settings.get("view_mode", "list"),
                 strip_emoji=bool(engine.settings.get("strip_emoji", False)),
                 sort_by=engine.settings.get("sort_by", "order"),
+                hide_on_blur=bool(engine.settings.get("hide_on_blur", True)),
             )
             tray.apply_palette(current_palette())
             ws_new = engine.settings.get("window_size") or [720, 520]
@@ -628,14 +668,18 @@ def launch_gui(
 
     def open_backups() -> None:
         pal = current_palette()
-        dlg = build_backups_dialog(
-            engine,
-            pal,
-            on_restored=lambda res: (overlay.set_items(engine.items), overlay.show_toast(res.message)),
-            on_imported=lambda _res: overlay.set_items(engine.items),
-            parent=overlay if overlay.isVisible() else None,
-        )
-        dlg.exec()
+        overlay.set_modal_child_open(True)
+        try:
+            dlg = build_backups_dialog(
+                engine,
+                pal,
+                on_restored=lambda res: (overlay.set_items(engine.items), overlay.show_toast(res.message)),
+                on_imported=lambda _res: overlay.set_items(engine.items),
+                parent=overlay if overlay.isVisible() else None,
+            )
+            dlg.exec()
+        finally:
+            overlay.set_modal_child_open(False)
 
     lifecycle_state = {"quitting": False, "cleaned": False}
 
@@ -669,11 +713,11 @@ def launch_gui(
         if overlay.isVisible():
             overlay.hide_overlay()
         else:
-            overlay.show_overlay(category="ALL", hotkey_key="all")
+            overlay.show_overlay(category="ALL", hotkey_key="all", force_category=True)
 
     open_hk = str((engine.settings.get("hotkeys") or {}).get("all", ""))
     tray = QtpTrayIcon(
-        on_open=lambda: overlay.show_overlay(category="ALL", hotkey_key="all"),
+        on_open=lambda: overlay.show_overlay(category="ALL", hotkey_key="all", force_category=True),
         on_toggle=toggle_overlay_visibility,
         on_settings=open_settings,
         on_reload_ini=reload_ini,
@@ -694,7 +738,7 @@ def launch_gui(
     )
     engine.start_watcher(on_reload=lambda ev: bridge.file_reloaded.emit(ev))
 
-    guard.acquire(lambda: bridge.show_ipc.emit())
+    guard.acquire(lambda tok="": bridge.show_ipc.emit(tok))
     conflicts = register_all_hotkeys()
 
     app.aboutToQuit.connect(_cleanup)
@@ -705,7 +749,7 @@ def launch_gui(
             category=initial_category or "ALL",
             hotkey_key="all",
             query=initial_query if initial_query else "",
-            force_category=bool(initial_category),
+            force_category=True,
         )
         if not eff_quiet:
             overlay.show_toast(toast_msg, duration_ms=2600)
