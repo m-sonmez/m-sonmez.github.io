@@ -1,5 +1,5 @@
-QTP v2.3.1 | Mod: TUI | Ara: "" [/ Ara] | Kayıt: 2/2
-Kategoriler: [Tümü (2)] | A · İş Ortağı (1) | Z · Kurye (1) | X · Canlı Yardım (0) | Q · Turkcell (0)
+QTP v2.4.0 | Mod: TUI | Ara: "" [/ Ara] | Kayıt: 2/2
+Kategoriler: [Tümü(2)] A(1) Z(1) X(0) Q(0)
 ------------------------------------------------------------------------------------------------
 === Desteklenen Modlar (Kapatmak için Esc/q) ===
 Desteklenen çalışma modları: gui, tui, cli, web.

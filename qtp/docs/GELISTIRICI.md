@@ -19,7 +19,7 @@ QTP'de tek doğruluk kaynağı [operations.py](../standalone/qtp_app/core/operat
   - Web (`qtp_app/web.py` + `qtp_app/web/qtp.html`)
   - GUI (`qtp_app/main.py` + `qtp_app/ui/{overlay,settings_window,help_dialog,icons}.py`)
 - Her yeni işlem (`op_id`, örneğin `add_item`, `bulk_edit`, `rename_group`, `undo`):
-  1. `OPERATIONS` içine (`cli_flag`, `tui_key`, `web_route`, `gui_binding`, `error_msgs_tr`, `exit_codes`) ile eklenir (v2.3.1 ile toplam 35 kanonsal işlem).
+  1. `OPERATIONS` içine (`cli_flag`, `tui_key`, `web_route`, `gui_binding`, `error_msgs_tr`, `exit_codes`) ile eklenir (v2.4.0 ile toplam 35 kanonsal işlem).
   2. `QtpEngine` üzerinde `op_<ad>` metodu ve gerekirse `_persist_items_change()` gibi atomik INI+JSON kalıcılık adımı yazılır (UTF-16 LE BOM + otomatik `.bak` yedek + 30 adımlı `_undo_stack`/`_redo_stack`).
   3. CLI bayrağı (`cli.py`), HTTP rotası (`web.py`), TUI tuşu/komutu (`tui/app.py`) ve GUI eylemi (`ui/overlay.py`) bağlanır.
   4. Birebir hata mesajları [SSS.md](SSS.md) içine, parite satırı ise [KULLANIM.md](KULLANIM.md#12-modlar-arası-eşitlik-matrisi) tablosuna eklenir.
@@ -55,3 +55,25 @@ QTP'de tek doğruluk kaynağı [operations.py](../standalone/qtp_app/core/operat
   standalone\.venv\Scripts\python.exe -m unittest discover -s legacy/tests -v
   ```
 - **Otomatik Linux `qtp.bin` CI & Çapraz Dağıtım Politikası:** `.github/workflows/qtp-publish-linux.yml`, `main` dalındaki `qtp/**` (`!qtp/qtp.bin`) değişikliklerinde Ubuntu 22.04 üzerinde `xvfb-run` altında tüm testleri geçirip ELF `qtp/qtp.bin` çıktısını yayımlar; `build/qtp.spec` üzerinde konak yapılandırmasına bağlı `libfontconfig`/`libxkbcommon`/`Mesa`/`Wayland`/`X11` kitaplıkları dışlanarak Arch/CachyOS/Fedora/Ubuntu/openSUSE arasında uyumluluk korunur.
+
+---
+
+## 5. Düzen Kuralı ve Taşma Önleme Politikası
+
+- **Web (`qtp.html`, `theme.css`, `index.html`, `legacy/cevaplar.html`):**
+  - Hiçbir esnek (flex) veya ızgara (grid) kapsayıcısında `min-width: auto` sızıntısına izin verilmez; üst kartlarda ve öğe kabuklarında `min-width: 0; max-width: 100%` zorunludur.
+  - Yatay düğme grupları dar ekranlarda sarmalanır (`flex-wrap: wrap`) veya disclosure (`<details>`) / sabit genişliksiz açılır çekmece (`position: fixed; inset-x-3`) içine toplanır; yalnızca `.table-wrap`, `.modal-body-scroll pre/table` ve `.overflow-x-auto` alanları yatay kaydırma kullanabilir.
+  - Tüm mobil (`<= 768px`) form girdileri iOS otomatik yakınlaştırmasını önlemek için en az `16px` yazı boyutunda tutulur, `autofocus` kullanılmaz ve etkileşimli dokunma hedefleri en az `36px` yüksekliğe getirilir.
+- **PyQt6 Masaüstü (`ui/flow_layout.py`, `ui/overlay.py`, `ui/settings_window.py`, `ui/help_dialog.py`, `main.py`):**
+  - Yatay düğme ve hap satırları genişlik küçüldüğünde taşmak yerine `FlowLayout` ile alt satıra akar; `< 640 px` katman genişliklerinde ikincil yönetim düğmeleri `⋯` (`QToolButton` + `QMenu`) içine daraltılır.
+  - Tüm iletişim kutuları yeniden boyutlandırılabilir (`setMinimumSize`, asla `setFixedSize` değil), uzun `QFormLayout` satırları `WrapLongRows` kullanır ve alt ipucu metinleri `ElideRight` ile kırpılır.
+
+---
+
+## 6. Ekran Denetimi (E2E Playwright & Qt Geometri Kapısı)
+
+- **PyQt6 Geometri Doğrulaması (`qtp_app/tests/test_gui_geometry.py`):**
+  - `560×400`, `720×520`, `1024×700` ve `1920×1080` boyutlarında × `list`/`grid`/`table` görünümlerinde × `light`/`dark` temalarda hem yerel biçem hem de `QT_STYLE_OVERRIDE=Fusion` altında hiçbir görünür widget'ın kart dışına taşmadığı, çakışmadığı ve liste/tablo alanının en az `180 px` yüksekliğe sahip olduğu doğrulanır.
+  - Yedi iletişim kutusunun tamamı minimum boyutlarında sıfır yatay kaydırma taşmasıyla denetlenir.
+- **Gerçek Tarayıcı Playwright DOM Denetimi (`/tmp/qtp_audit/audit.py`):**
+  - `--web` canlı sunucusu ve statik HTTP sunucusu (ayrıca GitHub Pages canlı dağıtımı) karşısında `320×568`, `360×800`, `768×1024`, `1280×800` ve `1920×1080` viewport boyutlarında `scrollWidth`, viewport sınırı, kardeş çakışması, mobil dokunma hedefi boyutu ve tam CRUD/yapıştır/geri-al/cross-origin-403 senaryoları otomatik çalıştırılır.

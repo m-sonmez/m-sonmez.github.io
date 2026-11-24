@@ -4,6 +4,27 @@ Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
 
 ---
 
+## [2.4.0] - 2026-11-24
+
+### Güvenlik, Mobil/Masaüstü Düzen Sertleştirme, Veri Koruma & Wayland İyileştirmeleri
+- **`--web` CSRF, DNS Rebinding ve İstek Boyutu Koruması (`qtp_app/web.py`, `docs/SSS.md`):**
+  - Tüm `/api/*` uç noktalarında `Host` (`127.0.0.1`/`localhost`/`[::1]`), `Origin` ve `Sec-Fetch-Site` (`cross-site` engelli) doğrulamaları zorunlu kılındı; çapraz köken istekleri ve `OPTIONS` preflight çağrıları HTTP `403 Forbidden` JSON yanıtıyla reddedildi.
+  - `Content-Length` başlığı doğrulandı (bozuk değerde HTTP `400`, `25 MiB` üstünde HTTP `413` + `SSS.md` hata mesajı), `/manifest.webmanifest` sunucu üzerinden servis edildi ve yanıtlara `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY` ve sıkı `Content-Security-Policy` başlıkları eklendi.
+  - Canlı web modunda satır tıklama/Enter yalnızca tarayıcı panosuna kopyalamaya ayrıldı (`POST /api/copy`); aktif uygulamaya yapıştırma yalnızca açık `Yapıştır` düğmesi üzerinden `delay_s: 3` gecikmesiyle çalışır duruma getirildi. `/api/revision` yanıtına `warning` alanı eklendi.
+- **Veri Dirilişi & Git Kirliliği Koruması (`core/engine.py`, `core/json_store.py`, `core/watcher.py`, `core/settings.py`, `qtp/.gitignore`):**
+  - `engine.reload_data()` içinde diskteki `QuickTextPaste.ini` veya `data.json` boş ya da bozuksa 527 gömülü varsayılanın kullanıcı verisi üzerine diriltilmesi engellendi; bozuk açılışta bir kez `corrupt_load` yedeği alınıp tüm arayüzlerde `startup_warning` bildirildi.
+  - `save_data_json` bayt-eşitliği kontrolleriyle gereksiz yazımları atladı; `compute_file_fingerprint` 1 MB SHA-256 öncesinde `(mtime_ns, size)` kısa devre kontrolü ekledi; `window_size` alt sınırı `560×400` ile eşitlendi; `.qtp_history.json` `.gitignore` içine eklendi; GUI/Web/Engine/CLI/TUI arasında `"Notlar"` filtresi `is_note_item()` (`not keys` veya `[DAHİLİ NOT]`) ile hizalandı.
+- **320 px–1920 px Web & Klasik PWA Duyarlılığı (`web/qtp.html`, `web/theme.css`, `qtp/index.html`, `qtp/legacy/cevaplar.html`, `sw.js` `v3.5.0`):**
+  - `.overlay-card` ve klasik konteynerlerde `min-width: 0; overflow-x: clip`, sarmalanan `#categoryPills`, `minmax(min(290px, 100%), 1fr)` kart ızgarası, `<details>` tabanlı kompakt araçlar menüsü, satır içi `.row-more`, sabit konumlu açılır menüler (`fixed inset-x-3`), `16px` mobil girdiler (`autofocus` kaldırıldı) ve `>= 36px` dokunma hedefleri uygulandı.
+  - `renderList` sessiz 200 satır sınırı kaldırılarak `100` adımlı artımlı `Daha Fazla Göster` + tam `beforeprint` yazdırma, tam filtreli `Tümünü Seç`, DOM yamalı satır güncellemeleri, index sıfırlamayan `loadItems`, Türkçe `Intl.Collator('tr')` sıralaması ve odak korumalı `aria-modal` iletişim kutuları getirildi.
+- **PyQt6 Masaüstü Esnekliği, Performans & Wayland Deneyimi (`ui/flow_layout.py`, `ui/overlay.py`, `ui/tray.py`, `ui/icons.py`, `ui/help_dialog.py`, `ui/settings_window.py`, `main.py`):**
+  - `FlowLayout` ile haplar, araç çubukları, grup satırları, ayar kısayol satırları ve yedekleme düğmeleri `560 px` altına kadar taşmadan akar; `< 640 px` genişlikte ikincil düğmeler `⋯` menüsüne katlanır, alt ipucu `ElideRight` ile kırpılır, tüm 7 iletişim kutusu yeniden boyutlandırılabilir.
+  - Hayalet kopyala tıklama alanı (`mousePressEvent` durum yakalama + `grid_mode` boş `copy_button_rect`), ızgarada `Movement.Static`, Wayland/offscreen `raise_()` bastırma + `requestActivate()`, 400 ms gecikmeli pencere boyutu kaydı, yapıştırma/uyarı bildirimleri (`notify()`), Plasma Wayland tek-tık `Trigger` tepsi aç/kapat, HiDPI SVG DPR ölçekleme, Markdown bağlantı dönüşümü, macOS Cocoa `Ctrl`/`Meta` ayrımı ve 6 katmanlı önbellekli `paintEvent` gölge ile LRU belge/yazıtipi önbelleği uygulandı.
+- **TUI Ekran & Geniş Karakter Sertleştirmesi (`tui/app.py`):**
+  - `display_width()` ve `clip_to_width()` ile emoji/CJK genişliği ve birleştirme karakterleri hesaba katılarak tüm satırlar terminal genişliğine kırpıldı, `inner_w < 100` / taşma durumunda kompakt kategori çubuğuna geçildi, `ESCDELAY=25` ve `KEY_RESIZE` eklendi.
+
+---
+
 ## [2.3.1] - 2026-11-23
 
 ### Linux (Arch/CachyOS/Wayland/X11) Düzeltmeleri, Gömülü SVG Simgeler, 8-Kenar Boyutlandırma & Mobil Web Uyumluluğu

@@ -1,6 +1,6 @@
 # QTP Kurulum ve Sistem Gereksinimleri
 
-QTP v2.3.1 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya statik Web arayüzü içinde sunar.
+QTP v2.4.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya statik Web arayüzü içinde sunar.
 
 ---
 
@@ -84,7 +84,7 @@ QTP v2.3.1 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satır�
      - Alpine Linux (`apk` — `--tui`/`--cli`/`--web` kaynak çalıştırma): `apk add python3 py3-pip` (Wayland masaüstü için isteğe bağlı: `apk add wl-clipboard wtype`)
      - FreeBSD (`pkg`): `pkg install python3 py311-qt6 xcb-util-cursor libxkbcommon` (veya sıfır bağımlılıkla `python3 -m qtp_app --tui`)
      - macOS (`brew`): `qtp.bin` sıfır bağımlılıkla çalışır; kaynaktan geliştirme için `brew install python uv` yeterlidir.
-3. **Wayland Notu:** Wayland oturumlarında (`KDE Plasma`/`GNOME`/`Sway`/`Hyprland`) global tuş yakalama compositor tarafından sınırlandırılabilir; tepsi simgesi, pencere kenarından yeniden boyutlandırma/sürükleme, `--web` ve `--tui` kesintisiz çalışır. QTP önce seçili metni pencere gizlenmeden önce güvenli biçimde panoya yazar; aktif hedefe göre `Ctrl+V` veya Linux uçbirimlerinde (`Konsole`, `Alacritty`, `Kitty`, `Ghostty`, `GNOME Terminal` vb.) otomatik olarak `Ctrl+Shift+V` gönderir (`wtype`/`ydotool` yoksa da panoya kopyalama daima çalışır).
+3. **Wayland Notu (KDE Plasma & Diğer Compositor'lar):** Wayland oturumlarında (`KDE Plasma`/`GNOME`/`Sway`/`Hyprland`) `pynput` tabanlı arka plan X11 global tuş yakalama compositor tarafından kısıtlanır; bu nedenle **Sistem Ayarları → Klavye → Kısayollar → Özel Ekle** altından doğrudan `./qtp.bin --gui` komutuna bir kısayol atayabilirsiniz (zaten çalışan QTP varsa tek-örnek IPC `SHOW` sinyali katmanı anında açar; tepsi simgesi sol tıkı da katmanı açıp kapatır). Pencere kenarından yeniden boyutlandırma/sürükleme, `--web` ve `--tui` kesintisiz çalışır. QTP önce seçili metni pencere gizlenmeden önce güvenli biçimde panoya yazar (`Ctrl+V` veya terminalde `Ctrl+Shift+V` / `--set paste_method ctrl_shift_v`; `wtype`/`ydotool` kuruluysa otomatik tuş simülasyonu da denenir).
 
 ### 2.3 macOS 10.15–15 ve Unix-benzeri / BSD (`qtp.bin`)
 1. **macOS Gatekeeper & Erişilebilirlik İzni:**

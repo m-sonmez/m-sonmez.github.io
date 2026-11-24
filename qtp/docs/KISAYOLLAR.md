@@ -1,6 +1,6 @@
 # QTP Klavye Kısayolları Rehberi
 
-QTP v2.3.1, Windows 10/11 sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama ve tüm arayüzlerde çoklu seçim / toplu işlem / geri al-yinele destekli tam klavye kontrolü sunar.
+QTP v2.4.0, Windows 10/11 sistem kısayollarıyla ve Türkçe-Q `AltGr` karakterleriyle çakışmayan akıllı varsayılan kısayollar, **6 hazır profil**, **15 değiştirici bileşimi**, **Win32 `RegisterHotKey` özel kilitleme**, canlı çakışma algılama ve tüm arayüzlerde çoklu seçim / toplu işlem / geri al-yinele destekli tam klavye kontrolü sunar.
 
 ---
 
@@ -54,8 +54,8 @@ Varsayılan `all`, `A`, `Z`, `X`, `Q` yuvalarına ek olarak `qtp_settings.json` 
 | **Satır Seçimi / Gezinti** | `↑` / `↓` / `PgUp` / `PgDn` | `↑` / `↓` / `PgUp` / `PgDn` | `↑` / `↓` / Tıklama |
 | **Kategori Geçişi** | `Tab` / Kategori Hapları | `Tab` / `1`–`5` | Kategori Hapları (`Tümü` / `A` / `Z` / `X` / `Q`) |
 | **Aramaya Odaklanma** | `Ctrl+K` / Doğrudan yazma | `/` | `Ctrl+K` veya `/` |
-| **Aktif Uygulamaya Yapıştır** | `Enter` / Çift veya Sol Tık | `Enter` | Satır `Yapıştır` düğmesi (`--web`) |
-| **Yalnızca Panoya Kopyala** | `Ctrl+Enter` / `Shift+Tık` / `Kopyala` | `c` | `Ctrl+Enter` / Satır `Kopyala` düğmesi |
+| **Aktif Uygulamaya Yapıştır** | `Enter` / Çift veya Sol Tık | `Enter` | Satır `Yapıştır` düğmesi (`--web`, 3 sn gecikmeli) |
+| **Yalnızca Panoya Kopyala** | `Ctrl+Enter` / `Shift+Tık` / `Kopyala` | `c` | Satıra Tıklama / `Enter` / `Ctrl+Enter` / `Kopyala` |
 | **Yeni Cevap Ekle (`add_item`)** | Üst çubuk `+ Yeni Cevap` düğmesi | `a` | `+ Yeni Cevap` düğmesi |
 | **Seçili Cevabı Düzenle (`update_item`)** | Sağ Tık → `Düzenle` | `E` | Satır içi `Düzenle` düğmesi |
 | **Seçili Cevabı Sil (`delete_item`)** | Sağ Tık → `Sil` | `d` | Satır içi `Sil` düğmesi |
@@ -74,7 +74,7 @@ Varsayılan `all`, `A`, `Z`, `X`, `Q` yuvalarına ek olarak `qtp_settings.json` 
 
 ## 4. Fare Etkileşimleri
 
-- **Sol Tık (`--gui`):** Öğeyi kopyalar, katmanı gizler ve aktif pencereye `Ctrl+V` (ve istenirse `Enter`) gönderir.
+- **Sol Tık (`--gui`):** Öğeyi kopyalar, katmanı gizler ve aktif pencereye `Ctrl+V` (ve istenirse `Enter`) gönderir; Wayland'de yalnızca kopyalama yapılırsa bildirim tepsi/katman üzerinden gösterilir (terminal ağırlıklı kullanımda `paste_method=ctrl_shift_v` seçilebilir).
 - **Shift + Sol Tık (`--gui`):** Yapıştırma simülasyonu yapmadan yalnızca panoya kopyalar.
 - **Sağ Tık (`--gui`):** Bağlam menüsünü açar (`Yapıştır`, `Yalnızca Panoya Kopyala`, `Düzenle`, `Sil`, `INI'de Göster`).
-- **Sistem Tepsisi Simgesi:** Sol tık ile katmanı açar/kapatır; sağ tık ile tüm hızlı işlemleri (`Katmanı Aç`, `Ayarlar`, `Yedekler…`, `INI İçe/Dışa Aktar`, `INI Yeniden Yükle`, `Yardım (F1)`, `Çıkış`) açar.
+- **Sistem Tepsisi Simgesi:** Sol tık ile katmanı açar/kapatır; sağ tık ile tüm hızlı işlemleri (`Katmanı Aç`, `Ayarlar`, `Yedekler…`, `INI İçe/Dışa Aktar`, `INI Yeniden Yükle`, `Yardım (F1)`, `Çıkış`) açar. KDE Plasma Wayland üzerinde özel sistem kısayoluna `./qtp.bin --gui` atayarak çalışan pencereyi IPC `SHOW` ile tek tuşla açabilirsiniz.
