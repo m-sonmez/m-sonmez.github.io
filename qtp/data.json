@@ -1,74 +1,344 @@
 [
   {
-    "keys": "L-Win+1",
-    "group": "General/Email",
-    "label": "Greeting & Sign-off",
-    "text": "Hi there,\n\nThanks for reaching out! Please let me know if you need anything else.\n\nBest regards,\n[Your Name]"
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "Hava durumu",
+    "text": "Kontrol ettiğimde bölgenizde hava koşulları siparişi teslim etmeniz için uygun görünüyor. Siparişe devam etmenizi rica ederim."
   },
   {
-    "keys": "L-Win+1",
-    "group": "General/Email",
-    "label": "Thank You Reply",
-    "text": "Thank you very much for the quick update! I appreciate your help."
+    "keys": "L-Win+Z",
+    "group": "Sipariş Bölme",
+    "label": "bölme işlemi teyit",
+    "text": "Sipariş bölme talebinizi gerçekleştirdim. 😊"
   },
   {
-    "keys": "L-Win+1",
-    "group": "General/Email",
-    "label": "Out of Office",
-    "text": "Thanks for your message. I am currently out of office and will reply as soon as I return on [Date]."
+    "keys": "L-Win+Z",
+    "group": "Sipariş Bölme",
+    "label": "Bölme işlemi",
+    "text": "Siparişi tek kurye taşıyamadığı için destek olarak ikiye bölündüğünü görüyorum."
   },
   {
-    "keys": "L-Win+1",
-    "group": "General/Email",
-    "label": "Contact Placeholder",
-    "text": "Name: [Full Name]\nEmail: [you@example.com]\nPhone: [+1 555 0100]\nAddress: [Street, City]"
+    "keys": "L-Win+Z",
+    "group": "Sipariş Bölme",
+    "label": "Bölme geçersiz",
+    "text": "Sipariş ağırlığının çantanıza uygun olduğunu görüyorum. Bu nedenle siparişi bölmüyorum, üzgünüm. Siparişi teslim etmenizi rica ederim."
   },
   {
-    "keys": "L-Win+2",
-    "group": "Work/Meetings",
-    "label": "Meeting Follow-up",
-    "text": "Thanks everyone for joining today! Here is a quick recap:\n- Key decisions:\n- Action items:\n- Next sync: [Date/Time]"
+    "keys": "L-Win+Z",
+    "group": "Genel",
+    "label": "Geçmiş olsun",
+    "text": "Öncelikle çok geçmiş olsun. Sağlığınız bizim için çok önemli, umarım iyisinizdir."
   },
   {
-    "keys": "L-Win+2",
-    "group": "Work/Meetings",
-    "label": "Calendar Link",
-    "text": "Feel free to grab a convenient slot on my calendar here: https://calendar.example.com/your-handle"
+    "keys": "L-Win+Z",
+    "group": "Genel",
+    "label": "Çalışma saati sonlandırma",
+    "text": "Siparişi iptal ederek çalışma saatinizi sonlandırdım."
   },
   {
-    "keys": "L-Win+2",
-    "group": "Work/Meetings",
-    "label": "Quick Reminder",
-    "text": "Friendly reminder about our upcoming deadline on [Date]. Let me know if anything is blocked."
+    "keys": "L-Win+Z",
+    "group": "Ödeme",
+    "label": "kurye ödeme ataması",
+    "text": "Siparişin ödeme alınması adına size atandığını görüntülüyorum. Kullanıcı adresine geçerek yalnızca ödeme alabilirsiniz"
   },
   {
-    "keys": "L-Win+3",
-    "group": "Developer/Code",
-    "label": "Bug Report Template",
-    "text": "### Summary\n[Brief description]\n\n### Steps to Reproduce\n1. \n2. \n\n### Expected vs Actual\n- Expected:\n- Actual:"
+    "keys": "L-Win+Z",
+    "group": "Kapanış",
+    "label": "Uygulama 5",
+    "text": "Yardımcı olabileceğim farklı bir konu yoksa görüşmeyi sonlandırabilirsiniz. Yanıt vermemeniz durumunda görüşmeyi sonlandıracağım."
   },
   {
-    "keys": "L-Win+3",
-    "group": "Developer/Code",
-    "label": "PR Review Checklist",
-    "text": "PR Review Checklist:\n- [ ] Tests added & passing\n- [ ] Edge cases handled\n- [ ] Docs / changelog updated\n- [ ] No unintended diff"
+    "keys": "L-Win+Z",
+    "group": "Kapanış",
+    "label": "Uygulama 4",
+    "text": "Sizden yanıt alamadığım için görüşmeyi sonlandırıyorum, sağlıklı günler dilerim."
   },
   {
-    "keys": "L-Win+3",
-    "group": "Developer/Code",
-    "label": "Conventional Commit",
-    "text": "feat(scope): concise summary of change\n\nWhy:\n- \n\nWhat changed:\n- "
+    "keys": "L-Win+Z",
+    "group": "Kapanış",
+    "label": "Uygulama 2",
+    "text": "Teşekkür ederim, sağlıklı günler dilerim."
   },
   {
-    "keys": "L-Win+3",
-    "group": "Developer/Code",
-    "label": "Code Snippet Block",
-    "text": "```text\n[Paste code or terminal output here]\n```"
+    "keys": "L-Win+Z",
+    "group": "Kapanış",
+    "label": "Uygulama",
+    "text": "Rica ederim, sağlıklı günler dilerim.😊"
   },
   {
-    "keys": "",
-    "group": "Notes",
-    "label": "Internal Note Example",
-    "text": "[NOTE] Keep keyless reminders, checklists, or reference links here without binding a hotkey."
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "Sipariş alma teyit",
+    "text": "Siparişi işletmeden teslim alıp almadığınızı öğrenebilir miyim?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Genel",
+    "label": "Talep sorma",
+    "text": "Talebinizi detaylı olarak iletmeniz halinde size memnuniyetle yardımcı olmak isterim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Genel",
+    "label": "Kurye çalışma saat sonu",
+    "text": "Kontrol ettiğimde çalışma saatinizin sonlandığını görüntülüyorum. Siparişi iptal ettim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "Güvenli yer",
+    "text": "Siparişi bırakabileceğiniz uygun ve güvenli bir yer bulunuyor mu?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "Tehlikeli bölge",
+    "text": "Kontrol ettiğimde adresin aktif tehlikeli bölge saatleri içinde yer aldığını görüyorum; güvenliğiniz önceliğimiz olduğu için siparişi iptal ediyorum."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "Restoran kapalı",
+    "text": "İşletmenin isimli kapısının/girişinin/tabelasının yer aldığı bir fotoğraf iletmeniz halinde size hemen yardımcı olmak isterim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "İşletme sip hazır der",
+    "text": "İşletme sahibi siparişin hazır olduğunu iletti. Siparişi teslim almanızı rica ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "İşletme adresine geç",
+    "text": "Henüz işletme adresinde olmadığınızı görüntülüyorum. Adrese geçtikten sonra bağlanmanızı rica ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "İşletme açık teyidi",
+    "text": "İşletme yetkilisi ile görüştüm. İşletmenin açık olduğunu siparişi teslim edeceğini iletti."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Kullanıcı İletişimi",
+    "label": "Kullanıcı iletişime geç",
+    "text": "Kullanıcıyla uygulama üzerinden iletişime geçip geçmediğinizi öğrenebilir miyim?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "Sip teslime çektim",
+    "text": "Siparişi teslime çekiyorum. Ürünleri kullanıcıya teslim ederek adresten ayrılabilirsiniz."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Ödeme",
+    "label": "Ödeme kurye atama",
+    "text": "Ödeme alınabilmesi için yeniden kurye ataması yapıyorum. Siparişi teslime çekiyorum. Ürünleri kullanıcıya teslim ederek adresten ayrılabilirsiniz."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "Pickup",
+    "text": "Hazırlanma süresi dolduktan sonra 10 dakika bekleyip Sürücü Uygulaması üzerinden yeniden atama yapabilirsiniz."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Ödeme",
+    "label": "Ödeme alma kurye",
+    "text": "Siparişin ödeme alınması adına size atandığını görüntülüyorum. Kullanıcı adresine geçerek yalnızca ödeme alabilirsiniz."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Bekletme",
+    "label": "bekleme",
+    "text": "Hemen siparişinizin detaylarını inceleyerek size yardımcı olacağım, izninizle bekliyorum. 🧐"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İptal",
+    "label": "Hasarlı ürün onay",
+    "text": "Paylaştığınız görsel için teşekkür ederim. Siparişin açıkça sorunlu olduğunu görebiliyorum, şimdi sizin için iptal işlemini gerçekleştireceğim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "İşletme arıyorum 2",
+    "text": "İşletmeyi aradım ama ulaşamadım. Sizin için bir kez daha deneyeceğim, kısa bir süre daha bekletiyorum."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Bekletme",
+    "label": "bekleme 3",
+    "text": "Size yardımcı olabilmek adına kısa bir süre bekletiyorum. ⏳"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Genel",
+    "label": "Talep sor",
+    "text": "Talebinizi detaylı olarak iletmeniz halinde size memnuniyetle yardımcı olmak isterim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "Sip teslim alma",
+    "text": "Siparişi işletmeden teslim alıp almadığınızı öğrenebilir miyim?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Genel",
+    "label": "Sipariş neden atama isteği",
+    "text": "Siparişi neden atamak istediğinizi paylaşabilir misiniz?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İptal",
+    "label": "Sip iptal Kon ayrıl",
+    "text": "Siparişi iptal ediyorum. Konumdan ayrılabilirsiniz.🖤"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İptal",
+    "label": "sip iptal ürün bırak",
+    "text": "Siparişi iptal ediyorum, ürünü geri bırakmak için yola çıkabilirsiniz.🖤"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Genel",
+    "label": "Sip tes sorun devam",
+    "text": "Siparişin teslim alındı işaretlendiğini görüntülüyorum. Sorun hala devam ediyor mu?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "pickup",
+    "text": "Hazırlanma süresi dolduktan sonra 10 dakika bekleyip Sürücü Uygulaması üzerinden yeniden atama yapabilirsiniz."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İptal",
+    "label": "Sip iptal 30 dk ara",
+    "text": "Siparişi iptal ederek sizi 30 dakika araya aldım."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Ödeme",
+    "label": "Ödeme Nakit teyit",
+    "text": "Ödemeyi nakit olarak temin edebilir misiniz?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Kullanıcı İletişimi",
+    "label": "Kul cevap verdi",
+    "text": "Kullanıcının uygulama üzerinden size yanıt verdiğini görüntülüyorum. Kullanıcı ile uygulama üzerinden iletişime geçerek siparişi teslim etmenizi rica ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Kullanıcı İletişimi",
+    "label": "KUL SİP KABUL ETMEZ MSJ",
+    "text": "Kullanıcıya ulaşamadığınızı anlıyorum. \"Adresinize geldik ancak size ulaşamadığımız için üzülerek siparişi iptal etmek durumundayız.\" bilgisini kopyala/yapıştır yaparak kullanıcıya iletmenizi rica ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "Cihaz sip hazırlama",
+    "text": "Siparişin detaylarını vermem durumunda işletme siparişi hazırlayabilir mi bilgi alabilir misiniz?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Sipariş Bölme",
+    "label": "Bölme çanta uygun geçersiz",
+    "text": "Sipariş ağırlığının çantanıza uygun olduğunu görüyorum. Bu nedenle siparişi bölmüyorum, üzgünüm. Siparişi teslim etmenizi rica ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Sipariş Bölme",
+    "label": "bölme uygun",
+    "text": "Siparişi tek kurye taşıyamadığı için destek olarak iki kuryeye böldüm.🖤"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Bekletme",
+    "label": "Bekletme teşekkür",
+    "text": "Beklediğiniz için teşekkür ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "Alternatif yol",
+    "text": "Alternatif yolları kullanarak siparişi teslim edebilirsiniz."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "Adres güncelleme",
+    "text": "Her şey hazır! Yeni adresi sistem üzerinde güncelledim. Adres, kapsama alanınız içinde olduğu için teslimata devam edebilirsiniz."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Sipariş Bölme",
+    "label": "Bölme çanta fotoğrafı",
+    "text": "Kontrol ettiğimde, toplam paket sayısı taşınabilir görünüyor. Daha detaylı inceleyebilmemiz için üzerine atanmış tüm siparişlerin ve motosiklet çantanızın tamamen dolu olduğunu gösteren ek bir fotoğraf paylaşmanızı rica ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Kaza & Destek",
+    "label": "Kaza uygulama yön",
+    "text": "Bu konuda chat üzerinden destek olamıyorum, üzgünüm. Yeniden atama talebinizi, puanınız etkilenmeyecek şekilde uygulamadaki \"Siparişinizle ilgili destekte mi ihtiyacınız var?\" alanından \"Ekipman sorunu\" ya da \"Kaza\" başlıklarından uygun olanı seçerek tamamlamanız gerekiyor."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Sipariş Bölme",
+    "label": "Bölme yeniden atama",
+    "text": "Sipariş bölme işlemini gerçekleştiremiyoruz. Destek talep ettiğiniz siparişi başka bir kuryeye yeniden atayacağız. Diğer çoklu siparişinizi her zamanki gibi teslim etmeye devam etmenizi rica ederiz."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Kullanıcı İletişimi",
+    "label": "KUL ULAŞMAZ MESAJI",
+    "text": "Kullanıcının siparişi kabul etmediğini anlıyorum. \"Siparişi kabul etmeyeceğinizi belirtmeniz nedeniyle üzülerek siparişi iptal etmek durumundayız.\" bilgisini kopyala/yapıştır yaparak kullanıcıya iletmenizi rica ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Kullanıcı İletişimi",
+    "label": "Kullanıcı iletişim geç",
+    "text": "Kullanıcıyla uygulama üzerinden iletişime geçip geçmediğinizi öğrenebilir miyim?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Teslimat",
+    "label": "sip atama 30 dk araya alma",
+    "text": "Teslimatı tamamlayabilir misiniz? Tamamlayamamanız durumunda sizi 30 dakika araya alacağım ve siparişi tekrar atayacağım. Bu süre boyunca yeni sipariş almayacaksınız. Sizin için uygun mu?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İptal",
+    "label": "sip iptal 30 dk araya alma",
+    "text": "Teslimatı tamamlayabilir misiniz? Tamamlayamamanız durumunda sizi 30 dakika araya alacağım ve siparişi iptal edeceğim. Bu süre boyunca yeni sipariş almayacaksınız. Sizin için uygun mu?"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "Kaza & Destek",
+    "label": "kaza formu",
+    "text": "Kaza nedeniyle performansınızın olumsuz etkilenmemesi için aşağıdaki link üzerinden Kaza Bildirim Formunu doldurmanızı rica ederim.\nhttps://forms.gle/wsxLNP6vGKcheXra7"
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "İşletmeyi arıyorum",
+    "text": "İşletme ile iletişime geçiyorum, hemen yardımcı olacağım."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "Cihaz yeniden başlat",
+    "text": "İşletmeye cihazını yeniden başlatması gerektiğini bildirmenizi rica ederim."
+  },
+  {
+    "keys": "L-Win+Z",
+    "group": "İşletme İletişimi",
+    "label": "Cihaz sorma",
+    "text": "İşletmeye siparişe devam edebilmeleri için yedek bir cihaz sağlanabilir mi sorar mısınız?"
   }
 ]
