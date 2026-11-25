@@ -114,7 +114,7 @@ def test_edge_cases_empty_program_only_list_text_only_crlf_and_mixed_terminators
         "text_000=L-Win+A=Enter gönderir<E<N<D|\r\n"
         "text_001=L-Win+Z=Enter göndermez\r\n"
         "[list_order]\r\ntext_000=1\r\ntext_001=2\r\n"
-        "[list_label]\r\ntext_000=Restoran/Birinci\r\ntext_001=Düz Etiket\r\n"
+        "[list_label]\r\ntext_000=Partner/Birinci\r\ntext_001=Düz Etiket\r\n"
     )
     mixed_doc = parse_qtp_ini(mixed)
     assert mixed_doc.items[0].terminator == "<E<N<D|"

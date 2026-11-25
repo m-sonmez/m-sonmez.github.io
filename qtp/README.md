@@ -1,55 +1,53 @@
-# QTP — QuickTextPaste & Hazır Cevaplar (Bağımsız Uygulama + Klasik PWA)
+# QTP — QuickTextPaste & Universal Snippet Manager (`v2.5.0`)
 
-**QTP v2.4.4**, ek harici bağımlılık gerektirmeyen, tek taşınabilir yürütülebilir dosya (`qtp.exe` / `qtp.bin`) ve sıfır arka uçlu 320 px–1920 px uyumlu statik Web arayüzü (`qtp.html` + `index.html`) olarak çalışan gelişmiş hazır cevap, snippet yöneticisi ve otomatik yapıştırma aracıdır. Windows ikilisi (`qtp.exe`), `CompanyName = Murat Sönmez` PE sürüm bilgisini ve `CN=Murat Sönmez` SHA-256 Authenticode dijital imzasını taşır; Linux ikilisi (`qtp.bin`) ise Arch/CachyOS, Ubuntu/Debian, Fedora ve openSUSE gibi dağıtımlarda yerel sistem font/xkbcommon/Mesa kütüphaneleriyle uyumlu çalışır.
-
----
-
-## Dört Mod (`--gui`, `--tui`, `--cli`, `--web`) & Tam Güçlü Yönetim
-
-- **`--gui`:** Varsayılan **Açık (Light)** tema (üst çubukta `🌙 Koyu` / `☀️ Açık`), **`☰ Liste` / `▦ Kart` / `▤ Tablo`** görünümleri, çoklu seçim ve **`✏️ Toplu Düzenle`**, **`📁 Grup Yöneticisi`**, **`⭐ Favoriler`**, **`😊/🚫 Emoji Temizle & Ekle`**, **`Ctrl+Z` / `Ctrl+Y` Geri Al/Yinele**, **`Ctrl+S` Kaydet**, sistem tepsisi ve `Win+Alt+*` kısayollar.
-- **`--tui`:** Renkli VT / eski Windows 7 Console uyumlu tam terminal arayüzü (`a`/`E`/`d` CRUD, `Space` çoklu seçim, `U`/`X` toplu işlem, `D`/`K`/`J` çoğalt/taşı, `f`/`F` favoriler, `m` emoji temizleme, `g`/`G` gruplar, `u`/`y` geri/yinele, `w` kaydet).
-- **`--cli`:** PowerShell / bash / zsh / fish otomatik tamamlama (`--completion`), `--json`, `--bulk-edit` / `--bulk-delete`, `--duplicate-item`, `--move-item`, `--toggle-favorite`, `--rename-group` / `--delete-group`, `--undo` / `--redo`, `--save`, `--only-favorites` / `--only-notes` / `--sort` / `--strip-emoji`.
-- **`--web` ve `qtp.html`:** Yerelde `127.0.0.1` loopback veya GitHub Pages `localStorage`: Liste/Kart/Tablo görünümleri, sürükle-bırak İçe Aktarım, UTF-16 LE/UTF-8/ANSI/JSON/Word `.doc`/Yazdır dışa aktarımı, Toplu Düzenleme, Grup Yöneticisi, Emoji yongaları, Geri Al/Yinele ve yerel Anlık Kayıt Geçmişi.
+**QTP v2.5.0** is a **100 % config- and data-driven, globally usable quick-paste & snippet manager** for any user, any language, any domain, any categories, any groups, and any keybindings. It ships as a standalone zero-runtime-dependency single-file portable binary (`qtp.exe` for Windows, `qtp.bin` for Linux x64) and a responsive 320 px–1920 px offline-capable Web/PWA (`qtp.html` + `index.html`), while remaining **100 % backward-compatible** with any existing `QuickTextPaste.ini` or `data.json`.
 
 ---
 
-## 1. Tek Dosya Uygulama ve Canlı GitHub Pages Dağıtımı
+## Highlights (`v2.5.0`)
 
-- **Klasik PWA (Ana URL):** [https://m-sonmez.github.io/qtp/](https://m-sonmez.github.io/qtp/) ([index.html](index.html)) — Klasik QuickTextPaste kılavuzu, [legacy/cevaplar.html](legacy/cevaplar.html) görüntüleyici, **📲 PWA Yükle** ve akıllı OS indirme düğmesi.
-- **Birleşik Web Uygulaması:** [https://m-sonmez.github.io/qtp/qtp.html](https://m-sonmez.github.io/qtp/qtp.html) ([qtp.html](qtp.html)) — `--web` ile birebir özdeş çevrimdışı/statik CRUD arayüzü.
-- **Windows x64 Taşınabilir İkili (`≤ 50 MB`, İmzalı):** [https://m-sonmez.github.io/qtp/qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe) ([Ortak Sertifika `.cer`](certs/MuratSonmez-QTP.cer))
-- **Linux x64 ELF Taşınabilir İkili (`≤ 60 MB`):** [https://m-sonmez.github.io/qtp/qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin)
-
----
-
-## 2. Çakışmasız Kısayollar ve Tam Özelleştirme
-
-- Varsayılan `recommended` profili Windows sistem kısayolları ve Türkçe-Q `AltGr` (`@`) ile çakışmaz: `Win+Alt+Space` (Tümü), `Win+Alt+A`, `Win+Alt+Z`, `Win+Alt+X`, `Win+Alt+Q`.
-- Altı hazır profil (`recommended`, `win_ctrl`, `ctrl_alt`, `ctrl_shift_alt`, `function_keys`, `legacy_win`), tüm 15 değiştirici bileşimi ve `hotkeys.<özel>` dinamik yuvaları.
-- Ayrıntılar için [Klavye Kısayolları Rehberi](docs/KISAYOLLAR.md) belgesine bakın.
+- **100 % Config-Driven Categories & Hotkeys:** Only virtual `All` (`Tümü`) is built in. Define custom categories (`code`, `label`, `hotkey_prefix`) in `qtp_settings.json`, GUI **Settings**, or Web **Categories** — or drop any existing `QuickTextPaste.ini` / `data.json` into the folder and QTP automatically discovers every distinct category prefix in order of first appearance.
+- **Universal Default Hotkey (`Win+Alt+Space`) & Dynamic Presets:** Starts with a minimal, conflict-free `{"all": "Win+Alt+Space"}` binding and lets you bind any category or custom slot across all 15 modifier combinations and 6 dynamic presets (`recommended`, `win_ctrl`, `ctrl_alt`, `ctrl_shift_alt`, `function_keys`, `legacy_win`), with live OS/KDE/GNOME/AltGr conflict detection.
+- **Built-in EN / TR i18n + Custom `qtp_locale.json`:** Defaults to `language: "auto"` (English globally, Turkish automatically on `tr*` OS locales) with live 1-click EN/TR switching across GUI, TUI, CLI, and Web (`qtp.html`, `index.html`, `legacy/cevaplar.html`). Place an optional `qtp_locale.json` in your config directory to translate or customize any UI string in any language without recompiling.
+- **Four Full-Parity Modes (`--gui`, `--tui`, `--cli`, `--web`):**
+  - **`--gui`:** Light-first WCAG-verified Spotlight overlay with dark toggle, List/Grid/Table views, dynamic category pills, multi-select & Bulk Edit, Group Manager, Emoji strip/chips, 30-step Undo/Redo, 8-edge frameless resize/drag, Wayland `XDG_ACTIVATION_TOKEN` IPC raising, `hide_on_blur`, and tray single-click toggle.
+  - **`--tui`:** Pure-stdlib terminal interface (Linux/macOS `curses`, Windows VT100/Win32 Console) with dynamic `Tab`/`1–9` category switching, `N` notes-only toggle, `F` favorites filter, `a`/`E`/`d` CRUD, `Space`/`U`/`X` bulk edit/delete, `g`/`G` groups, `u`/`y` undo/redo, and `F1` help.
+  - **`--cli`:** Machine-readable `--json`, PowerShell/bash/zsh/fish `--completion`, full CRUD, bulk operations, `--only-favorites`, `--only-notes`, `--group`, `--sort {order,usage,alpha,keys,favorites}`, `--strip-emoji`, `--get`/`--set`, and `--check-hotkeys`.
+  - **`--web` & Offline PWA (`qtp.html`):** Identical UI in local loopback (`127.0.0.1` with DNS-rebinding/CSRF protection) and zero-backend GitHub Pages static mode (`localStorage` + `sw.js` `qtp-pwa-cache-v4.0.0` offline routing with query-string support).
 
 ---
 
-## 3. Kurulum, Kullanım, SSS ve Geliştirici Belgeleri
+## 1. Live GitHub Pages & Single-File Downloads
 
-| Belge | İçerik |
+- **Unified Web App (Offline PWA):** [https://m-sonmez.github.io/qtp/qtp.html](https://m-sonmez.github.io/qtp/qtp.html) ([qtp.html](qtp.html))
+- **Classic PWA (Root URL):** [https://m-sonmez.github.io/qtp/](https://m-sonmez.github.io/qtp/) ([index.html](index.html)) & [Quick Board](legacy/cevaplar.html)
+- **Windows x64 Portable Binary (`≤ 50 MB`, Authenticode-signed `CN=Murat Sönmez`):** [https://m-sonmez.github.io/qtp/qtp.exe](https://m-sonmez.github.io/qtp/qtp.exe) ([Public Certificate `.cer`](certs/MuratSonmez-QTP.cer))
+- **Linux x64 ELF Portable Binary (`≤ 60 MB`, cross-distro):** [https://m-sonmez.github.io/qtp/qtp.bin](https://m-sonmez.github.io/qtp/qtp.bin)
+
+---
+
+## 2. Documentation
+
+| Document | Contents |
 | :--- | :--- |
-| [Kurulum ve Sistem Gereksinimleri](docs/KURULUM.md) | Windows 7–11, Linux (X11/Wayland), macOS, BSD ve kaynaktan derleme adımları |
-| [Kullanım Kılavuzu](docs/KULLANIM.md) | 4 kipin kullanımı, tam CRUD rehberi, JSON API örnekleri ve [Modlar Arası Eşitlik Matrisi](docs/KULLANIM.md#12-modlar-arası-eşitlik-matrisi) |
-| [Klavye Kısayolları Rehberi](docs/KISAYOLLAR.md) | Global profiller, 15 değiştirici, `AltGr`, katman/TUI/Web kısayolları |
-| [Sıkça Sorulan Sorular (SSS)](docs/SSS.md) | Birebir Türkçe hata/uyarı kataloğu, tema ve CRUD çözümleri |
-| [Geliştirici Rehberi](docs/GELISTIRICI.md) | `legacy/` ve `standalone/` mimarisi, `OPERATIONS`, canlı izleyici ve CI/test kuralları |
+| [Installation & Requirements (`KURULUM.md`)](docs/KURULUM.md) | Windows 7–11, Linux (X11/Wayland), macOS, BSD, code signing & source builds |
+| [Usage Guide (`KULLANIM.md`)](docs/KULLANIM.md) | All 4 modes, dynamic categories, EN/TR/`qtp_locale.json`, CRUD, settings & [Mode Parity Matrix](docs/KULLANIM.md#12-modlar-arası-eşitlik-matrisi) |
+| [Keyboard Shortcuts (`KISAYOLLAR.md`)](docs/KISAYOLLAR.md) | Dynamic hotkeys, 6 presets, 15 modifier combos, conflict checks & overlay/TUI/Web keys |
+| [FAQ & Error Reference (`SSS.md`)](docs/SSS.md) | Exact error/warning catalog, Wayland/Windows troubleshooting, theme & CRUD tips |
+| [Developer Guide (`GELISTIRICI.md`)](docs/GELISTIRICI.md) | `standalone/` vs `legacy/` architecture, `OPERATIONS`, i18n, live watcher & test/CI gates |
 
 ---
 
-## 4. Dizin Yapısı ve Ayarlar (`qtp_settings.json`)
+## 3. Quick Settings Reference (`qtp_settings.json`)
 
-- `qtp/standalone/` → Bağımsız uygulama kaynakları (`qtp_app/`), PyInstaller yapılandırmaları ve `pytest` takımı.
-- `qtp/legacy/` → Klasik HTML/Python/PowerShell betikleri (`cevaplar.html`, `qtp_manager.py`, `qtp_core.py`, `qtp_server.py`, `kurulum.ps1`, `tests/test_qtp.py`).
-- `qtp_settings.json` varsayılan değerleri: `theme: "light"`, `view_mode: "list"`, `strip_emoji: false`, `sort_by: "order"`, `hide_on_blur: true`, `auto_reload: true` (`500 ms`), `paste_method: "auto"`, `enter_after_paste: true`, `backup_count: 15`, `web.port: 8765`.
+Default configuration (`qtp_settings.json`):
+- `language`: `"auto"` (`"auto"` / `"en"` / `"tr"` or custom code from `qtp_locale.json`)
+- `categories`: `[]` (custom `[{"code": "1", "label": "General", "hotkey_prefix": "L-Win+1"}]` merged with auto-discovered data categories)
+- `hotkeys`: `{"all": "Win+Alt+Space"}` (extendable with any category or custom slot `hotkeys.<slot>`)
+- `theme`: `"light"`, `view_mode`: `"list"`, `strip_emoji`: `false`, `sort_by`: `"order"`, `hide_on_blur`: `true`, `auto_reload`: `true` (`500 ms`), `paste_method`: `"auto"`, `enter_after_paste`: `true`, `backup_count`: `15`, `web.port`: `8765`.
 
 ---
 
-## 5. English Summary
+## 4. Türkçe Özet
 
-**QTP v2.4.4** is a standalone, zero-runtime-dependency snippet & quick-paste manager shipping portable single-file binaries (Authenticode-signed `qtp.exe` for Windows with `CN=Murat Sönmez` & PE version metadata, cross-distro `qtp.bin` for Linux x64 built with host `fontconfig`/`xkbcommon` compatibility) and a 320 px–1920 px responsive unified browser UI (`qtp.html`, styled via offline compiled Tailwind CSS v3.4.19 `theme.css` with persistent `compact`/`default`/`metro` density modes) alongside the preserved classic PWA (`index.html`, `legacy/`). It delivers full power-user parity across GUI, TUI, CLI, and Web/Static modes: Wayland `XDG_ACTIVATION_TOKEN` IPC raising & auto-hide on focus loss (`hide_on_blur`), deterministic `ALL` initial startup category, Linux KDE `~/.config/kglobalshortcutsrc` & GNOME hotkey conflict detection, high-density Spotlight-style desktop/mobile UI (15–20+ desktop rows, 8–12+ mobile rows, unified View/Edit/Quick-Actions modal), `Host`/`Origin`/`Sec-Fetch-Site` DNS-rebinding & CSRF protection with bounded JSON bodies on `--web`, zero accidental data resurrection after delete or corrupt INI load, `FlowLayout` narrow-window GUI responsiveness, HiDPI SVG icons & tray single-click toggle, List/Grid/Table views, 8-edge frameless resize/drag across Wayland/X11/Windows/macOS, clean `SIGINT`/`SIGTERM` shutdown, Wayland-safe copy-before-hide & terminal-aware paste (`ctrl_shift_v`), multi-select & bulk edit/delete, Unicode display-width TUI clipping, 30-step Undo/Redo, drag-and-drop INI/JSON import, multi-encoding INI / JSON / Word `.doc` / Print export, and local/disk snapshots with a WCAG-verified light-first UI.
+**QTP v2.5.0**, herhangi bir alan adına, sabit kategoriye veya dile bağlı kalmadan tamamen yapılandırma ve veri odaklı çalışan taşınabilir hızlı yapıştırma ve metin şablonu yöneticisidir. Tek dosya Windows (`qtp.exe`, `CN=Murat Sönmez` Authenticode imzalı) ve Linux (`qtp.bin`) ikilileri ile çevrimdışı PWA web arayüzü (`qtp.html`, `index.html`, `legacy/cevaplar.html`) sunar. `qtp_settings.json` içinde kendi kategorilerinizi ve `hotkeys.*` kısayollarınızı tanımlayabilir ya da mevcut `QuickTextPaste.ini` / `data.json` dosyanızı doğrudan klasöre bırakarak tüm eski kategorilerinizi %100 geriye dönük uyumlulukla otomatik keşfedebilirsiniz. Yerleşik İngilizce/Türkçe (`language: "auto" | "en" | "tr"`) dil desteği ve isteğe bağlı `qtp_locale.json` ile her dilde özelleştirilebilir.

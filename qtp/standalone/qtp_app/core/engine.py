@@ -23,9 +23,12 @@ from qtp_app.core.hotkeys import (
     HOTKEY_PRESETS,
     HOTKEY_PRESET_LABELS,
     apply_modifier_combo,
+    build_preset_hotkeys,
     detect_hotkey_conflicts,
+    get_preset_labels,
     resolve_preset_name,
 )
+from qtp_app.core.i18n import resolve_language, t
 from qtp_app.core.operations import OPERATIONS
 from qtp_app.core.ini_parser import (
     DEFAULT_TERMINATOR,
@@ -73,7 +76,7 @@ from qtp_app.core.settings import (
     set_setting_value,
 )
 from qtp_app.core.watcher import ConfigFileWatcher, FileChange, ReloadEvent
-from qtp_app.ui.search import FuzzyMatcher, tr_lower, tr_sort_key
+from qtp_app.ui.search import FuzzyMatcher, locale_sort_key, tr_lower, tr_sort_key
 
 _EMOJI_RE = re.compile(
     "["
@@ -97,25 +100,36 @@ def strip_emojis(text: str) -> str:
     return _strip_unicode_emojis(text)
 
 CATEGORY_DEFINITIONS: tuple[tuple[str, str, str], ...] = (
-    ("ALL", "Tümü", ""),
-    ("A", "A · İş Ortağı", "L-Win+A"),
-    ("Z", "Z · Kurye", "L-Win+Z"),
-    ("X", "X · Canlı Yardım", "L-Win+X"),
-    ("Q", "Q · Turkcell", "L-Win+Q"),
+    ("ALL", "All", ""),
 )
 
 
-def format_hotkeys_toast(hotkeys: dict[str, str] | None = None) -> str:
-    hk = hotkeys or DEFAULT_HOTKEYS
-    ordered = []
-    for k in ("all", "A", "Z", "X", "Q"):
-        val = str(hk.get(k, "")).strip()
-        if val:
-            ordered.append(val)
+def extract_category_code(keys: str) -> str:
+    """Extracts the canonical uppercased category code (token after last '+') from a hotkey prefix."""
+    raw = str(keys or "").strip()
+    if not raw:
+        return ""
+    token = raw.rsplit("+", 1)[-1].strip() if "+" in raw else raw
+    return token.upper()
+
+
+def format_hotkeys_toast(
+    hotkeys: dict[str, str] | None = None,
+    *,
+    lang: str = "en",
+    config_dir: str | Path | None = None,
+) -> str:
+    hk = hotkeys if hotkeys is not None else DEFAULT_HOTKEYS
+    ordered: list[str] = []
+    all_val = str(hk.get("all", "")).strip()
+    if all_val:
+        ordered.append(all_val)
     for k, val in hk.items():
-        if k not in ("all", "A", "Z", "X", "Q") and str(val or "").strip():
+        if k != "all" and str(val or "").strip():
             ordered.append(str(val).strip())
-    return "QTP hazır. " + (" / ".join(ordered) if ordered else "Tepsi veya Ctrl+, ile kısayol atayın")
+    prefix = t("tray.ready", lang, config_dir)
+    body = " / ".join(ordered) if ordered else t("tray.assign_hotkey", lang, config_dir)
+    return f"{prefix} {body}"
 
 
 FIRST_RUN_TOAST = format_hotkeys_toast(DEFAULT_HOTKEYS)
@@ -261,11 +275,15 @@ def detect_target_shell(requested: str | None = None, *, platform_name: str | No
     return "bash"
 
 
-def build_completion_script(shell: str, option_strings: list[str] | tuple[str, ...] | None = None) -> str:
-    """Canlı seçenekler, kategoriler, ayar anahtarları ve profillerden kabuk tamamlama betiği üretir."""
+def build_completion_script(
+    shell: str,
+    option_strings: list[str] | tuple[str, ...] | None = None,
+    categories: list[str] | tuple[str, ...] | None = None,
+) -> str:
+    """Canlı seçenekler, dinamik kategoriler, ayar anahtarları ve profillerden kabuk tamamlama betiği üretir."""
     flags = list(option_strings) if option_strings else list(_DEFAULT_CLI_FLAGS)
     modes = ["gui", "tui", "cli", "web"]
-    cats = [c for c, _lbl, _p in CATEGORY_DEFINITIONS]
+    cats = list(categories) if categories else [c for c, _lbl, _p in CATEGORY_DEFINITIONS]
     presets = list(HOTKEY_PRESETS.keys())
     shells = ["powershell", "bash", "zsh", "fish", "auto"]
     skeys = _all_setting_keys()
@@ -448,10 +466,10 @@ def item_matches_category(item: dict[str, Any], category_code: str) -> bool:
 
 
 def is_note_item(item: dict[str, Any]) -> bool:
-    """Kısayolsuz kayıtları ve [DAHİLİ NOT] ön ekli dahili notları tanımlar."""
+    """Identifies keyless notes and items prefixed with [NOTE] or [DAHİLİ NOT]."""
     keys = str(item.get("keys", item.get("hotkey_prefix", ""))).strip()
     text = str(item.get("text", ""))
-    return (not keys) or text.startswith("[DAHİLİ NOT]")
+    return (not keys) or text.startswith("[DAHİLİ NOT]") or text.startswith("[NOTE]")
 
 
 def format_ini_preview(item: dict[str, Any], index: int) -> str:
@@ -470,77 +488,136 @@ def format_ini_preview(item: dict[str, Any], index: int) -> str:
     )
 
 
-def build_cli_help_text(*, verbose: bool = False) -> str:
-    """Tüm modlar (--cli, --web, --tui, --gui) ve Yardım pencereleri için kanonsal Türkçe yardım metni."""
+def build_cli_help_text(
+    *,
+    verbose: bool = False,
+    lang: str = "en",
+    config_dir: str | Path | None = None,
+) -> str:
+    """Canonical CLI help text for --cli, --web, --tui, --gui and Help windows."""
+    is_tr = str(lang or "en").strip().lower().startswith("tr")
     op_lines = []
     for op in OPERATIONS:
         flag_disp = f"{op.cli_flag} {op.args_spec}".strip()
-        op_lines.append(f"  {flag_disp:<38} {op.label_tr}")
-    base = (
-        f"{__display_name__} v{__version__} — Komut Satırı Kullanımı\n\n"
-        "Kullanım:\n"
-        "  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]\n\n"
-        "Çalışma Modları:\n"
-        "  --mode {gui,tui,cli,web}               Çalışma modunu seçer (kısayol: --gui, --tui, --cli, --web).\n"
-        "  --work-dir DIZIN                       Veri ve ayarlar için çalışma dizini belirler.\n"
-        "  --json                                 Salt-okunur CLI çıktılarını UTF-8 JSON biçiminde basar.\n"
-        "  -v, --verbose / -vv                    Ayrıntılı yardım ve stderr tanılama günlüğü (-vv hata ayıklama).\n"
-        "  -q, --quiet                            Yalnızca veri veya hata çıktılarını basar; bilgi başlıklarını gizler.\n\n"
-        "İşlemler (Operation Registry):\n"
-        + "\n".join(op_lines)
-        + "\n\nEk Seçenekler:\n"
-        "  --category KOD                         --gui/--tui/--web ve --list-items/--search kategori filtresi (ALL/A/Z/X/Q)\n"
-        "  --query METIN                          --gui/--tui/--web ve --list-items için arama süzgeci\n"
-        "  --only-favorites / --only-notes        Yalnızca favori veya [DAHİLİ NOT] kayıtlarını süzer\n"
-        "  --group GRUP / --sort OLCUT            Grup filtresi ve sıralama (order, usage, alpha, keys, favorites)\n"
-        "  --strip-emoji                          Kopyalama/yapıştırma sırasında emojileri temizler\n"
-        "  --selected-keys CSV / --skip-duplicates Seçili kayıt dışa aktarma ve içe aktarmada tekrar atlama\n"
-        "  --merge / --replace                    --import-ini ve --restore için birleştir/değiştir modu\n"
-        "  --keep N                               --backup için tutulacak maksimum yedek sayısı\n"
-        "  --port N                               --web için 127.0.0.1 bağlantı noktası (varsayılan: 8765)\n"
-        "  --open-browser                         --web başlatıldığında tarayıcıyı açar\n"
-        "  --shutdown-after SN                    --web sunucusunu belirtilen saniye sonra zarifçe kapatır\n"
-        "  --item-keys TUS / --item-group GRUP    Ekleme/güncelleme/toplu düzenleme için kısayol, grup, etiket ve metin\n"
-        "  --item-label ETIKET / --item-text METIN / --no-end-marker\n"
-        "                                         Yeni veya güncellenen kaydın alanlarını ve <E<N<D| son ekini belirler\n"
-        "  --find ARA --replace YENI [--ignore-case] [--prefix ON] [--suffix SON] [--strip-emojis] [--add-emoji EMOJI]\n"
-        "  --favorite-action {keep,add,remove}    --bulk-edit için toplu metin ve favori seçenekleri\n"
-        "  --direction {up,down} / --new-group GRUP --move-item ve --rename-group alt parametreleri\n"
-    )
+        op_lines.append(f"  {flag_disp:<38} {op.label_tr if is_tr else op.op_id}")
+    if is_tr:
+        base = (
+            f"{__display_name__} v{__version__} — Komut Satırı Kullanımı\n\n"
+            "Kullanım:\n"
+            "  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [SEÇENEK]\n\n"
+            "Çalışma Modları:\n"
+            "  --mode {gui,tui,cli,web}               Çalışma modunu seçer (kısayol: --gui, --tui, --cli, --web).\n"
+            "  --work-dir DIZIN                       Veri ve ayarlar için çalışma dizini belirler.\n"
+            "  --json                                 Salt-okunur CLI çıktılarını UTF-8 JSON biçiminde basar.\n"
+            "  -v, --verbose / -vv                    Ayrıntılı yardım ve stderr tanılama günlüğü (-vv hata ayıklama).\n"
+            "  -q, --quiet                            Yalnızca veri veya hata çıktılarını basar; bilgi başlıklarını gizler.\n\n"
+            "İşlemler (Operation Registry):\n"
+            + "\n".join(op_lines)
+            + "\n\nEk Seçenekler:\n"
+            "  --category KOD                         --gui/--tui/--web ve --list-items/--search kategori filtresi (ALL veya dinamik kod)\n"
+            "  --query METIN                          --gui/--tui/--web ve --list-items için arama süzgeci\n"
+            "  --only-favorites / --only-notes        Yalnızca favori veya kısayolsuz/[NOTE]/[DAHİLİ NOT] kayıtlarını süzer\n"
+            "  --group GRUP / --sort OLCUT            Grup filtresi ve sıralama (order, usage, alpha, keys, favorites)\n"
+            "  --strip-emoji                          Kopyalama/yapıştırma sırasında emojileri temizler\n"
+            "  --selected-keys CSV / --skip-duplicates Seçili kayıt dışa aktarma ve içe aktarmada tekrar atlama\n"
+            "  --merge / --replace                    --import-ini ve --restore için birleştir/değiştir modu\n"
+            "  --keep N                               --backup için tutulacak maksimum yedek sayısı\n"
+            "  --port N                               --web için 127.0.0.1 bağlantı noktası (varsayılan: 8765)\n"
+            "  --open-browser                         --web başlatıldığında tarayıcıyı açar\n"
+            "  --shutdown-after SN                    --web sunucusunu belirtilen saniye sonra zarifçe kapatır\n"
+            "  --item-keys TUS / --item-group GRUP    Ekleme/güncelleme/toplu düzenleme için kısayol, grup, etiket ve metin\n"
+            "  --item-label ETIKET / --item-text METIN / --no-end-marker\n"
+            "                                         Yeni veya güncellenen kaydın alanlarını ve <E<N<D| son ekini belirler\n"
+            "  --find ARA --replace YENI [--ignore-case] [--prefix ON] [--suffix SON] [--strip-emojis] [--add-emoji EMOJI]\n"
+            "  --favorite-action {keep,add,remove}    --bulk-edit için toplu metin ve favori seçenekleri\n"
+            "  --direction {up,down} / --new-group GRUP --move-item ve --rename-group alt parametreleri\n"
+        )
+    else:
+        base = (
+            f"{__display_name__} v{__version__} — Command-Line Usage\n\n"
+            "Usage:\n"
+            "  qtp [--mode {gui,tui,cli,web} | --gui | --tui | --cli | --web] [OPTIONS]\n\n"
+            "Operating Modes:\n"
+            "  --mode {gui,tui,cli,web}               Select operating mode (shortcuts: --gui, --tui, --cli, --web).\n"
+            "  --work-dir DIR                         Set working directory for data and settings.\n"
+            "  --json                                 Output CLI responses as UTF-8 JSON.\n"
+            "  -v, --verbose / -vv                    Detailed help and stderr diagnostics (-vv debug).\n"
+            "  -q, --quiet                            Print only data or errors; suppress info banners.\n\n"
+            "Operations (Operation Registry):\n"
+            + "\n".join(op_lines)
+            + "\n\nAdditional Options:\n"
+            "  --category CODE                        Category filter (ALL or any dynamic category code)\n"
+            "  --query TEXT                           Fuzzy search filter for --gui/--tui/--web and --list-items\n"
+            "  --only-favorites / --only-notes        Filter favorites or keyless/[NOTE] entries only\n"
+            "  --group GROUP / --sort ORDER           Group filter and sort order (order, usage, alpha, keys, favorites)\n"
+            "  --strip-emoji                          Strip Unicode emojis on copy/paste\n"
+            "  --selected-keys CSV / --skip-duplicates Export selected keys only or skip duplicate texts on import\n"
+            "  --merge / --replace                    Merge or replace mode for --import-ini and --restore\n"
+            "  --keep N                               Maximum backups to retain for --backup\n"
+            "  --port N                               127.0.0.1 port for --web (default: 8765)\n"
+            "  --open-browser                         Open default browser when starting --web\n"
+            "  --shutdown-after SEC                   Gracefully stop --web server after N seconds\n"
+            "  --item-keys KEYS / --item-group GROUP  Hotkey prefix, group, label, and text for item mutations\n"
+            "  --item-label LABEL / --item-text TEXT / --no-end-marker\n"
+            "                                         Configure item fields and <E<N<D| paste terminator\n"
+            "  --find STR --replace NEW [--ignore-case] [--prefix PRE] [--suffix SUF] [--strip-emojis] [--add-emoji EMOJI]\n"
+            "  --favorite-action {keep,add,remove}    Bulk text transformation and favorite flags for --bulk-edit\n"
+            "  --direction {up,down} / --new-group NAME Sub-parameters for --move-item and --rename-group\n"
+        )
     if not verbose:
         return base
 
+    preset_labels = get_preset_labels("tr" if is_tr else "en", config_dir)
     preset_lines = [
-        f"  {pid:<16} {', '.join(f'{k}={v}' for k, v in pmap.items())}  [{HOTKEY_PRESET_LABELS.get(pid, pid)}]"
+        f"  {pid:<16} {', '.join(f'{k}={v}' for k, v in pmap.items())}  [{preset_labels.get(pid, pid)}]"
         for pid, pmap in HOTKEY_PRESETS.items()
     ]
-    setting_keys = []
-    for k, v in DEFAULT_SETTINGS.items():
-        if isinstance(v, dict):
-            for sub in v:
-                setting_keys.append(f"{k}.{sub}")
-        else:
-            setting_keys.append(k)
-    setting_keys.extend(["hotkeys.all", "hotkeys.A", "hotkeys.Z", "hotkeys.X", "hotkeys.Q", "hotkeys.<özel>"])
+    setting_keys = _all_setting_keys()
+    setting_keys.append("hotkeys.<slot>")
+    if is_tr:
+        return (
+            base
+            + "\nAyrıntılı Başvuru (--verbose):\n"
+            + "\nKısayol Profilleri (--hotkey-preset):\n"
+            + "\n".join(preset_lines)
+            + "\n\nGeçerli Ayar Anahtarları (--get / --set):\n  "
+            + ", ".join(setting_keys)
+            + "\n\nÇıkış Kodları:\n"
+            "  0  Başarılı\n"
+            "  1  Genel G/Ç, derleme veya Web port hatası\n"
+            "  2  Geçersiz CLI argümanı, ayar anahtarı/değeri veya bulunamayan kayıt/kabuk\n"
+            "  3  Pano erişimi başarısız (başsız grafik oturumu yok)\n"
+            "  4  Tuş simülasyonu başarısız (pano kopyalandı, Wayland/pencere odak kısıtı)\n"
+            + "\nTaşınabilir ve Salt-Okunur Yapılandırma Yolları:\n"
+            "  Taşınabilir : <ikili_klasörü>/{qtp_settings.json, qtp.log, backups/, QuickTextPaste.ini, data.json}\n"
+            "  Windows     : %APPDATA%\\QTP\\\n"
+            "  Linux/BSD   : $XDG_CONFIG_HOME/qtp/ (varsayılan ~/.config/qtp/)\n"
+            "  macOS       : ~/Library/Application Support/QTP/\n"
+            + "\nKabuk Otomatik Tamamlama (--completion) Kurulumu:\n"
+            "  PowerShell  : qtp.exe --completion powershell | Out-String | Invoke-Expression\n"
+            "  Bash        : eval \"$(./qtp.bin --completion bash)\"\n"
+            "  Zsh         : eval \"$(./qtp.bin --completion zsh)\"\n"
+            "  Fish        : ./qtp.bin --completion fish | source\n"
+        )
     return (
         base
-        + "\nAyrıntılı Başvuru (--verbose):\n"
-        + "\nKısayol Profilleri (--hotkey-preset):\n"
+        + "\nDetailed Reference (--verbose):\n"
+        + "\nHotkey Presets (--hotkey-preset):\n"
         + "\n".join(preset_lines)
-        + "\n\nGeçerli Ayar Anahtarları (--get / --set):\n  "
+        + "\n\nValid Setting Keys (--get / --set):\n  "
         + ", ".join(setting_keys)
-        + "\n\nÇıkış Kodları:\n"
-        "  0  Başarılı\n"
-        "  1  Genel G/Ç, derleme veya Web port hatası\n"
-        "  2  Geçersiz CLI argümanı, ayar anahtarı/değeri veya bulunamayan kayıt/kabuk\n"
-        "  3  Pano erişimi başarısız (başsız grafik oturumu yok)\n"
-        "  4  Tuş simülasyonu başarısız (pano kopyalandı, Wayland/pencere odak kısıtı)\n"
-        + "\nTaşınabilir ve Salt-Okunur Yapılandırma Yolları:\n"
-        "  Taşınabilir : <ikili_klasörü>/{qtp_settings.json, qtp.log, backups/, QuickTextPaste.ini, data.json}\n"
+        + "\n\nExit Codes:\n"
+        "  0  Success\n"
+        "  1  General I/O, build, or Web port error\n"
+        "  2  Invalid CLI argument, setting key/value, or missing item/shell\n"
+        "  3  Clipboard access failed (headless or unavailable)\n"
+        "  4  Keystroke simulation failed (copied to clipboard only)\n"
+        + "\nPortable and Read-Only Fallback Config Paths:\n"
+        "  Portable    : <binary_dir>/{qtp_settings.json, qtp.log, backups/, QuickTextPaste.ini, data.json}\n"
         "  Windows     : %APPDATA%\\QTP\\\n"
-        "  Linux/BSD   : $XDG_CONFIG_HOME/qtp/ (varsayılan ~/.config/qtp/)\n"
+        "  Linux/BSD   : $XDG_CONFIG_HOME/qtp/ (default ~/.config/qtp/)\n"
         "  macOS       : ~/Library/Application Support/QTP/\n"
-        + "\nKabuk Otomatik Tamamlama (--completion) Kurulumu:\n"
+        + "\nShell Completion Setup (--completion):\n"
         "  PowerShell  : qtp.exe --completion powershell | Out-String | Invoke-Expression\n"
         "  Bash        : eval \"$(./qtp.bin --completion bash)\"\n"
         "  Zsh         : eval \"$(./qtp.bin --completion zsh)\"\n"
@@ -600,7 +677,7 @@ class QtpEngine:
                 try:
                     raw = json.loads(self.settings_path.read_text(encoding="utf-8"))
                     if isinstance(raw, dict):
-                        self.settings = _sanitize_settings(raw)
+                        self.settings = _sanitize_settings(raw, config_dir=self.config_dir)
                 except Exception:
                     pass
             self.settings_warning = None
@@ -774,7 +851,7 @@ class QtpEngine:
             if "settings" in kinds and kinds["settings"].exists:
                 try:
                     raw = self._read_json_with_retry(self.settings_path)
-                    new_settings = _sanitize_settings(raw)
+                    new_settings = _sanitize_settings(raw, config_dir=self.config_dir)
                     old = self.settings
                     if new_settings != old:
                         ev.settings_changed = True
@@ -878,7 +955,7 @@ class QtpEngine:
         old_data = self.settings.get("data_path")
         with self._suppress_write(self.settings_path):
             saved = save_settings(new_settings, self.settings_path)
-        self.settings = _sanitize_settings(new_settings)
+        self.settings = _sanitize_settings(new_settings, config_dir=self.config_dir)
         new_level = str(self.settings.get("log_level", "info"))
         if not self.ephemeral and new_level != getattr(self, "_applied_log_level", None):
             setup_logging(
@@ -1002,6 +1079,60 @@ class QtpEngine:
             data={"modes": modes},
         )
 
+    def resolved_language(self) -> str:
+        """Resolves the active UI/CLI language ('en', 'tr', or custom locale from qtp_locale.json)."""
+        return resolve_language(self.settings.get("language", "auto"), self.config_dir)
+
+    def resolve_categories(self) -> list[dict[str, Any]]:
+        """Merges virtual ALL, user-configured categories, and auto-discovered snippet categories."""
+        lang = self.resolved_language()
+        categories: list[dict[str, Any]] = [
+            {
+                "code": "ALL",
+                "label": t("cat.all", lang, self.config_dir),
+                "hotkey_prefix": "",
+                "count": len(self.items),
+                "auto": False,
+            }
+        ]
+        seen_codes: set[str] = {"ALL"}
+        configured = self.settings.get("categories") or []
+        if isinstance(configured, list):
+            for entry in configured:
+                if not isinstance(entry, dict):
+                    continue
+                code = str(entry.get("code", "")).strip().upper()
+                if not code or code in seen_codes:
+                    continue
+                seen_codes.add(code)
+                label = str(entry.get("label", "")).strip() or code
+                prefix = str(entry.get("hotkey_prefix", "")).strip()
+                categories.append(
+                    {
+                        "code": code,
+                        "label": label,
+                        "hotkey_prefix": prefix,
+                        "count": sum(1 for it in self.items if item_matches_category(it, code)),
+                        "auto": False,
+                    }
+                )
+        for it in self.items:
+            raw_keys = str(it.get("keys", it.get("hotkey_prefix", ""))).strip()
+            code = extract_category_code(raw_keys)
+            if not code or code in seen_codes:
+                continue
+            seen_codes.add(code)
+            categories.append(
+                {
+                    "code": code,
+                    "label": code,
+                    "hotkey_prefix": raw_keys,
+                    "count": sum(1 for row in self.items if item_matches_category(row, code)),
+                    "auto": True,
+                }
+            )
+        return categories
+
     def op_completion(
         self,
         shell: str = "auto",
@@ -1014,7 +1145,8 @@ class QtpEngine:
                 f"Desteklenmeyen kabuk türü: '{shell}' (desteklenenler: {', '.join(SUPPORTED_SHELLS)})."
             )
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
-        script = build_completion_script(target, option_strings=option_strings)
+        cat_codes = [c["code"] for c in self.resolve_categories()]
+        script = build_completion_script(target, option_strings=option_strings, categories=cat_codes)
         return OperationResult(
             ok=True,
             exit_code=0,
@@ -1023,8 +1155,9 @@ class QtpEngine:
         )
 
     def op_help(self, help_text: str = "", *, verbose: bool = False) -> OperationResult:
-        usage = build_cli_help_text(verbose=False)
-        usage_verbose = build_cli_help_text(verbose=True)
+        lang = self.resolved_language()
+        usage = build_cli_help_text(verbose=False, lang=lang, config_dir=self.config_dir)
+        usage_verbose = build_cli_help_text(verbose=True, lang=lang, config_dir=self.config_dir)
         chosen_usage = help_text or (usage_verbose if verbose else usage)
         return OperationResult(
             ok=True,
@@ -1038,6 +1171,7 @@ class QtpEngine:
                 "kisayollar": read_doc_text("KISAYOLLAR.md"),
                 "sss": read_doc_text("SSS.md"),
                 "verbose": bool(verbose),
+                "language": lang,
             },
         )
 
@@ -1115,7 +1249,7 @@ class QtpEngine:
                         overlay.deleteLater()
                         app.processEvents()
                 except ImportError:
-                    self._matcher.filter_items("şifre", [it.to_dict(include_meta=False) for it in doc.items])
+                    self._matcher.filter_items("Note", [it.to_dict(include_meta=False) for it in doc.items])
                 finally:
                     if prev_qpa is None and os.environ.get("QT_QPA_PLATFORM") == "offscreen":
                         os.environ.pop("QT_QPA_PLATFORM", None)
@@ -1132,15 +1266,7 @@ class QtpEngine:
             return OperationResult(ok=False, exit_code=1, message=err, error=err)
 
     def op_list_categories(self) -> OperationResult:
-        categories = [
-            {
-                "code": code,
-                "label": label,
-                "hotkey_prefix": prefix,
-                "count": sum(1 for it in self.items if item_matches_category(it, code)),
-            }
-            for code, label, prefix in CATEGORY_DEFINITIONS
-        ]
+        categories = self.resolve_categories()
         return OperationResult(
             ok=True,
             exit_code=0,
@@ -1262,14 +1388,14 @@ class QtpEngine:
         elif eff_sort == "alpha":
             matched = sorted(
                 matched,
-                key=lambda r: (tr_sort_key(str(r[1].get("label") or r[1].get("text") or "")), r[0]),
+                key=lambda r: (locale_sort_key(str(r[1].get("label") or r[1].get("text") or "")), r[0]),
             )
         elif eff_sort == "keys":
             matched = sorted(
                 matched,
                 key=lambda r: (
                     0 if str(r[1].get("keys", "")).strip() else 1,
-                    tr_sort_key(str(r[1].get("keys", ""))),
+                    locale_sort_key(str(r[1].get("keys", ""))),
                     r[0],
                 ),
             )
@@ -1785,7 +1911,7 @@ class QtpEngine:
 
     def op_set_setting(self, key: str, value: Any) -> OperationResult:
         try:
-            updated = set_setting_value(self.settings, key, value)
+            updated = set_setting_value(self.settings, key, value, config_dir=self.config_dir)
             self.save_current_settings(updated)
             stored = self.settings.get("hotkeys", {}) if key.startswith("hotkeys.") else None
             if stored is not None:
@@ -1805,7 +1931,7 @@ class QtpEngine:
 
     def op_check_hotkeys(self) -> OperationResult:
         hk = dict(self.settings.get("hotkeys") or DEFAULT_HOTKEYS)
-        conflicts = detect_hotkey_conflicts(hk)
+        conflicts = detect_hotkey_conflicts(hk, language=self.resolved_language())
         count = sum(len(v) for v in conflicts.values())
         msg = (
             "Kısayol çakışma denetimi tamamlandı: çakışma yok ✔"
@@ -1827,12 +1953,19 @@ class QtpEngine:
             return OperationResult(ok=False, exit_code=2, message=err, error=err)
 
         updated = copy.deepcopy(self.settings)
-        merged_hk = dict(updated.get("hotkeys") or DEFAULT_HOTKEYS)
-        merged_hk.update(HOTKEY_PRESETS[canon])
-        updated["hotkeys"] = merged_hk
+        existing_hk = dict(updated.get("hotkeys") or DEFAULT_HOTKEYS)
+        active_slots: list[str] = ["all"]
+        for slot in existing_hk:
+            if slot != "all" and slot not in active_slots:
+                active_slots.append(slot)
+        for cat in self.resolve_categories():
+            code = str(cat.get("code", "")).strip()
+            if code and code.upper() != "ALL" and code not in active_slots:
+                active_slots.append(code)
+        updated["hotkeys"] = build_preset_hotkeys(canon, active_slots)
         self.save_current_settings(updated)
 
-        conflicts = detect_hotkey_conflicts(self.settings["hotkeys"])
+        conflicts = detect_hotkey_conflicts(self.settings["hotkeys"], language=self.resolved_language())
         warn = None
         if conflicts:
             warn = "; ".join(f"{k}: {v[0]}" for k, v in conflicts.items())
@@ -1854,7 +1987,7 @@ class QtpEngine:
         updated = copy.deepcopy(self.settings)
         updated["hotkeys"] = new_hk
         self.save_current_settings(updated)
-        conflicts = detect_hotkey_conflicts(self.settings["hotkeys"])
+        conflicts = detect_hotkey_conflicts(self.settings["hotkeys"], language=self.resolved_language())
         warn = "; ".join(f"{k}: {v[0]}" for k, v in conflicts.items()) if conflicts else None
         return OperationResult(
             ok=True,

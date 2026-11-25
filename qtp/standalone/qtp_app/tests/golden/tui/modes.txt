@@ -1,7 +1,7 @@
-QTP v2.4.4 | Mod: TUI | Ara: "" [/ Ara] | Kayıt: 2/2
-Kategoriler: [Tümü(2)] A(1) Z(1) X(0) Q(0)
+QTP v2.5.0 | Mode: TUI | Search: "" [/ Search] | Items: 2/2
+Categories: [All (2)] | 1 (1) | 2 (1)
 ------------------------------------------------------------------------------------------------
-=== Desteklenen Modlar (Kapatmak için Esc/q) ===
+=== Desteklenen Modlar (Esc/q Close) ===
 Desteklenen çalışma modları: gui, tui, cli, web.
 
 
@@ -18,5 +18,5 @@ Desteklenen çalışma modları: gui, tui, cli, web.
 
 
 ------------------------------------------------------------------------------------------------
-Durum: Desteklenen çalışma modları: gui, tui, cli, web.
-↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış
+Status: Desteklenen çalışma modları: gui, tui, cli, web.
+↑↓ Move  Enter Paste  c Copy  / Search  Tab/1-9 Cat  F Fav  N Notes  a Add  E Edit  d Del  s Settin…

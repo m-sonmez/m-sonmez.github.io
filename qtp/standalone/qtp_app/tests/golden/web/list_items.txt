@@ -4,22 +4,22 @@
     "count": 2,
     "items": [
       {
-        "group": "Restoran",
-        "keys": "L-Win+A",
-        "label": "Karşılama",
+        "group": "General",
+        "keys": "L-Win+1",
+        "label": "Greeting",
         "matched_indices": [],
         "raw_key": "text_000",
         "terminator": "<E<N<D|",
-        "text": "Merhaba şğıöç ŞĞÜÖÇİ 😊"
+        "text": "Merhaba Dünya!"
       },
       {
-        "group": "Kurye",
-        "keys": "L-Win+Z",
-        "label": "Bilgi",
+        "group": "Work",
+        "keys": "L-Win+2",
+        "label": "Update",
         "matched_indices": [],
         "raw_key": "text_001",
         "terminator": "<E<N<D|",
-        "text": "İkinci satır\nDevam"
+        "text": "Status update ready"
       }
     ],
     "query": ""

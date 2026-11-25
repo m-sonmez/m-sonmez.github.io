@@ -172,9 +172,20 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         assert h_resp["ok"] is True
         for key in ("usage", "usage_verbose", "kullanim", "kurulum", "kisayollar", "sss"):
             assert h_resp["data"][key], f"/api/help eksik alan: {key}"
-        assert "Ayrıntılı Başvuru (--verbose):" in h_resp["message"]
+        assert "Detailed Reference (--verbose):" in h_resp["message"] or "Ayrıntılı Başvuru (--verbose):" in h_resp["message"]
         assert "btnHelp" in html and "showHelpModal" in html and "/api/help?verbose=1" in html
         assert "helpTabs" in html and "CLI &amp; Parametreler" in html and "Kurulum &amp; SSS" in html
+
+        conn.request(
+            "POST",
+            "/api/categories",
+            body=json.dumps({"categories": [{"code": "WORK", "label": "Work", "hotkey_prefix": "L-Win+W"}]}),
+            headers={"Content-Type": "application/json"},
+        )
+        cat_post = json.loads(conn.getresponse().read().decode("utf-8"))
+        assert cat_post["ok"] is True
+        assert any(c["code"] == "WORK" for c in cat_post["data"]["categories"])
+        assert any(c["code"] == "WORK" for c in cat_post["data"]["configured_categories"])
 
         conn.request("GET", "/api/revision")
         rev = json.loads(conn.getresponse().read().decode("utf-8"))
@@ -183,6 +194,8 @@ def test_web_ui_has_no_external_urls_and_matches_theme(tmp_path: Path):
         assert rev["data"]["initial_query"] == ""
         assert rev["data"]["view_mode"] == "list"
         assert rev["data"]["strip_emoji"] is False
+        assert rev["data"]["language"] in ("en", "tr")
+        assert isinstance(rev["data"]["configured_categories"], list)
 
         conn.request("GET", "/api/groups")
         grps = json.loads(conn.getresponse().read().decode("utf-8"))
@@ -289,7 +302,7 @@ def test_web_live_hot_reload_from_external_file_changes(tmp_path: Path):
         conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
         conn.request("GET", "/api/items")
         before = json.loads(conn.getresponse().read().decode("utf-8"))["data"]["count"]
-        assert before >= 500
+        assert before == 12
 
         new_items = [
             {"keys": "L-Win+A", "group": "Test", "label": f"L{i}", "text": f"Öğe {i}"}
@@ -407,12 +420,14 @@ def test_github_pages_sync_static_http_serving_and_js_syntax(tmp_path: Path):
             + pure_js
             + "\nconst hit = filterItemsStatic('şifre', ["
             + "{keys:'L-Win+A', group:'G', label:'İ', text:'Şifre sıfırlama bağlantısı'},"
-            + "{keys:'L-Win+Z', group:'G', label:'K', text:'Kurye notu'}"
+            + "{keys:'L-Win+Z', group:'G', label:'F', text:'Field note'}"
             + "]);"
             + "\nassert.strictEqual(hit.length, 1);"
             + "\nassert(hit[0].matched_indices.length >= 5);"
-            + "\nconst conf = detectHotkeyConflictsStatic({all:'Ctrl+Shift+Space', Q:'Ctrl+Alt+Q'});"
-            + "\nassert(conf.Q && conf.Q[0].includes('AltGr+Q'));"
+            + "\nconst confTr = detectHotkeyConflictsStatic({all:'Ctrl+Shift+Space', Q:'Ctrl+Alt+Q'}, 'tr');"
+            + "\nassert(confTr.Q && confTr.Q[0].includes('AltGr+Q'));"
+            + "\nconst confEn = detectHotkeyConflictsStatic({all:'Ctrl+Shift+Space', Q:'Ctrl+Alt+Q'}, 'en');"
+            + "\nassert(confEn.Q && confEn.Q[0].includes('AltGr') && !confEn.Q[0].includes('Türkçe-Q'));"
             + "\nconsole.log('STATIC_SEARCH_AND_HOTKEY_OK');\n"
         )
         vm_file = tmp_path / "vm_static_check.js"
@@ -438,6 +453,7 @@ function runSim(liveMode) {
       style: {},
       dataset: {},
       children: [],
+      options: [],
       value: '',
       _text: '',
       className: '',
@@ -483,8 +499,8 @@ function runSim(liveMode) {
     TextEncoder, TextDecoder, ArrayBuffer, DataView, Uint8Array, URLSearchParams,
     Blob: class FakeBlob { constructor(parts, opts) { this.parts = parts; this.type = opts?.type || ''; } },
     URL: { createObjectURL: () => 'blob:x', revokeObjectURL: () => {} },
-    location: { protocol: 'https:', hostname: liveMode ? '127.0.0.1' : 'm-sonmez.github.io', search: liveMode ? '' : '?category=Z' },
-    navigator: { onLine: true, platform: 'Win32', userAgent: 'Windows NT 10.0', clipboard: { writeText: async () => {} } },
+    location: { protocol: 'https:', hostname: liveMode ? '127.0.0.1' : 'm-sonmez.github.io', search: liveMode ? '' : '?category=1' },
+    navigator: { onLine: true, language: 'en-US', platform: 'Win32', userAgent: 'Windows NT 10.0', clipboard: { writeText: async () => {} } },
     window: { addEventListener() {}, matchMedia: () => ({ matches: false }) },
     localStorage: { getItem: (k) => (k in ls ? ls[k] : null), setItem: (k, v) => { ls[k] = String(v); } },
     document: {
@@ -504,7 +520,7 @@ function runSim(liveMode) {
         return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ ok: true, data: { revision: 3, initial_category: 'A', initial_query: '' } }) };
       }
       if (u.includes('/api/categories')) {
-        return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ ok: true, data: { categories: [{ code: 'ALL', label: 'Tümü', count: dataArr.length }] } }) };
+        return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ ok: true, data: { categories: [{ code: 'ALL', label: 'Tümü', count: dataArr.length }, { code: 'A', label: 'A', count: 1 }] } }) };
       }
       if (u.includes('/api/groups')) {
         return { ok: true, status: 200, headers: { get: () => 'application/json' }, json: async () => ({ ok: true, data: { groups: [{ name: 'Genel', count: 5, hotkeys: [] }] } }) };
@@ -537,10 +553,16 @@ function runSim(liveMode) {
   const st = await runSim(false);
   const stState = st.getState();
   assert.strictEqual(stState.isStatic, true);
-  assert.strictEqual(stState.category, 'Z');
-  assert(stState.allItems.length >= 500);
+  assert.strictEqual(stState.category, '1');
+  assert.strictEqual(stState.allItems.length, 12);
+  assert.strictEqual(stState.lang, 'en');
   assert.strictEqual(st.htmlRoot.attributes['data-theme'], 'light');
+  assert(st.elsById.get('modeBadge').textContent.includes('Static Web'));
+  await st.elsById.get('btnLangToggle').onclick();
+  assert.strictEqual(st.getState().lang, 'tr');
   assert(st.elsById.get('modeBadge').textContent.includes('Statik Web'));
+  await st.elsById.get('btnLangToggle').onclick();
+  assert.strictEqual(st.getState().lang, 'en');
   await st.ctx.showHelpModal('genel');
   assert(st.elsById.get('modalBody').innerHTML.includes('<div class="md-view">'));
   await st.ctx.showHelpModal('usage_verbose');
@@ -596,7 +618,7 @@ function runSim(liveMode) {
   const lvState = lv.getState();
   assert.strictEqual(lvState.isStatic, false);
   assert.strictEqual(lvState.category, 'A');
-  assert(lv.elsById.get('modeBadge').textContent.includes('Canlı Mod'));
+  assert(lv.elsById.get('modeBadge').textContent.includes('Live Mode') || lv.elsById.get('modeBadge').textContent.includes('Canlı Mod'));
 
   st.ctx.toggleSelectRow('text_000', 0, true, false);
   st.ctx.toggleSelectRow('text_001', 1, true, false);
@@ -605,7 +627,18 @@ function runSim(liveMode) {
   await st.ctx.handleMoveItem(st.getState().allItems[1], 'up');
   assert.strictEqual(st.getState().selectedKeys.size, 0);
 
+  st.getState().allItems = Array.from({ length: 240 }, (_, i) => ({
+    raw_key: 'text_' + String(i).padStart(3, '0'),
+    keys: i % 2 === 0 ? 'L-Win+1' : 'L-Win+2',
+    group: 'Bulk',
+    label: 'Item ' + i,
+    text: 'Snippet #' + i,
+    terminator: '<E<N<D|',
+    favorite: false,
+    copyCount: 0,
+  }));
   st.getState().category = 'ALL';
+  st.ctx.updateStaticCategories();
   st.ctx.updateStaticItems({ resetSelection: true });
   assert.strictEqual(st.getState().renderLimit, 100);
   st.ctx.selectAllVisible();

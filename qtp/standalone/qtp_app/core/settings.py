@@ -1,20 +1,25 @@
-"""Taşınabilir ayar yönetimi (qtp_settings.json) — tüm modlar tarafından ortak kullanılır."""
+"""Portable settings management (qtp_settings.json) shared across all QTP modes."""
 
 from __future__ import annotations
 
 import copy
 import json
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
-from qtp_app.core.hotkeys import HOTKEY_PRESETS, normalize_hotkey
+from qtp_app.core.hotkeys import HOTKEY_PRESETS, build_preset_hotkeys, normalize_hotkey
+from qtp_app.core.i18n import DEFAULT_LANGUAGE, available_languages, t
 from qtp_app.core.ini_parser import atomic_write_bytes
 from qtp_app.core.logging_setup import get_logger
 
 SETTINGS_FILENAME = "qtp_settings.json"
+
+CATEGORY_CODE_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
+_LOCALE_CODE_RE = re.compile(r"^[a-z]{2,3}(?:[-_][a-z0-9]{2,8})?$")
 
 DEFAULT_HOTKEYS: dict[str, str] = dict(HOTKEY_PRESETS["recommended"])
 
@@ -31,6 +36,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "view_mode": "list",
     "strip_emoji": False,
     "sort_by": "order",
+    "categories": [],
     "hotkeys": dict(DEFAULT_HOTKEYS),
     "last_category": "ALL",
     "last_category_by_hotkey": {},
@@ -43,90 +49,51 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "data_path": "./QuickTextPaste.ini",
     "backup_count": 15,
     "log_level": "info",
-    "language": "tr",
+    "language": DEFAULT_LANGUAGE,
     "auto_reload": True,
     "auto_reload_interval_ms": 500,
     "web": {"port": 8765},
 }
 
-SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = {
-    "theme": {
-        "label": "Tema",
-        "tooltip": "Arayüz renk temasını belirler: 'auto' işletim sistemini izler, 'dark' koyu, 'light' açık tema kullanır.",
-    },
-    "view_mode": {
-        "label": "Görünüm Kipi",
-        "tooltip": "Hazır cevap listesinin görünüm düzenini belirler: 'list' (Liste), 'grid' (Izgara) veya 'table' (Tablo).",
-    },
-    "strip_emoji": {
-        "label": "Emojisiz Kopyala / Yapıştır",
-        "tooltip": "Etkinleştirildiğinde kopyalama ve yapıştırma sırasında Unicode emojiler otomatik temizlenir; kayıtlı özgün metin korunur.",
-    },
-    "sort_by": {
-        "label": "Sıralama Ölçütü",
-        "tooltip": "Kayıtların sıralama düzeni: 'order' (Sıra), 'usage' (En Çok Kullanılan), 'alpha' (A–Z), 'keys' (Kısayol), 'favorites' (Favoriler Önce).",
-    },
-    "hotkeys": {
-        "label": "Global Kısayollar",
-        "tooltip": "Katmanı (overlay) tüm kategoriler veya belirli kategoriler (A, Z, X, Q ve özel yuvalar) için açan sistem geneli tuş bileşimleri.",
-    },
-    "last_category": {
-        "label": "Son Seçili Kategori",
-        "tooltip": "Katman genel kısayolla açıldığında otomatik seçilecek son kategori sekmesini hatırlar.",
-    },
-    "window_size": {
-        "label": "Pencere Boyutu",
-        "tooltip": "Katman penceresinin piksel cinsinden [genişlik, yükseklik] boyutu (varsayılan: 720x520).",
-    },
-    "paste_method": {
-        "label": "Yapıştırma Yöntemi",
-        "tooltip": "'auto' platforma ve hedef pencereye (Linux uçbirimlerde Ctrl+Shift+V) göre seçim yapar; gerekirse 'ctrl_v', 'ctrl_shift_v', 'shift_insert' veya 'type' seçilebilir.",
-    },
-    "enter_after_paste": {
-        "label": "Yapıştırma Sonrası Enter (<E<N<D|)",
-        "tooltip": "Kayıt '<E<N<D|' bitiş işaretine sahipse yapıştırma işleminden sonra otomatik Enter tuşu gönderir.",
-    },
-    "hide_on_blur": {
-        "label": "Odağı kaybedince katmanı otomatik gizle",
-        "tooltip": "Katman penceresi dışına tıklandığında veya başka bir pencereye geçildiğinde katmanı otomatik kapatır.",
-    },
-    "start_minimized": {
-        "label": "Küçültülmüş Başlat",
-        "tooltip": "Etkinleştirildiğinde uygulama açılışta katmanı göstermeden doğrudan sistem tepsisinde bekler.",
-    },
-    "tray_icon": {
-        "label": "Sistem Tepsisi Simgesi",
-        "tooltip": "Sistem tepsisi simgesini ve sağ tık menüsünü gösterir veya gizler.",
-    },
-    "data_path": {
-        "label": "Veri Dosyası Yolu",
-        "tooltip": "Okunacak ve kaydedilecek QuickTextPaste.ini dosyasının yolu (varsayılan: ./QuickTextPaste.ini).",
-    },
-    "backup_count": {
-        "label": "Yedek Sayısı",
-        "tooltip": "backups/ klasöründe saklanacak maksimum zaman damgalı yedek sayısı (varsayılan: 15).",
-    },
-    "log_level": {
-        "label": "Günlük Düzeyi",
-        "tooltip": "qtp.log dosyasına yazılacak ayrıntı düzeyi: debug, info, warn veya error.",
-    },
-    "language": {
-        "label": "Arayüz Dili",
-        "tooltip": "Uygulama dili (şu an yalnızca 'tr' desteklenmektedir; gelecek sürümler için ayrılmıştır).",
-    },
-    "auto_reload": {
-        "label": "Otomatik Canlı Yenileme",
-        "tooltip": "Etkinleştirildiğinde qtp_settings.json, QuickTextPaste.ini ve data.json dosyasındaki harici değişiklikler yeniden başlatma olmadan canlı yüklenir.",
-    },
-    "auto_reload_interval_ms": {
-        "label": "Otomatik Yenileme Aralığı (ms)",
-        "tooltip": "Disk değişikliklerinin ne sıklıkla denetleneceğini belirler (100–10000 ms, varsayılan: 500 ms).",
-    },
-    "web": {
-        "label": "Yerel Web Sunucusu",
-        "tooltip": "--web modunun dinleyeceği 127.0.0.1 bağlantı noktası yapılandırması (varsayılan port: 8765).",
-    },
-}
+_SETTING_DESC_KEYS: tuple[str, ...] = (
+    "theme",
+    "view_mode",
+    "strip_emoji",
+    "sort_by",
+    "categories",
+    "hotkeys",
+    "last_category",
+    "window_size",
+    "paste_method",
+    "enter_after_paste",
+    "hide_on_blur",
+    "start_minimized",
+    "tray_icon",
+    "data_path",
+    "backup_count",
+    "log_level",
+    "language",
+    "auto_reload",
+    "auto_reload_interval_ms",
+    "web",
+)
+
+
+def get_setting_descriptions(
+    lang: str = "en",
+    config_dir: str | Path | None = None,
+) -> dict[str, dict[str, str]]:
+    """Returns localized label and tooltip descriptions for all setting keys."""
+    return {
+        key: {
+            "label": t(f"desc.{key}.label", lang, config_dir),
+            "tooltip": t(f"desc.{key}.tooltip", lang, config_dir),
+        }
+        for key in _SETTING_DESC_KEYS
+    }
+
+
+SETTING_DESCRIPTIONS: dict[str, dict[str, str]] = get_setting_descriptions("en")
 
 VALID_THEMES = ("auto", "dark", "light")
 VALID_VIEW_MODES = ("list", "grid", "table")
@@ -136,18 +103,39 @@ VALID_LOG_LEVELS = ("debug", "info", "warn", "error")
 
 
 class SettingValidationError(ValueError):
-    """Geçersiz ayar anahtarı veya değeri için Türkçe hata."""
+    """Validation error raised for invalid setting keys or values."""
+
+
+def sanitize_categories(raw: Any) -> list[dict[str, str]]:
+    """Sanitizes user-configured category entries into canonical {code, label, hotkey_prefix} dicts."""
+    if not isinstance(raw, list):
+        return []
+    cleaned: list[dict[str, str]] = []
+    seen_codes: set[str] = set()
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        code = str(entry.get("code", "")).strip().upper()
+        if not code or code == "ALL" or not CATEGORY_CODE_RE.fullmatch(code):
+            continue
+        if code in seen_codes:
+            continue
+        seen_codes.add(code)
+        label = str(entry.get("label", "")).strip() or code
+        prefix = str(entry.get("hotkey_prefix", "")).strip()
+        cleaned.append({"code": code, "label": label, "hotkey_prefix": prefix})
+    return cleaned
 
 
 def get_app_dir() -> Path:
-    """Çalıştırılabilir dosyanın (veya geliştirme ortamında proje kökünün) dizinini döndürür."""
+    """Returns the executable directory (or repository standalone root during development)."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
     return Path(__file__).resolve().parent.parent.parent
 
 
 def get_os_fallback_dir(platform_name: str | None = None) -> Path:
-    """Salt-okunur klasör durumunda işletim sistemine özgü kullanıcı yapılandırma klasörünü döndürür."""
+    """Returns the OS user configuration directory when the app directory is read-only."""
     plat = platform_name or sys.platform
     if plat == "win32":
         base = os.environ.get("APPDATA") or os.environ.get("USERPROFILE") or str(Path.home() / "AppData" / "Roaming")
@@ -162,7 +150,7 @@ def get_os_fallback_dir(platform_name: str | None = None) -> Path:
 
 
 def is_dir_writable(path: Path) -> bool:
-    """Dizine gerçekten yazma izni olup olmadığını geçici dosya denemesiyle kontrol eder."""
+    """Checks whether the directory is truly writable using a temporary file probe."""
     try:
         path.mkdir(parents=True, exist_ok=True)
         fd, tmp = tempfile.mkstemp(prefix=".qtp_wtest_", dir=str(path))
@@ -173,8 +161,12 @@ def is_dir_writable(path: Path) -> bool:
         return False
 
 
-def resolve_config_dir(preferred_dir: str | Path | None = None, *, platform_name: str | None = None) -> tuple[Path, bool]:
-    """Ayarlar ve günlük dosyaları için yazılabilir klasörü çözer."""
+def resolve_config_dir(
+    preferred_dir: str | Path | None = None,
+    *,
+    platform_name: str | None = None,
+) -> tuple[Path, bool]:
+    """Resolves a writable directory for settings and log files."""
     primary = Path(preferred_dir).resolve() if preferred_dir else get_app_dir()
     if is_dir_writable(primary):
         return primary, True
@@ -183,7 +175,11 @@ def resolve_config_dir(preferred_dir: str | Path | None = None, *, platform_name
     return fallback, False
 
 
-def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
+def _sanitize_settings(
+    raw: dict[str, Any] | None,
+    *,
+    config_dir: str | Path | None = None,
+) -> dict[str, Any]:
     merged = copy.deepcopy(DEFAULT_SETTINGS)
     if not isinstance(raw, dict):
         return merged
@@ -198,6 +194,8 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
 
     sb = str(raw.get("sort_by", merged["sort_by"])).strip().lower()
     merged["sort_by"] = sb if sb in VALID_SORT_BY else DEFAULT_SETTINGS["sort_by"]
+
+    merged["categories"] = sanitize_categories(raw.get("categories"))
 
     raw_hotkeys = raw.get("hotkeys")
     if isinstance(raw_hotkeys, dict):
@@ -219,7 +217,11 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
         merged["hotkeys"] = hk
 
     if "last_category" in raw and isinstance(raw["last_category"], str):
-        merged["last_category"] = raw["last_category"].strip() or "ALL"
+        lc = raw["last_category"].strip().upper()
+        if lc == "ALL" or CATEGORY_CODE_RE.fullmatch(lc):
+            merged["last_category"] = lc
+        else:
+            merged["last_category"] = "ALL"
 
     if isinstance(raw.get("last_category_by_hotkey"), dict):
         merged["last_category_by_hotkey"] = {
@@ -262,8 +264,14 @@ def _sanitize_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
     ll = str(raw.get("log_level", DEFAULT_SETTINGS["log_level"])).strip().lower()
     merged["log_level"] = ll if ll in VALID_LOG_LEVELS else DEFAULT_SETTINGS["log_level"]
 
-    lang = str(raw.get("language", "tr")).strip().lower()
-    merged["language"] = "tr" if lang in ("", "tr") else "tr"
+    lang = str(raw.get("language", DEFAULT_LANGUAGE)).strip().lower()
+    valid_langs = available_languages(config_dir)
+    if lang in valid_langs:
+        merged["language"] = lang
+    elif config_dir is None and _LOCALE_CODE_RE.fullmatch(lang):
+        merged["language"] = lang
+    else:
+        merged["language"] = DEFAULT_LANGUAGE
 
     raw_web = raw.get("web")
     if isinstance(raw_web, dict):
@@ -289,7 +297,7 @@ def _parse_bool(raw_val: Any) -> bool:
 
 
 def get_setting_value(settings: dict[str, Any], key: str) -> Any:
-    """Noktalı yollar dahil ('web.port', 'hotkeys.A') ayar değerini döndürür."""
+    """Returns the value of a setting key including dotted paths ('web.port', 'hotkeys.all')."""
     norm = (key or "").strip()
     if not norm:
         raise SettingValidationError("Geçersiz ayar anahtarı: boş anahtar.")
@@ -303,8 +311,14 @@ def get_setting_value(settings: dict[str, Any], key: str) -> Any:
     return settings.get(norm, DEFAULT_SETTINGS[norm])
 
 
-def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[str, Any]:
-    """Belirtilen ayar anahtarını doğrulayarak günceller ve yeni sözlük döndürür."""
+def set_setting_value(
+    settings: dict[str, Any],
+    key: str,
+    value: Any,
+    *,
+    config_dir: str | Path | None = None,
+) -> dict[str, Any]:
+    """Validates and updates the requested setting key, returning a new sanitized settings dict."""
     norm = (key or "").strip()
     updated = copy.deepcopy(settings)
 
@@ -327,6 +341,30 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
                 f"Geçersiz ayar değeri ('sort_by'): '{value}' ({', '.join(VALID_SORT_BY)})."
             )
         updated["sort_by"] = val
+    elif norm == "categories":
+        parsed_cats = value
+        if isinstance(value, str):
+            try:
+                parsed_cats = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise SettingValidationError(
+                    f"Geçersiz ayar değeri ('categories'): geçerli JSON listesi bekleniyor ({exc})."
+                ) from exc
+        if not isinstance(parsed_cats, list):
+            raise SettingValidationError(
+                "Geçersiz ayar değeri ('categories'): kategori nesneleri listesi bekleniyor."
+            )
+        for entry in parsed_cats:
+            if not isinstance(entry, dict):
+                raise SettingValidationError(
+                    "Geçersiz ayar değeri ('categories'): her öğe {code, label, hotkey_prefix} nesnesi olmalı."
+                )
+            code = str(entry.get("code", "")).strip().upper()
+            if not code or code == "ALL" or not CATEGORY_CODE_RE.fullmatch(code):
+                raise SettingValidationError(
+                    f"Geçersiz ayar değeri ('categories'): geçersiz kategori kodu '{entry.get('code', '')}'."
+                )
+        updated["categories"] = sanitize_categories(parsed_cats)
     elif norm == "paste_method":
         val = str(value).strip().lower()
         if val not in VALID_PASTE_METHODS:
@@ -342,9 +380,11 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
             )
         updated["log_level"] = val
     elif norm == "last_category":
-        val = str(value).strip().upper()
-        if val not in ("ALL", "A", "Z", "X", "Q"):
-            raise SettingValidationError(f"Geçersiz ayar değeri ('last_category'): '{value}' (ALL/A/Z/X/Q).")
+        val = str(value or "").strip().upper()
+        if val != "ALL" and not CATEGORY_CODE_RE.fullmatch(val):
+            raise SettingValidationError(
+                f"Geçersiz ayar değeri ('last_category'): '{value}' (ALL veya alfanümerik kod bekleniyor)."
+            )
         updated["last_category"] = val
     elif norm in ("enter_after_paste", "hide_on_blur", "start_minimized", "tray_icon", "auto_reload", "strip_emoji"):
         updated[norm] = _parse_bool(value)
@@ -372,10 +412,13 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
             raise SettingValidationError("Geçersiz ayar değeri ('data_path'): boş yol olamaz.")
         updated["data_path"] = dp
     elif norm == "language":
-        val = str(value).strip().lower()
-        if val != "tr":
-            raise SettingValidationError(f"Geçersiz ayar değeri ('language'): '{value}' (yalnızca 'tr').")
-        updated["language"] = "tr"
+        val = str(value or "").strip().lower()
+        valid_langs = available_languages(config_dir)
+        if val not in valid_langs:
+            raise SettingValidationError(
+                f"Geçersiz ayar değeri ('language'): '{value}' ({', '.join(valid_langs)})."
+            )
+        updated["language"] = val
     elif norm == "window_size":
         if isinstance(value, str):
             parts = [p.strip() for p in value.replace("x", ",").replace("×", ",").split(",")]
@@ -420,7 +463,7 @@ def set_setting_value(settings: dict[str, Any], key: str, value: Any) -> dict[st
     else:
         raise SettingValidationError(f"Geçersiz ayar anahtarı: '{norm}'.")
 
-    return _sanitize_settings(updated)
+    return _sanitize_settings(updated, config_dir=config_dir)
 
 
 def load_settings(
@@ -428,7 +471,7 @@ def load_settings(
     *,
     platform_name: str | None = None,
 ) -> tuple[dict[str, Any], Path, str | None]:
-    """qtp_settings.json dosyasını yükler; yoksa varsayılanlarla oluşturur ve eski çakışmalı varsayılanları güvenle geçirir."""
+    """Loads qtp_settings.json, creating defaults if missing and safely migrating legacy v2.0 defaults."""
     logger = get_logger("settings")
     config_dir, portable = resolve_config_dir(preferred_dir, platform_name=platform_name)
     settings_path = config_dir / SETTINGS_FILENAME
@@ -447,9 +490,9 @@ def load_settings(
         migrated = False
         if isinstance(raw.get("hotkeys"), dict) and raw["hotkeys"] == LEGACY_DEFAULT_HOTKEYS:
             raw = copy.deepcopy(raw)
-            raw["hotkeys"] = dict(DEFAULT_HOTKEYS)
+            raw["hotkeys"] = build_preset_hotkeys("recommended", tuple(LEGACY_DEFAULT_HOTKEYS.keys()))
             migrated = True
-        clean = _sanitize_settings(raw)
+        clean = _sanitize_settings(raw, config_dir=config_dir)
         if migrated:
             save_settings(clean, settings_path)
             logger.info(
@@ -467,9 +510,9 @@ def load_settings(
 
 
 def save_settings(settings: dict[str, Any], settings_path: str | Path) -> Path:
-    """Ayarları temizleyerek diske atomik yazar."""
+    """Sanitizes and atomically writes settings to disk."""
     path = Path(settings_path)
-    clean = _sanitize_settings(settings)
+    clean = _sanitize_settings(settings, config_dir=path.parent)
     payload = json.dumps(clean, ensure_ascii=False, indent=2) + "\n"
     atomic_write_bytes(path, payload.encode("utf-8"))
     get_logger("settings").info("Ayarlar kaydedildi: %s", path)
@@ -477,7 +520,7 @@ def save_settings(settings: dict[str, Any], settings_path: str | Path) -> Path:
 
 
 def resolve_data_path(settings: dict[str, Any], base_dir: Path) -> Path:
-    """data_path ayarını mutlak yola çevirir."""
+    """Resolves data_path relative to base_dir."""
     raw = str(settings.get("data_path") or "./QuickTextPaste.ini").strip()
     p = Path(raw)
     if p.is_absolute():

@@ -32,11 +32,12 @@ def test_gui_offscreen_model_matches_cli_json_output(tmp_path: Path, capsys):
             gui_count = overlay.category_buttons[cat["code"]].property("item_count")
             assert gui_count == cat["count"]
 
-        overlay.search_input.setText("şifre")
+        overlay.search_input.setText("email")
         app.processEvents()
-        cli.execute_cli(eng_cli, parser.parse_args(["--search", "şifre", "--json"]))
+        cli.execute_cli(eng_cli, parser.parse_args(["--search", "email", "--json"]))
         cli_items = json.loads(capsys.readouterr().out)["data"]["items"]
 
+        assert len(cli_items) >= 1
         assert overlay.list_model.rowCount() == len(cli_items)
         gui_texts = [overlay.list_model.item_at(i)["text"] for i in range(overlay.list_model.rowCount())]
         cli_texts = [it["text"] for it in cli_items]

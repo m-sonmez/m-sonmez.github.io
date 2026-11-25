@@ -543,3 +543,48 @@ def test_linux_pyinstaller_spec_excludes_host_config_libs():
         assert lib_prefix in spec_src, f"qtp.spec Linux dışlama listesinde eksik: {lib_prefix}"
     assert "libqsvgicon" not in spec_src
     assert "libqt6core" not in spec_src
+
+
+def test_zero_hardcoded_domain_or_brand_strings():
+    forbidden = (
+        "Yemek" + "sepeti",
+        "Turk" + "cell",
+        "\u0130\u015f " + "Orta\u011f\u0131",
+        "Kur" + "ye",
+        "Canl\u0131 " + "Yard\u0131m",
+        "Resto" + "ran",
+    )
+    scan_paths: list[Path] = [
+        QTP_ROOT_DIR / "qtp.html",
+        QTP_ROOT_DIR / "theme.css",
+        QTP_ROOT_DIR / "index.html",
+        QTP_ROOT_DIR / "legacy" / "cevaplar.html",
+        QTP_ROOT_DIR / "data.json",
+        QTP_ROOT_DIR / "QuickTextPaste.ini",
+        QTP_ROOT_DIR / "manifest.webmanifest",
+        QTP_ROOT_DIR / "README.md",
+    ]
+    scan_paths.extend(sorted((QTP_ROOT_DIR / "docs").glob("*.md")))
+    app_dir = STANDALONE_DIR / "qtp_app"
+    for p in sorted(app_dir.rglob("*")):
+        if not p.is_file():
+            continue
+        posix = p.as_posix()
+        if "tests/fixtures/" in posix or "__pycache__" in posix:
+            continue
+        if p.suffix.lower() in {".py", ".html", ".css", ".json", ".ini", ".txt", ".md", ".spec"}:
+            scan_paths.append(p)
+
+    violations: list[str] = []
+    for path in scan_paths:
+        raw = path.read_bytes()
+        if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+            txt = raw.decode("utf-16", errors="ignore")
+        else:
+            txt = raw.decode("utf-8", errors="ignore")
+        low = txt.lower()
+        hits = [term for term in forbidden if term.lower() in low]
+        if hits:
+            violations.append(f"{path.relative_to(QTP_ROOT_DIR).as_posix()}: {hits}")
+
+    assert not violations, "Sabit marka/alan metinleri bulundu:\n" + "\n".join(violations)

@@ -1,6 +1,6 @@
-# QTP Kurulum ve Sistem Gereksinimleri
+# QTP Kurulum ve Sistem Gereksinimleri / Installation (`v2.5.0`)
 
-QTP v2.4.4 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya statik Web arayüzü içinde sunar.
+QTP v2.5.0 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satırı aracına bağımlı değildir ve dört farklı çalışma kipini (`--gui`, `--tui`, `--cli`, `--web`) tek bir taşınabilir dosya veya çevrimdışı PWA web arayüzü içinde sunar. Varsayılan olarak evrensel İngilizce/Türkçe (`language: "auto"`) ve dinamik kategori/kısayol mimarisiyle çalışır.
 
 ---
 
@@ -31,7 +31,7 @@ QTP v2.4.4 **kurulum gerektirmez**, ek harici paket veya ayrı bir komut satır�
    .\qtp.exe --selftest
    .\qtp.exe --web --open-browser
    .\qtp.exe --tui
-   .\qtp.exe --cli --list-items --category A --json
+   .\qtp.exe --cli --list-items --category 1 --json
    ```
 4. **Dijital İmza, PE Bilgisi ve Diğer Windows Cihazlarında Güven:**
    - `qtp.exe`, PE sürüm metadata bilgisi (`CompanyName = Murat Sönmez`) ile derlenir ve **SHA-256 + RFC 3161 zaman damgalı** Authenticode dijital imzası (`CN=Murat Sönmez`) taşır.

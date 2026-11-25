@@ -78,9 +78,15 @@ Bu belge, QTP'nin üretebileceği **tüm Türkçe hata/uyarı mesajlarını bire
 ## 2. Sık Karşılaşılan Sorunlar ve Çözümler
 
 ### Kısayollar Windows'ta Sistem Menüsünü Açıyorsa veya `1409` Hatası Alınıyorsa
-QTP varsayılan olarak çakışmasız **`Win+Alt+Space / A / Z / X / Q`** kısayollarını yerel Win32 `RegisterHotKey` üzerinden kaydeder ve basılan tuşları aktif pencereye sızdırmadan tüketir. Eski ayar dosyanızda `Win+A/Z/X/Q` kaldıysa veya başka bir araç kısayolu tutuyorsa:
+QTP varsayılan olarak çakışmasız **`Win+Alt+Space`** (`all`) kısayolunu yerel Win32 `RegisterHotKey` üzerinden kaydeder ve basılan tuşları aktif pencereye sızdırmadan tüketir. Eski ayar dosyanızda çakışan `Win+*` kısayolları kaldıysa veya başka bir araç kısayolu tutuyorsa:
 1. Ayarlar (`Ctrl+,`) penceresini açın (veya `qtp --hotkey-preset recommended` çalıştırın).
-2. `recommended` (`Win+Alt+*`) veya `Win` tuşsuz `function_keys` (`Ctrl+Shift+F1–F5`) / `ctrl_shift_alt` profilini seçip kaydedin; yeniden başlatma gerekmez.
+2. `recommended` (`Win+Alt+*`) veya `Win` tuşsuz `function_keys` (`Ctrl+Shift+F1–Fn`) / `ctrl_shift_alt` profilini seçip kaydedin; yeniden başlatma gerekmez.
+
+### Arayüz Dili Nasıl Değiştirilir (`EN` / `TR` / `qtp_locale.json`)?
+- Varsayılan `language: "auto"` ayarı Türkçe işletim sistemlerinde Türkçe, diğer tüm sistemlerde İngilizce açılır.
+- **Web (`qtp.html`, `index.html`, `legacy/cevaplar.html`):** Üst çubuktaki `EN`/`TR` düğmesiyle tek tıkla geçiş yapın.
+- **GUI / CLI / TUI:** `Ctrl+,` → **Language** veya `qtp --set language en` / `qtp --set language tr`.
+- **Özel Dil (`qtp_locale.json`):** Çalışma/ayar klasörüne `qtp_locale.json` dosyası ekleyerek (`{"ui.all": "Alle"}` veya `{"de": {"ui.all": "Alle"}}`) tüm metinleri yeniden derlemeden özelleştirebilirsiniz.
 
 ### PowerShell'de `--help` Çıktısı Neden Ekstra Bayrak Olmadan Önemlidir?
 Windows `qtp.exe` çift tıklandığında siyah komut penceresi açmamak için GUI alt sisteminde (`console=False`) paketlenir. `--help`, `-v --help`, `--completion`, `--cli` veya `--tui` gibi bir bayrakla çalıştırıldığında QTP üst süreç zincirini (`AttachConsole` ile PowerShell/cmd/Terminal) yürüyüp `UTF-8 (65001)` kod sayfasıyla `argparse` öncesinde bağlanır.

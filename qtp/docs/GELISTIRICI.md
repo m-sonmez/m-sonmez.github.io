@@ -19,18 +19,18 @@ QTP'de tek doğruluk kaynağı [operations.py](../standalone/qtp_app/core/operat
   - Web (`qtp_app/web.py` + `qtp_app/web/qtp.html`)
   - GUI (`qtp_app/main.py` + `qtp_app/ui/{overlay,settings_window,help_dialog,icons}.py`)
 - Her yeni işlem (`op_id`, örneğin `add_item`, `bulk_edit`, `rename_group`, `undo`):
-  1. `OPERATIONS` içine (`cli_flag`, `tui_key`, `web_route`, `gui_binding`, `error_msgs_tr`, `exit_codes`) ile eklenir (v2.4.4 ile toplam 35 kanonsal işlem).
+  1. `OPERATIONS` içine (`cli_flag`, `tui_key`, `web_route`, `gui_binding`, `error_msgs_tr`, `exit_codes`) ile eklenir (v2.5.0 ile toplam 35 kanonsal işlem).
   2. `QtpEngine` üzerinde `op_<ad>` metodu ve gerekirse `_persist_items_change()` gibi atomik INI+JSON kalıcılık adımı yazılır (UTF-16 LE BOM + otomatik `.bak` yedek + 30 adımlı `_undo_stack`/`_redo_stack`).
   3. CLI bayrağı (`cli.py`), HTTP rotası (`web.py`), TUI tuşu/komutu (`tui/app.py`) ve GUI eylemi (`ui/overlay.py`) bağlanır.
   4. Birebir hata mesajları [SSS.md](SSS.md) içine, parite satırı ise [KULLANIM.md](KULLANIM.md#12-modlar-arası-eşitlik-matrisi) tablosuna eklenir.
 
 ---
 
-## 2. Esnek Kısayol Modeli ve Dinamik Özel Yuvalar
+## 2. Dinamik Kategoriler, Esnek Kısayollar ve Çoklu Dil (`core/i18n.py`)
 
-- Tüm kısayol ayrıştırma, normalleştirme (`Ctrl+Alt+Shift+Win` sırası), 6 hazır profil, 15 değiştirici kümesi, Türkçe-Q `AltGr` tespiti ve OS rezerve kısayol kontrolleri `qtp_app/core/hotkeys.py` içindedir.
-- Windows üzerinde `ctypes` + `user32.dll` (`RegisterHotKey` / `UnregisterHotKey`) 64-bit güvenli `argtypes`/`restype` imzalarıyla çağrılır.
-- `QtpEngine.op_set_setting`, `hotkeys.<özel_ad>` anahtarlarını kabul ederek hem varsayılan `all`, `A`, `Z`, `X`, `Q` hem de dinamik kullanıcı yuvalarını canlı kaydeder ve çakışma denetiminden geçirir.
+- **Dinamik Kategoriler (`core/settings.py`, `core/engine.py`):** Sabit kodlu kategori listeleri yerine `settings["categories"]` (`[{"code", "label", "hotkey_prefix"}]`) ve `engine.resolve_categories()` otomatik keşfi kullanılır; sanal `ALL` dışındaki tüm kategoriler yapılandırma veya yüklü veriden üretilir.
+- **Dinamik Kısayollar (`core/hotkeys.py`):** Varsayılan `DEFAULT_HOTKEYS = {"all": "Win+Alt+Space"}`; `build_preset_hotkeys(preset, slots)` 6 profili etkin yuvalara göre dinamik üretir. Windows üzerinde `ctypes` + `user32.dll` (`RegisterHotKey` / `UnregisterHotKey`) 64-bit güvenli imzalarla çağrılır.
+- **Çoklu Dil (`core/i18n.py`):** Python 3.8+ uyumlu sıfır bağımlılıklı katalog (`auto` / `en` / `tr`) + çalışma dizinindeki isteğe bağlı `qtp_locale.json` geçersiz kılma desteği. `ui/search.py` içindeki `locale_sort_key()` ve `qtp.html` içindeki JS eşleniği 4 modda birebir sıralama eşitliği sağlar.
 
 ---
 

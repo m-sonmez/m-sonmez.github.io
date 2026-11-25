@@ -154,7 +154,10 @@ def test_wayland_uses_wtype_when_available_and_warns_otherwise(capsys, monkeypat
     assert run_mock.call_args_list[0][0][0] == ["/usr/bin/wtype", "-M", "ctrl", "-k", "v", "-m", "ctrl"]
     assert run_mock.call_args_list[1][0][0] == ["/usr/bin/wtype", "-k", "Return"]
 
+    from qtp_app.core.logging_setup import attach_stderr_handler
+
     monkeypatch.setenv("DISPLAY", ":0")
+    attach_stderr_handler(verbose=1)
     capsys.readouterr()
     with mock.patch("qtp_app.core.paster.copy_to_clipboard", return_value=True), \
          mock.patch("shutil.which", return_value=None), \

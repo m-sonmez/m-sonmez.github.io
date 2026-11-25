@@ -33,13 +33,9 @@ def test_first_run_creates_default_settings_in_portable_dir(tmp_path: Path):
     assert settings_path == tmp_path / SETTINGS_FILENAME
     assert settings_path.is_file()
     assert settings == DEFAULT_SETTINGS
-    assert settings["hotkeys"] == {
-        "all": "Win+Alt+Space",
-        "A": "Win+Alt+A",
-        "Z": "Win+Alt+Z",
-        "X": "Win+Alt+X",
-        "Q": "Win+Alt+Q",
-    }
+    assert settings["hotkeys"] == {"all": "Win+Alt+Space"}
+    assert settings["categories"] == []
+    assert settings["language"] == "auto"
     assert settings["auto_reload"] is True
     assert settings["auto_reload_interval_ms"] == 500
 
@@ -59,9 +55,16 @@ def test_legacy_default_hotkeys_migrated_safely_without_touching_custom(tmp_path
 
     migrated, _, warn = load_settings(legacy_dir)
     assert warn is None
-    assert migrated["hotkeys"] == DEFAULT_HOTKEYS
+    expected_migrated = {
+        "all": "Win+Alt+Space",
+        "A": "Win+Alt+A",
+        "Z": "Win+Alt+Z",
+        "X": "Win+Alt+X",
+        "Q": "Win+Alt+Q",
+    }
+    assert migrated["hotkeys"] == expected_migrated
     reloaded_disk = json.loads(cfg_path.read_text(encoding="utf-8"))
-    assert reloaded_disk["hotkeys"] == DEFAULT_HOTKEYS
+    assert reloaded_disk["hotkeys"] == expected_migrated
     assert "Win+Alt+*" in (legacy_dir / LOG_FILENAME).read_text(encoding="utf-8")
 
     custom_dir = tmp_path / "custom"
@@ -96,7 +99,7 @@ def test_corrupt_settings_regenerates_defaults_and_logs_turkish_warning(tmp_path
     assert settings == DEFAULT_SETTINGS
 
     parsed = json.loads(bad_file.read_text(encoding="utf-8"))
-    assert parsed["language"] == "tr"
+    assert parsed["language"] == "auto"
 
     log_text = (tmp_path / LOG_FILENAME).read_text(encoding="utf-8")
     assert "Bozuk ayar dosyası" in log_text
@@ -166,7 +169,9 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
     cfg = copy.deepcopy(DEFAULT_SETTINGS)
     assert get_setting_value(cfg, "theme") == "light"
     assert get_setting_value(cfg, "web.port") == 8765
-    assert get_setting_value(cfg, "hotkeys.A") == "Win+Alt+A"
+    assert get_setting_value(cfg, "hotkeys.all") == "Win+Alt+Space"
+    assert get_setting_value(cfg, "categories") == []
+    assert get_setting_value(cfg, "language") == "auto"
     assert get_setting_value(cfg, "auto_reload") is True
 
     cfg = set_setting_value(cfg, "theme", "auto")
@@ -175,11 +180,13 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
     cfg = set_setting_value(cfg, "sort_by", "usage")
     cfg = set_setting_value(cfg, "paste_method", "shift_insert")
     cfg = set_setting_value(cfg, "log_level", "debug")
-    cfg = set_setting_value(cfg, "last_category", "z")
+    cfg = set_setting_value(cfg, "last_category", "work_1")
+    cfg = set_setting_value(cfg, "categories", '[{"code": "1", "label": "General", "hotkey_prefix": "L-Win+1"}]')
     cfg = set_setting_value(cfg, "enter_after_paste", "false")
     cfg = set_setting_value(cfg, "start_minimized", "true")
     cfg = set_setting_value(cfg, "backup_count", "20")
     cfg = set_setting_value(cfg, "data_path", "./custom.ini")
+    cfg = set_setting_value(cfg, "language", "en")
     cfg = set_setting_value(cfg, "language", "tr")
     cfg = set_setting_value(cfg, "window_size", "800x600")
     cfg = set_setting_value(cfg, "web.port", "9090")
@@ -194,7 +201,8 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
     assert cfg["sort_by"] == "usage"
     assert cfg["paste_method"] == "shift_insert"
     assert cfg["log_level"] == "debug"
-    assert cfg["last_category"] == "Z"
+    assert cfg["last_category"] == "WORK_1"
+    assert cfg["categories"] == [{"code": "1", "label": "General", "hotkey_prefix": "L-Win+1"}]
     assert cfg["enter_after_paste"] is False
     assert cfg["start_minimized"] is True
     assert cfg["backup_count"] == 20
@@ -205,8 +213,10 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
     assert cfg["hotkeys"]["A"] == "Ctrl+Alt+A"
     assert cfg["hotkeys"]["W"] == "Ctrl+Shift+W"
 
+    cfg = set_setting_value(cfg, "hotkeys.all", "")
+    assert cfg["hotkeys"]["all"] == ""
     cfg = set_setting_value(cfg, "hotkeys.A", "")
-    assert cfg["hotkeys"]["A"] == ""
+    assert "A" not in cfg["hotkeys"]
     cfg = set_setting_value(cfg, "hotkeys.W", "")
     assert "W" not in cfg["hotkeys"]
 
@@ -221,7 +231,9 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
         ("sort_by", "random"),
         ("paste_method", "magic"),
         ("log_level", "verbose"),
-        ("last_category", "B"),
+        ("last_category", "bad category!"),
+        ("categories", "not-json"),
+        ("categories", "{}"),
         ("enter_after_paste", "belki"),
         ("auto_reload", "belki"),
         ("auto_reload_interval_ms", "abc"),
@@ -230,7 +242,7 @@ def test_get_and_set_setting_value_validation_and_custom_slots():
         ("backup_count", "abc"),
         ("backup_count", "999"),
         ("data_path", "   "),
-        ("language", "en"),
+        ("language", "zz_unsupported"),
         ("window_size", "100"),
         ("window_size", "bad,size"),
         ("window_size", "100,100"),

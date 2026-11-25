@@ -76,29 +76,34 @@ def test_overlay_renders_all_items_focus_pills_and_enter_paste(qtbot):
 def test_help_settings_and_tray_smoke(qtbot):
     from qtp_app.core.engine import build_cli_help_text
 
-    help_dlg = HelpDialog(DARK_PALETTE)
+    help_dlg = HelpDialog(DARK_PALETTE, language="en")
     qtbot.addWidget(help_dlg)
     assert help_dlg.tabs.count() == 5
     tab_titles = [help_dlg.tabs.tabText(i) for i in range(help_dlg.tabs.count())]
     assert tab_titles == [
-        "Kullanım (Web/GUI/TUI/CLI)",
-        "Kurulum & İndirme",
-        "Kısayollar & Profiller",
-        "Sorun Giderme (SSS)",
-        "CLI & Parametreler",
+        "Usage",
+        "Installation",
+        "Hotkeys",
+        "FAQ",
+        "CLI Reference",
     ]
     assert "--hotkey-preset" in help_dlg.browsers[4].toPlainText()
-    assert build_cli_help_text(verbose=True).splitlines()[0] in help_dlg.browsers[4].toPlainText()
+    assert build_cli_help_text(verbose=True, lang="en").splitlines()[0] in help_dlg.browsers[4].toPlainText()
     assert "Windows" in help_dlg.browsers[1].toPlainText()
 
-    settings_dlg = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE)
+    help_tr = HelpDialog(DARK_PALETTE, language="tr")
+    qtbot.addWidget(help_tr)
+    assert help_tr.tabs.tabText(0) == "Kullanım"
+
+    settings_dlg = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE, language="en")
     qtbot.addWidget(settings_dlg)
     collected = settings_dlg.collect_settings()
     assert collected["theme"] == DEFAULT_SETTINGS["theme"]
     assert collected["hotkeys"] == DEFAULT_SETTINGS["hotkeys"]
+    assert collected["categories"] == []
     assert collected["auto_reload"] is True
     assert collected["auto_reload_interval_ms"] == 500
-    assert "Çakışma algılanmadı" in settings_dlg.conflict_label.text()
+    assert "No hotkey conflicts" in settings_dlg.conflict_label.text()
 
     tray = QtpTrayIcon(
         on_open=lambda: None,
@@ -108,33 +113,38 @@ def test_help_settings_and_tray_smoke(qtbot):
         on_backups=lambda: None,
         on_help=lambda: None,
         on_quit=lambda: None,
+        language="tr",
     )
     labels = [act.text() for act in tray.menu.actions() if not act.isSeparator()]
     assert labels == [
-        "Aç (Win+Alt+Space)",
+        "QTP Katmanını Aç (Win+Alt+Space)",
         "Ayarlar…",
-        "INI Yeniden Yükle",
+        "Verileri Yeniden Yükle",
         "data.json Aç",
         "Yedekler…",
         "Yardım (F1)",
         "Çıkış",
     ]
     tray.update_hotkeys_label("Win+Ctrl+Space")
-    assert tray.act_open.text() == "Aç (Win+Ctrl+Space)"
+    assert tray.act_open.text() == "QTP Katmanını Aç (Win+Ctrl+Space)"
+    tray.apply_language("en")
+    assert tray.act_open.text() == "Open QTP Overlay (Win+Ctrl+Space)"
 
 
 def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(qtbot, tmp_path: Path):
     custom = copy.deepcopy(DEFAULT_SETTINGS)
     custom["web"] = {"port": 8899}
+    custom["language"] = "tr"
+    custom["hotkeys"] = {"all": "Win+Alt+Space", "A": "Win+Alt+A", "Q": "Win+Alt+Q"}
     custom["last_category_by_hotkey"] = {"win_z": "Z"}
 
-    dlg = SettingsWindow(custom, DARK_PALETTE)
+    dlg = SettingsWindow(custom, DARK_PALETTE, language="tr")
     qtbot.addWidget(dlg)
 
     dlg.apply_preset("function_keys")
     assert dlg.hk_edits["all"].text() == "Ctrl+Shift+F1"
     assert dlg.hk_edits["A"].text() == "Ctrl+Shift+F2"
-    assert "Çakışma algılanmadı" in dlg.conflict_label.text()
+    assert "Kısayol çakışması bulunamadı" in dlg.conflict_label.text()
 
     with mock.patch("qtp_app.core.hotkeys.sys.platform", "win32"):
         dlg.apply_preset("legacy_win")
@@ -145,7 +155,7 @@ def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(q
         assert "AltGr+Q" in dlg.conflict_label.text()
 
     dlg.apply_preset("recommended")
-    assert "Çakışma algılanmadı" in dlg.conflict_label.text()
+    assert "Kısayol çakışması bulunamadı" in dlg.conflict_label.text()
 
     row_a = dlg.hk_rows["A"]
     row_a.chk_ctrl.setChecked(True)
@@ -167,6 +177,12 @@ def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(q
     assert "W" not in dlg.hk_edits
     dlg.add_hotkey_slot("W", "Ctrl+Shift+W")
 
+    dlg.new_cat_code.setText("WORK")
+    dlg.new_cat_label.setText("Work Snippets")
+    dlg.new_cat_prefix.setText("L-Win+W")
+    dlg._on_add_category()
+    assert any(c["code"] == "WORK" for c in dlg.collect_categories())
+
     dlg.web_port_spin.setValue(9123)
     dlg.theme_cb.setCurrentText("dark")
     dlg.auto_reload_chk.setChecked(False)
@@ -180,6 +196,7 @@ def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(q
     assert dlg.result_settings["auto_reload"] is False
     assert dlg.result_settings["auto_reload_interval_ms"] == 900
     assert dlg.result_settings["hotkeys"]["W"] == "Ctrl+Shift+W"
+    assert any(c["code"] == "WORK" for c in dlg.result_settings["categories"])
 
     cfg_path = tmp_path / "qtp_settings.json"
     save_settings(dlg.result_settings, cfg_path)
@@ -190,6 +207,7 @@ def test_settings_window_hotkeys_presets_checkboxes_custom_slots_and_conflicts(q
     assert dlg.web_port_spin.value() == 8765
     assert dlg.theme_cb.currentText() == "light"
     assert "W" not in dlg.hk_edits
+    assert dlg.collect_categories() == []
 
 
 def test_gui_live_reload_event_handler_updates_overlay_tray_and_hotkeys(qtbot, tmp_path: Path):
@@ -232,9 +250,9 @@ def test_gui_live_reload_event_handler_updates_overlay_tray_and_hotkeys(qtbot, t
         fake_register,
     )
     assert reg_calls["n"] == 1
-    assert tray.act_open.text() == "Aç (Win+Ctrl+Space)"
+    assert "Win+Ctrl+Space" in tray.act_open.text()
     assert overlay.size().width() == 800
-    assert "otomatik yenilendi" in overlay.toast_label.text()
+    assert "Auto-reloaded" in overlay.toast_label.text() or "otomatik yenilendi" in overlay.toast_label.text()
 
     from PyQt6.QtWidgets import QMessageBox
     from qtp_app.ui.overlay import SnippetEditorDialog
@@ -321,8 +339,8 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
     from qtp_app.ui.theme import DARK_PALETTE, LIGHT_PALETTE
 
     sample_items = [
-        {"raw_key": "text_000", "keys": "L-Win+A", "group": "Restoran", "label": "Selam", "text": "Merhaba destek talebiniz alındı", "terminator": "<E<N<D|"},
-        {"raw_key": "text_001", "keys": "L-Win+Z", "group": "Kurye", "label": "Teslim", "text": "Sipariş yola çıktı", "terminator": "<E<N<D|"},
+        {"raw_key": "text_000", "keys": "L-Win+A", "group": "Partner", "label": "Selam", "text": "Merhaba destek talebiniz alındı", "terminator": "<E<N<D|"},
+        {"raw_key": "text_001", "keys": "L-Win+Z", "group": "Field", "label": "Teslim", "text": "Sipariş yola çıktı", "terminator": "<E<N<D|"},
     ]
     theme_events: list[str] = []
     ov = OverlayWindow(sample_items, theme="light", on_theme_change=theme_events.append)
@@ -375,10 +393,10 @@ def test_offscreen_rendered_pixel_luminance_light_vs_dark_and_live_switch(qtbot)
             HelpDialog(pal),
             SnippetEditorDialog(pal, ["Genel"], item=sample_items[0]),
             IniSnippetViewerDialog(sample_items[0], 0, "QuickTextPaste.ini", pal),
-            BulkEditDialog(pal, 2, ["Genel", "Kurye"]),
+            BulkEditDialog(pal, 2, ["General", "Field"]),
             GroupManagerDialog(
                 pal,
-                lambda: [("Genel", 2), ("Kurye", 1)],
+                lambda: [("General", 2), ("Field", 1)],
                 on_rename=lambda _o, _n: None,
                 on_delete=lambda _g: None,
             ),
@@ -428,7 +446,7 @@ def test_overlay_copy_before_hide_wayland_opacity_svg_icons_and_8edge_resize(qtb
             assert not ic.isNull()
 
     items = [
-        {"raw_key": "text_000", "keys": "L-Win+A", "group": "Restoran", "label": "Selam", "text": "Kopya önce gelmeli", "terminator": "<E<N<D|"},
+        {"raw_key": "text_000", "keys": "L-Win+A", "group": "Partner", "label": "Selam", "text": "Kopya önce gelmeli", "terminator": "<E<N<D|"},
     ]
     events: list[str] = []
     ov = OverlayWindow(
@@ -572,11 +590,11 @@ def test_overlay_focus_loss_initial_category_ipc_and_conflict_confirm(qtbot, tmp
     assert received_tokens[1] == ""
     g_srv.release()
 
-    sw = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE)
+    sw = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE, language="tr")
     qtbot.addWidget(sw)
     assert sw.hide_on_blur_chk.isChecked() is True
     sw.hide_on_blur_chk.setChecked(False)
-    sw.hk_rows["Q"].edit.setText("Win+Q")
+    sw.add_hotkey_slot("Q", "Win+Q")
     with mock.patch(
              "qtp_app.ui.settings_window.detect_hotkey_conflicts",
              return_value={"Q": ["KDE Plasma Etkinlikler (Activities) sistem kısayolu ile çakışır."]},

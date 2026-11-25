@@ -1,7 +1,7 @@
-QTP v2.4.4 | Mod: TUI | Ara: "Merhaba" [/ Ara] | Kayıt: 1/2
-Kategoriler: [Tümü(2)] A(1) Z(1) X(0) Q(0)
+QTP v2.5.0 | Mode: TUI | Search: "Merhaba" [/ Search] | Items: 1/2
+Categories: [All (2)] | 1 (1) | 2 (1)
 ------------------------------------------------------------------------------------------------
->   1. [A] Merhaba şğıöç ŞĞÜÖÇİ 😊
+>   1. [1] Merhaba Dünya!
 
 
 
@@ -18,5 +18,5 @@ Kategoriler: [Tümü(2)] A(1) Z(1) X(0) Q(0)
 
 
 ------------------------------------------------------------------------------------------------
-Durum: Arama tamamlandı: 1 eşleşme.
-↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış
+Status: Arama tamamlandı: 1 eşleşme.
+↑↓ Move  Enter Paste  c Copy  / Search  Tab/1-9 Cat  F Fav  N Notes  a Add  E Edit  d Del  s Settin…

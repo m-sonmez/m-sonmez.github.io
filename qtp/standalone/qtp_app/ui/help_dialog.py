@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+from pathlib import Path
 import re
 
 from PyQt6.QtWidgets import (
@@ -16,6 +17,7 @@ from PyQt6.QtWidgets import (
 )
 
 from qtp_app.core.engine import build_cli_help_text, get_bundled_docs_dir, read_doc_text
+from qtp_app.core.i18n import t
 from qtp_app.ui.theme import (
     ThemePalette,
     build_dialog_stylesheet,
@@ -182,10 +184,14 @@ class HelpDialog(QDialog):
         palette: ThemePalette,
         *,
         initial_tab: int = 0,
+        language: str = "en",
+        config_dir: Path | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("QTP Yardım ve Kullanım Kılavuzu")
+        self._language = str(language or "en")
+        self._config_dir = config_dir
+        self.setWindowTitle(t("help.title", self._language, self._config_dir))
         self.setMinimumSize(520, 380)
         self.resize(HELP_WIDTH, HELP_HEIGHT)
         self.setSizeGripEnabled(True)
@@ -202,10 +208,10 @@ class HelpDialog(QDialog):
         self.tabs = QTabWidget(self)
         self.browsers: list[QTextBrowser] = []
         for title, doc_file in (
-            ("Kullanım (Web/GUI/TUI/CLI)", "KULLANIM.md"),
-            ("Kurulum & İndirme", "KURULUM.md"),
-            ("Kısayollar & Profiller", "KISAYOLLAR.md"),
-            ("Sorun Giderme (SSS)", "SSS.md"),
+            (t("help.tab.usage", self._language, self._config_dir), "KULLANIM.md"),
+            (t("help.tab.install", self._language, self._config_dir), "KURULUM.md"),
+            (t("help.tab.hotkeys", self._language, self._config_dir), "KISAYOLLAR.md"),
+            (t("help.tab.faq", self._language, self._config_dir), "SSS.md"),
         ):
             browser = QTextBrowser(self)
             browser.setPalette(build_qpalette(palette))
@@ -217,15 +223,16 @@ class HelpDialog(QDialog):
             self.tabs.addTab(browser, title)
             self.browsers.append(browser)
 
-        cli_help_text = build_cli_help_text(verbose=True)
+        cli_help_text = build_cli_help_text(verbose=True, lang=self._language, config_dir=self._config_dir)
         cli_browser = QTextBrowser(self)
         cli_browser.setPalette(build_qpalette(palette))
         cli_browser.setOpenExternalLinks(False)
         cli_browser.setFont(create_app_font(self._font_family, 13))
-        cli_md = f"# QTP CLI & Parametreler (--verbose --help)\n\n```\n{cli_help_text}\n```\n"
+        cli_title = t("help.tab.cli", self._language, self._config_dir)
+        cli_md = f"# {cli_title} (--verbose --help)\n\n```\n{cli_help_text}\n```\n"
         cli_browser.setHtml(markdown_to_html(cli_md, palette))
         cli_browser.verticalScrollBar().setValue(0)
-        self.tabs.addTab(cli_browser, "CLI & Parametreler")
+        self.tabs.addTab(cli_browser, cli_title)
         self.browsers.append(cli_browser)
 
         if 0 <= initial_tab < self.tabs.count():
@@ -235,7 +242,7 @@ class HelpDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        close_btn = QPushButton("Kapat", self)
+        close_btn = QPushButton(t("help.close", self._language, self._config_dir), self)
         close_btn.setObjectName("PrimaryBtn")
         close_btn.clicked.connect(self.accept)
         btn_row.addWidget(close_btn)

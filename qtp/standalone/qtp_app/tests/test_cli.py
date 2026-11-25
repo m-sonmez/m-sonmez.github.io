@@ -39,16 +39,23 @@ def test_cli_help_and_verbose_help_turkish(capsys, tmp_path: Path, monkeypatch):
     out = capsys.readouterr().out
     for flag in ("--help", "--version", "--selftest", "--export-ini", "--import-ini", "--completion", "--verbose"):
         assert flag in out
-    assert "Komut Satırı Kullanımı" in out
+    assert "Command-Line Usage" in out or "Komut Satırı Kullanımı" in out
     assert list(app_dir.iterdir()) == []
 
     for argv in (["--verbose", "--help"], ["--cli", "--verbose", "--help"], ["-v", "-h"]):
         assert main(argv) == 0
         vout = capsys.readouterr().out
-        assert "Ayrıntılı Başvuru (--verbose):" in vout
+        assert "Detailed Reference (--verbose):" in vout or "Ayrıntılı Başvuru (--verbose):" in vout
         assert "function_keys" in vout
         assert "Register-ArgumentCompleter" in vout or "completion powershell" in vout
         assert list(app_dir.iterdir()) == []
+
+    from qtp_app.core.engine import build_cli_help_text
+
+    assert "Komut Satırı Kullanımı" in build_cli_help_text(verbose=False, lang="tr")
+    assert "Ayrıntılı Başvuru (--verbose):" in build_cli_help_text(verbose=True, lang="tr")
+    assert "Command-Line Usage" in build_cli_help_text(verbose=False, lang="en")
+    assert "Detailed Reference (--verbose):" in build_cli_help_text(verbose=True, lang="en")
 
 
 def test_cli_verbose_diagnostics_and_quiet(capsys, tmp_path: Path, monkeypatch):
@@ -143,7 +150,7 @@ def test_cli_hotkey_check_preset_and_modifiers(capsys, tmp_path: Path):
         assert "UYARI:" in capsys.readouterr().err
         assert main(["--work-dir", str(work), "--check-hotkeys"]) == 0
         chk_plain = capsys.readouterr().out
-        assert "Uyarılar:" in chk_plain and "Win+A" in chk_plain
+        assert "Uyarılar:" in chk_plain and ("Win+1" in chk_plain or "Win+W" in chk_plain)
         assert main(["--work-dir", str(work), "--hotkey-modifiers", "Win"]) == 0
         assert "UYARI:" in capsys.readouterr().err
     assert main(["--work-dir", str(work), "--set", "hotkeys.W", ""]) == 0
@@ -175,8 +182,8 @@ def test_cli_export_and_import_ini(tmp_path: Path, capsys):
     work_dir = tmp_path / "work"
     work_dir.mkdir()
     seed_items = [
-        {"keys": "L-Win+A", "group": "Restoran", "label": "İlk", "text": "Mevcut kayıt 1"},
-        {"keys": "L-Win+Z", "group": "Kurye", "label": "İki", "text": "Mevcut kayıt 2"},
+        {"keys": "L-Win+A", "group": "Partner", "label": "İlk", "text": "Mevcut kayıt 1"},
+        {"keys": "L-Win+Z", "group": "Field", "label": "İki", "text": "Mevcut kayıt 2"},
     ]
     save_data_json(work_dir / "data.json", seed_items)
 
@@ -256,7 +263,7 @@ def test_windows_ancestor_pid_console_attach_before_argparse(capsys, tmp_path: P
     assert fake_k32.AttachConsole.call_args_list == [mock.call(-1), mock.call(9001), mock.call(4444)]
     fake_k32.SetConsoleOutputCP.assert_called_with(65001)
     fake_k32.SetConsoleCP.assert_called_with(65001)
-    assert "Komut Satırı Kullanımı" in out_con.getvalue()
+    assert "Command-Line Usage" in out_con.getvalue() or "Komut Satırı Kullanımı" in out_con.getvalue()
 
     import builtins
 
@@ -289,7 +296,7 @@ def test_windows_ancestor_pid_console_attach_before_argparse(capsys, tmp_path: P
          mock.patch("builtins.open", side_effect=open_w):
         assert cli.run(["--web", "--verbose", "--help"]) == 0
     fake_k32_web.AllocConsole.assert_not_called()
-    assert "Ayrıntılı Başvuru (--verbose):" in c_out_w.getvalue()
+    assert "Detailed Reference (--verbose):" in c_out_w.getvalue() or "Ayrıntılı Başvuru (--verbose):" in c_out_w.getvalue()
 
     _out_g, _err_g, _in_g, open_g = make_con_open()
     fake_k32_gui_verb = mock.Mock()
@@ -331,7 +338,7 @@ def test_windows_ancestor_pid_console_attach_before_argparse(capsys, tmp_path: P
          mock.patch("builtins.open", side_effect=open_t):
         assert cli.run(["--tui", "--help"]) == 0
     fake_k32_tui_help.AllocConsole.assert_not_called()
-    assert "Komut Satırı Kullanımı" in tui_help_out.getvalue()
+    assert "Command-Line Usage" in tui_help_out.getvalue() or "Komut Satırı Kullanımı" in tui_help_out.getvalue()
 
     assert cli._detect_pre_mode(["--mode", "web"]) == "web"
     assert cli._detect_pre_mode(["--mode=tui"]) == "tui"
@@ -373,13 +380,15 @@ def test_windows_ancestor_pid_console_attach_before_argparse(capsys, tmp_path: P
     help_json = json.loads(capsys.readouterr().out)
     assert help_json["ok"] is True and help_json["data"]["sss"]
     assert cli.run(["--work-dir", str(tmp_path), "--cli"]) == 0
-    assert "Komut Satırı Kullanımı" in capsys.readouterr().out
+    out_cli_empty = capsys.readouterr().out
+    assert "Command-Line Usage" in out_cli_empty or "Komut Satırı Kullanımı" in out_cli_empty
 
     parser = cli.build_arg_parser()
     from qtp_app.core.engine import QtpEngine as _Eng
     tmp_eng = _Eng(work_dir=tmp_path, seed_defaults=False, ephemeral=True)
     assert cli.execute_cli(tmp_eng, parser.parse_args(["--help"])) == 0
-    assert "Komut Satırı Kullanımı" in capsys.readouterr().out
+    out_cli_h = capsys.readouterr().out
+    assert "Command-Line Usage" in out_cli_h or "Komut Satırı Kullanımı" in out_cli_h
     cli._emit_verbose_diagnostics(tmp_eng, 0, "cli")
     cli._emit_verbose_diagnostics(tmp_eng, 2, "cli")
     assert "[DEBUG]" in capsys.readouterr().err
@@ -408,7 +417,7 @@ def test_cli_unknown_flag_and_full_subcommands(tmp_path: Path, capsys, monkeypat
     work_dir.mkdir()
     save_data_json(
         work_dir / "data.json",
-        [{"keys": "L-Win+A", "group": "Restoran", "label": "Selam", "text": "Merhaba Dünya"}],
+        [{"keys": "L-Win+A", "group": "General", "label": "Selam", "text": "Merhaba Dünya"}],
     )
 
     monkeypatch.setenv("CI", "true")
@@ -419,7 +428,8 @@ def test_cli_unknown_flag_and_full_subcommands(tmp_path: Path, capsys, monkeypat
     assert cli.run(["--work-dir", str(work_dir), "--modes", "--json"]) == 0
     assert "web" in capsys.readouterr().out
     assert cli.run(["--work-dir", str(work_dir), "--list-categories"]) == 0
-    assert "Tümü" in capsys.readouterr().out
+    cats_out = capsys.readouterr().out
+    assert "ALL" in cats_out and ("All" in cats_out or "Tümü" in cats_out)
     assert cli.run(["--work-dir", str(work_dir), "--list-items"]) == 0
     assert "Merhaba Dünya" in capsys.readouterr().out
     assert cli.run(["--work-dir", str(work_dir), "--search", "Merhaba"]) == 0
@@ -550,7 +560,7 @@ def test_cli_unknown_flag_and_full_subcommands(tmp_path: Path, capsys, monkeypat
 
     with mock.patch("qtp_app.core.engine.is_dir_writable", return_value=False):
         ro_eng = QtpEngine(work_dir=tmp_path / "ro_work", seed_defaults=False)
-        assert len(ro_eng.items) >= 500
+        assert len(ro_eng.items) >= 12
     with mock.patch("qtp_app.core.engine.get_bundled_default_path", return_value=tmp_path / "missing.ini"):
         assert eng.op_selftest(run_ui_smoke=False).exit_code == 1
     with mock.patch("qtp_app.core.engine.serialize_qtp_ini", return_value="bozuk"):

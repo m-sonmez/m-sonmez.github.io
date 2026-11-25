@@ -45,9 +45,9 @@ def test_tui_clips_every_line_and_compacts_narrow_categories(tmp_path: Path):
             assert display_width(stripped) <= width
 
         if width < 100:
-            assert "Tümü(" in plain[1]
+            assert "All(" in plain[1] or "Tümü(" in plain[1]
+            assert "1(" in plain[1]
             assert "A(" in plain[1]
-            assert "Q(" in plain[1]
 
 
 def test_tui_sets_escdelay_and_handles_curses_resize(tmp_path: Path, monkeypatch):
@@ -115,31 +115,40 @@ def test_tui_toggle_only_favorites_and_only_notes(tmp_path: Path):
     save_state(
         work,
         [
-            {"keys": "L-Win+A", "group": "Genel", "label": "Normal", "text": "Normal cevap", "favorite": True},
-            {"keys": "", "group": "Genel", "label": "Not1", "text": "Kısayolsuz not", "favorite": False},
-            {"keys": "L-Win+Z", "group": "Genel", "label": "Not2", "text": "[DAHİLİ NOT] İç kural", "favorite": False},
+            {"keys": "L-Win+1", "group": "General", "label": "Normal", "text": "Normal snippet", "favorite": True},
+            {"keys": "", "group": "General", "label": "Not1", "text": "Keyless note", "favorite": False},
+            {"keys": "L-Win+2", "group": "General", "label": "Not2", "text": "[NOTE] Internal rule", "favorite": False},
+            {"keys": "L-Win+2", "group": "General", "label": "Not3", "text": "[DAHİLİ NOT] Legacy rule", "favorite": False},
         ],
         create_backup_flag=False,
     )
     eng = QtpEngine(work_dir=work, seed_defaults=False)
 
     tui = QtpTui(eng, term_size=(100, 20), use_color=False)
-    assert len(tui._visible_items) == 3
+    assert len(tui._visible_items) == 4
+    assert tui._category_codes() == ["ALL", "1", "2"]
+
+    tui.handle_key("TAB")
+    assert tui.category == "1"
+    tui.handle_key("3")
+    assert tui.category == "2"
+    tui.handle_key("1")
+    assert tui.category == "ALL"
 
     tui.handle_key("F")
     assert tui.only_favorites is True
-    assert tui.status_message == "Yalnızca favoriler"
-    assert [it["text"] for it in tui._visible_items] == ["Normal cevap"]
+    assert [it["text"] for it in tui._visible_items] == ["Normal snippet"]
     tui.handle_key("F")
     assert tui.only_favorites is False
-    assert tui.status_message == "Tüm kayıtlar"
-    assert len(tui._visible_items) == 3
+    assert len(tui._visible_items) == 4
 
     tui.handle_key("N")
     assert tui.only_notes is True
-    assert tui.status_message == "Yalnızca notlar"
-    assert [it["text"] for it in tui._visible_items] == ["Kısayolsuz not", "[DAHİLİ NOT] İç kural"]
+    assert [it["text"] for it in tui._visible_items] == [
+        "Keyless note",
+        "[NOTE] Internal rule",
+        "[DAHİLİ NOT] Legacy rule",
+    ]
     tui.handle_key("N")
     assert tui.only_notes is False
-    assert tui.status_message == "Tüm kayıtlar"
-    assert len(tui._visible_items) == 3
+    assert len(tui._visible_items) == 4

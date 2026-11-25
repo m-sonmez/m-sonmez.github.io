@@ -42,9 +42,9 @@ def test_watcher_reloads_ini_in_place_and_atomic_replace(tmp_path: Path):
     eng.start_watcher(on_reload=events.append, debounce_ms=80)
     try:
         items_ext = [
-            {"keys": "L-Win+A", "group": "Restoran", "label": "Bir", "text": "Birinci metin"},
-            {"keys": "L-Win+Z", "group": "Kurye", "label": "İki", "text": "İkinci metin"},
-            {"keys": "L-Win+X", "group": "Canlı", "label": "Üç", "text": "Üçüncü metin eklendi"},
+            {"keys": "L-Win+A", "group": "Partner", "label": "Bir", "text": "Birinci metin"},
+            {"keys": "L-Win+Z", "group": "Field", "label": "İki", "text": "İkinci metin"},
+            {"keys": "L-Win+X", "group": "Live", "label": "Üç", "text": "Üçüncü metin eklendi"},
         ]
         write_qtp_ini(work / "QuickTextPaste.ini", build_qtp_ini(items_ext), create_bak=False)
 
@@ -52,7 +52,7 @@ def test_watcher_reloads_ini_in_place_and_atomic_replace(tmp_path: Path):
         assert len(eng.items) == 3
         assert eng.items[2]["text"] == "Üçüncü metin eklendi"
 
-        items_rep = items_ext + [{"keys": "L-Win+Q", "group": "Turkcell", "label": "Dört", "text": "Atomik değişim"}]
+        items_rep = items_ext + [{"keys": "L-Win+Q", "group": "Telecom", "label": "Dört", "text": "Atomik değişim"}]
         tmp_atomic = work / "QuickTextPaste.ini.tmp"
         write_qtp_ini(tmp_atomic, build_qtp_ini(items_rep), create_bak=False)
         os.replace(tmp_atomic, work / "QuickTextPaste.ini")

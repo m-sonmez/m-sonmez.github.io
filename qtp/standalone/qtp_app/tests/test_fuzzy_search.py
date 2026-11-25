@@ -27,8 +27,8 @@ def test_turkish_locale_case_matching():
 def test_subsequence_scoring_stable_order():
     matcher = FuzzyMatcher()
     items = [
-        {"keys": "L-Win+A", "group": "Restoran", "label": "Genel", "text": "Sipariş hazırlık süresi uzadı"},
-        {"keys": "L-Win+Z", "group": "Kurye", "label": "Sipariş İptali", "text": "Sipariş iptal edildi"},
+        {"keys": "L-Win+A", "group": "Partner", "label": "Genel", "text": "Sipariş hazırlık süresi uzadı"},
+        {"keys": "L-Win+Z", "group": "Field", "label": "Sipariş İptali", "text": "Sipariş iptal edildi"},
         {"keys": "L-Win+X", "group": "Müşteri", "label": "Bilgi", "text": "Sıradaki işlem için bekleyin"},
     ]
 
@@ -72,9 +72,9 @@ def test_fuzzy_subsequence_highlights_case_sensitive_and_edge_cases():
     assert matcher.match_text("xyz", "Merhaba") is None
     assert matcher.match_text("   ", "Merhaba").score == 0.0
 
-    item = {"keys": "L-Win+Q", "group": "Turkcell Hat", "label": "Kurulum", "text": "İşlem tamamlandı"}
+    item = {"keys": "L-Win+Q", "group": "Telecom Hat", "label": "Kurulum", "text": "İşlem tamamlandı"}
     assert matcher.score_item("Q", item) is not None
-    assert matcher.score_item("Turkcell", item) is not None
+    assert matcher.score_item("Telecom", item) is not None
     assert matcher.score_item("   ", item).score == 0.0
     assert matcher.score_item("olmayan_terim", item) is None
 

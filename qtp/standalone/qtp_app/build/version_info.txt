@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(2, 4, 4, 0),
-    prodvers=(2, 4, 4, 0),
+    filevers=(2, 5, 0, 0),
+    prodvers=(2, 5, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -16,13 +16,13 @@ VSVersionInfo(
           '040904B0',
           [
             StringStruct('CompanyName', 'Murat Sönmez'),
-            StringStruct('FileDescription', 'QTP — Hazır Cevaplar (Bağımsız Masaüstü Uygulaması)'),
-            StringStruct('FileVersion', '2.4.4.0'),
+            StringStruct('FileDescription', 'QTP — QuickTextPaste & Snippet Manager'),
+            StringStruct('FileVersion', '2.5.0.0'),
             StringStruct('InternalName', 'QTP'),
             StringStruct('LegalCopyright', 'Copyright © 2026 Murat Sönmez'),
             StringStruct('OriginalFilename', 'qtp.exe'),
-            StringStruct('ProductName', 'QTP — Hazır Cevaplar'),
-            StringStruct('ProductVersion', '2.4.4.0')
+            StringStruct('ProductName', 'QTP — QuickTextPaste & Snippet Manager'),
+            StringStruct('ProductVersion', '2.5.0.0')
           ]
         )
       ]

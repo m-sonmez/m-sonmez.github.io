@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Callable
 
 from PyQt6.QtCore import QRectF, Qt
@@ -9,6 +10,7 @@ from PyQt6.QtGui import QAction, QIcon, QPainter, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtWidgets import QMenu, QSystemTrayIcon, QWidget
 
+from qtp_app.core.i18n import t
 from qtp_app.ui.icons import make_svg_icon
 from qtp_app.ui.theme import DARK_PALETTE, ThemePalette, build_overlay_stylesheet, build_qpalette, get_asset_path
 
@@ -68,21 +70,26 @@ class QtpTrayIcon(QSystemTrayIcon):
         on_quit: Callable[[], None],
         open_hotkey: str = "Win+Alt+Space",
         palette: ThemePalette | None = None,
+        language: str = "en",
+        config_dir: Path | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__(load_tray_icon(), parent)
 
         self._on_open = on_open
         self._on_toggle = on_toggle
+        self._language = str(language or "en")
+        self._config_dir = config_dir
+        self._open_hotkey = str(open_hotkey or "").strip()
         self.menu = QMenu(parent)
 
         self.act_open = QAction("", self.menu)
-        self.act_settings = QAction("Ayarlar…", self.menu)
-        self.act_reload = QAction("INI Yeniden Yükle", self.menu)
-        self.act_open_json = QAction("data.json Aç", self.menu)
-        self.act_backups = QAction("Yedekler…", self.menu)
-        self.act_help = QAction("Yardım (F1)", self.menu)
-        self.act_quit = QAction("Çıkış", self.menu)
+        self.act_settings = QAction("", self.menu)
+        self.act_reload = QAction("", self.menu)
+        self.act_open_json = QAction("data.json", self.menu)
+        self.act_backups = QAction("", self.menu)
+        self.act_help = QAction("", self.menu)
+        self.act_quit = QAction("", self.menu)
 
         self.act_open.triggered.connect(on_open)
         self.act_settings.triggered.connect(on_settings)
@@ -102,10 +109,23 @@ class QtpTrayIcon(QSystemTrayIcon):
         self.menu.addAction(self.act_help)
         self.menu.addAction(self.act_quit)
 
-        self.update_hotkeys_label(open_hotkey)
+        self.apply_language(self._language, self._config_dir)
         self.apply_palette(palette if palette is not None else DARK_PALETTE)
         self.setContextMenu(self.menu)
         self.activated.connect(self._handle_activated)
+
+    def apply_language(self, language: str, config_dir: Path | None = None) -> None:
+        self._language = str(language or "en")
+        if config_dir is not None:
+            self._config_dir = config_dir
+        is_tr = self._language.startswith("tr")
+        self.act_settings.setText(t("tray.settings", self._language, self._config_dir))
+        self.act_reload.setText(t("tray.reload", self._language, self._config_dir))
+        self.act_open_json.setText("data.json Aç" if is_tr else "Open data.json")
+        self.act_backups.setText(t("tray.backups", self._language, self._config_dir))
+        self.act_help.setText(t("tray.help", self._language, self._config_dir))
+        self.act_quit.setText(t("tray.quit", self._language, self._config_dir))
+        self.update_hotkeys_label(self._open_hotkey)
 
     def apply_palette(self, palette: ThemePalette) -> None:
         self.menu.setPalette(build_qpalette(palette))
@@ -121,12 +141,15 @@ class QtpTrayIcon(QSystemTrayIcon):
 
     def update_hotkeys_label(self, open_hotkey: str) -> None:
         hk = (open_hotkey or "").strip()
+        self._open_hotkey = hk
+        open_lbl = t("tray.open", self._language, self._config_dir)
+        app_lbl = t("app.display_name", self._language, self._config_dir)
         if hk:
-            self.act_open.setText(f"Aç ({hk})")
-            self.setToolTip(f"QTP — Hazır Cevaplar ({hk})")
+            self.act_open.setText(f"{open_lbl} ({hk})")
+            self.setToolTip(f"{app_lbl} ({hk})")
         else:
-            self.act_open.setText("Aç")
-            self.setToolTip("QTP — Hazır Cevaplar")
+            self.act_open.setText(open_lbl)
+            self.setToolTip(app_lbl)
 
     def _handle_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         if reason == QSystemTrayIcon.ActivationReason.Trigger:

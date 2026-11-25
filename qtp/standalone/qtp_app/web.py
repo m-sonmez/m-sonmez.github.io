@@ -17,6 +17,7 @@ from typing import Any
 import webbrowser
 
 from qtp_app.core.engine import OperationResult, QtpEngine, get_bundled_docs_dir
+from qtp_app.core.i18n import available_languages
 from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.operations import OPERATIONS
 
@@ -98,7 +99,7 @@ class QtpWebServer(ThreadingHTTPServer):
 
 
 class QtpWebRequestHandler(BaseHTTPRequestHandler):
-    server_version = "QTPWeb/2.4.4"
+    server_version = "QTPWeb/2.5.0"
 
     @staticmethod
     def _parse_qs_bool(val: str) -> bool:
@@ -253,7 +254,7 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/manifest.webmanifest":
             manifest_payload = {
-                "name": "QTP — Hazır Cevaplar",
+                "name": "QTP — QuickTextPaste & Snippet Manager",
                 "short_name": "QTP",
                 "start_url": "./",
                 "display": "standalone",
@@ -371,6 +372,11 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
                 data={
                     "revision": self.engine.revision,
                     "theme": self.engine.settings.get("theme"),
+                    "language": self.engine.resolved_language(),
+                    "language_setting": self.engine.settings.get("language", "auto"),
+                    "available_languages": available_languages(self.engine.config_dir),
+                    "categories": self.engine.resolve_categories(),
+                    "configured_categories": self.engine.settings.get("categories", []),
                     "view_mode": self.engine.settings.get("view_mode", "list"),
                     "strip_emoji": bool(self.engine.settings.get("strip_emoji", False)),
                     "sort_by": self.engine.settings.get("sort_by", "order"),
@@ -456,6 +462,22 @@ class QtpWebRequestHandler(BaseHTTPRequestHandler):
             key = str(body.get("key", ""))
             value = body.get("value")
             self._send_result(self.engine.op_set_setting(key, value))
+            return
+        if path == "/api/categories":
+            cats = body.get("categories", [])
+            res = self.engine.op_set_setting("categories", cats)
+            if res.ok:
+                payload = dict(res.data) if isinstance(res.data, dict) else {}
+                payload["categories"] = self.engine.resolve_categories()
+                payload["configured_categories"] = list(self.engine.settings.get("categories", []))
+                res = OperationResult(
+                    ok=res.ok,
+                    exit_code=res.exit_code,
+                    message=res.message,
+                    data=payload,
+                    error=res.error,
+                )
+            self._send_result(res)
             return
         if path == "/api/hotkeys/preset":
             preset = str(body.get("preset", "recommended"))

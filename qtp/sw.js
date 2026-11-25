@@ -1,4 +1,4 @@
-const CACHE_NAME = 'qtp-pwa-cache-v3.5.5';
+const CACHE_NAME = 'qtp-pwa-cache-v4.0.0';
 const APP_SHELL = [
   './',
   './index.html',

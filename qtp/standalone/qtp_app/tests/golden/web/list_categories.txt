@@ -2,34 +2,25 @@
   "data": {
     "categories": [
       {
+        "auto": false,
         "code": "ALL",
         "count": 2,
         "hotkey_prefix": "",
-        "label": "Tümü"
+        "label": "All"
       },
       {
-        "code": "A",
+        "auto": true,
+        "code": "1",
         "count": 1,
-        "hotkey_prefix": "L-Win+A",
-        "label": "A · İş Ortağı"
+        "hotkey_prefix": "L-Win+1",
+        "label": "1"
       },
       {
-        "code": "Z",
+        "auto": true,
+        "code": "2",
         "count": 1,
-        "hotkey_prefix": "L-Win+Z",
-        "label": "Z · Kurye"
-      },
-      {
-        "code": "X",
-        "count": 0,
-        "hotkey_prefix": "L-Win+X",
-        "label": "X · Canlı Yardım"
-      },
-      {
-        "code": "Q",
-        "count": 0,
-        "hotkey_prefix": "L-Win+Q",
-        "label": "Q · Turkcell"
+        "hotkey_prefix": "L-Win+2",
+        "label": "2"
       }
     ],
     "total": 2

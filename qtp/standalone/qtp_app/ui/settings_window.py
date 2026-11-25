@@ -1,8 +1,9 @@
-"""Tema, esnek global kısayollar, canlı çakışma uyarısı, otomatik yenileme ve veri ayarları penceresi."""
+"""Settings window for theme, language, dynamic categories, global hotkeys, auto-reload, and storage."""
 
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 from typing import Any, Callable
 
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -28,23 +29,27 @@ from PyQt6.QtWidgets import (
 from qtp_app.core.hotkeys import (
     CANONICAL_MODIFIERS,
     HOTKEY_PRESETS,
-    HOTKEY_PRESET_LABELS,
     apply_modifier_combo,
+    build_preset_hotkeys,
     detect_hotkey_conflicts,
+    get_preset_labels,
     normalize_hotkey,
     parse_hotkey,
     resolve_preset_name,
 )
+from qtp_app.core.i18n import available_languages, resolve_language, t
 from qtp_app.core.settings import (
+    CATEGORY_CODE_RE,
     DEFAULT_HOTKEYS,
     DEFAULT_SETTINGS,
-    SETTING_DESCRIPTIONS,
     VALID_LOG_LEVELS,
     VALID_PASTE_METHODS,
     VALID_SORT_BY,
     VALID_THEMES,
     VALID_VIEW_MODES,
     _sanitize_settings,
+    get_setting_descriptions,
+    sanitize_categories,
 )
 from qtp_app.ui.flow_layout import FlowLayout
 from qtp_app.ui.help_dialog import HelpDialog
@@ -57,15 +62,7 @@ from qtp_app.ui.theme import (
     load_bundled_fonts,
 )
 
-_BUILTIN_HOTKEY_LABELS: tuple[tuple[str, str], ...] = (
-    ("all", "Tümü (Genel)"),
-    ("A", "Kategori A (İş Ortağı)"),
-    ("Z", "Kategori Z (Kurye)"),
-    ("X", "Kategori X (Canlı Yardım)"),
-    ("Q", "Kategori Q (Turkcell)"),
-)
-
-_BUILTIN_SLOT_SET = {k for k, _ in _BUILTIN_HOTKEY_LABELS}
+_BUILTIN_SLOT_SET = {"all"}
 
 _MODIFIER_BULK_CHOICES: tuple[str, ...] = (
     "Win+Alt",
@@ -133,14 +130,18 @@ _MODIFIER_ONLY_KEYS = {
 
 
 class HotkeyEdit(QLineEdit):
-    """Hem doğrudan tuş basarak hem de elle düzenleyerek kısayol girişi kabul eden alan."""
+    """Accepts both live keystroke capture and manual editing of hotkey combinations."""
 
     combo_changed = pyqtSignal(str)
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None, *, language: str = "en"):
         super().__init__(parent)
         self.capture_mode = False
-        self.setPlaceholderText("Tuş bileşimi basın veya yazın (ör. Win+Alt+A)")
+        self.setPlaceholderText(
+            "Tuş bileşimi basın veya yazın (ör. Win+Alt+1)"
+            if str(language or "en").startswith("tr")
+            else "Press or type a key combo (e.g. Win+Alt+1)"
+        )
 
     def keyPressEvent(self, event: Any) -> None:
         key_code = int(event.key())
@@ -186,13 +187,15 @@ class HotkeyEdit(QLineEdit):
 
 
 class HotkeyRow(QWidget):
-    """4 değiştirici onay kutusu (Ctrl/Alt/Shift/Win) ile çift yönlü eşitlenen kısayol satırı."""
+    """Two-way synced hotkey editor row with Ctrl/Alt/Shift/Win checkboxes."""
 
     def __init__(
         self,
         slot: str,
         *,
         removable: bool = False,
+        language: str = "en",
+        config_dir: Path | None = None,
         on_changed: Callable[[], None] | None = None,
         on_remove: Callable[[str], None] | None = None,
         tooltip: str = "",
@@ -202,6 +205,7 @@ class HotkeyRow(QWidget):
         self.slot = slot
         self._on_changed = on_changed
         self._syncing = False
+        is_tr = str(language or "en").startswith("tr")
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 2, 0, 2)
@@ -219,8 +223,9 @@ class HotkeyRow(QWidget):
             "Alt": self.chk_alt,
             "Shift": self.chk_shift,
         }
+        mod_tip = "Bu değiştiriciyi kısayola ekle veya kaldır" if is_tr else "Toggle this modifier"
         for chk in (self.chk_ctrl, self.chk_alt, self.chk_shift, self.chk_win):
-            chk.setToolTip("Bu değiştiriciyi kısayola ekle veya kaldır")
+            chk.setToolTip(mod_tip)
             chk.toggled.connect(self._on_checkbox_toggled)
             mods_flow.addWidget(chk)
         outer.addLayout(mods_flow)
@@ -229,16 +234,20 @@ class HotkeyRow(QWidget):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(6)
 
-        self.edit = HotkeyEdit(self)
+        self.edit = HotkeyEdit(self, language=language)
         self.edit.setMinimumWidth(140)
         if tooltip:
             self.edit.setToolTip(tooltip)
         self.edit.textChanged.connect(self._on_edit_text_changed)
         row.addWidget(self.edit, 1)
 
-        self.capture_btn = QPushButton("Yakala", self)
+        self.capture_btn = QPushButton(t("settings.hk.record", language, config_dir), self)
         self.capture_btn.setCheckable(True)
-        self.capture_btn.setToolTip("Etkinleştirildiğinde klavyeden basılan tuş bileşimini doğrudan yakalar")
+        self.capture_btn.setToolTip(
+            "Klavyeden basılan tuş bileşimini doğrudan yakala"
+            if is_tr
+            else "Capture keystrokes directly from keyboard"
+        )
         self.capture_btn.toggled.connect(self._on_capture_toggled)
         row.addWidget(self.capture_btn)
 
@@ -246,7 +255,9 @@ class HotkeyRow(QWidget):
         if removable:
             btn = QPushButton("×", self)
             btn.setFixedWidth(28)
-            btn.setToolTip(f"'{slot}' özel kısayol yuvasını kaldır")
+            btn.setToolTip(
+                f"'{slot}' kısayol yuvasını kaldır" if is_tr else f"Remove hotkey slot '{slot}'"
+            )
             btn.clicked.connect(lambda: on_remove(slot) if on_remove else None)
             row.addWidget(btn)
             self.remove_btn = btn
@@ -310,7 +321,7 @@ class HotkeyRow(QWidget):
                 mods, _key = parse_hotkey(clean)
             except ValueError:
                 mods = tuple(
-                    m for m in CANONICAL_MODIFIERS if m.lower() in {t.strip().lower() for t in clean.split("+")}
+                    m for m in CANONICAL_MODIFIERS if m.lower() in {tok.strip().lower() for tok in clean.split("+")}
                 )
             for mod_name, chk in self._mod_boxes.items():
                 chk.setChecked(mod_name in mods)
@@ -327,20 +338,31 @@ class HotkeyRow(QWidget):
 
 
 class SettingsWindow(QDialog):
-    """qtp_settings.json içindeki tüm alanları Türkçe etiket ve ipuçlarıyla düzenleme penceresi."""
+    """Cross-platform settings dialog covering appearance, language, dynamic categories, hotkeys, and storage."""
 
     def __init__(
         self,
         current_settings: dict[str, Any],
         palette: ThemePalette,
         parent: QWidget | None = None,
+        *,
+        language: str | None = None,
+        config_dir: Path | None = None,
+        discovered_categories: list[dict[str, Any]] | None = None,
     ):
         super().__init__(parent)
-        self.setWindowTitle("QTP Ayarları")
-        self.setMinimumSize(520, 420)
-        self.resize(680, 700)
         self._palette = palette
+        self._config_dir = config_dir
+        self._discovered_categories = list(discovered_categories or [])
         self._base_settings = copy.deepcopy(current_settings)
+        lang_src = language if language is not None else self._base_settings.get("language", "auto")
+        self._lang = resolve_language(lang_src, config_dir)
+        self._descriptions = get_setting_descriptions(self._lang, config_dir)
+        self._preset_labels = get_preset_labels(self._lang, config_dir)
+
+        self.setWindowTitle(t("settings.title", self._lang, config_dir))
+        self.setMinimumSize(520, 420)
+        self.resize(680, 720)
         self._font_family = load_bundled_fonts()
         self.setFont(create_app_font(self._font_family, 13))
         self.setPalette(build_qpalette(palette))
@@ -349,15 +371,17 @@ class SettingsWindow(QDialog):
         self.hk_rows: dict[str, HotkeyRow] = {}
         self.hk_edits: dict[str, HotkeyEdit] = {}
         self._hk_form_rows: dict[str, int] = {}
+        self.cat_rows: list[tuple[QWidget, QLineEdit, QLineEdit, QLineEdit]] = []
 
         self._build_ui()
         self._populate(self._base_settings)
 
     def _desc(self, key: str) -> tuple[str, str]:
-        entry = SETTING_DESCRIPTIONS.get(key, {})
+        entry = self._descriptions.get(key, {})
         return entry.get("label", key), entry.get("tooltip", "")
 
     def _build_ui(self) -> None:
+        is_tr = self._lang.startswith("tr")
         root = QVBoxLayout(self)
         root.setContentsMargins(16, 16, 16, 16)
         root.setSpacing(12)
@@ -370,7 +394,7 @@ class SettingsWindow(QDialog):
         container_layout = QVBoxLayout(container)
         container_layout.setSpacing(12)
 
-        gen_group = QGroupBox("Görünüm ve Davranış", container)
+        gen_group = QGroupBox(t("settings.sec.appearance", self._lang, self._config_dir), container)
         gen_form = QFormLayout(gen_group)
         gen_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         gen_form.setSpacing(8)
@@ -380,6 +404,13 @@ class SettingsWindow(QDialog):
         self.theme_cb.addItems(list(VALID_THEMES))
         self.theme_cb.setToolTip(tip)
         gen_form.addRow(lbl + ":", self.theme_cb)
+
+        lbl, tip = self._desc("language")
+        self.lang_cb = QComboBox()
+        self.lang_cb.addItems(available_languages(self._config_dir))
+        self.lang_cb.setToolTip(tip)
+        self.lang_cb.currentTextChanged.connect(lambda _v: self._update_conflict_status())
+        gen_form.addRow(lbl + ":", self.lang_cb)
 
         lbl, tip = self._desc("view_mode")
         self.view_mode_cb = QComboBox()
@@ -400,7 +431,8 @@ class SettingsWindow(QDialog):
 
         lbl, tip = self._desc("last_category")
         self.last_cat_cb = QComboBox()
-        self.last_cat_cb.addItems(["ALL", "A", "Z", "X", "Q"])
+        self.last_cat_cb.setEditable(True)
+        self.last_cat_cb.addItem("ALL")
         self.last_cat_cb.setToolTip(tip)
         gen_form.addRow(lbl + ":", self.last_cat_cb)
 
@@ -416,12 +448,6 @@ class SettingsWindow(QDialog):
         size_row.addWidget(QLabel("×"))
         size_row.addWidget(self.height_spin)
         gen_form.addRow(lbl + ":", size_row)
-
-        lbl, tip = self._desc("language")
-        self.lang_cb = QComboBox()
-        self.lang_cb.addItems(["tr"])
-        self.lang_cb.setToolTip(tip)
-        gen_form.addRow(lbl + ":", self.lang_cb)
 
         lbl, tip = self._desc("hide_on_blur")
         self.hide_on_blur_chk = QCheckBox(lbl)
@@ -440,7 +466,7 @@ class SettingsWindow(QDialog):
 
         container_layout.addWidget(gen_group)
 
-        paste_group = QGroupBox("Yapıştırma Ayarları", container)
+        paste_group = QGroupBox(t("settings.sec.behavior", self._lang, self._config_dir), container)
         paste_form = QFormLayout(paste_group)
         paste_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         paste_form.setSpacing(8)
@@ -458,33 +484,60 @@ class SettingsWindow(QDialog):
 
         container_layout.addWidget(paste_group)
 
-        hk_group = QGroupBox("Global Kısayollar", container)
+        cat_group = QGroupBox(t("settings.sec.categories", self._lang, self._config_dir), container)
+        cat_outer = QVBoxLayout(cat_group)
+        cat_outer.setSpacing(8)
+        cat_hint = QLabel(t("settings.cat.hint", self._lang, self._config_dir), cat_group)
+        cat_hint.setProperty("class", "MutedHint")
+        cat_hint.setWordWrap(True)
+        cat_outer.addWidget(cat_hint)
+
+        self.cat_rows_layout = QVBoxLayout()
+        self.cat_rows_layout.setSpacing(6)
+        cat_outer.addLayout(self.cat_rows_layout)
+
+        add_cat_row = FlowLayout(margin=0, spacing=6)
+        self.new_cat_code = QLineEdit()
+        self.new_cat_code.setPlaceholderText(t("settings.cat.code", self._lang, self._config_dir) + " (e.g. 1, WORK)")
+        self.new_cat_code.setMinimumWidth(90)
+        self.new_cat_label = QLineEdit()
+        self.new_cat_label.setPlaceholderText(t("settings.cat.label", self._lang, self._config_dir) + " (e.g. General)")
+        self.new_cat_label.setMinimumWidth(110)
+        self.new_cat_prefix = QLineEdit()
+        self.new_cat_prefix.setPlaceholderText(t("settings.cat.prefix", self._lang, self._config_dir) + " (e.g. L-Win+1)")
+        self.new_cat_prefix.setMinimumWidth(110)
+        self.add_cat_btn = QPushButton(t("settings.cat.add", self._lang, self._config_dir))
+        self.add_cat_btn.clicked.connect(self._on_add_category)
+        for w in (self.new_cat_code, self.new_cat_label, self.new_cat_prefix, self.add_cat_btn):
+            add_cat_row.addWidget(w)
+        cat_outer.addLayout(add_cat_row)
+        container_layout.addWidget(cat_group)
+
+        hk_group = QGroupBox(t("settings.sec.hotkeys", self._lang, self._config_dir), container)
         hk_outer = QVBoxLayout(hk_group)
         hk_outer.setSpacing(8)
         _, self._hk_tip = self._desc("hotkeys")
         hk_group.setToolTip(self._hk_tip)
 
         preset_bar = FlowLayout(margin=0, spacing=6)
-        preset_bar.addWidget(QLabel("Kısayol Profili:"))
+        preset_bar.addWidget(QLabel(t("settings.hk.preset", self._lang, self._config_dir) + ":"))
         self.preset_cb = QComboBox()
         self.preset_cb.setMinimumWidth(160)
         for pid in HOTKEY_PRESETS:
-            self.preset_cb.addItem(HOTKEY_PRESET_LABELS.get(pid, pid), pid)
-        self.preset_cb.setToolTip("Hazır kısayol şablonunu seçin ve uygulayın")
+            self.preset_cb.addItem(self._preset_labels.get(pid, pid), pid)
         self.preset_cb.activated.connect(self._on_preset_activated)
-        self.apply_preset_btn = QPushButton("Profili Uygula")
+        self.apply_preset_btn = QPushButton(t("settings.hk.apply_preset", self._lang, self._config_dir))
         self.apply_preset_btn.clicked.connect(self._apply_selected_preset)
         preset_bar.addWidget(self.preset_cb)
         preset_bar.addWidget(self.apply_preset_btn)
         hk_outer.addLayout(preset_bar)
 
         mod_bar = FlowLayout(margin=0, spacing=6)
-        mod_bar.addWidget(QLabel("Tümüne Değiştirici Uygula:"))
+        mod_bar.addWidget(QLabel(t("settings.hk.apply_mods", self._lang, self._config_dir) + ":"))
         self.bulk_mod_cb = QComboBox()
         self.bulk_mod_cb.setMinimumWidth(150)
         self.bulk_mod_cb.addItems(list(_MODIFIER_BULK_CHOICES))
-        self.bulk_mod_cb.setToolTip("Tüm etkin kısayolların değiştirici ön ekini tek tıkla günceller")
-        self.apply_mod_btn = QPushButton("Değiştirici Uygula")
+        self.apply_mod_btn = QPushButton("Uygula" if is_tr else "Apply")
         self.apply_mod_btn.clicked.connect(self._apply_bulk_modifiers)
         mod_bar.addWidget(self.bulk_mod_cb)
         mod_bar.addWidget(self.apply_mod_btn)
@@ -497,8 +550,10 @@ class SettingsWindow(QDialog):
 
         add_slot_bar = QHBoxLayout()
         self.new_slot_edit = QLineEdit()
-        self.new_slot_edit.setPlaceholderText("Yeni yuva adı (ör. W, 1, Özel)")
-        self.add_slot_btn = QPushButton("+ Özel Kısayol Ekle")
+        self.new_slot_edit.setPlaceholderText(
+            "Yeni yuva adı (ör. 1, WORK, M)" if is_tr else "New slot name (e.g. 1, WORK, M)"
+        )
+        self.add_slot_btn = QPushButton(t("settings.hk.add_slot", self._lang, self._config_dir))
         self.add_slot_btn.clicked.connect(self._on_add_custom_slot)
         add_slot_bar.addWidget(self.new_slot_edit, 1)
         add_slot_bar.addWidget(self.add_slot_btn)
@@ -511,7 +566,7 @@ class SettingsWindow(QDialog):
 
         container_layout.addWidget(hk_group)
 
-        data_group = QGroupBox("Veri, Yedekleme, Otomatik Yenileme ve Günlük", container)
+        data_group = QGroupBox(t("settings.sec.advanced", self._lang, self._config_dir), container)
         data_form = QFormLayout(data_group)
         data_form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         data_form.setSpacing(8)
@@ -520,7 +575,7 @@ class SettingsWindow(QDialog):
         path_row = QHBoxLayout()
         self.data_path_edit = QLineEdit()
         self.data_path_edit.setToolTip(tip)
-        browse_btn = QPushButton("Seç…")
+        browse_btn = QPushButton("Seç…" if is_tr else "Browse…")
         browse_btn.clicked.connect(self._browse_ini)
         path_row.addWidget(self.data_path_edit, 1)
         path_row.addWidget(browse_btn)
@@ -555,7 +610,7 @@ class SettingsWindow(QDialog):
         self.web_port_spin = QSpinBox()
         self.web_port_spin.setRange(0, 65535)
         self.web_port_spin.setToolTip(tip)
-        data_form.addRow(f"{lbl} Portu:", self.web_port_spin)
+        data_form.addRow(t("settings.web_port", self._lang, self._config_dir) + ":", self.web_port_spin)
 
         container_layout.addWidget(data_group)
         container_layout.addStretch()
@@ -564,15 +619,15 @@ class SettingsWindow(QDialog):
         root.addWidget(scroll, 1)
 
         btn_row = FlowLayout(margin=0, spacing=6)
-        help_btn = QPushButton("Yardım")
+        help_btn = QPushButton(t("overlay.help", self._lang, self._config_dir))
         help_btn.setIcon(make_svg_icon("help", self._palette.btn_text, size=14))
         help_btn.clicked.connect(self._open_help)
-        reset_btn = QPushButton("Varsayılana Sıfırla")
+        reset_btn = QPushButton(t("settings.btn.reset", self._lang, self._config_dir))
         reset_btn.setIcon(make_svg_icon("reload", self._palette.btn_text, size=14))
         reset_btn.clicked.connect(self._reset_defaults)
-        cancel_btn = QPushButton("İptal")
+        cancel_btn = QPushButton(t("settings.btn.cancel", self._lang, self._config_dir))
         cancel_btn.clicked.connect(self.reject)
-        save_btn = QPushButton("Kaydet")
+        save_btn = QPushButton(t("settings.btn.save", self._lang, self._config_dir))
         save_btn.setIcon(make_svg_icon("save", self._palette.pill_active_text, size=14))
         save_btn.setObjectName("PrimaryBtn")
         save_btn.clicked.connect(self._save_and_accept)
@@ -582,6 +637,110 @@ class SettingsWindow(QDialog):
         btn_row.addWidget(cancel_btn)
         btn_row.addWidget(save_btn)
         root.addLayout(btn_row)
+
+    def _clear_category_rows(self) -> None:
+        while self.cat_rows_layout.count():
+            child = self.cat_rows_layout.takeAt(0)
+            w = child.widget() if child is not None else None
+            if w is not None:
+                w.setParent(None)
+                w.deleteLater()
+        self.cat_rows.clear()
+
+    def add_category_row(self, code: str, label: str = "", hotkey_prefix: str = "") -> None:
+        clean_code = str(code or "").strip().upper()
+        if not clean_code or clean_code == "ALL" or not CATEGORY_CODE_RE.fullmatch(clean_code):
+            return
+        row_w = QWidget(self)
+        row_lay = QHBoxLayout(row_w)
+        row_lay.setContentsMargins(0, 0, 0, 0)
+        row_lay.setSpacing(6)
+
+        ed_code = QLineEdit(clean_code, row_w)
+        ed_code.setMinimumWidth(56)
+        ed_code.setMaximumWidth(90)
+        ed_code.textChanged.connect(lambda _v: self._sync_last_category_choices())
+
+        ed_label = QLineEdit(str(label or clean_code), row_w)
+        ed_label.setMinimumWidth(80)
+
+        ed_prefix = QLineEdit(str(hotkey_prefix or ""), row_w)
+        ed_prefix.setMinimumWidth(80)
+
+        rm_btn = QPushButton("×", row_w)
+        rm_btn.setFixedWidth(28)
+        rm_btn.setToolTip(t("settings.cat.remove", self._lang, self._config_dir))
+
+        entry = (row_w, ed_code, ed_label, ed_prefix)
+        rm_btn.clicked.connect(lambda _c=False, ent=entry: self._remove_category_row(ent))
+
+        row_lay.addWidget(ed_code)
+        row_lay.addWidget(ed_label, 1)
+        row_lay.addWidget(ed_prefix, 1)
+        row_lay.addWidget(rm_btn)
+        self.cat_rows_layout.addWidget(row_w)
+        self.cat_rows.append(entry)
+        self._sync_last_category_choices()
+
+    def _remove_category_row(self, entry: tuple[QWidget, QLineEdit, QLineEdit, QLineEdit]) -> None:
+        if entry in self.cat_rows:
+            self.cat_rows.remove(entry)
+        row_w = entry[0]
+        self.cat_rows_layout.removeWidget(row_w)
+        row_w.setParent(None)
+        row_w.deleteLater()
+        self._sync_last_category_choices()
+
+    def _on_add_category(self) -> None:
+        code = self.new_cat_code.text().strip().upper()
+        if not code or code == "ALL" or not CATEGORY_CODE_RE.fullmatch(code):
+            QMessageBox.warning(
+                self,
+                "Geçersiz Kategori" if self._lang.startswith("tr") else "Invalid Category",
+                "Alfanümerik kategori kodu girin (ör. 1, WORK)."
+                if self._lang.startswith("tr")
+                else "Enter an alphanumeric category code (e.g. 1, WORK).",
+            )
+            return
+        label = self.new_cat_label.text().strip() or code
+        prefix = self.new_cat_prefix.text().strip() or f"L-Win+{code}"
+        self.add_category_row(code, label, prefix)
+        self.new_cat_code.clear()
+        self.new_cat_label.clear()
+        self.new_cat_prefix.clear()
+
+    def collect_categories(self) -> list[dict[str, str]]:
+        raw: list[dict[str, str]] = []
+        for _w, ed_code, ed_label, ed_prefix in self.cat_rows:
+            code = ed_code.text().strip().upper()
+            if code and code != "ALL" and CATEGORY_CODE_RE.fullmatch(code):
+                raw.append(
+                    {
+                        "code": code,
+                        "label": ed_label.text().strip() or code,
+                        "hotkey_prefix": ed_prefix.text().strip(),
+                    }
+                )
+        return sanitize_categories(raw)
+
+    def _sync_last_category_choices(self) -> None:
+        cur = self.last_cat_cb.currentText().strip().upper() or "ALL"
+        choices: list[str] = ["ALL"]
+        for cat in self.collect_categories():
+            c = cat["code"]
+            if c not in choices:
+                choices.append(c)
+        for cat in self._discovered_categories:
+            c = str(cat.get("code", "")).strip().upper()
+            if c and c not in choices:
+                choices.append(c)
+        if cur not in choices:
+            choices.append(cur)
+        self.last_cat_cb.blockSignals(True)
+        self.last_cat_cb.clear()
+        self.last_cat_cb.addItems(choices)
+        self.last_cat_cb.setCurrentText(cur)
+        self.last_cat_cb.blockSignals(False)
 
     def _clear_hotkey_rows(self) -> None:
         while self.hk_form.rowCount() > 0:
@@ -597,12 +756,16 @@ class SettingsWindow(QDialog):
                 self.hk_rows[clean_slot].set_combo(combo)
             return self.hk_rows[clean_slot]
 
-        label_map = dict(_BUILTIN_HOTKEY_LABELS)
-        label_txt = label_map.get(clean_slot, f"Özel ({clean_slot})")
+        if clean_slot == "all":
+            label_txt = t("settings.hk.all_slot", self._lang, self._config_dir)
+        else:
+            label_txt = t("settings.hk.cat_slot", self._lang, self._config_dir, code=clean_slot)
         removable = clean_slot not in _BUILTIN_SLOT_SET
         row_widget = HotkeyRow(
             clean_slot,
             removable=removable,
+            language=self._lang,
+            config_dir=self._config_dir,
             on_changed=self._update_conflict_status,
             on_remove=self.remove_custom_slot,
             tooltip=self._hk_tip,
@@ -627,11 +790,22 @@ class SettingsWindow(QDialog):
 
     def _on_add_custom_slot(self) -> None:
         raw_slot = self.new_slot_edit.text().strip()
+        is_tr = self._lang.startswith("tr")
         if not raw_slot or "." in raw_slot:
-            QMessageBox.warning(self, "Geçersiz Yuva", "Lütfen geçerli ve noktası bulunmayan bir yuva adı girin (ör. W, 1).")
+            QMessageBox.warning(
+                self,
+                "Geçersiz Yuva" if is_tr else "Invalid Slot",
+                "Lütfen geçerli ve noktası bulunmayan bir yuva adı girin (ör. 1, WORK)."
+                if is_tr
+                else "Enter a valid slot name without dots (e.g. 1, WORK).",
+            )
             return
         if raw_slot in self.hk_rows:
-            QMessageBox.information(self, "Mevcut Yuva", f"'{raw_slot}' yuvası zaten tanımlı.")
+            QMessageBox.information(
+                self,
+                "Mevcut Yuva" if is_tr else "Slot Exists",
+                f"'{raw_slot}' yuvası zaten tanımlı." if is_tr else f"Slot '{raw_slot}' already exists.",
+            )
             return
         key_hint = raw_slot.upper() if len(raw_slot) == 1 and raw_slot.isalnum() else "K"
         self.add_hotkey_slot(raw_slot, f"Win+Alt+{key_hint}")
@@ -639,7 +813,14 @@ class SettingsWindow(QDialog):
 
     def apply_preset(self, preset_id: str) -> None:
         canon = resolve_preset_name(preset_id)
-        target_map = HOTKEY_PRESETS[canon]
+        active_slots: list[str] = ["all"]
+        for s in self.hk_rows:
+            if s != "all" and s not in active_slots:
+                active_slots.append(s)
+        for cat in self.collect_categories():
+            if cat["code"] not in active_slots:
+                active_slots.append(cat["code"])
+        target_map = build_preset_hotkeys(canon, active_slots)
         for slot, combo in target_map.items():
             if slot in self.hk_rows:
                 self.hk_rows[slot].set_combo(combo)
@@ -672,12 +853,16 @@ class SettingsWindow(QDialog):
     def _current_hotkeys_map(self) -> dict[str, str]:
         return {k: row.edit.text().strip() for k, row in self.hk_rows.items()}
 
+    def _effective_language(self) -> str:
+        return resolve_language(self.lang_cb.currentText(), self._config_dir)
+
     def _update_conflict_status(self) -> None:
         hk_map = self._current_hotkeys_map()
-        conflicts = detect_hotkey_conflicts(hk_map)
+        eff_lang = self._effective_language()
+        conflicts = detect_hotkey_conflicts(hk_map, language=eff_lang)
         if not conflicts:
             self.conflict_label.setStyleSheet(f"color: {self._palette.success_text}; font-weight: 600;")
-            self.conflict_label.setText("Çakışma algılanmadı ✔")
+            self.conflict_label.setText(t("settings.hk.conflicts_none", self._lang, self._config_dir))
             return
         lines = []
         has_severe = False
@@ -692,24 +877,28 @@ class SettingsWindow(QDialog):
 
     def _populate(self, data: dict[str, Any]) -> None:
         self.theme_cb.setCurrentText(str(data.get("theme", "light")))
+        self.lang_cb.setCurrentText(str(data.get("language", "auto")))
         self.view_mode_cb.setCurrentText(str(data.get("view_mode", "list")))
         self.sort_by_cb.setCurrentText(str(data.get("sort_by", "order")))
         self.strip_emoji_chk.setChecked(bool(data.get("strip_emoji", False)))
-        self.last_cat_cb.setCurrentText(str(data.get("last_category", "ALL")))
         ws = data.get("window_size") or [720, 520]
         self.width_spin.setValue(int(ws[0]))
         self.height_spin.setValue(int(ws[1]))
-        self.lang_cb.setCurrentText(str(data.get("language", "tr")))
         self.hide_on_blur_chk.setChecked(bool(data.get("hide_on_blur", True)))
         self.start_min_chk.setChecked(bool(data.get("start_minimized", False)))
         self.tray_chk.setChecked(bool(data.get("tray_icon", True)))
         self.paste_method_cb.setCurrentText(str(data.get("paste_method", "auto")))
         self.enter_after_chk.setChecked(bool(data.get("enter_after_paste", True)))
 
+        self._clear_category_rows()
+        for cat in sanitize_categories(data.get("categories")):
+            self.add_category_row(cat["code"], cat["label"], cat["hotkey_prefix"])
+        self._sync_last_category_choices()
+        self.last_cat_cb.setCurrentText(str(data.get("last_category", "ALL")).strip().upper() or "ALL")
+
         self._clear_hotkey_rows()
         hotkeys = data.get("hotkeys") or DEFAULT_SETTINGS["hotkeys"]
-        for k, _lbl in _BUILTIN_HOTKEY_LABELS:
-            self.add_hotkey_slot(k, str(hotkeys.get(k, DEFAULT_HOTKEYS[k])))
+        self.add_hotkey_slot("all", str(hotkeys.get("all", DEFAULT_HOTKEYS["all"])))
         for k, v in hotkeys.items():
             if k not in _BUILTIN_SLOT_SET:
                 self.add_hotkey_slot(str(k), str(v))
@@ -736,11 +925,12 @@ class SettingsWindow(QDialog):
         self._update_conflict_status()
 
     def _browse_ini(self) -> None:
+        is_tr = self._lang.startswith("tr")
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "QuickTextPaste.ini Dosyası Seç",
+            "QuickTextPaste.ini Dosyası Seç" if is_tr else "Select QuickTextPaste.ini File",
             self.data_path_edit.text(),
-            "INI Dosyaları (*.ini);;Tüm Dosyalar (*.*)",
+            "INI Files (*.ini);;All Files (*.*)",
         )
         if path:
             self.data_path_edit.setText(path)
@@ -750,18 +940,25 @@ class SettingsWindow(QDialog):
         self._populate(self._base_settings)
 
     def _open_help(self) -> None:
-        dlg = HelpDialog(self._palette, initial_tab=0, parent=self)
-        dlg.scroll_to_anchor_text("Ayarlar")
+        dlg = HelpDialog(
+            self._palette,
+            initial_tab=0,
+            language=self._lang,
+            config_dir=self._config_dir,
+            parent=self,
+        )
+        dlg.scroll_to_anchor_text("Ayarlar" if self._lang.startswith("tr") else "Settings")
         dlg.exec()
 
     def collect_settings(self, base: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Form değerlerini qtp_settings.json sözlüğü olarak toplar."""
+        """Collects form values into a sanitized qtp_settings.json dictionary."""
         out = copy.deepcopy(base if base is not None else self._base_settings)
         out["theme"] = self.theme_cb.currentText()
         out["view_mode"] = self.view_mode_cb.currentText()
         out["sort_by"] = self.sort_by_cb.currentText()
         out["strip_emoji"] = self.strip_emoji_chk.isChecked()
-        out["last_category"] = self.last_cat_cb.currentText()
+        out["categories"] = self.collect_categories()
+        out["last_category"] = self.last_cat_cb.currentText().strip().upper() or "ALL"
         out["window_size"] = [self.width_spin.value(), self.height_spin.value()]
         out["language"] = self.lang_cb.currentText()
         out["hide_on_blur"] = self.hide_on_blur_chk.isChecked()
@@ -789,10 +986,11 @@ class SettingsWindow(QDialog):
         out["auto_reload_interval_ms"] = self.auto_reload_interval_spin.value()
         out["log_level"] = self.log_level_cb.currentText()
         out["web"] = {"port": int(self.web_port_spin.value())}
-        return _sanitize_settings(out)
+        return _sanitize_settings(out, config_dir=self._config_dir)
 
     def _save_and_accept(self) -> None:
         hk_map = self._current_hotkeys_map()
+        is_tr = self._lang.startswith("tr")
         seen_combos: dict[str, str] = {}
         for slot, raw in hk_map.items():
             if not raw:
@@ -800,18 +998,22 @@ class SettingsWindow(QDialog):
             try:
                 norm = normalize_hotkey(raw)
             except ValueError as exc:
-                QMessageBox.warning(self, "Geçersiz Kısayol", f"[{slot}] {exc}")
+                QMessageBox.warning(self, "Geçersiz Kısayol" if is_tr else "Invalid Hotkey", f"[{slot}] {exc}")
                 return
             if norm in seen_combos:
                 QMessageBox.warning(
                     self,
-                    "Çift Kısayol Ataması",
-                    f"'{norm}' kısayolu hem '{seen_combos[norm]}' hem de '{slot}' yuvasına atanmış. Kaydetmeden önce benzersiz hale getirin.",
+                    "Çift Kısayol Ataması" if is_tr else "Duplicate Hotkey",
+                    (
+                        f"'{norm}' kısayolu hem '{seen_combos[norm]}' hem de '{slot}' yuvasına atanmış. Kaydetmeden önce benzersiz hale getirin."
+                        if is_tr
+                        else f"'{norm}' is assigned to both '{seen_combos[norm]}' and '{slot}'. Make them unique before saving."
+                    ),
                 )
                 return
             seen_combos[norm] = slot
 
-        os_conflicts = detect_hotkey_conflicts(hk_map)
+        os_conflicts = detect_hotkey_conflicts(hk_map, language=self._effective_language())
         if os_conflicts:
             summary_lines = [
                 f"• [{slot}: {hk_map.get(slot, '')}] {'; '.join(msgs)}"
@@ -819,10 +1021,14 @@ class SettingsWindow(QDialog):
             ]
             ans = QMessageBox.warning(
                 self,
-                "Kısayol Çakışması Uyarısı",
-                "Uyarı: Seçilen kısayollar işletim sistemi veya masaüstü ortamı ile çakışıyor:\n\n"
+                "Kısayol Çakışması Uyarısı" if is_tr else "Hotkey Conflict Warning",
+                (
+                    "Uyarı: Seçilen kısayollar işletim sistemi veya masaüstü ortamı ile çakışıyor:\n\n"
+                    if is_tr
+                    else "Warning: Selected hotkeys conflict with OS or desktop shortcuts:\n\n"
+                )
                 + "\n".join(summary_lines)
-                + "\n\nYine de kaydetmek istiyor musunuz?",
+                + ("\n\nYine de kaydetmek istiyor musunuz?" if is_tr else "\n\nSave anyway?"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )

@@ -1,9 +1,9 @@
 {
   "id": "./",
-  "name": "Hazır Cevaplar & QuickTextPaste Yöneticisi",
-  "short_name": "QTP Panel",
-  "description": "Çevrimdışı çalışan yerel Hazır Cevaplar ve QuickTextPaste (.ini / .json) yönetim ve düzenleme uygulaması.",
-  "lang": "tr",
+  "name": "QTP — QuickTextPaste & Snippet Manager",
+  "short_name": "QTP",
+  "description": "Offline-first universal quick-paste and snippet manager supporting QuickTextPaste .ini and .json formats.",
+  "lang": "en",
   "start_url": "./qtp.html",
   "scope": "./",
   "display": "standalone",
@@ -32,13 +32,13 @@
   ],
   "shortcuts": [
     {
-      "name": "QTP Yeni Web Arayüzü",
+      "name": "QTP Web UI",
       "short_name": "QTP Web",
       "url": "./qtp.html"
     },
     {
-      "name": "Eski QuickTextPaste Yöneticisi",
-      "short_name": "Yönetici",
+      "name": "Classic Manager",
+      "short_name": "Classic",
       "url": "./index.html"
     }
   ]

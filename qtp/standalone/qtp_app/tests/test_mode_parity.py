@@ -25,9 +25,19 @@ GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 
 
 def _make_isolated_engine(tmp_path: Path) -> QtpEngine:
+    from qtp_app.core.ini_parser import build_qtp_ini, write_qtp_ini
+    from qtp_app.core.settings import DEFAULT_SETTINGS, save_settings
+
     work = tmp_path / "work"
     work.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(FIXTURES_DIR / "minimal.ini", work / "QuickTextPaste.ini")
+    seed_items = [
+        {"keys": "L-Win+1", "group": "General", "label": "Greeting", "text": "Merhaba Dünya!"},
+        {"keys": "L-Win+2", "group": "Work", "label": "Update", "text": "Status update ready"},
+    ]
+    write_qtp_ini(work / "QuickTextPaste.ini", build_qtp_ini(seed_items), create_bak=False)
+    cfg = dict(DEFAULT_SETTINGS)
+    cfg["language"] = "en"
+    save_settings(cfg, work / "qtp_settings.json")
     copied_texts: list[str] = []
 
     def fake_copy(txt: str) -> bool:
@@ -352,7 +362,10 @@ def test_cross_mode_parity_for_operation(op_id: str, tmp_path: Path, capsys):
 
     spec = OPERATIONS_BY_ID[op_id]
     for mode, (_code, msg, _payload) in results.items():
-        assert spec.success_msg_tr.split()[0] in msg, f"{mode}/{op_id} mesaj uyumsuz: {msg}"
+        if op_id == "help":
+            assert "Usage:" in msg or "Kullanım" in msg, f"{mode}/{op_id} mesaj uyumsuz: {msg}"
+        else:
+            assert spec.success_msg_tr.split()[0] in msg, f"{mode}/{op_id} mesaj uyumsuz: {msg}"
 
     if spec.read_only and op_id != "selftest":
         hashes = {}
@@ -677,7 +690,7 @@ def test_cross_mode_help_flag_and_order_parity(mode: str, tmp_path: Path, capsys
         assert cli.run(argv) == 0
         v_out = capsys.readouterr().out
         assert v_out == cli.format_help_text(verbose=True) + "\n"
-        assert "Ayrıntılı Başvuru (--verbose):" in v_out
+        assert "Detailed Reference (--verbose):" in v_out or "Ayrıntılı Başvuru (--verbose):" in v_out
         assert list(work_dir.iterdir()) == []
 
 
@@ -691,15 +704,20 @@ def test_only_notes_filter_parity_across_engine_gui_and_static_js(tmp_path: Path
     work = tmp_path / "notes_parity"
     work.mkdir()
     sample_items = [
-        {"keys": "L-Win+Z", "group": "Kurye", "label": "Not", "text": "[DAHİLİ NOT] Dahili kural"},
-        {"keys": "", "group": "Genel", "label": "Düz", "text": "Kısayolsuz plain not"},
-        {"keys": "L-Win+A", "group": "Restoran", "label": "Normal", "text": "Normal hazır cevap"},
+        {"keys": "L-Win+2", "group": "Work", "label": "NoteEn", "text": "[NOTE] Universal internal rule"},
+        {"keys": "L-Win+2", "group": "Work", "label": "NoteTr", "text": "[DAHİLİ NOT] Legacy internal rule"},
+        {"keys": "", "group": "General", "label": "Plain", "text": "Keyless plain note"},
+        {"keys": "L-Win+1", "group": "General", "label": "Normal", "text": "Normal snippet"},
     ]
     save_state(work, sample_items, create_backup_flag=False)
     eng = QtpEngine(work_dir=work, seed_defaults=False)
 
     eng_texts = [it["text"] for it in eng.op_list_items(only_notes=True).data["items"]]
-    assert eng_texts == ["[DAHİLİ NOT] Dahili kural", "Kısayolsuz plain not"]
+    assert eng_texts == [
+        "[NOTE] Universal internal rule",
+        "[DAHİLİ NOT] Legacy internal rule",
+        "Keyless plain note",
+    ]
 
     app = QApplication.instance() or QApplication([])
     overlay = OverlayWindow(eng.items, theme="light")
@@ -745,12 +763,12 @@ def test_sort_keys_and_alpha_parity_across_engine_gui_and_static_js(tmp_path: Pa
     work = tmp_path / "sort_parity"
     work.mkdir()
     sample_items = [
-        {"keys": "", "group": "Genel", "label": "Not Kayıt", "text": "Kısayolsuz not"},
-        {"keys": "L-Win+Z", "group": "Kurye", "label": "Şifre", "text": "Şifre metni"},
-        {"keys": "L-Win+A", "group": "Restoran", "label": "Cem", "text": "Cem metni"},
-        {"keys": "L-Win+A", "group": "Restoran", "label": "Çözüm", "text": "Çözüm metni"},
-        {"keys": "L-Win+1", "group": "Ortak", "label": "18 Yaş", "text": "18 Yaş metni"},
-        {"keys": "L-Win+Z", "group": "Kurye", "label": "[NOT] Kural", "text": "Dahili"},
+        {"keys": "", "group": "General", "label": "Not Kayıt", "text": "Kısayolsuz not"},
+        {"keys": "L-Win+2", "group": "Work", "label": "Şifre", "text": "Şifre metni"},
+        {"keys": "L-Win+1", "group": "General", "label": "Cem", "text": "Cem metni"},
+        {"keys": "L-Win+1", "group": "General", "label": "Çözüm", "text": "Çözüm metni"},
+        {"keys": "L-Win+3", "group": "Dev", "label": "18 Yaş", "text": "18 Yaş metni"},
+        {"keys": "L-Win+2", "group": "Work", "label": "[NOTE] Kural", "text": "Dahili"},
     ]
     save_state(work, sample_items, create_backup_flag=False)
     eng = QtpEngine(work_dir=work, seed_defaults=False)
@@ -881,8 +899,9 @@ def test_cross_mode_verbose_quiet_and_initial_filters_parity(mode: str, tmp_path
         tui.execute_operation("help")
         assert len(tui.modal_lines) > 200
         joined = "\n".join(tui.modal_lines)
-        for part in ("Ayrıntılı Başvuru (--verbose):", "QTP Kullanım Kılavuzu", "QTP Klavye Kısayolları Rehberi", "SSS"):
+        for part in ("QTP Kullanım Kılavuzu", "QTP Klavye Kısayolları Rehberi", "SSS"):
             assert part in joined
+        assert "Detailed Reference (--verbose):" in joined or "Ayrıntılı Başvuru (--verbose):" in joined
         before_scroll = tui.modal_scroll
         tui.handle_key("PGDN")
         assert tui.modal_scroll > before_scroll
@@ -896,7 +915,7 @@ def test_cross_mode_verbose_quiet_and_initial_filters_parity(mode: str, tmp_path
         tui_frames = QtpTui(eng_ref, term_size=(100, 28), initial_category="A", initial_query="sipariş")
         tui_frames.run_scripted(["F1", "PGDN", "PGDN", "PGDN", "PGDN", "PGDN", "PGDN", "ESC", "q"])
         all_frames = "\n".join(tui_frames.recorded_frames)
-        assert "Ayrıntılı Başvuru (--verbose):" in all_frames
+        assert "Detailed Reference (--verbose):" in all_frames or "Ayrıntılı Başvuru (--verbose):" in all_frames
         assert "Katmanı (Overlay) Açma" in all_frames
         return
 
@@ -932,6 +951,43 @@ def test_cross_mode_verbose_quiet_and_initial_filters_parity(mode: str, tmp_path
     assert cli.format_help_text(verbose=True).splitlines()[0] in help_dlg.browsers[4].toPlainText()
     help_dlg.close()
     help_dlg.deleteLater()
+
+
+def test_dynamic_category_auto_discovery_and_backward_compat(tmp_path: Path):
+    from qtp_app.core.json_store import save_data_json, save_state
+
+    empty_dir = tmp_path / "empty_cats"
+    empty_dir.mkdir()
+    save_data_json(empty_dir / "data.json", [])
+    eng_empty = QtpEngine(work_dir=empty_dir, seed_defaults=False)
+    assert [c["code"] for c in eng_empty.resolve_categories()] == ["ALL"]
+
+    legacy_dir = tmp_path / "legacy_527"
+    legacy_dir.mkdir()
+    shutil.copy2(FIXTURES_DIR / "QuickTextPaste.ini", legacy_dir / "QuickTextPaste.ini")
+    eng_legacy = QtpEngine(work_dir=legacy_dir, seed_defaults=False)
+    cats = eng_legacy.resolve_categories()
+    codes = [c["code"] for c in cats]
+    assert codes[0] == "ALL"
+    for expected_code in ("A", "Z", "X", "Q", "W", "1"):
+        assert expected_code in codes
+    assert cats[0]["count"] == len(eng_legacy.items) and cats[0]["count"] >= 500
+
+    custom_dir = tmp_path / "custom_ini"
+    custom_dir.mkdir()
+    save_state(
+        custom_dir,
+        [
+            {"keys": "L-Ctrl+1", "group": "Mail", "label": "M1", "text": "Mail reply"},
+            {"keys": "Alt+M", "group": "Dev", "label": "D1", "text": "Dev macro"},
+            {"keys": "", "group": "Notes", "label": "N1", "text": "[NOTE] Keyless note"},
+        ],
+        create_backup_flag=False,
+    )
+    eng_custom = QtpEngine(work_dir=custom_dir, seed_defaults=False)
+    assert [c["code"] for c in eng_custom.resolve_categories()] == ["ALL", "1", "M"]
+    eng_custom.op_set_setting("categories", json.dumps([{"code": "TEAM", "label": "Team", "hotkey_prefix": "L-Win+T"}]))
+    assert [c["code"] for c in eng_custom.resolve_categories()] == ["ALL", "TEAM", "1", "M"]
 
 
 

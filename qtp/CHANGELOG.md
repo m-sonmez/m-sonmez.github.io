@@ -1,6 +1,27 @@
 # Değişiklik Günlüğü (CHANGELOG)
 
-Tüm kayda değer QTP sürümleri bu dosyada Türkçe olarak belgelenir.
+Tüm kayda değer QTP sürümleri bu dosyada belgelenir.
+
+---
+
+## [2.5.0] - 2026-11-25
+
+### Küresel, Yapılandırma Odaklı Mimari, EN/TR Çoklu Dil (`qtp_locale.json`), Dinamik Kategoriler/Kısayollar & Çevrimdışı PWA
+- **Dinamik Yapılandırma Odaklı Kategoriler (`core/settings.py`, `core/engine.py`, `ui/overlay.py`, `ui/settings_window.py`, `web.py`, `qtp.html`):**
+  - Sabit kodlu kategori listeleri tamamen kaldırıldı; yalnızca sanal `ALL` (`All` / `Tümü`) yerleşiktir.
+  - `qtp_settings.json` içine `categories` (`[{"code", "label", "hotkey_prefix"}]`, varsayılan `[]`) eklendi; `engine.resolve_categories()` yapılandırılmış kategorileri ve yüklü `QuickTextPaste.ini` / `data.json` içindeki tüm farklı `keys` öneklerini ilk görünüm sırasıyla otomatik birleştirir (eski çok-kategorili INI dosyalarıyla %100 geriye dönük uyumlu).
+  - GUI **Ayarlar**, Web **Kategoriler** modalı (`POST /api/categories` + statik `localStorage`) ve `last_category` doğrulaması tüm alfasayısal kategori kodlarını (en fazla 32 karakter) destekleyecek şekilde güncellendi.
+- **Evrensel Varsayılan Kısayol & Dinamik Profiller (`core/hotkeys.py`, `core/settings.py`, `qtp.html`):**
+  - `DEFAULT_HOTKEYS` minimal, çakışmasız `{"all": "Win+Alt+Space"}` olarak güncellendi; `build_preset_hotkeys(preset, slots)` etkin kategori ve özel yuvalara göre 6 hazır profili dinamik olarak üretir.
+  - Eski v2.0 sabit `Win+*` varsayılanı kullanan mevcut yapılandırmalar güvenli tek-seferlik geçişle korunur; `AltGr` çakışma notları dil tercihine göre yerelleştirilir.
+- **Yerleşik EN/TR Çoklu Dil & İsteğe Bağlı `qtp_locale.json` (`core/i18n.py`, tüm arayüzler):**
+  - `language: "auto"` (küresel varsayılan İngilizce, Türkçe OS yerel ayarında otomatik Türkçe) + `"en"` / `"tr"` + çalışma dizinindeki isteğe bağlı `qtp_locale.json` geçersiz kılma desteği eklendi.
+  - GUI, TUI, CLI (`--help`), Web (`qtp.html`), Klasik PWA (`index.html`) ve Hızlı Pano (`legacy/cevaplar.html`) üzerinde anlık EN/TR dil değişimi (`qtp_ui_lang_v1`) eklendi.
+- **Evrensel 12 Kayıtlı Başlangıç Veri Seti & Sıfır Marka/Kişisel Veri (`data.json`, `QuickTextPaste.ini`, `assets/defaults/`):**
+  - Genel kullanıma hazır 12 kayıtlı başlangıç paketi (`L-Win+1` General/Email, `L-Win+2` Work/Meetings, `L-Win+3` Developer/Code ve 1 kısayolsuz `[NOTE]` kaydı) üretildi ve 4 varsayılan dosya bayt-birebir eşitlendi; 527 kayıtlı büyük veri gerileme testi yalnızca `tests/fixtures/` altında korundu.
+- **P1/P2 Denetim Düzeltmeleri (Sıralama Eşitliği, TUI `N` & Dinamik Kategori, Çevrimdışı PWA & Erişilebilirlik):**
+  - `locale_sort_key()` (Python `ui/search.py` ve JS `qtp.html` birebir eşlenik) ile `sort_by="alpha"` ve `sort_by="keys"` (kısayolsuz notlar sona) 4 modun tamamında %100 özdeş sıralama üretir; `[NOTE]` ve `[DAHİLİ NOT]` her modda not olarak tanınır.
+  - `qtp/sw.js` `qtp-pwa-cache-v4.0.0` sürümüne yükseltildi ve `legacy/cevaplar.html` içine manifest + Service Worker kaydı eklendi; tüm `qtp.html`, `index.html` ve `legacy/cevaplar.html` kontrollerine eksiksiz `aria-label` ve modal odak tuzağı tamamlandı.
 
 ---
 

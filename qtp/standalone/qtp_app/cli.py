@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import Any
 
 from qtp_app.core.engine import QtpEngine, build_cli_help_text
+from qtp_app.core.i18n import resolve_language
 from qtp_app.core.operations import OPERATIONS
+from qtp_app.core.settings import SETTINGS_FILENAME
 
 TH32CS_SNAPPROCESS = 0x00000002
 _CONSOLE_ATTACHED_EXISTING = False
@@ -255,8 +257,28 @@ def _attach_windows_console_before_argparse(raw_args: list[str]) -> bool:
     return False
 
 
-def format_help_text(*, verbose: bool = False) -> str:
-    return build_cli_help_text(verbose=verbose)
+def _resolve_cli_help_language(work_dir: Path | None = None) -> str:
+    lang_setting = "auto"
+    if work_dir is not None:
+        cfg_file = work_dir / SETTINGS_FILENAME
+        if cfg_file.is_file():
+            try:
+                raw = json.loads(cfg_file.read_text(encoding="utf-8"))
+                if isinstance(raw, dict) and raw.get("language"):
+                    lang_setting = str(raw["language"])
+            except Exception:
+                pass
+    return resolve_language(lang_setting, work_dir)
+
+
+def format_help_text(
+    *,
+    verbose: bool = False,
+    lang: str | None = None,
+    config_dir: Path | None = None,
+) -> str:
+    eff_lang = lang if lang else _resolve_cli_help_language(config_dir)
+    return build_cli_help_text(verbose=verbose, lang=eff_lang, config_dir=config_dir)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -458,7 +480,11 @@ def _dispatch_cli_action(
     option_strings: list[str] | None,
 ) -> int:
     if args.show_help:
-        txt = format_help_text(verbose=verbose > 0)
+        txt = format_help_text(
+            verbose=verbose > 0,
+            lang=engine.resolved_language(),
+            config_dir=engine.config_dir,
+        )
         if as_json:
             return _print_result(engine.op_help(txt, verbose=verbose > 0), as_json=True)
         print(txt)
@@ -727,7 +753,7 @@ def _dispatch_cli_action(
             ),
         )
 
-    print(format_help_text(verbose=verbose > 0))
+    print(format_help_text(verbose=verbose > 0, lang=engine.resolved_language(), config_dir=engine.config_dir))
     return 0
 
 
@@ -800,7 +826,7 @@ def run(argv: list[str] | None = None) -> int:
         work_dir = Path(args.work_dir).resolve() if args.work_dir else None
 
         if args.show_help and not args.as_json:
-            print(format_help_text(verbose=verbose > 0))
+            print(format_help_text(verbose=verbose > 0, config_dir=work_dir))
             return 0
 
         ephemeral = bool(

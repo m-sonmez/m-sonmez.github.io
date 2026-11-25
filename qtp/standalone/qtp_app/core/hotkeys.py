@@ -7,15 +7,24 @@ from pathlib import Path
 import re
 import sys
 import threading
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
+from qtp_app.core.i18n import t
 from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.paster import is_posix_desktop, is_wayland_session
 
 logger = get_logger("hotkeys")
 
-HOTKEY_CATEGORY_ORDER = ("all", "A", "Z", "X", "Q")
+HOTKEY_CATEGORY_ORDER = ("all",)
 CANONICAL_MODIFIERS = ("Win", "Ctrl", "Alt", "Shift")
+PRESET_ORDER = (
+    "recommended",
+    "win_ctrl",
+    "ctrl_alt",
+    "ctrl_shift_alt",
+    "function_keys",
+    "legacy_win",
+)
 
 MOD_ALT = 0x0001
 MOD_CONTROL = 0x0002
@@ -26,63 +35,89 @@ WM_QUIT = 0x0012
 WM_HOTKEY = 0x0312
 ERROR_HOTKEY_ALREADY_REGISTERED = 1409
 
-HOTKEY_PRESETS: dict[str, dict[str, str]] = {
-    "recommended": {
-        "all": "Win+Alt+Space",
-        "A": "Win+Alt+A",
-        "Z": "Win+Alt+Z",
-        "X": "Win+Alt+X",
-        "Q": "Win+Alt+Q",
-    },
-    "win_ctrl": {
-        "all": "Win+Ctrl+Space",
-        "A": "Win+Ctrl+A",
-        "Z": "Win+Ctrl+Z",
-        "X": "Win+Ctrl+X",
-        "Q": "Win+Ctrl+Q",
-    },
-    "ctrl_alt": {
-        "all": "Ctrl+Alt+Space",
-        "A": "Ctrl+Alt+A",
-        "Z": "Ctrl+Alt+Z",
-        "X": "Ctrl+Alt+X",
-        "Q": "Ctrl+Alt+Q",
-    },
-    "ctrl_shift_alt": {
-        "all": "Ctrl+Alt+Shift+Space",
-        "A": "Ctrl+Alt+Shift+A",
-        "Z": "Ctrl+Alt+Shift+Z",
-        "X": "Ctrl+Alt+Shift+X",
-        "Q": "Ctrl+Alt+Shift+Q",
-    },
-    "function_keys": {
-        "all": "Ctrl+Shift+F1",
-        "A": "Ctrl+Shift+F2",
-        "Z": "Ctrl+Shift+F3",
-        "X": "Ctrl+Shift+F4",
-        "Q": "Ctrl+Shift+F5",
-    },
-    "legacy_win": {
-        "all": "Ctrl+Shift+Space",
-        "A": "Win+A",
-        "Z": "Win+Z",
-        "X": "Win+X",
-        "Q": "Win+Q",
-    },
-}
-
 HOTKEY_PRESET_ALIASES: dict[str, str] = {
     "triple_mod": "ctrl_shift_alt",
 }
 
-HOTKEY_PRESET_LABELS: dict[str, str] = {
-    "recommended": "Önerilen — Çakışmasız (Win+Alt)",
-    "win_ctrl": "Win+Ctrl Bileşimi (Win+Ctrl)",
-    "ctrl_alt": "Ctrl+Alt Bileşimi (Dikkat: TR-Q AltGr)",
-    "ctrl_shift_alt": "Üçlü Değiştirici (Win Tuşsuz — Ctrl+Alt+Shift)",
-    "function_keys": "Fonksiyon Tuşları (Win Tuşsuz — Ctrl+Shift+F1–F5)",
-    "legacy_win": "Klasik QuickTextPaste (Win — Çakışma Riskli)",
+_PRESET_SPECS: dict[str, tuple[str, str]] = {
+    "recommended": ("Win+Alt+Space", "Win+Alt"),
+    "win_ctrl": ("Win+Ctrl+Space", "Win+Ctrl"),
+    "ctrl_alt": ("Ctrl+Alt+Space", "Ctrl+Alt"),
+    "ctrl_shift_alt": ("Ctrl+Alt+Shift+Space", "Ctrl+Alt+Shift"),
+    "function_keys": ("Ctrl+Shift+F1", "Ctrl+Shift"),
+    "legacy_win": ("Ctrl+Shift+Space", "Win"),
 }
+
+
+def build_preset_hotkeys(
+    preset_name: str,
+    slots: Iterable[str] | None = None,
+) -> dict[str, str]:
+    """Dynamically builds a preset hotkey mapping for 'all' plus any active category or custom slots."""
+    norm = (preset_name or "").strip().lower()
+    canon = HOTKEY_PRESET_ALIASES.get(norm, norm)
+    if canon not in _PRESET_SPECS:
+        raise ValueError(
+            f"Geçersiz kısayol profili: '{preset_name}' (geçerli: {', '.join(PRESET_ORDER)})."
+        )
+
+    ordered_slots: list[str] = ["all"]
+    seen_lower: set[str] = {"all"}
+    if slots is not None:
+        for raw_slot in slots:
+            s = str(raw_slot or "").strip()
+            if not s or "." in s:
+                continue
+            low = s.lower()
+            if low in seen_lower:
+                continue
+            seen_lower.add(low)
+            ordered_slots.append(s)
+
+    all_combo, mod_prefix = _PRESET_SPECS[canon]
+    result: dict[str, str] = {"all": all_combo}
+    if canon == "function_keys":
+        fn_idx = 2
+        for slot in ordered_slots[1:]:
+            if fn_idx <= 24:
+                result[slot] = f"{mod_prefix}+F{fn_idx}"
+                fn_idx += 1
+        return result
+
+    used_triggers: set[str] = {"Space"}
+    fallback_pool = list("123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ") + [f"F{n}" for n in range(2, 13)]
+    for slot in ordered_slots[1:]:
+        up = slot.upper()
+        trigger = ""
+        if len(up) == 1 and (("A" <= up <= "Z") or ("0" <= up <= "9")) and up not in used_triggers:
+            trigger = up
+        elif up and (("A" <= up[0] <= "Z") or ("0" <= up[0] <= "9")) and up[0] not in used_triggers:
+            trigger = up[0]
+        else:
+            for cand in fallback_pool:
+                if cand not in used_triggers:
+                    trigger = cand
+                    break
+        if trigger:
+            used_triggers.add(trigger)
+            result[slot] = f"{mod_prefix}+{trigger}"
+    return result
+
+
+HOTKEY_PRESETS: dict[str, dict[str, str]] = {
+    pid: build_preset_hotkeys(pid, ("all",)) for pid in PRESET_ORDER
+}
+
+
+def get_preset_labels(
+    lang: str = "en",
+    config_dir: str | Path | None = None,
+) -> dict[str, str]:
+    """Returns localized labels for all built-in hotkey presets."""
+    return {pid: t(f"preset.{pid}", lang, config_dir) for pid in PRESET_ORDER}
+
+
+HOTKEY_PRESET_LABELS: dict[str, str] = get_preset_labels("en")
 
 _MOD_ALIASES: dict[str, str] = {
     "win": "Win",
@@ -512,12 +547,14 @@ def detect_hotkey_conflicts(
     *,
     kde_config_path: Path | None = None,
     include_host_config: bool | None = None,
+    language: str = "en",
 ) -> dict[str, list[str]]:
     """
-    Kısayol haritasındaki çift atamaları, OS sistem kısayollarını, Türkçe-Q AltGr tuzaklarını,
+    Kısayol haritasındaki çift atamaları, OS sistem kısayollarını, AltGr düzen uyarılarını,
     KDE Plasma global kısayollarını ve Linux/BSD masaüstü geçişlerini denetleyip slot→uyarı döndürür.
     """
     plat = platform_name or sys.platform
+    lang_norm = str(language or "en").strip().lower()
     conflicts: dict[str, list[str]] = {}
     normalized_by_slot: dict[str, str] = {}
     slots_by_combo: dict[str, list[str]] = {}
@@ -562,7 +599,10 @@ def detect_hotkey_conflicts(
             if norm in _WIN_RESERVED_SHORTCUTS:
                 _add_conflict(slot, _WIN_RESERVED_SHORTCUTS[norm])
             if mods == ("Ctrl", "Alt") and norm in _TRQ_ALTGR_WARNINGS:
-                _add_conflict(slot, _TRQ_ALTGR_WARNINGS[norm])
+                if lang_norm.startswith("tr"):
+                    _add_conflict(slot, _TRQ_ALTGR_WARNINGS[norm])
+                else:
+                    _add_conflict(slot, t("conflict.intl_altgr", "en", combo=norm))
         elif plat == "darwin":
             if norm in _MACOS_RESERVED_SHORTCUTS:
                 _add_conflict(slot, _MACOS_RESERVED_SHORTCUTS[norm])

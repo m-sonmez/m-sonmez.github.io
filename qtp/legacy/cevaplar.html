@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hazır Cevaplar Hızlı Pano | QTP Uyumlu</title>
+  <title>QTP Quick Board</title>
   <link rel="icon" type="image/svg+xml" href="../icon.svg" />
+  <link rel="manifest" href="../manifest.webmanifest" />
   <script>
     (function () {
       try {
@@ -18,14 +19,16 @@
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: { brand: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' } }
+    if (typeof tailwind !== 'undefined') {
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: { brand: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' } }
+          }
         }
-      }
-    };
+      };
+    }
   </script>
   <style>
     :root {
@@ -172,10 +175,13 @@
             </div>
           </div>
 
-          <button id="themeBtn" type="button" class="px-2 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Tema Değiştir">
+          <button id="themeBtn" type="button" class="px-2 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Tema Değiştir" aria-label="Toggle theme">
             🌙
           </button>
-          <button id="collapseHeaderBtn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Üst menüyü daralt (Alt+H)">
+          <button id="langBtn" type="button" class="px-2 py-1 rounded-lg text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Switch language (EN / TR)" aria-label="Switch language">
+            EN
+          </button>
+          <button id="collapseHeaderBtn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Üst menüyü daralt (Alt+H)" aria-label="Collapse header">
             ▲ Gizle
           </button>
         </div>
@@ -184,27 +190,27 @@
       <div class="flex flex-wrap lg:flex-nowrap items-center gap-2 min-w-0">
         <div class="relative flex-1 min-w-[min(200px,100%)]">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
-          <input id="searchInput" type="text" placeholder="Metin, başlık, kategori veya kısayol ara (/)"
+          <input id="searchInput" type="text" placeholder="Metin, başlık, kategori veya kısayol ara (/)" aria-label="Search snippets"
             class="qtp-ctrl w-full pl-8 pr-9 text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button id="clearSearchBtn" type="button" class="hidden qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
+          <button id="clearSearchBtn" type="button" aria-label="Clear search" class="hidden qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
         </div>
 
         <div id="catDropdownWrap" class="relative shrink-0 max-w-full min-w-0 flex items-center">
           <div class="inline-flex items-stretch max-w-full border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 overflow-hidden" style="border-radius: var(--radius-ctrl);">
-            <button id="catDropdownBtn" type="button" class="qtp-ctrl inline-flex items-center gap-1.5 px-2.5 text-xs font-medium hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0" title="Çoklu kategori filtrele">
+            <button id="catDropdownBtn" type="button" class="qtp-ctrl inline-flex items-center gap-1.5 px-2.5 text-xs font-medium hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0" title="Çoklu kategori filtrele" aria-label="Filter categories">
               <span id="catBtnLabel" class="truncate">📁 Kategoriler: Tümü (0)</span>
               <span id="catBtnCaret" class="text-[10px] opacity-70 shrink-0">▼</span>
             </button>
-            <button id="catClearBtn" type="button" class="hidden px-2 py-1.5 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-slate-200 dark:hover:bg-slate-700 border-l border-slate-300 dark:border-slate-700 transition" title="Kategori filtresini sıfırla">✕</button>
+            <button id="catClearBtn" type="button" class="hidden px-2 py-1.5 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-slate-200 dark:hover:bg-slate-700 border-l border-slate-300 dark:border-slate-700 transition" title="Kategori filtresini sıfırla" aria-label="Clear category filter">✕</button>
           </div>
 
           <div id="catDropdownMenu" class="hidden fixed inset-x-3 top-[var(--hdr-bottom,5rem)] w-auto max-h-[70dvh] sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-1.5 sm:w-[390px] md:right-0 md:left-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl z-40 overflow-hidden overflow-y-auto">
             <div class="p-2.5 border-b border-slate-200 dark:border-slate-800 space-y-2 bg-slate-50/80 dark:bg-slate-800/40">
               <div class="relative">
                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔎</span>
-                <input id="catSearchInput" type="text" placeholder="Kategori ara..."
+                <input id="catSearchInput" type="text" placeholder="Kategori ara..." aria-label="Search categories"
                   class="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <button id="catSearchClearBtn" type="button" class="hidden qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                <button id="catSearchClearBtn" type="button" aria-label="Clear category search" class="hidden qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
               </div>
               <div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
                 <div class="flex items-center gap-1">
@@ -220,11 +226,11 @@
         </div>
 
         <div id="expandedFilters" class="flex flex-wrap lg:flex-nowrap items-center gap-1.5 max-w-full min-w-0">
-          <select id="hotkeyFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select id="hotkeyFilter" aria-label="Filter by shortcut" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="ALL">⌨️ Tüm Kısayollar</option>
           </select>
 
-          <select id="scopeFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select id="scopeFilter" aria-label="Search scope" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="all">🎯 Tümü</option>
             <option value="text">📝 Metin</option>
             <option value="label">🏷️ Başlık</option>
@@ -232,13 +238,13 @@
             <option value="keys">⌨️ Kısayol</option>
           </select>
 
-          <select id="sortFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select id="sortFilter" aria-label="Sort order" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="default">↕️ Varsayılan</option>
             <option value="popular">🔥 Popüler</option>
             <option value="az">🔤 A → Z</option>
           </select>
 
-          <select id="densitySelect" aria-label="Görünüm yoğunluğu" title="Arayüz yoğunluğu" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select id="densitySelect" aria-label="UI density" title="Arayüz yoğunluğu" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="compact">Sıkı</option>
             <option value="default" selected>Varsayılan</option>
             <option value="metro">Metro</option>
@@ -247,7 +253,7 @@
 
         <div id="collapsedControls" class="hidden items-center gap-1.5 shrink-0">
           <span id="collapsedStatsBadge" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">0 / 0</span>
-          <button id="showHeaderBtn" type="button" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition" title="Üst menüyü göster (Alt+H)">
+          <button id="showHeaderBtn" type="button" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition" title="Üst menüyü göster (Alt+H)" aria-label="Show header">
             ▼ Menüyü Göster
           </button>
         </div>
@@ -906,7 +912,8 @@
           grid.className = 'qtp-cards-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 content-start items-stretch';
 
           items.forEach(item => {
-            const isNote = (item.text || '').startsWith('[DAHİLİ NOT]');
+            const rawText = String(item.text || '');
+            const isNote = !String(item.keys || '').trim() || rawText.startsWith('[NOTE]') || rawText.startsWith('[DAHİLİ NOT]');
             const h = itemHash(item);
             const isFav = Boolean(item.favorite) || favorites.has(h);
             const count = Math.max(Number(item.copyCount || 0), copyCounts[h] || 0);
@@ -923,19 +930,19 @@
                 <div class="flex items-start justify-between gap-2 mb-2 min-w-0">
                   <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                     ${item.keys ? `<kbd class="px-1.5 py-0.5 text-[11px] font-mono rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">${escapeHtml(item.keys)}</kbd>` : ''}
-                    ${isNote ? `<span class="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-white">Dahili Not</span>` : ''}
+                    ${isNote ? `<span class="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-white">${uiLang === 'tr' ? 'Not' : 'Note'}</span>` : ''}
                     ${item.label ? `<span class="text-xs font-semibold text-slate-600 dark:text-slate-300 break-words">${highlightText(item.label, terms)}</span>` : ''}
                   </div>
-                  <button class="fav-btn qtp-btn-sm no-print inline-flex items-center justify-center rounded-md text-base leading-none opacity-75 hover:opacity-100 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition shrink-0" title="Favorilere Ekle/Çıkar">
+                  <button class="fav-btn qtp-btn-sm no-print inline-flex items-center justify-center rounded-md text-base leading-none opacity-75 hover:opacity-100 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition shrink-0" title="Toggle favorite" aria-label="Toggle favorite">
                     ${isFav ? '⭐' : '☆'}
                   </button>
                 </div>
                 <p class="qtp-card-text text-slate-800 dark:text-slate-200 whitespace-pre-line break-words overflow-hidden">${highlightText(item.text, terms)}</p>
               </div>
               <div class="qtp-card-meta no-print shrink-0 flex items-center justify-between gap-2 border-t border-slate-200/70 dark:border-slate-800/80 min-w-0">
-                <span class="copy-count-badge text-[11px] text-slate-400 truncate min-w-0">${count > 0 ? `${count}x kopyalandı` : 'Tıkla & kopyala'}</span>
-                <button class="copy-btn qtp-btn-sm inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition shrink-0">
-                  📋 Kopyala
+                <span class="copy-count-badge text-[11px] text-slate-400 truncate min-w-0">${count > 0 ? `${count}x` : (uiLang === 'tr' ? 'Tıkla & kopyala' : 'Click to copy')}</span>
+                <button class="copy-btn qtp-btn-sm inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition shrink-0" aria-label="Copy snippet">
+                  📋 ${uiLang === 'tr' ? 'Kopyala' : 'Copy'}
                 </button>
               </div>`;
 
@@ -1221,6 +1228,29 @@
         el.stats.textContent = '0 kayıt';
         el.collapsedStatsBadge.textContent = '0 / 0';
       }
+    }
+
+    const LS_LANG_KEY = 'qtp_ui_lang_v1';
+    let uiLang = (() => {
+      try { const s = localStorage.getItem(LS_LANG_KEY); if (s === 'en' || s === 'tr') return s; } catch (_) {}
+      const navLang = (typeof navigator !== 'undefined' && navigator.language) ? String(navigator.language) : '';
+      return navLang.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+    })();
+    document.documentElement.lang = uiLang;
+    const langBtnEl = document.getElementById('langBtn');
+    if (langBtnEl) {
+      langBtnEl.textContent = uiLang.toUpperCase();
+      langBtnEl.addEventListener('click', () => {
+        uiLang = uiLang === 'tr' ? 'en' : 'tr';
+        try { localStorage.setItem(LS_LANG_KEY, uiLang); } catch (_) {}
+        document.documentElement.lang = uiLang;
+        langBtnEl.textContent = uiLang.toUpperCase();
+        render();
+        showToast(uiLang === 'tr' ? 'Dil: Türkçe' : 'Language: English');
+      });
+    }
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('../sw.js').catch(() => {});
     }
 
     bootstrapData();

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 import html
+from pathlib import Path
 import time
 from typing import Any, Callable
 
@@ -67,12 +68,19 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from qtp_app.core.engine import format_ini_preview, is_note_item, item_matches_category, strip_emojis
+from qtp_app.core.engine import (
+    extract_category_code,
+    format_ini_preview,
+    is_note_item,
+    item_matches_category,
+    strip_emojis,
+)
+from qtp_app.core.i18n import t
 from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.paster import bring_window_to_top, capture_previous_app, copy_to_clipboard, is_posix_desktop
 from qtp_app.ui.flow_layout import FlowLayout
 from qtp_app.ui.icons import make_svg_icon
-from qtp_app.ui.search import FuzzyMatcher, tr_lower, tr_sort_key
+from qtp_app.ui.search import FuzzyMatcher, locale_sort_key, tr_lower, tr_sort_key
 from qtp_app.ui.theme import (
     ANIMATION_DURATION_MS,
     ANIMATION_SLIDE_OFFSET_PX,
@@ -170,12 +178,19 @@ class SnippetListModel(QAbstractListModel):
 class SnippetTableModel(QAbstractTableModel):
     """Tablo görünümü için hazır cevap veri modeli."""
 
-    HEADERS = ("Seç", "Fav", "Kısayol", "Grup", "Etiket", "Hazır Cevap", "Kullanım")
+    HEADERS_EN = ("Sel", "Fav", "Shortcut", "Group", "Label", "Snippet", "Uses")
+    HEADERS_TR = ("Seç", "Fav", "Kısayol", "Grup", "Etiket", "Metin", "Kullanım")
+    HEADERS = HEADERS_EN
 
-    def __init__(self, checked_keys: set[str], parent: QWidget | None = None):
+    def __init__(self, checked_keys: set[str], language: str = "en", parent: QWidget | None = None):
         super().__init__(parent)
         self._rows: list[tuple[int, dict[str, Any], tuple[int, ...]]] = []
         self._checked_keys = checked_keys
+        self._headers = self.HEADERS_TR if str(language or "en").startswith("tr") else self.HEADERS_EN
+
+    def set_language(self, language: str) -> None:
+        self._headers = self.HEADERS_TR if str(language or "en").startswith("tr") else self.HEADERS_EN
+        self.headerDataChanged.emit(Qt.Orientation.Horizontal, 0, len(self._headers) - 1)
 
     def set_rows(self, rows: list[tuple[int, dict[str, Any], tuple[int, ...]]]) -> None:
         self.beginResetModel()
@@ -190,12 +205,12 @@ class SnippetTableModel(QAbstractTableModel):
     def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
         if parent.isValid():
             return 0
-        return len(self.HEADERS)
+        return len(self._headers)
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
-            if 0 <= section < len(self.HEADERS):
-                return self.HEADERS[section]
+            if 0 <= section < len(self._headers):
+                return self._headers[section]
         return None
 
     def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
@@ -252,6 +267,8 @@ class SnippetItemDelegate(QStyledItemDelegate):
         self.hovered_row: int = -1
         self.checked_keys: set[str] = set()
         self.grid_mode: bool = False
+        self.copy_btn_label: str = "Copy"
+        self.uses_suffix: str = "×"
         self._doc_cache: OrderedDict[tuple[Any, ...], QTextDocument] = OrderedDict()
         self._build_font_cache()
 
@@ -463,7 +480,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
             painter.drawPath(copy_path)
             painter.setPen(parse_qcolor(self.palette.btn_text))
             painter.setFont(self._badge_font)
-            painter.drawText(copy_rect, Qt.AlignmentFlag.AlignCenter, "Kopyala")
+            painter.drawText(copy_rect, Qt.AlignmentFlag.AlignCenter, self.copy_btn_label)
             right_reserved += self.COPY_BTN_WIDTH + 8
 
         if self.grid_mode:
@@ -503,7 +520,7 @@ class SnippetItemDelegate(QStyledItemDelegate):
         cc = int(item.get("copyCount", 0) or 0)
         meta_text = f"{grp}  ·  {lbl}" if lbl else grp
         if cc > 0:
-            meta_text = f"{meta_text}  ·  {cc} kez"
+            meta_text = f"{meta_text}  ·  {cc}{self.uses_suffix}"
         painter.setFont(self._meta_font)
         painter.setPen(parse_qcolor(self.palette.text_muted))
         elided_meta = self._meta_fm.elidedText(
@@ -639,7 +656,7 @@ class IniSnippetViewerDialog(QDialog):
 
 
 class SnippetEditorDialog(QDialog):
-    """Katman üzerinden yeni hazır cevap ekleme veya mevcut kaydı düzenleme iletişim kutusu."""
+    """Katman üzerinden yeni kayıt ekleme veya mevcut kaydı düzenleme iletişim kutusu."""
 
     def __init__(
         self,
@@ -647,11 +664,19 @@ class SnippetEditorDialog(QDialog):
         groups: list[str],
         *,
         item: dict[str, Any] | None = None,
+        key_prefixes: list[str] | None = None,
+        language: str = "en",
+        config_dir: Path | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
+        self._language = str(language or "en")
+        self._config_dir = config_dir
+        is_tr = self._language.startswith("tr")
         is_edit = item is not None
-        self.setWindowTitle("Hazır Cevap Düzenle" if is_edit else "Yeni Hazır Cevap Ekle")
+        self.setWindowTitle(
+            t("overlay.dlg.edit_title" if is_edit else "overlay.dlg.new_title", self._language, self._config_dir)
+        )
         self.setMinimumSize(480, 380)
         self.resize(580, 480)
         self.setPalette(build_qpalette(palette))
@@ -666,35 +691,44 @@ class SnippetEditorDialog(QDialog):
         self.keys_cb = QComboBox(self)
         self.keys_cb.setMinimumWidth(140)
         self.keys_cb.setEditable(True)
-        self.keys_cb.addItems(["L-Win+A", "L-Win+Z", "L-Win+X", "L-Win+Q", "L-Win+W", "L-Win+1", ""])
-        cur_keys = str((item or {}).get("keys", "L-Win+A"))
+        prefixes_clean: list[str] = []
+        for p in (key_prefixes or []):
+            ps = str(p or "").strip()
+            if ps and ps not in prefixes_clean:
+                prefixes_clean.append(ps)
+        cur_keys = str((item or {}).get("keys", prefixes_clean[0] if (item is None and prefixes_clean) else "")).strip()
+        if cur_keys and cur_keys not in prefixes_clean:
+            prefixes_clean.insert(0, cur_keys)
+        prefixes_clean.append("")
+        self.keys_cb.addItems(prefixes_clean)
         self.keys_cb.setCurrentText(cur_keys)
 
+        default_grp = t("cat.default_group", self._language, self._config_dir)
         self.group_cb = QComboBox(self)
         self.group_cb.setMinimumWidth(160)
         self.group_cb.setEditable(True)
-        uniq_groups = sorted({g for g in groups if g} | {"Genel"})
+        uniq_groups = sorted({g for g in groups if g} | {default_grp})
         self.group_cb.addItems(uniq_groups)
-        self.group_cb.setCurrentText(str((item or {}).get("group", "Genel")) or "Genel")
+        self.group_cb.setCurrentText(str((item or {}).get("group", default_grp)) or default_grp)
 
-        top_fields.addWidget(QLabel("Kategori Kısayolu:"))
+        top_fields.addWidget(QLabel(t("overlay.dlg.keys", self._language, self._config_dir) + ":"))
         top_fields.addWidget(self.keys_cb)
-        top_fields.addWidget(QLabel("Grup:"))
+        top_fields.addWidget(QLabel(t("overlay.dlg.group", self._language, self._config_dir) + ":"))
         top_fields.addWidget(self.group_cb)
         lay.addLayout(top_fields)
 
         lbl_row = QHBoxLayout()
-        lbl_row.addWidget(QLabel("Etiket / Başlık:"))
+        lbl_row.addWidget(QLabel(t("overlay.dlg.label", self._language, self._config_dir) + ":"))
         self.label_edit = QLineEdit(self)
         self.label_edit.setText(str((item or {}).get("label", "")))
-        self.label_edit.setPlaceholderText("Kısa başlık (isteğe bağlı)")
+        self.label_edit.setPlaceholderText("Kısa başlık (isteğe bağlı)" if is_tr else "Short title (optional)")
         lbl_row.addWidget(self.label_edit, 1)
         lay.addLayout(lbl_row)
 
         txt_head = QHBoxLayout()
-        txt_head.addWidget(QLabel("Hazır Cevap Metni:"))
+        txt_head.addWidget(QLabel(t("overlay.dlg.text", self._language, self._config_dir) + ":"))
         txt_head.addStretch()
-        self.strip_emoji_btn = QPushButton("Emojileri Temizle", self)
+        self.strip_emoji_btn = QPushButton(t("overlay.dlg.bulk_strip_emojis", self._language, self._config_dir), self)
         self.strip_emoji_btn.setIcon(make_svg_icon("no_emoji", palette.btn_text, size=14))
         self.strip_emoji_btn.clicked.connect(self._strip_editor_emojis)
         txt_head.addWidget(self.strip_emoji_btn)
@@ -713,16 +747,16 @@ class SnippetEditorDialog(QDialog):
         self.text_edit.textChanged.connect(self._update_char_count)
         lay.addWidget(self.text_edit, 1)
 
-        self.char_count_label = QLabel("0 karakter", self)
+        self.char_count_label = QLabel("0", self)
         self.char_count_label.setProperty("class", "MutedHint")
         lay.addWidget(self.char_count_label)
 
         checks_row = FlowLayout(margin=0, spacing=8)
-        self.end_marker_chk = QCheckBox("Yapıştırma sonrası Enter gönder (<E<N<D|)", self)
+        self.end_marker_chk = QCheckBox(t("overlay.dlg.end_marker", self._language, self._config_dir), self)
         term_now = (item or {}).get("terminator", "<E<N<D|")
         self.end_marker_chk.setChecked(term_now == "<E<N<D|" or item is None)
         checks_row.addWidget(self.end_marker_chk)
-        self.favorite_chk = QCheckBox("Favori olarak işaretle", self)
+        self.favorite_chk = QCheckBox(t("overlay.dlg.favorite", self._language, self._config_dir), self)
         self.favorite_chk.setChecked(bool((item or {}).get("favorite", False)))
         checks_row.addWidget(self.favorite_chk)
         lay.addLayout(checks_row)
@@ -731,8 +765,8 @@ class SnippetEditorDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        cancel_btn = QPushButton("İptal", self)
-        save_btn = QPushButton("Kaydet", self)
+        cancel_btn = QPushButton(t("overlay.dlg.cancel", self._language, self._config_dir), self)
+        save_btn = QPushButton(t("overlay.dlg.save", self._language, self._config_dir), self)
         save_btn.setObjectName("PrimaryBtn")
         cancel_btn.clicked.connect(self.reject)
         save_btn.clicked.connect(self._on_save)
@@ -745,16 +779,22 @@ class SnippetEditorDialog(QDialog):
         self._update_char_count()
 
     def _update_char_count(self) -> None:
-        self.char_count_label.setText(f"{len(self.text_edit.toPlainText())} karakter")
+        unit = "karakter" if self._language.startswith("tr") else "chars"
+        self.char_count_label.setText(f"{len(self.text_edit.toPlainText())} {unit}")
 
     def _on_save(self) -> None:
         raw_text = self.text_edit.toPlainText()
         if not raw_text.strip():
-            QMessageBox.warning(self, "Eksik Metin", "Metin alanı boş olamaz.")
+            QMessageBox.warning(
+                self,
+                "Eksik Metin" if self._language.startswith("tr") else "Empty Text",
+                t("overlay.dlg.empty_text_error", self._language, self._config_dir),
+            )
             return
+        default_grp = t("cat.default_group", self._language, self._config_dir)
         self.result_payload = {
             "keys": self.keys_cb.currentText().strip(),
-            "group": self.group_cb.currentText().strip() or "Genel",
+            "group": self.group_cb.currentText().strip() or default_grp,
             "label": self.label_edit.text().strip(),
             "text": raw_text,
             "terminator": "<E<N<D|" if self.end_marker_chk.isChecked() else "",
@@ -764,17 +804,24 @@ class SnippetEditorDialog(QDialog):
 
 
 class BulkEditDialog(QDialog):
-    """Seçili birden fazla hazır cevabı tek işlemde düzenleme penceresi."""
+    """Seçili birden fazla kaydı tek işlemde düzenleme penceresi."""
 
     def __init__(
         self,
         palette: ThemePalette,
         selected_count: int,
         groups: list[str],
+        *,
+        key_prefixes: list[str] | None = None,
+        language: str = "en",
+        config_dir: Path | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
-        self.setWindowTitle(f"Toplu Düzenleme ({selected_count} kayıt)")
+        self._language = str(language or "en")
+        self._config_dir = config_dir
+        is_tr = self._language.startswith("tr")
+        self.setWindowTitle(t("overlay.dlg.bulk_title", self._language, self._config_dir, count=selected_count))
         self.setMinimumSize(460, 420)
         self.resize(560, 520)
         self.setPalette(build_qpalette(palette))
@@ -799,50 +846,57 @@ class BulkEditDialog(QDialog):
         form.setSpacing(8)
 
         self.keys_mode_cb = QComboBox(self)
-        self.keys_mode_cb.addItem("Mevcut kısayolu koru", "keep")
-        self.keys_mode_cb.addItem("Yeni kısayol ata", "set")
-        self.keys_mode_cb.addItem("Kısayolsuz yap (Not)", "clear")
-        form.addRow("Kısayol İşlemi:", self.keys_mode_cb)
+        self.keys_mode_cb.addItem("Mevcut kısayolu koru" if is_tr else "Keep existing hotkey", "keep")
+        self.keys_mode_cb.addItem("Yeni kısayol ata" if is_tr else "Assign new hotkey", "set")
+        self.keys_mode_cb.addItem("Kısayolsuz yap (Not)" if is_tr else "Clear hotkey (Note)", "clear")
+        form.addRow("Kısayol İşlemi:" if is_tr else "Hotkey Action:", self.keys_mode_cb)
 
         self.keys_cb = QComboBox(self)
         self.keys_cb.setEditable(True)
-        self.keys_cb.addItems(["L-Win+A", "L-Win+Z", "L-Win+X", "L-Win+Q", "L-Win+W", "L-Win+1"])
-        form.addRow("Hedef Kısayol:", self.keys_cb)
+        prefixes_clean: list[str] = []
+        for p in (key_prefixes or []):
+            ps = str(p or "").strip()
+            if ps and ps not in prefixes_clean:
+                prefixes_clean.append(ps)
+        if prefixes_clean:
+            self.keys_cb.addItems(prefixes_clean)
+        form.addRow(t("overlay.dlg.keys", self._language, self._config_dir) + ":", self.keys_cb)
 
+        default_grp = t("cat.default_group", self._language, self._config_dir)
         self.group_cb = QComboBox(self)
         self.group_cb.setEditable(True)
         self.group_cb.addItem("")
-        self.group_cb.addItems(sorted({g for g in groups if g} | {"Genel"}))
+        self.group_cb.addItems(sorted({g for g in groups if g} | {default_grp}))
         self.group_cb.setCurrentText("")
-        form.addRow("Grup (boş = değiştirme):", self.group_cb)
+        form.addRow(t("overlay.dlg.bulk_group", self._language, self._config_dir) + ":", self.group_cb)
 
         self.fav_cb = QComboBox(self)
-        self.fav_cb.addItem("Değiştirme", "keep")
-        self.fav_cb.addItem("Favorilere ekle", "add")
-        self.fav_cb.addItem("Favorilerden çıkar", "remove")
-        form.addRow("Favori Durumu:", self.fav_cb)
+        self.fav_cb.addItem(t("overlay.dlg.bulk_fav_keep", self._language, self._config_dir), "keep")
+        self.fav_cb.addItem(t("overlay.dlg.bulk_fav_add", self._language, self._config_dir), "add")
+        self.fav_cb.addItem(t("overlay.dlg.bulk_fav_remove", self._language, self._config_dir), "remove")
+        form.addRow(t("overlay.dlg.bulk_favorite", self._language, self._config_dir) + ":", self.fav_cb)
 
         self.find_edit = QLineEdit(self)
-        form.addRow("Metinde Bul:", self.find_edit)
+        form.addRow(t("overlay.dlg.bulk_find", self._language, self._config_dir) + ":", self.find_edit)
 
         self.replace_edit = QLineEdit(self)
-        form.addRow("Şununla Değiştir:", self.replace_edit)
+        form.addRow(t("overlay.dlg.bulk_replace", self._language, self._config_dir) + ":", self.replace_edit)
 
-        self.ignore_case_chk = QCheckBox("Büyük/küçük harf duyarsız", self)
+        self.ignore_case_chk = QCheckBox(t("overlay.dlg.bulk_ignore_case", self._language, self._config_dir), self)
         form.addRow("", self.ignore_case_chk)
 
         self.prefix_edit = QLineEdit(self)
-        form.addRow("Başına Ekle (Önek):", self.prefix_edit)
+        form.addRow(t("overlay.dlg.bulk_prefix", self._language, self._config_dir) + ":", self.prefix_edit)
 
         self.suffix_edit = QLineEdit(self)
-        form.addRow("Sonuna Ekle (Sonek):", self.suffix_edit)
+        form.addRow(t("overlay.dlg.bulk_suffix", self._language, self._config_dir) + ":", self.suffix_edit)
 
-        self.strip_emojis_chk = QCheckBox("Emojileri toplu temizle", self)
+        self.strip_emojis_chk = QCheckBox(t("overlay.dlg.bulk_strip_emojis", self._language, self._config_dir), self)
         form.addRow("", self.strip_emojis_chk)
 
         self.add_emoji_edit = QLineEdit(self)
-        self.add_emoji_edit.setPlaceholderText("Örn. 😊 veya ✅")
-        form.addRow("Sonuna Emoji Ekle:", self.add_emoji_edit)
+        self.add_emoji_edit.setPlaceholderText("e.g. 😊 or ✅" if not is_tr else "Örn. 😊 veya ✅")
+        form.addRow(t("overlay.dlg.bulk_add_emoji", self._language, self._config_dir) + ":", self.add_emoji_edit)
         body_lay.addLayout(form)
 
         chip_row = FlowLayout(margin=0, spacing=4)
@@ -862,8 +916,8 @@ class BulkEditDialog(QDialog):
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
-        cancel_btn = QPushButton("İptal", self)
-        apply_btn = QPushButton("Seçili Kayıtlara Uygula", self)
+        cancel_btn = QPushButton(t("overlay.dlg.cancel", self._language, self._config_dir), self)
+        apply_btn = QPushButton(t("overlay.dlg.bulk_apply", self._language, self._config_dir), self)
         apply_btn.setObjectName("PrimaryBtn")
         cancel_btn.clicked.connect(self.reject)
         apply_btn.clicked.connect(self._on_apply)
@@ -1021,6 +1075,9 @@ class OverlayWindow(QWidget):
         strip_emoji: bool = False,
         sort_by: str = "order",
         hide_on_blur: bool = True,
+        categories: list[dict[str, Any]] | None = None,
+        language: str = "en",
+        config_dir: Path | None = None,
         can_undo: bool = False,
         can_redo: bool = False,
         window_size: tuple[int, int] = (WINDOW_WIDTH, WINDOW_HEIGHT),
@@ -1055,6 +1112,10 @@ class OverlayWindow(QWidget):
         self._strip_emoji = bool(strip_emoji)
         self._sort_by = sort_by if sort_by in ("order", "usage", "alpha", "keys", "favorites") else "order"
         self._hide_on_blur = bool(hide_on_blur)
+        self._configured_categories: list[dict[str, Any]] = list(categories or [])
+        self._language = str(language or "en")
+        self._config_dir = config_dir
+        self._footer_hints_full = FOOTER_HINTS_TEXT
         self._opened_monotonic: float = 0.0
         self._modal_depth: int = 0
         self._only_favorites = False
@@ -1125,6 +1186,7 @@ class OverlayWindow(QWidget):
         self._blur_timer.timeout.connect(self._hide_if_still_inactive)
 
         self._build_ui()
+        self._apply_language()
         self._apply_theme()
         self._bind_shortcuts()
         if initial_query:
@@ -1247,20 +1309,9 @@ class OverlayWindow(QWidget):
 
         card_layout.addLayout(top_row)
 
-        pills_row = FlowLayout(margin=0, spacing=5)
+        self._pills_row = FlowLayout(margin=0, spacing=5)
         self.category_buttons: dict[str, QPushButton] = {}
-        for code, title, _prefix in CATEGORY_TABS:
-            btn = QPushButton(title, self.card)
-            btn.setProperty("class", "CategoryPill")
-            btn.setProperty("category_code", code)
-            btn.setProperty("item_count", 0)
-            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setAccessibleName(f"Kategori: {title}")
-            btn.clicked.connect(lambda _chk=False, c=code: self.set_category(c))
-            pills_row.addWidget(btn)
-            self.category_buttons[code] = btn
-        card_layout.addLayout(pills_row)
+        card_layout.addLayout(self._pills_row)
 
         manage_row = FlowLayout(margin=0, spacing=4)
 
@@ -1435,7 +1486,7 @@ class OverlayWindow(QWidget):
         self.list_view.item_check_toggled.connect(self._on_list_check_toggled)
         self.list_view.item_favorite_toggled.connect(self._on_list_favorite_toggled)
 
-        self.table_model = SnippetTableModel(self._selected_keys, self)
+        self.table_model = SnippetTableModel(self._selected_keys, language=self._language, parent=self)
         self.table_view = QTableView(self.card)
         self.table_view.setObjectName("SnippetTable")
         self.table_view.setModel(self.table_model)
@@ -1528,7 +1579,8 @@ class OverlayWindow(QWidget):
             btn.style().polish(btn)
 
         sel_cnt = len(self._selected_keys)
-        bulk_lbl = f"Toplu ({sel_cnt})" if sel_cnt else "Toplu"
+        bulk_base = t("overlay.bulk_edit", self._language, self._config_dir)
+        bulk_lbl = f"{bulk_base} ({sel_cnt})" if sel_cnt else bulk_base
         self.bulk_edit_btn.setText(bulk_lbl)
         self.bulk_edit_btn.setIcon(make_svg_icon("edit", normal_col, size=14))
         self.select_all_btn.setIcon(make_svg_icon("check_all", normal_col, size=15))
@@ -1539,7 +1591,7 @@ class OverlayWindow(QWidget):
         self._more_act_emoji.setChecked(self._strip_emoji)
         self._more_act_emoji.setIcon(make_svg_icon("no_emoji" if self._strip_emoji else "emoji", self._palette.menu_text, size=14))
         self._more_act_select_all.setIcon(make_svg_icon("check_all", self._palette.menu_text, size=14))
-        self._more_act_bulk_edit.setText(f"Toplu Düzenle ({sel_cnt})" if sel_cnt else "Toplu Düzenle")
+        self._more_act_bulk_edit.setText(bulk_lbl)
         self._more_act_bulk_edit.setIcon(make_svg_icon("edit", self._palette.menu_text, size=14))
         self._more_act_bulk_del.setIcon(make_svg_icon("trash", self._palette.menu_text, size=14))
         self._more_act_groups.setIcon(make_svg_icon("folder", self._palette.menu_text, size=14))
@@ -1638,7 +1690,36 @@ class OverlayWindow(QWidget):
         card_w = self.card.width() if hasattr(self, "card") and self.card.width() > 0 else self.width() - 12
         avail = max(40, card_w - self.count_label.sizeHint().width() - self.size_grip.width() - 48)
         fm = QFontMetrics(self.footer_hints.font())
-        self.footer_hints.setText(fm.elidedText(FOOTER_HINTS_TEXT, Qt.TextElideMode.ElideRight, avail))
+        self.footer_hints.setText(fm.elidedText(self._footer_hints_full, Qt.TextElideMode.ElideRight, avail))
+
+    def _apply_language(self) -> None:
+        lang = self._language
+        cfg_dir = self._config_dir
+        is_tr = lang.startswith("tr")
+        self.window_title_label.setText(t("app.display_name", lang, cfg_dir))
+        self.search_input.setPlaceholderText(
+            t("overlay.search_placeholder", lang, cfg_dir) if is_tr else SEARCH_PLACEHOLDER
+        )
+        self.add_btn.setText(t("overlay.new_snippet", lang, cfg_dir))
+        self.add_btn.setToolTip("Yeni kayıt ekle" if is_tr else "Add new snippet")
+        self.help_btn.setToolTip("Yardım ve kısayollar (F1)" if is_tr else "Help & documentation (F1)")
+        self.settings_btn.setToolTip("Ayarlar (Ctrl+,)" if is_tr else "Settings (Ctrl+,)")
+        self._footer_hints_full = t("overlay.footer_hints", lang, cfg_dir) if is_tr else FOOTER_HINTS_TEXT
+        self.footer_hints.setToolTip(self._footer_hints_full)
+        self.list_delegate.copy_btn_label = "Kopyala" if is_tr else "Copy"
+        self.list_delegate.uses_suffix = " kez" if is_tr else "×"
+        self.table_model.set_language(lang)
+        sort_keys = ("order", "usage", "alpha", "keys", "favorites")
+        self.sort_cb.blockSignals(True)
+        for idx, sk in enumerate(sort_keys):
+            if idx < self.sort_cb.count():
+                self.sort_cb.setItemText(idx, t(f"overlay.sort.{sk}", lang, cfg_dir))
+        self.sort_cb.blockSignals(False)
+        self._more_act_emoji.setText(t("overlay.strip_emoji", lang, cfg_dir))
+        self._more_act_select_all.setText(t("overlay.select_all", lang, cfg_dir))
+        self._more_act_bulk_del.setText(t("overlay.bulk_delete", lang, cfg_dir))
+        self._more_act_groups.setText(t("overlay.groups", lang, cfg_dir))
+        self._elide_footer_hints()
 
     def _apply_theme(self) -> None:
         self._palette = resolve_palette(self._theme_setting, os_is_dark=self._detect_os_dark())
@@ -1723,6 +1804,9 @@ class OverlayWindow(QWidget):
         strip_emoji: bool | None = None,
         sort_by: str | None = None,
         hide_on_blur: bool | None = None,
+        categories: list[dict[str, Any]] | None = None,
+        language: str | None = None,
+        config_dir: Path | None = None,
     ) -> None:
         if theme is not None:
             self._theme_setting = theme
@@ -1734,6 +1818,12 @@ class OverlayWindow(QWidget):
             self._strip_emoji = bool(strip_emoji)
         if hide_on_blur is not None:
             self._hide_on_blur = bool(hide_on_blur)
+        if categories is not None:
+            self._configured_categories = list(categories)
+        if config_dir is not None:
+            self._config_dir = config_dir
+        if language is not None:
+            self._language = str(language or "en")
         if sort_by is not None and sort_by in ("order", "usage", "alpha", "keys", "favorites"):
             self._sort_by = sort_by
             sidx = self.sort_cb.findData(sort_by)
@@ -1741,6 +1831,8 @@ class OverlayWindow(QWidget):
                 self.sort_cb.blockSignals(True)
                 self.sort_cb.setCurrentIndex(sidx)
                 self.sort_cb.blockSignals(False)
+        self._apply_language()
+        self._rebuild_category_pills()
         self._apply_theme()
         self._refresh_list()
 
@@ -1854,21 +1946,82 @@ class OverlayWindow(QWidget):
         self.list_view.viewport().update()
         self.table_model.layoutChanged.emit()
 
+    def _resolve_category_tabs(self) -> list[tuple[str, str, str, int]]:
+        base_code = CATEGORY_TABS[0][0] if CATEGORY_TABS else "ALL"
+        all_lbl = t("cat.all", self._language, self._config_dir)
+        tabs: list[tuple[str, str, str, int]] = [(base_code, all_lbl, "", len(self._items))]
+        seen: set[str] = {base_code}
+        for entry in self._configured_categories:
+            if not isinstance(entry, dict):
+                continue
+            code = str(entry.get("code", "")).strip().upper()
+            if not code or code in seen:
+                continue
+            seen.add(code)
+            label = str(entry.get("label", "")).strip() or code
+            prefix = str(entry.get("hotkey_prefix", "")).strip()
+            cnt = sum(1 for it in self._items if _matches_category(it, code))
+            tabs.append((code, label, prefix, cnt))
+        for it in self._items:
+            raw_keys = str(it.get("keys", it.get("hotkey_prefix", ""))).strip()
+            code = extract_category_code(raw_keys)
+            if not code or code in seen:
+                continue
+            seen.add(code)
+            cnt = sum(1 for row in self._items if _matches_category(row, code))
+            tabs.append((code, code, raw_keys, cnt))
+        return tabs
+
+    def _collect_key_prefixes(self) -> list[str]:
+        prefixes: list[str] = []
+        for entry in self._configured_categories:
+            if isinstance(entry, dict):
+                p = str(entry.get("hotkey_prefix", "")).strip()
+                if p and p not in prefixes:
+                    prefixes.append(p)
+        for it in self._items:
+            p = str(it.get("keys", it.get("hotkey_prefix", ""))).strip()
+            if p and p not in prefixes:
+                prefixes.append(p)
+        return prefixes
+
+    def _rebuild_category_pills(self) -> None:
+        while self._pills_row.count():
+            child = self._pills_row.takeAt(0)
+            w = child.widget() if child is not None else None
+            if w is not None:
+                w.setParent(None)
+                w.deleteLater()
+        self.category_buttons = {}
+        is_tr = self._language.startswith("tr")
+        for code, title, _prefix, count in self._resolve_category_tabs():
+            btn = QPushButton(f"{title} ({count})", self.card)
+            btn.setProperty("class", "CategoryPill")
+            btn.setProperty("category_code", code)
+            btn.setProperty("item_count", count)
+            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setAccessibleName(f"{'Kategori' if is_tr else 'Category'}: {title}")
+            btn.setToolTip(
+                f"{title} kategorisinde {count} kayıt" if is_tr else f"{count} items in {title}"
+            )
+            btn.clicked.connect(lambda _chk=False, c=code: self.set_category(c))
+            self._pills_row.addWidget(btn)
+            self.category_buttons[code] = btn
+        if self._active_category not in self.category_buttons:
+            self._active_category = "ALL"
+        self._update_pill_styles()
+
     def set_items(self, items: list[dict[str, Any]]) -> None:
         self._items = list(items)
         valid_keys = {str(it.get("raw_key", "")) for it in self._items}
         self._selected_keys.intersection_update(valid_keys)
-        self._update_pill_counts()
+        self._rebuild_category_pills()
         self._refresh_list()
         self._sync_toolbar_widgets()
 
     def _update_pill_counts(self) -> None:
-        for code, title, _prefix in CATEGORY_TABS:
-            btn = self.category_buttons[code]
-            count = sum(1 for it in self._items if _matches_category(it, code))
-            btn.setProperty("item_count", count)
-            btn.setText(f"{title} ({count})")
-            btn.setToolTip(f"{title} kategorisinde {count} kayıt")
+        self._rebuild_category_pills()
 
     def _update_pill_styles(self) -> None:
         for code, btn in self.category_buttons.items():
@@ -1909,14 +2062,15 @@ class OverlayWindow(QWidget):
         if self._sort_by == "usage":
             rows.sort(key=lambda r: (-int(r[1].get("copyCount", 0) or 0), r[0]))
         elif self._sort_by == "alpha":
-            rows.sort(key=lambda r: (tr_sort_key(str(r[1].get("label") or r[1].get("text") or "")), r[0]))
+            rows.sort(key=lambda r: (locale_sort_key(str(r[1].get("label") or r[1].get("text") or "")), r[0]))
         elif self._sort_by == "keys":
-            rows.sort(key=lambda r: (0 if str(r[1].get("keys", "")).strip() else 1, tr_sort_key(str(r[1].get("keys", ""))), r[0]))
+            rows.sort(key=lambda r: (0 if str(r[1].get("keys", "")).strip() else 1, locale_sort_key(str(r[1].get("keys", ""))), r[0]))
         elif self._sort_by == "favorites":
             rows.sort(key=lambda r: (0 if bool(r[1].get("favorite", False)) else 1, r[0]))
         self.list_model.set_rows(rows)
         self.table_model.set_rows(rows)
-        self.count_label.setText(f"{len(rows)} / {len(self._items)} kayıt")
+        unit = "kayıt" if self._language.startswith("tr") else "items"
+        self.count_label.setText(f"{len(rows)} / {len(self._items)} {unit}")
         if rows:
             first = self.list_model.index(0, 0)
             self.list_view.setCurrentIndex(first)
@@ -2044,10 +2198,18 @@ class OverlayWindow(QWidget):
 
     def _open_add_dialog(self) -> None:
         self.add_item_requested.emit()
-        groups = [str(it.get("group", "Genel")) for it in self._items]
+        groups = [str(it.get("group", "General")) for it in self._items]
         self.set_modal_child_open(True)
         try:
-            dlg = SnippetEditorDialog(self._palette, groups, item=None, parent=self)
+            dlg = SnippetEditorDialog(
+                self._palette,
+                groups,
+                item=None,
+                key_prefixes=self._collect_key_prefixes(),
+                language=self._language,
+                config_dir=self._config_dir,
+                parent=self,
+            )
             accepted = dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None
         finally:
             self.set_modal_child_open(False)
@@ -2059,10 +2221,18 @@ class OverlayWindow(QWidget):
 
     def _open_edit_dialog(self, item: dict[str, Any]) -> None:
         self.edit_item_requested.emit(item)
-        groups = [str(it.get("group", "Genel")) for it in self._items]
+        groups = [str(it.get("group", "General")) for it in self._items]
         self.set_modal_child_open(True)
         try:
-            dlg = SnippetEditorDialog(self._palette, groups, item=item, parent=self)
+            dlg = SnippetEditorDialog(
+                self._palette,
+                groups,
+                item=item,
+                key_prefixes=self._collect_key_prefixes(),
+                language=self._language,
+                config_dir=self._config_dir,
+                parent=self,
+            )
             accepted = dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None
         finally:
             self.set_modal_child_open(False)
@@ -2078,8 +2248,9 @@ class OverlayWindow(QWidget):
         try:
             ans = QMessageBox.question(
                 self,
-                "Kaydı Sil",
-                f"'{item.get('label') or str(item.get('text', ''))[:40]}' kaydı silinsin mi?",
+                t("overlay.dlg.delete_confirm_title", self._language, self._config_dir),
+                f"'{item.get('label') or str(item.get('text', ''))[:40]}' — "
+                + t("overlay.dlg.delete_confirm_body", self._language, self._config_dir),
             )
         finally:
             self.set_modal_child_open(False)
@@ -2090,12 +2261,24 @@ class OverlayWindow(QWidget):
 
     def open_bulk_edit_dialog(self) -> None:
         if not self._selected_keys:
-            self.show_toast("Toplu düzenleme için önce kayıt seçin.")
+            self.show_toast(
+                "Toplu düzenleme için önce kayıt seçin."
+                if self._language.startswith("tr")
+                else "Select items first to bulk edit."
+            )
             return
-        groups = [str(it.get("group", "Genel")) for it in self._items]
+        groups = [str(it.get("group", "General")) for it in self._items]
         self.set_modal_child_open(True)
         try:
-            dlg = BulkEditDialog(self._palette, len(self._selected_keys), groups, parent=self)
+            dlg = BulkEditDialog(
+                self._palette,
+                len(self._selected_keys),
+                groups,
+                key_prefixes=self._collect_key_prefixes(),
+                language=self._language,
+                config_dir=self._config_dir,
+                parent=self,
+            )
             accepted = dlg.exec() == QDialog.DialogCode.Accepted and dlg.result_payload is not None
         finally:
             self.set_modal_child_open(False)

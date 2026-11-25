@@ -57,7 +57,7 @@ def test_full_backup_roundtrip_qtp_tam_yedek(tmp_path: Path):
     items = [
         {
             "keys": "L-Win+A",
-            "group": "Restoran - Ödeme",
+            "group": "Partner - Ödeme",
             "label": "İade Bilgisi",
             "text": "İadeniz onaylandı.",
             "favorite": True,
@@ -66,7 +66,7 @@ def test_full_backup_roundtrip_qtp_tam_yedek(tmp_path: Path):
         },
         {
             "keys": "L-Win+Z",
-            "group": "Kurye",
+            "group": "Field",
             "label": "Konum",
             "text": "Konum paylaşabilir misiniz?",
         },
@@ -158,7 +158,7 @@ def test_load_state_ini_newer_and_parse_any_content_branches(tmp_path: Path):
         create_backup_flag=False,
     )
     ini_path.write_bytes(
-        b"\xff\xfe" + "[Program]\r\nlng=21\r\n[list_text]\r\ntext_000=L-Win+Z=Güncel INI<E<N<D|\r\n[list_order]\r\ntext_000=1\r\n[list_label]\r\ntext_000=Kurye/Yeni\r\n".encode("utf-16-le")
+        b"\xff\xfe" + "[Program]\r\nlng=21\r\n[list_text]\r\ntext_000=L-Win+Z=Güncel INI<E<N<D|\r\n[list_order]\r\ntext_000=1\r\n[list_label]\r\ntext_000=Field/Yeni\r\n".encode("utf-16-le")
     )
     now = 1900000000.0
     os.utime(json_path, (now, now))

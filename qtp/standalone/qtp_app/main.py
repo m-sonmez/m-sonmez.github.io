@@ -151,7 +151,12 @@ def apply_reload_event_gui(
             strip_emoji=bool(engine.settings.get("strip_emoji", False)),
             sort_by=engine.settings.get("sort_by", "order"),
             hide_on_blur=bool(engine.settings.get("hide_on_blur", True)),
+            categories=engine.settings.get("categories", []),
+            language=engine.resolved_language(),
+            config_dir=engine.config_dir,
         )
+        if hasattr(tray, "apply_language"):
+            tray.apply_language(engine.resolved_language(), engine.config_dir)
         if event.theme_changed and hasattr(tray, "apply_palette") and hasattr(overlay, "_palette"):
             tray.apply_palette(overlay._palette)
 
@@ -532,6 +537,9 @@ def launch_gui(
         strip_emoji=bool(engine.settings.get("strip_emoji", False)),
         sort_by=str(engine.settings.get("sort_by", "order")),
         hide_on_blur=bool(engine.settings.get("hide_on_blur", True)),
+        categories=engine.settings.get("categories", []),
+        language=engine.resolved_language(),
+        config_dir=engine.config_dir,
         can_undo=bool(engine._undo_stack),
         can_redo=bool(engine._redo_stack),
         window_size=(int(ws[0]), int(ws[1])),
@@ -578,7 +586,12 @@ def launch_gui(
     def open_help() -> None:
         overlay.set_modal_child_open(True)
         try:
-            dlg = HelpDialog(current_palette(), parent=overlay if overlay.isVisible() else None)
+            dlg = HelpDialog(
+                current_palette(),
+                language=engine.resolved_language(),
+                config_dir=engine.config_dir,
+                parent=overlay if overlay.isVisible() else None,
+            )
             dlg.exec()
         finally:
             overlay.set_modal_child_open(False)
@@ -615,7 +628,13 @@ def launch_gui(
     def open_settings() -> None:
         overlay.set_modal_child_open(True)
         try:
-            dlg = SettingsWindow(engine.settings, current_palette(), parent=overlay if overlay.isVisible() else None)
+            dlg = SettingsWindow(
+                engine.settings,
+                current_palette(),
+                parent=overlay if overlay.isVisible() else None,
+                config_dir=engine.config_dir,
+                discovered_categories=engine.resolve_categories(),
+            )
             accepted = dlg.exec() == dlg.DialogCode.Accepted and dlg.result_settings is not None
         finally:
             overlay.set_modal_child_open(False)
@@ -631,7 +650,11 @@ def launch_gui(
                 strip_emoji=bool(engine.settings.get("strip_emoji", False)),
                 sort_by=engine.settings.get("sort_by", "order"),
                 hide_on_blur=bool(engine.settings.get("hide_on_blur", True)),
+                categories=engine.settings.get("categories", []),
+                language=engine.resolved_language(),
+                config_dir=engine.config_dir,
             )
+            tray.apply_language(engine.resolved_language(), engine.config_dir)
             tray.apply_palette(current_palette())
             ws_new = engine.settings.get("window_size") or [720, 520]
             overlay.resize(int(ws_new[0]), int(ws_new[1]))
@@ -727,6 +750,8 @@ def launch_gui(
         on_quit=quit_app,
         open_hotkey=open_hk,
         palette=current_palette(),
+        language=engine.resolved_language(),
+        config_dir=engine.config_dir,
     )
     tray_ref.append(tray)
     overlay.theme_toggle_requested.connect(lambda _t: tray.apply_palette(current_palette()))
@@ -743,7 +768,11 @@ def launch_gui(
 
     app.aboutToQuit.connect(_cleanup)
 
-    toast_msg = format_hotkeys_toast(engine.settings.get("hotkeys"))
+    toast_msg = format_hotkeys_toast(
+        engine.settings.get("hotkeys"),
+        lang=engine.resolved_language(),
+        config_dir=engine.config_dir,
+    )
     if not engine.settings.get("start_minimized", False):
         overlay.show_overlay(
             category=initial_category or "ALL",

@@ -39,11 +39,17 @@ class TestQtpCore(unittest.TestCase):
         ini_text = qtp_core.read_text_auto(ROOT_DIR / "QuickTextPaste.ini")
         parsed = qtp_core.parse_qtp_ini_full(ini_text)
         json_items = json.loads((ROOT_DIR / "data.json").read_text(encoding="utf-8"))
-        self.assertGreaterEqual(len(json_items), 500)
+        self.assertEqual(len(json_items), 12)
         self.assertEqual(len(parsed["items"]), len(json_items))
         self.assertEqual(parsed["items"], json_items)
-        self.assertEqual(parsed["program"].get("lng"), "21")
         self.assertEqual(parsed["program"].get("m_show_tree"), "1")
+
+        fixture_dir = ROOT_DIR / "standalone" / "qtp_app" / "tests" / "fixtures"
+        fix_ini = qtp_core.parse_qtp_ini_full(qtp_core.read_text_auto(fixture_dir / "QuickTextPaste.ini"))
+        fix_json = json.loads((fixture_dir / "data.json").read_text(encoding="utf-8"))
+        self.assertGreaterEqual(len(fix_json), 500)
+        self.assertEqual(fix_ini["items"], fix_json)
+        self.assertEqual(fix_ini["program"].get("lng"), "21")
 
     def test_high_count_1200_records_ini_roundtrip(self):
         items = [
@@ -255,7 +261,7 @@ class TestFullStackServer(unittest.TestCase):
         data = json.loads(raw.decode("utf-8"))
         self.assertTrue(data["ok"])
         initial_count = len(data["items"])
-        self.assertGreaterEqual(initial_count, 500)
+        self.assertEqual(initial_count, 12)
 
         updated = data["items"] + [{"keys": "L-Ctrl+1", "group": "TestGrup", "label": "Yeni", "text": "Merhaba Dünya!"}]
         status, _, raw = self._req("/api/data", method="POST", body={
@@ -354,9 +360,10 @@ class TestHtmlJsParity(unittest.TestCase):
         self.assertLess(len(idx_scripts[2].encode("utf-8")), 105_000)
 
         sw_js = (ROOT_DIR / "sw.js").read_text(encoding="utf-8")
-        self.assertIn("qtp-pwa-cache-v3.5.5", sw_js)
+        self.assertIn("qtp-pwa-cache-v4.0.0", sw_js)
         self.assertIn("ignoreSearch: true", sw_js)
         self.assertIn("url.pathname.endsWith('/qtp.html')", sw_js)
+        self.assertIn("url.pathname.endsWith('/cevaplar.html')", sw_js)
         self.assertIn("/api/", sw_js)
         self.assertIn("data.json", sw_js)
         self.assertIn("./theme.css", sw_js)
@@ -453,9 +460,9 @@ const rootDir = process.env.QTP_ROOT;
 const html = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 const appScript = scripts[2];
-const dataJsonBytes = fs.readFileSync(path.join(rootDir, 'data.json'));
+const dataJsonBytes = fs.readFileSync(path.join(rootDir, 'standalone', 'qtp_app', 'tests', 'fixtures', 'data.json'));
 const dataJsonArr = JSON.parse(dataJsonBytes.toString('utf8'));
-assert(dataJsonArr.length >= 527, 'data.json en az 527 kayıt içermeli');
+assert(dataJsonArr.length >= 527, 'fixture data.json en az 527 kayıt içermeli');
 
 function createHarness({ proto = 'https:', host = 'm-sonmez.github.io', lsInit = {}, failFetch = false } = {}) {
   const ls = { ...lsInit };
@@ -606,7 +613,7 @@ assert(scripts.length >= 3);
 scripts.forEach((s) => new vm.Script(s));
 new vm.Script(swJs);
 
-const dataJsonArr = JSON.parse(fs.readFileSync(path.join(rootDir, 'data.json'), 'utf8'));
+const dataJsonArr = JSON.parse(fs.readFileSync(path.join(rootDir, 'standalone', 'qtp_app', 'tests', 'fixtures', 'data.json'), 'utf8'));
 
 function makeEl(id) {
   const cls = new Set();

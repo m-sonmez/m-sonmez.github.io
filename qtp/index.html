@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#4f46e5" />
-  <meta name="description" content="Çevrimdışı çalışan yerel Hazır Cevaplar ve QuickTextPaste (.ini / .json) PWA yönetim ve düzenleme uygulaması." />
-  <title>QTP & Hazır Cevaplar PWA | Yerel & Full-Stack Yönetim Paneli</title>
+  <meta name="description" content="Offline QuickTextPaste (.ini / .json) & snippet manager PWA." />
+  <title>QTP — QuickTextPaste &amp; Snippet Manager (Classic PWA)</title>
   <link rel="icon" type="image/svg+xml" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -28,16 +28,18 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+    if (typeof tailwind !== 'undefined') {
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+            }
           }
         }
-      }
-    };
+      };
+    }
   </script>
 
   <style>
@@ -697,6 +699,10 @@
         qtpLinks: QTP_OFFICIAL_LINKS,
 
         storageEngine: 'Yükleniyor...',
+        lang: (() => {
+          try { const l = localStorage.getItem('qtp_ui_lang_v1'); if (l === 'en' || l === 'tr') return l; } catch (_) {}
+          return (navigator.language || '').toLowerCase().startsWith('tr') ? 'tr' : 'en';
+        })(),
         isPersistent: false,
         isFileProtocol: location.protocol === 'file:',
         isOnline: navigator.onLine,
@@ -706,16 +712,16 @@
 
         editorOpen: false,
         editorMode: 'add',
-        editorForm: { id: '', keys: 'L-Win+Z', group: 'Karşılama ve Bekletme', label: '', text: '', favorite: false },
+        editorForm: { id: '', keys: 'L-Win+1', group: 'General', label: '', text: '', favorite: false },
         hkMod: 'L-Win',
-        hkKey: 'Z',
+        hkKey: '1',
         hkKeyList: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'],
         quickChips: ['%LDF%', '%LTF%', '%pptxt%', '%phtml%', '%send_enter%', '%send_tab%', '%TAB%', '%sleep_100%', '🍀', '🙏', '🌷', '🛵', '😊', '✔️', '💵', '💳', '👀'],
 
         bulkOpen: false,
         bulkForm: {
           useGroup: false, group: '',
-          useKeys: false, keys: 'L-Win+Z',
+          useKeys: false, keys: 'L-Win+1',
           useReplace: false, findStr: '', replStr: '', ignoreCase: false,
           useAffix: false, prefix: '', suffix: '',
           useStripEmoji: false,
@@ -774,6 +780,7 @@
           if ('serviceWorker' in navigator && !this.isFileProtocol) {
             navigator.serviceWorker.register('./sw.js').catch(() => {});
           }
+          document.documentElement.lang = this.lang;
 
           if (navigator.storage && navigator.storage.persist) {
             try {
@@ -1719,16 +1726,28 @@
           return q ? q.split(/\s+/).filter(Boolean) : [];
         },
 
+        isNoteItem(it) {
+          const t = String(it?.text || '');
+          return !String(it?.keys || '').trim() || t.startsWith('[NOTE]') || t.startsWith('[DAHİLİ NOT]');
+        },
+
+        toggleLang() {
+          this.lang = this.lang === 'tr' ? 'en' : 'tr';
+          try { localStorage.setItem('qtp_ui_lang_v1', this.lang); } catch (_) {}
+          document.documentElement.lang = this.lang;
+          this.showToast(this.lang === 'tr' ? 'Dil: Türkçe' : 'Language: English');
+        },
+
         get filteredItems() {
           const normTerms = this.searchTerms.map(normTR);
           const hasSelectedGroups = this.selectedGroups.length > 0;
           const selGroupSet = hasSelectedGroups ? new Set(this.selectedGroups) : null;
           let list = this.items.filter((it) => {
-            const grp = (it.group || 'Genel').trim() || 'Genel';
+            const grp = (it.group || 'General').trim() || 'General';
             if (hasSelectedGroups && !selGroupSet.has(grp)) return false;
             if (this.hotkeyFilter !== 'ALL' && it.keys !== this.hotkeyFilter) return false;
             if (this.onlyFavorites && !it.favorite) return false;
-            if (this.onlyNotes && !String(it.text || '').startsWith('[DAHİLİ NOT]')) return false;
+            if (this.onlyNotes && !this.isNoteItem(it)) return false;
 
             if (normTerms.length) {
               let hay = '';
@@ -1887,10 +1906,10 @@
           this.editorMode = 'add';
           const defaultGrp = this.selectedGroups.length === 1
             ? this.selectedGroups[0]
-            : (this.allGroups[0]?.name || 'Genel');
+            : (this.allGroups[0]?.name || 'General');
           this.editorForm = {
             id: '',
-            keys: this.hotkeyFilter !== 'ALL' ? this.hotkeyFilter : 'L-Win+Z',
+            keys: this.hotkeyFilter !== 'ALL' ? this.hotkeyFilter : (this.allHotkeys[0] || ''),
             group: defaultGrp,
             label: '',
             text: '',
@@ -2076,8 +2095,8 @@
         openBulkModal() {
           if (!this.selectedIds.length) return;
           this.bulkForm = {
-            useGroup: false, group: this.allGroups[0]?.name || 'Genel',
-            useKeys: false, keys: 'L-Win+Z',
+            useGroup: false, group: this.allGroups[0]?.name || 'General',
+            useKeys: false, keys: this.allHotkeys[0] || 'L-Win+1',
             useReplace: false, findStr: '', replStr: '', ignoreCase: false,
             useAffix: false, prefix: '', suffix: '',
             useStripEmoji: false,
@@ -2664,6 +2683,7 @@
                   ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
                   : 'bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/40 hover:bg-violet-500/25')"
               title="QuickTextPaste kurulum, çalıştırma ve yerel sunucu köprü ayarları"
+              aria-label="QuickTextPaste status and local bridge settings"
             >
               <span class="truncate" x-text="serverConnected
                 ? (qtpStatus?.running ? '🟢 QTP Çalışıyor' : (qtpStatus?.installed ? '🟡 QTP Kapalı' : '🔴 QTP Kur'))
@@ -2689,6 +2709,7 @@
               :href="standaloneDownloadMeta.href"
               :download="standaloneDownloadMeta.file || undefined"
               :title="standaloneDownloadMeta.title"
+              :aria-label="standaloneDownloadMeta.title"
               class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition inline-flex items-center gap-1"
               x-text="standaloneDownloadMeta.label"
             ></a>
@@ -2697,6 +2718,7 @@
               href="./qtp.html"
               class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-violet-600 hover:bg-violet-500 text-white shadow-sm transition inline-flex items-center gap-1"
               title="Yeni QTP bağımsız Web arayüzüne geç (qtp.html)"
+              aria-label="Open unified QTP web UI"
             >
               🌐 Yeni Web Arayüzü (qtp.html)
             </a>
@@ -2705,11 +2727,12 @@
               @click="installPwa()"
               class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition"
               title="Bu web uygulamasını çevrimdışı masaüstü PWA olarak yükle"
+              aria-label="Install offline PWA"
             >
               📲 PWA Yükle
             </button>
 
-            <button @click="openAddModal()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
+            <button @click="openAddModal()" aria-label="Add new snippet" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
               ➕ Yeni
             </button>
 
@@ -2719,6 +2742,7 @@
               @click="openDiskFile()"
               class="px-2.5 py-1 rounded-lg text-xs font-medium bg-sky-600 hover:bg-sky-500 text-white shadow-sm transition"
               title="Bilgisayarınızdaki QuickTextPaste.ini veya data.json dosyasını açıp doğrudan üzerine kaydedin"
+              aria-label="Open local file from disk"
             >
               🔗 Diskten Aç
             </button>
@@ -2730,11 +2754,12 @@
               :class="hasUnsavedDiskChanges ? 'bg-amber-600 hover:bg-amber-500 text-white animate-pulse' : 'bg-emerald-600 hover:bg-emerald-500 text-white'"
               class="px-2.5 py-1 rounded-lg text-xs font-semibold shadow-sm transition"
               title="Değişiklikleri doğrudan bağlı yerel dosyanın üzerine yaz (Ctrl+S)"
+              aria-label="Save changes to linked file"
             >
               💾 Kaydet
             </button>
 
-            <button @click="triggerImportPicker()" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Bir veya birden fazla INI, JSON ya da Tam Yedek yükle">
+            <button @click="triggerImportPicker()" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Bir veya birden fazla INI, JSON ya da Tam Yedek yükle" aria-label="Import INI or JSON">
               📥 İçe Aktar
             </button>
 
@@ -2745,6 +2770,7 @@
               :disabled="qtpBusy"
               class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition disabled:opacity-50"
               title="data.json + QuickTextPaste.ini disk üzerine yaz ve QuickTextPaste'i anında yenile"
+              aria-label="Apply changes to server and QTP"
             >
               ⚡ QTP'ye Uygula
             </button>
@@ -2784,7 +2810,7 @@
             </div>
 
             <div class="relative" @click.outside="toolsMenuOpen = false">
-              <button @click="toolsMenuOpen = !toolsMenuOpen; exportMenuOpen = false; if (toolsMenuOpen) setHdrBottomFromEl($event.currentTarget)" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition inline-flex items-center gap-1" title="Görünüm, Yedekler, Gruplar ve Ayarlar">
+              <button @click="toolsMenuOpen = !toolsMenuOpen; exportMenuOpen = false; if (toolsMenuOpen) setHdrBottomFromEl($event.currentTarget)" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition inline-flex items-center gap-1" title="Görünüm, Yedekler, Gruplar ve Ayarlar" aria-label="Tools menu">
                 ⚙️ Araçlar <span class="text-[10px]">▼</span>
               </button>
               <div x-show="toolsMenuOpen" x-cloak x-transition class="fixed inset-x-3 top-[var(--hdr-bottom,5rem)] w-auto max-h-[70dvh] overflow-y-auto sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-1.5 sm:w-64 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-40 text-xs">
@@ -2827,11 +2853,13 @@
               </div>
             </div>
 
-            <button @click="toggleTheme()" class="px-2 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" :title="theme === 'dark' ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'">
+            <button @click="toggleTheme()" class="px-2 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" :title="theme === 'dark' ? 'Açık Temaya Geç' : 'Koyu Temaya Geç'" :aria-label="theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
               <span x-text="theme === 'dark' ? '☀️' : '🌙'"></span>
             </button>
 
-            <button @click="toggleHeaderCollapsed(true)" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Üst menüyü daralt (Alt+H)">
+            <button @click="toggleLang()" class="px-2 py-1 rounded-lg text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" :title="lang === 'tr' ? 'Switch language (EN / TR)' : 'Dili değiştir (EN / TR)'" aria-label="Switch language" x-text="lang.toUpperCase()"></button>
+
+            <button @click="toggleHeaderCollapsed(true)" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 transition" title="Üst menüyü daralt (Alt+H)" aria-label="Collapse header">
               ▲ Gizle
             </button>
           </div>
@@ -2854,7 +2882,7 @@
             aria-label="Hazır cevaplarda ara"
             class="qtp-ctrl w-full pl-8 pr-9 text-xs sm:text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-          <button x-show="search" x-cloak @click="search = ''; $refs.searchInput.focus()" class="qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
+          <button x-show="search" x-cloak @click="search = ''; $refs.searchInput.focus()" aria-label="Clear search" class="qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-1.5 top-1/2 -translate-y-1/2 px-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">✕</button>
         </div>
 
         <div class="relative shrink-0 max-w-full min-w-0 flex items-center" @click.outside="categoryDropdownOpen = false">
@@ -2866,6 +2894,7 @@
               :class="selectedGroups.length ? 'text-indigo-700 dark:text-indigo-300 font-semibold' : 'text-slate-700 dark:text-slate-200 font-medium'"
               class="qtp-ctrl inline-flex items-center gap-1.5 px-2.5 text-xs hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition max-w-[200px] sm:max-w-[280px] min-w-0"
               title="Çoklu kategori filtrele"
+              aria-label="Filter categories"
             >
               <span class="truncate" x-text="categorySummaryLabel"></span>
               <span class="text-[10px] opacity-70 shrink-0" x-text="categoryDropdownOpen ? '▲' : '▼'"></span>
@@ -2877,6 +2906,7 @@
               @click.stop="clearSelectedCategories()"
               class="px-2 py-1.5 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-slate-200 dark:hover:bg-slate-700 border-l border-slate-300 dark:border-slate-700 transition"
               title="Kategori filtresini sıfırla"
+              aria-label="Clear category filter"
             >✕</button>
           </div>
 
@@ -2894,9 +2924,10 @@
                   x-model="categorySearch"
                   type="text"
                   placeholder="Kategori ara..."
+                  aria-label="Search categories"
                   class="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-                <button x-show="categorySearch" x-cloak @click="categorySearch = ''; $refs.catSearchInput.focus()" class="qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                <button x-show="categorySearch" x-cloak @click="categorySearch = ''; $refs.catSearchInput.focus()" aria-label="Clear category search" class="qtp-btn-sm inline-flex items-center justify-center rounded-md absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">✕</button>
               </div>
 
               <div class="flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
@@ -2914,6 +2945,7 @@
                   :class="categorySelectedFirst ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
                   class="px-2 py-1 rounded-lg font-medium transition"
                   title="Seçili kategorileri listenin üstüne al"
+                  aria-label="Sort selected categories first"
                 >
                   ↑ Seçili (<span x-text="selectedGroups.length"></span>)
                 </button>
@@ -2930,7 +2962,8 @@
                         ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 border-indigo-400'
                         : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-indigo-400')"
                     class="px-2 py-0.5 rounded-full text-[11px] font-medium border transition"
-                    :title="pref.prefix + ' rolündeki tüm alt kategorileri seç/kaldır (' + pref.itemCount + ' kayıt)'"
+                    :title="pref.prefix + ' (' + pref.itemCount + ')'"
+                    :aria-label="pref.prefix + ' (' + pref.itemCount + ')'"
                   >
                     <span x-text="pref.prefix"></span>
                     <span class="opacity-75" x-text="'(' + (pref.selectedGroupsCount ? pref.selectedGroupsCount + '/' : '') + pref.groupNames.length + ')'"></span>
@@ -2967,14 +3000,14 @@
         </div>
 
         <div x-show="!headerCollapsed" class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 min-w-0 max-w-full">
-          <select x-model="hotkeyFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select x-model="hotkeyFilter" aria-label="Filter by shortcut" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="ALL">⌨️ Kısayollar</option>
             <template x-for="hk in allHotkeys" :key="hk">
               <option :value="hk" x-text="hk"></option>
             </template>
           </select>
 
-          <select x-model="scopeFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select x-model="scopeFilter" aria-label="Search scope" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="all">🎯 Tümü</option>
             <option value="text">📝 Metin</option>
             <option value="label">🏷️ Başlık</option>
@@ -2982,7 +3015,7 @@
             <option value="keys">⌨️ Kısayol</option>
           </select>
 
-          <select x-model="sortFilter" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <select x-model="sortFilter" aria-label="Sort order" class="qtp-ctrl max-w-full min-w-0 px-2.5 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="default">↕️ Varsayılan</option>
             <option value="favorites">⭐ Favoriler</option>
             <option value="popular">🔥 Popüler</option>
@@ -2995,14 +3028,14 @@
             <option value="metro">Metro</option>
           </select>
 
-          <button @click="toggleSelectAllFiltered()" class="qtp-ctrl px-2.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition" :title="allFilteredSelected ? 'Görünenlerin seçimini kaldır' : 'Görünenlerin tümünü seç'">
+          <button @click="toggleSelectAllFiltered()" class="qtp-ctrl px-2.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 transition" :title="allFilteredSelected ? 'Görünenlerin seçimini kaldır' : 'Görünenlerin tümünü seç'" aria-label="Select or deselect all visible items">
             <span x-text="allFilteredSelected ? '☑️' : '⬜ Seç'"></span>
           </button>
         </div>
 
         <div x-show="headerCollapsed" x-cloak class="flex flex-wrap items-center gap-1.5 max-w-full min-w-0">
           <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300" x-text="filteredItems.length + ' / ' + items.length"></span>
-          <button @click="toggleHeaderCollapsed(false)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition" title="Üst menüyü göster (Alt+H)">
+          <button @click="toggleHeaderCollapsed(false)" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition" title="Üst menüyü göster (Alt+H)" aria-label="Show header">
             ▼ Menüyü Göster
           </button>
         </div>
@@ -3070,7 +3103,7 @@
               <span class="px-2 py-0.5 text-xs rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-semibold" x-text="grp.items.length"></span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button @click.stop="openGroupsModal(grp.name)" class="no-print qtp-btn-sm inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[11px] text-slate-500 hover:text-indigo-500 hover:bg-slate-200/70 dark:hover:bg-slate-700" title="Grubu yeniden adlandır / dışa aktar">✏️</button>
+              <button @click.stop="openGroupsModal(grp.name)" class="no-print qtp-btn-sm inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[11px] text-slate-500 hover:text-indigo-500 hover:bg-slate-200/70 dark:hover:bg-slate-700" title="Grubu yeniden adlandır / dışa aktar" aria-label="Manage group">✏️</button>
               <template x-for="k in grp.hotkeys" :key="k">
                 <kbd class="px-2 py-0.5 text-xs font-mono rounded-md bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-indigo-300" x-text="k"></kbd>
               </template>
@@ -3084,7 +3117,7 @@
                 :class="[
                   copiedId === item.id ? 'card-copied' : '',
                   isSelected(item.id) ? 'ring-2 ring-indigo-500' : '',
-                  item.text.startsWith('[DAHİLİ NOT]')
+                  isNoteItem(item)
                     ? 'bg-amber-50/75 dark:bg-amber-950/25 border-amber-300 dark:border-amber-700/60 hover:border-amber-500'
                     : 'bg-slate-50/80 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md'
                 ]"
@@ -3102,7 +3135,7 @@
                         aria-label="Kaydı seç"
                       />
                       <kbd x-show="item.keys" class="px-1.5 py-0.5 text-[11px] font-mono rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800" x-text="item.keys"></kbd>
-                      <span x-show="item.text.startsWith('[DAHİLİ NOT]')" class="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-white">Dahili Not</span>
+                      <span x-show="isNoteItem(item)" class="px-1.5 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-white" x-text="lang === 'tr' ? 'Not' : 'Note'"></span>
                       <span x-show="item.label" class="text-xs font-semibold text-slate-600 dark:text-slate-300 break-words" x-html="highlight(item.label)"></span>
                     </div>
 
@@ -3110,6 +3143,7 @@
                       @click.stop="toggleFavorite(item)"
                       class="no-print qtp-btn-sm inline-flex items-center justify-center rounded-md text-base leading-none hover:bg-slate-200/70 dark:hover:bg-slate-800 hover:scale-110 transition shrink-0"
                       :title="item.favorite ? 'Favoriden çıkar' : 'Favorilere ekle'"
+                      aria-label="Toggle favorite"
                     >
                       <span x-text="item.favorite ? '⭐' : '☆'"></span>
                     </button>
@@ -3121,9 +3155,9 @@
                 <div class="qtp-card-meta no-print shrink-0 flex items-center justify-between gap-2 border-t border-slate-200/70 dark:border-slate-800/80 min-w-0">
                   <span class="text-[11px] text-slate-400 truncate min-w-0" x-text="item.copyCount > 0 ? item.copyCount + 'x kopyalandı' : 'Tıkla & kopyala'"></span>
                   <div class="flex items-center gap-1 shrink-0">
-                    <button @click.stop="openEditModal(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" title="Düzenle">✏️</button>
-                    <button @click.stop="duplicateItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" title="Çoğalt">📑</button>
-                    <button @click.stop="deleteItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-red-500 hover:bg-red-100/60 dark:hover:bg-red-950/60 transition" title="Sil">🗑️</button>
+                    <button @click.stop="openEditModal(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" title="Düzenle" aria-label="Edit snippet">✏️</button>
+                    <button @click.stop="duplicateItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-indigo-600 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition" title="Çoğalt" aria-label="Duplicate snippet">📑</button>
+                    <button @click.stop="deleteItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded-lg text-xs text-slate-500 hover:text-red-500 hover:bg-red-100/60 dark:hover:bg-red-950/60 transition" title="Sil" aria-label="Delete snippet">🗑️</button>
                     <button @click.stop="copyText(item)" class="qtp-btn-sm inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition shrink-0">
                       📋 Kopyala
                     </button>
@@ -3174,12 +3208,12 @@
                 </td>
                 <td class="text-right whitespace-nowrap">
                   <div class="row-actions inline-flex items-center gap-1">
-                    <button @click="moveItem(item, -1)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Yukarı Taşı">⬆️</button>
-                    <button @click="moveItem(item, 1)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Aşağı Taşı">⬇️</button>
-                    <button @click="openEditModal(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Düzenle">✏️</button>
-                    <button @click="duplicateItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Çoğalt">📑</button>
-                    <button @click="copyText(item, true)" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium" title="Kopyala">📋</button>
-                    <button @click="deleteItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-red-100 dark:hover:bg-red-950 text-xs" title="Sil">🗑️</button>
+                    <button @click="moveItem(item, -1)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Yukarı Taşı" aria-label="Move up">⬆️</button>
+                    <button @click="moveItem(item, 1)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Aşağı Taşı" aria-label="Move down">⬇️</button>
+                    <button @click="openEditModal(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Düzenle" aria-label="Edit snippet">✏️</button>
+                    <button @click="duplicateItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs" title="Çoğalt" aria-label="Duplicate snippet">📑</button>
+                    <button @click="copyText(item, true)" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium" title="Kopyala" aria-label="Copy snippet">📋</button>
+                    <button @click="deleteItem(item)" class="qtp-btn-sm inline-flex items-center justify-center p-1 rounded hover:bg-red-100 dark:hover:bg-red-950 text-xs" title="Sil" aria-label="Delete snippet">🗑️</button>
                   </div>
                 </td>
               </tr>
@@ -3201,13 +3235,13 @@
         <div>
           <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Kısayol (QuickTextPaste keys)</label>
           <div class="flex flex-wrap gap-2">
-            <input x-model="editorForm.keys" type="text" placeholder="L-Win+Z (veya boş bırakabilirsiniz)" class="flex-1 min-w-[140px] px-3 py-2 rounded-xl text-sm font-mono bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <select x-model="hkMod" class="px-2.5 py-2 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+            <input x-model="editorForm.keys" type="text" placeholder="L-Win+1 (or leave empty for Note)" aria-label="Shortcut prefix" class="flex-1 min-w-[140px] px-3 py-2 rounded-xl text-sm font-mono bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <select x-model="hkMod" aria-label="Shortcut modifier" class="px-2.5 py-2 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
               <option>L-Win</option><option>R-Win</option><option>L-Ctrl</option><option>R-Ctrl</option>
               <option>L-Alt</option><option>R-Alt</option><option>Ctrl+Alt</option><option>Ctrl+Shift</option>
               <option>Alt+Shift</option><option>Win+Alt</option>
             </select>
-            <select x-model="hkKey" class="px-2.5 py-2 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+            <select x-model="hkKey" aria-label="Shortcut key" class="px-2.5 py-2 rounded-xl text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
               <template x-for="k in hkKeyList" :key="k">
                 <option :value="k" x-text="k"></option>
               </template>
@@ -3219,7 +3253,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Grup (Alt Menü Adı — iç içe için '/')</label>
-            <input x-model="editorForm.group" list="groupSuggestions" type="text" placeholder="Örn: Karşılama ve Bekletme" class="w-full px-3 py-2 rounded-xl text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input x-model="editorForm.group" list="groupSuggestions" type="text" placeholder="e.g. General / Email" aria-label="Group name" class="w-full px-3 py-2 rounded-xl text-sm bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <datalist id="groupSuggestions">
               <template x-for="g in allGroups" :key="g.name">
                 <option :value="g.name"></option>
@@ -3292,7 +3326,7 @@
           <label class="inline-flex items-center gap-2 font-medium cursor-pointer">
             <input type="checkbox" x-model="bulkForm.useKeys" class="accent-indigo-600" /> Kısayolu Değiştir
           </label>
-          <input x-show="bulkForm.useKeys" x-model="bulkForm.keys" type="text" placeholder="Örn: L-Win+Z" class="w-full px-3 py-1.5 rounded-lg text-sm font-mono bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700" />
+          <input x-show="bulkForm.useKeys" x-model="bulkForm.keys" type="text" placeholder="e.g. L-Win+1" aria-label="Bulk shortcut prefix" class="w-full px-3 py-1.5 rounded-lg text-sm font-mono bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700" />
         </div>
 
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-2">
@@ -3516,7 +3550,7 @@
                   <div class="text-[10px] text-slate-400" x-text="'Neden: ' + snap.reason"></div>
                 </div>
                 <div class="flex items-center gap-1">
-                  <button @click="downloadSnapshot(snap)" class="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="İndir">⬇️</button>
+                  <button @click="downloadSnapshot(snap)" class="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="İndir" aria-label="Download snapshot">⬇️</button>
                   <button @click="restoreLocalSnapshot(snap)" class="px-2 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500">Geri Yükle</button>
                 </div>
               </div>
@@ -3567,7 +3601,7 @@
             Bu uygulamanın tam verimle yüklenip çalışması için QuickTextPaste'in de kurulu ve çalışıyor olması gerekir.
           </div>
           <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-            Windows sistem geneli klavye kısayolları (<code>L-Win+Z</code> vb.) QuickTextPaste uygulaması üzerinden tetiklenir. Bu web/PWA paneli ile kendi <code>QuickTextPaste.ini</code> veya <code>data.json</code> dosyanızı doğrudan bilgisayarınızda düzenleyebilir, ekleyebilir, çıkarabilir ve yedekleyebilirsiniz.
+            Windows sistem geneli klavye kısayolları (<code>L-Win+1</code> vb.) QuickTextPaste uygulaması üzerinden tetiklenir. Bu web/PWA paneli ile kendi <code>QuickTextPaste.ini</code> veya <code>data.json</code> dosyanızı doğrudan bilgisayarınızda düzenleyebilir, ekleyebilir, çıkarabilir ve yedekleyebilirsiniz.
           </p>
         </div>
 
@@ -3699,9 +3733,9 @@
                 <span class="shrink-0 px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-500 font-semibold" x-text="g.count"></span>
               </div>
               <div class="flex items-center gap-1 shrink-0">
-                <button @click="exportSingleGroup(g.name, 'ini')" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu INI olarak indir">INI</button>
-                <button @click="exportSingleGroup(g.name, 'json')" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu JSON olarak indir">JSON</button>
-                <button @click="deleteGroupItems(g.name)" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-red-500/15 text-red-500 hover:bg-red-500 hover:text-white" title="Grubu sil">🗑️</button>
+                <button @click="exportSingleGroup(g.name, 'ini')" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu INI olarak indir" aria-label="Export group as INI">INI</button>
+                <button @click="exportSingleGroup(g.name, 'json')" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300" title="Bu grubu JSON olarak indir" aria-label="Export group as JSON">JSON</button>
+                <button @click="deleteGroupItems(g.name)" class="qtp-btn-sm inline-flex items-center justify-center px-2 py-1 rounded-lg bg-red-500/15 text-red-500 hover:bg-red-500 hover:text-white" title="Grubu sil" aria-label="Delete group">🗑️</button>
               </div>
             </div>
           </template>

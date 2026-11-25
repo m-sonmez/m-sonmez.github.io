@@ -30,21 +30,24 @@ def tr_lower(text: str) -> str:
     return text.translate(_TR_UPPER_TO_LOWER).replace("\u0307", "").lower()
 
 
-def tr_sort_key(text: str) -> tuple[tuple[int, int], ...]:
-    """Türkçe alfabe sırası (a..z + ç,ğ,ı,ö,ş,ü) ve noktalama/rakam önceliği için sıralama anahtarı üretir."""
+def locale_sort_key(text: str) -> tuple[tuple[int, int], ...]:
+    """Deterministic Latin/Turkish locale-aware sort key matching QTP Web UI ordering."""
     norm = tr_lower(text or "")
     out: list[tuple[int, int]] = []
     for ch in norm:
         rank = _TR_CHAR_RANK.get(ch)
         if rank is not None:
             out.append(rank)
-        elif ch.isdigit():
-            out.append((1, int(ch)))
+        elif "0" <= ch <= "9":
+            out.append((1, ord(ch) - 48))
         elif ch.isspace() or not ch.isalnum():
             out.append((0, ord(ch)))
         else:
             out.append((3, ord(ch)))
     return tuple(out)
+
+
+tr_sort_key = locale_sort_key
 
 
 def _hotkey_badge(keys: str) -> str:

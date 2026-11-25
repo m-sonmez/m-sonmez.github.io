@@ -26,6 +26,7 @@ hiddenimports = [
     "pynput.mouse._win32",
     "qtp_app.core.engine",
     "qtp_app.core.hotkeys",
+    "qtp_app.core.i18n",
     "qtp_app.core.operations",
     "qtp_app.core.watcher",
     "qtp_app.cli",

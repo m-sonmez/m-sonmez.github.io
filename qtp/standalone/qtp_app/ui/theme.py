@@ -40,9 +40,9 @@ ACCENT_PURPLE = "#7C3AED"
 ACCENT_CYAN = "#22D3EE"
 ACCENT_GRADIENT_QSS = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #7C3AED, stop:1 #0E7490)"
 
-SEARCH_PLACEHOLDER = "Ara… (mesaj, kategori, etiket)"
+SEARCH_PLACEHOLDER = "Search… (text, category, label)"
 SEARCH_CHIP_TEXT = "Ctrl+K"
-FOOTER_HINTS_TEXT = "↑↓ Gezin · ⏎ Yapıştır · Ctrl+⏎ Kopyala · Esc Kapat"
+FOOTER_HINTS_TEXT = "↑↓ Navigate · ⏎ Paste · Ctrl+⏎ Copy · Esc Close"
 QUICK_EMOJIS: tuple[str, ...] = (
     "😊",
     "👍",
@@ -63,11 +63,7 @@ QUICK_EMOJIS: tuple[str, ...] = (
 )
 
 CATEGORY_TABS: tuple[tuple[str, str, str], ...] = (
-    ("ALL", "Tümü", ""),
-    ("A", "A · İş Ortağı", "L-Win+A"),
-    ("Z", "Z · Kurye", "L-Win+Z"),
-    ("X", "X · Canlı Yardım", "L-Win+X"),
-    ("Q", "Q · Turkcell", "L-Win+Q"),
+    ("ALL", "All", ""),
 )
 
 _RGBA_RE = re.compile(

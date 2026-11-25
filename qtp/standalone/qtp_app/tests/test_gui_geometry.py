@@ -335,13 +335,13 @@ def test_help_markdown_links_and_all_dialogs_at_minimum_size(qtbot, tmp_path: Pa
     settings_dlg = SettingsWindow(DEFAULT_SETTINGS, DARK_PALETTE)
     group_dlg = GroupManagerDialog(
         LIGHT_PALETTE,
-        lambda: [("Müşteri Destek / Kurye Operasyon", 14), ("Genel", 3)],
+        lambda: [("Support / Field Operations", 14), ("General", 3)],
         on_rename=lambda _o, _n: None,
         on_delete=lambda _g: None,
         on_export=lambda _g: None,
     )
-    editor_dlg = SnippetEditorDialog(LIGHT_PALETTE, ["Genel", "Kurye"], item=items[0])
-    bulk_dlg = BulkEditDialog(DARK_PALETTE, 5, ["Genel", "Kurye"])
+    editor_dlg = SnippetEditorDialog(LIGHT_PALETTE, ["General", "Field"], item=items[0])
+    bulk_dlg = BulkEditDialog(DARK_PALETTE, 5, ["General", "Field"])
     ini_dlg = IniSnippetViewerDialog(items[0], 0, str(tmp_path / "QuickTextPaste.ini"), LIGHT_PALETTE)
     backups_dlg = build_backups_dialog(eng, DARK_PALETTE)
 

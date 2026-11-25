@@ -11,18 +11,15 @@ import unicodedata
 from typing import Any, Callable, Iterable, TextIO
 
 from qtp_app import __version__
-from qtp_app.core.engine import CATEGORY_DEFINITIONS, OperationResult, QtpEngine, format_hotkeys_toast
+from qtp_app.core.engine import OperationResult, QtpEngine, format_hotkeys_toast
+from qtp_app.core.i18n import t
 from qtp_app.core.logging_setup import get_logger
 from qtp_app.core.operations import OPERATIONS
 from qtp_app.core.watcher import ReloadEvent
 
 tui_logger = get_logger("tui")
 
-TUI_FOOTER_HINTS = (
-    "↑↓ Gezin · ⏎ Yapıştır · c Kopyala · e INI'de Göster · b Yedekle · s Ayarlar · F1 Yardım · q Çıkış"
-)
-
-_CATEGORY_CODES = [code for code, _lbl, _pref in CATEGORY_DEFINITIONS]
+TUI_FOOTER_HINTS = t("tui.footer", "en")
 
 
 def _char_display_width(ch: str) -> int:
@@ -80,9 +77,7 @@ class QtpTui:
         self.use_color = use_color
         self.quiet = bool(quiet) and int(getattr(engine, "verbose", 0) or 0) <= 0
         raw_cat = initial_category if initial_category is not None else engine.settings.get("last_category", "ALL")
-        self.category: str = str(raw_cat).strip().upper()
-        if self.category not in _CATEGORY_CODES:
-            self.category = "ALL"
+        self.category: str = str(raw_cat or "ALL").strip().upper() or "ALL"
         self.query: str = str(initial_query or "")
         self.search_mode: bool = False
         self.selected_idx: int = 0
@@ -90,16 +85,25 @@ class QtpTui:
         self.modal_title: str = ""
         self.modal_lines: list[str] = []
         self.modal_scroll: int = 0
+        lang = engine.resolved_language()
+        is_tr = lang.startswith("tr")
         if getattr(engine, "startup_warning", None):
             self.status_message = str(engine.startup_warning)
         elif self.quiet:
-            self.status_message = f"{len(engine.items)} kayıt"
+            self.status_message = f"{len(engine.items)} kayıt" if is_tr else f"{len(engine.items)} items"
         else:
-            self.status_message = (
-                format_hotkeys_toast(engine.settings.get("hotkeys"))
-                if engine.first_run
-                else f"QTP hazır ({len(engine.items)} kayıt)"
-            )
+            if engine.first_run:
+                self.status_message = format_hotkeys_toast(
+                    engine.settings.get("hotkeys"),
+                    lang=lang,
+                    config_dir=engine.config_dir,
+                )
+            else:
+                self.status_message = (
+                    f"QTP hazır ({len(engine.items)} kayıt)"
+                    if is_tr
+                    else f"QTP ready ({len(engine.items)} items)"
+                )
         self.last_result: OperationResult = OperationResult(
             ok=True,
             exit_code=0,
@@ -121,6 +125,16 @@ class QtpTui:
         self.strip_emoji: bool = bool(engine.settings.get("strip_emoji", False))
         self._reload_lock = threading.RLock()
         self._refresh_view_data()
+        if self.category not in self._category_codes():
+            self.category = "ALL"
+            self._refresh_view_data()
+
+    def _category_codes(self) -> list[str]:
+        codes = [str(c.get("code", "ALL")).strip().upper() for c in self._categories_cache if c.get("code")]
+        return codes or ["ALL"]
+
+    def _lang(self) -> str:
+        return self.engine.resolved_language()
 
     def apply_reload_event(self, event: ReloadEvent) -> None:
         """İzleyici iş parçacığından gelen canlı değişiklik özetini TUI görünümüne uygular."""
@@ -171,15 +185,26 @@ class QtpTui:
         with self._reload_lock:
             width, height = self.term_size
             inner_w = max(40, width)
+            lang = self._lang()
+            is_tr = lang.startswith("tr")
             lines: list[str] = []
 
-            search_state = "[YAZIYOR]" if self.search_mode else "[/ Ara]"
-            lines.append(
-                clip_to_width(
-                    f"QTP v{__version__} | Mod: TUI | Ara: \"{self.query}\" {search_state} | Kayıt: {len(self._visible_items)}/{len(self.engine.items)}",
-                    inner_w,
-                )
+            search_state = (
+                ("[YAZIYOR]" if self.search_mode else "[/ Ara]")
+                if is_tr
+                else ("[TYPING]" if self.search_mode else "[/ Search]")
             )
+            filter_tags = ""
+            if self.only_favorites:
+                filter_tags += f" [{t('tui.filter_fav', lang, self.engine.config_dir)}]"
+            if self.only_notes:
+                filter_tags += f" [{t('tui.filter_notes', lang, self.engine.config_dir)}]"
+            header_line = (
+                f"QTP v{__version__} | Mod: TUI | Ara: \"{self.query}\" {search_state}{filter_tags} | Kayıt: {len(self._visible_items)}/{len(self.engine.items)}"
+                if is_tr
+                else f"QTP v{__version__} | Mode: TUI | Search: \"{self.query}\" {search_state}{filter_tags} | Items: {len(self._visible_items)}/{len(self.engine.items)}"
+            )
+            lines.append(clip_to_width(header_line, inner_w))
 
             pills: list[str] = []
             for cat in self._categories_cache:
@@ -190,18 +215,20 @@ class QtpTui:
                     pills.append(f"[{label} ({cnt})]")
                 else:
                     pills.append(f"{label} ({cnt})")
-            full_cat_line = "Kategoriler: " + " | ".join(pills)
+            cat_prefix = "Kategoriler: " if is_tr else "Categories: "
+            full_cat_line = cat_prefix + " | ".join(pills)
             if inner_w < 100 or display_width(full_cat_line) > inner_w:
                 compact_pills: list[str] = []
+                all_short = t("cat.all", lang, self.engine.config_dir)
                 for cat in self._categories_cache:
                     code = cat["code"]
                     cnt = cat["count"]
-                    short = "Tümü" if code == "ALL" else code
+                    short = all_short if code == "ALL" else code
                     if code == self.category:
                         compact_pills.append(f"[{short}({cnt})]")
                     else:
                         compact_pills.append(f"{short}({cnt})")
-                cat_line = clip_to_width("Kategoriler: " + " ".join(compact_pills), inner_w)
+                cat_line = clip_to_width(cat_prefix + " ".join(compact_pills), inner_w)
             else:
                 cat_line = full_cat_line
             lines.append(cat_line)
@@ -213,14 +240,16 @@ class QtpTui:
                 max_scroll = max(0, len(self.modal_lines) - vis_rows)
                 self.modal_scroll = max(0, min(self.modal_scroll, max_scroll))
                 if max_scroll > 0:
+                    close_hint = "↑↓ Kaydır · Kapatmak için Esc/q" if is_tr else "↑↓ Scroll · Esc/q Close"
                     lines.append(
                         clip_to_width(
-                            f"=== {self.modal_title} [{self.modal_scroll + 1}/{len(self.modal_lines)}] (↑↓ Kaydır · Kapatmak için Esc/q) ===",
+                            f"=== {self.modal_title} [{self.modal_scroll + 1}/{len(self.modal_lines)}] ({close_hint}) ===",
                             inner_w,
                         )
                     )
                 else:
-                    lines.append(clip_to_width(f"=== {self.modal_title} (Kapatmak için Esc/q) ===", inner_w))
+                    close_only = "Kapatmak için Esc/q" if is_tr else "Esc/q Close"
+                    lines.append(clip_to_width(f"=== {self.modal_title} ({close_only}) ===", inner_w))
                 for mline in self.modal_lines[self.modal_scroll : self.modal_scroll + vis_rows]:
                     lines.append(clip_to_width(mline, inner_w))
                 while len(lines) < 3 + body_rows:
@@ -244,29 +273,57 @@ class QtpTui:
                     row_txt = f"{pointer} {abs_idx + 1:>3}. {chk_pfx}{fav_pfx}[{badge}] {snippet}"
                     lines.append(clip_to_width(row_txt, inner_w))
                 if not slice_items:
-                    lines.append(clip_to_width("  (Eşleşen hazır cevap bulunamadı)", inner_w))
+                    lines.append(clip_to_width(f"  {t('tui.empty', lang, self.engine.config_dir)}", inner_w))
                 while len(lines) < 3 + body_rows:
                     lines.append("")
 
             lines.append("-" * min(inner_w, 96))
             if self.prompt_mode == "add":
-                status_line = f"Yeni Cevap (⏎ Kaydet · Esc İptal): {self.prompt_buffer}"
+                status_line = (
+                    f"Yeni Kayıt (⏎ Kaydet · Esc İptal): {self.prompt_buffer}"
+                    if is_tr
+                    else f"New Snippet (⏎ Save · Esc Cancel): {self.prompt_buffer}"
+                )
             elif self.prompt_mode == "edit":
-                status_line = f"Düzenle [{self.prompt_target}] (⏎ Kaydet · Esc İptal): {self.prompt_buffer}"
+                status_line = (
+                    f"Düzenle [{self.prompt_target}] (⏎ Kaydet · Esc İptal): {self.prompt_buffer}"
+                    if is_tr
+                    else f"Edit [{self.prompt_target}] (⏎ Save · Esc Cancel): {self.prompt_buffer}"
+                )
             elif self.prompt_mode == "delete":
-                status_line = f"Sil [{self.prompt_target}]? (⏎/e Onayla · Esc İptal)"
+                status_line = (
+                    f"Sil [{self.prompt_target}]? (⏎/e Onayla · Esc İptal)"
+                    if is_tr
+                    else f"Delete [{self.prompt_target}]? (⏎/y Confirm · Esc Cancel)"
+                )
             elif self.prompt_mode == "bulk_prefix":
-                status_line = f"Toplu Önek ({len(self.checked_keys)} kayıt) (⏎ Uygula · Esc İptal): {self.prompt_buffer}"
+                status_line = (
+                    f"Toplu Önek ({len(self.checked_keys)} kayıt) (⏎ Uygula · Esc İptal): {self.prompt_buffer}"
+                    if is_tr
+                    else f"Bulk Prefix ({len(self.checked_keys)} items) (⏎ Apply · Esc Cancel): {self.prompt_buffer}"
+                )
             elif self.prompt_mode == "bulk_delete":
-                status_line = f"Seçili {len(self.checked_keys)} kayıt silinsin mi? (⏎/e Onayla · Esc İptal)"
+                status_line = (
+                    f"Seçili {len(self.checked_keys)} kayıt silinsin mi? (⏎/e Onayla · Esc İptal)"
+                    if is_tr
+                    else f"Delete {len(self.checked_keys)} selected items? (⏎/y Confirm · Esc Cancel)"
+                )
             elif self.prompt_mode == "rename_group":
-                status_line = f"Grubu Yeniden Adlandır [{self.prompt_target}] → (⏎ Uygula · Esc İptal): {self.prompt_buffer}"
+                status_line = (
+                    f"Grubu Yeniden Adlandır [{self.prompt_target}] → (⏎ Uygula · Esc İptal): {self.prompt_buffer}"
+                    if is_tr
+                    else f"Rename Group [{self.prompt_target}] → (⏎ Apply · Esc Cancel): {self.prompt_buffer}"
+                )
             elif self.prompt_mode == "delete_group":
-                status_line = f"Grup silinsin mi [{self.prompt_target}]? (⏎/e Onayla · Esc İptal)"
+                status_line = (
+                    f"Grup silinsin mi [{self.prompt_target}]? (⏎/e Onayla · Esc İptal)"
+                    if is_tr
+                    else f"Delete group [{self.prompt_target}]? (⏎/y Confirm · Esc Cancel)"
+                )
             else:
-                status_line = f"Durum: {self.status_message}"
+                status_line = f"{'Durum' if is_tr else 'Status'}: {self.status_message}"
             lines.append(clip_to_width(status_line, inner_w))
-            lines.append(clip_to_width(TUI_FOOTER_HINTS, inner_w))
+            lines.append(clip_to_width(t("tui.footer", lang, self.engine.config_dir), inner_w))
             return [clip_to_width(ln, inner_w) for ln in lines]
 
     def render_ansi_lines(self) -> list[str]:
@@ -282,7 +339,7 @@ class QtpTui:
                 styled.append(f"\x1b[38;2;196;181;253m{line}\x1b[0m")
             elif line.startswith("> "):
                 styled.append(f"\x1b[48;2;124;58;237m\x1b[38;2;255;255;255m{line}\x1b[0m")
-            elif line.startswith("Durum:"):
+            elif line.startswith(("Durum:", "Status:")):
                 color = "34;211;238" if self.last_result.ok else "248;113;113"
                 styled.append(f"\x1b[1;38;2;{color}m{line}\x1b[0m")
             elif idx == len(plain) - 1:
@@ -649,12 +706,16 @@ class QtpTui:
             if self._visible_items:
                 self.selected_idx = min(len(self._visible_items) - 1, self.selected_idx + 6)
         elif key == "TAB":
-            idx = _CATEGORY_CODES.index(self.category)
-            self.category = _CATEGORY_CODES[(idx + 1) % len(_CATEGORY_CODES)]
+            codes = self._category_codes()
+            idx = codes.index(self.category) if self.category in codes else -1
+            self.category = codes[(idx + 1) % len(codes)]
             self._refresh_view_data()
-        elif key in ("1", "2", "3", "4", "5"):
-            self.category = _CATEGORY_CODES[int(key) - 1]
-            self._refresh_view_data()
+        elif key in ("1", "2", "3", "4", "5", "6", "7", "8", "9"):
+            codes = self._category_codes()
+            d_idx = int(key) - 1
+            if 0 <= d_idx < len(codes):
+                self.category = codes[d_idx]
+                self._refresh_view_data()
         elif key == "/":
             self.search_mode = True
         elif key == "ENTER":
